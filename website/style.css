@@ -1,0 +1,32 @@
+:root { color-scheme: light dark; --bg: #101412; --panel: #1b231e; --text: #edf2eb; --muted: #b9c7bb; --accent: #b9ef80; --line: #354438; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.75 system-ui, sans-serif; }
+a { color: var(--accent); text-underline-offset: .2em; }
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; }
+.skip { position: absolute; left: 1rem; top: -6rem; padding: .5rem; background: var(--panel); }
+.skip:focus { top: 0; }
+header, main, footer { max-width: 980px; margin: auto; padding: 1.5rem clamp(1rem, 5vw, 3rem); }
+header { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem 2rem; border-bottom: 1px solid var(--line); }
+.brand { display: inline-flex; align-items: center; gap: .7rem; color: var(--text); font-weight: 750; text-decoration: none; }
+.brand img { width: 40px; height: 40px; border-radius: 8px; }
+nav { display: flex; flex-wrap: wrap; gap: .6rem 1.4rem; font-size: .9rem; }
+main { min-height: 65vh; padding-top: 3rem; padding-bottom: 4rem; overflow-wrap: anywhere; }
+h1, h2, h3 { line-height: 1.2; letter-spacing: -.025em; }
+h1 { font-size: clamp(2.1rem, 5vw, 3.8rem); margin: 0 0 1.5rem; }
+h2 { margin-top: 2.5rem; font-size: 1.6rem; }
+h3 { margin-top: 2rem; }
+p, li { max-width: 78ch; }
+li + li { margin-top: .5rem; }
+pre { padding: 1.2rem; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; white-space: pre-wrap; }
+code { font-size: .88em; }
+:not(pre) > code { padding: .15em .35em; background: var(--panel); border-radius: 4px; }
+blockquote { margin-left: 0; padding-left: 1rem; border-left: 3px solid var(--accent); color: var(--muted); }
+table { display: block; overflow-x: auto; border-collapse: collapse; }
+th, td { padding: .5rem 1rem; border: 1px solid var(--line); }
+footer { border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
+@media (prefers-color-scheme: light) {
+  :root { --bg: #f7f8f2; --panel: #e9eee2; --text: #172219; --muted: #455649; --accent: #32640b; --line: #c9d5c6; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
