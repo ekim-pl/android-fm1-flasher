@@ -5,3 +5,12 @@ local.properties
 *.iml
 .idea/
 dist/
+*.jks
+*.keystore
+keystore.properties
+service-account*.json
+.bundle/
+vendor/bundle/
+.venv-pages/
+fastlane/report.xml
+fastlane/README.md
