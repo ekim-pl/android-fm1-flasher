@@ -1,19 +1,20 @@
-# Template: fill these two tokens after publishing/tagging the source.
+# Draft build recipe: validate with fdroidserver before submission.
 # Review optional proprietary stock-firmware downloads and catalog/image hosts
 # with the F-Droid reviewer before choosing any required AntiFeatures.
 Categories:
   - Multimedia
 License: MIT
+AuthorName: Ekim
 AuthorEmail: ekim.pl@gmail.com
-SourceCode: ${SOURCE_REPO_URL}
-IssueTracker: ${SOURCE_REPO_URL}/issues
+SourceCode: https://github.com/ekim-pl/android-fm1-flasher
+IssueTracker: https://github.com/ekim-pl/android-fm1-flasher/issues
 RepoType: git
-Repo: ${SOURCE_REPO_URL}
+Repo: https://github.com/ekim-pl/android-fm1-flasher
 
 Builds:
   - versionName: 0.5.1-experimental
     versionCode: 6
-    commit: ${RELEASE_TAG}
+    commit: v0.5.1-experimental
     subdir: app
     gradle:
       - yes

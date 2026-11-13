@@ -1,37 +1,38 @@
-FM-1 Flasher 0.5.1-experimental
+First public GitHub test release of the experimental Android firmware browser
+and USB MIDI updater for M-VAVE FM-1.
 
-New: About uses short, dedicated Markdown documents in Polish, English and
-Simplified Chinese, independent of the project README. Hard-coded app release
-references were removed from the README and all privacy-policy copies.
+Requires Android 8.0+, USB Host/OTG, Android MIDI and stable instrument power.
+Download FM1-Flasher-0.5.1-debug.apk from Assets and install it on your phone.
+The APK uses the same debug signing key as the previously shared test build.
 
-From 0.4: choose downloaded firmware directly in the Flasher tab. Catalog
-selection still sets the same saved package. After each planned restart, the
-new port is selected automatically when only one USB device and one eligible
-MIDI endpoint are present; Android USB permission is still required.
+Features:
+- Firmware catalog, favorites, verified downloads and an offline library.
+- Downloaded-firmware picker in Flasher; catalog selection sets the same package.
+- Automatic reconnection after planned restarts when exactly one USB device
+  and one eligible MIDI endpoint are present. Android USB permission is required.
+- English, Polish and Simplified Chinese; light, dark and system themes.
+- Portrait and landscape layouts.
+- Short, dedicated offline About documents, license and privacy policy.
 
-An experimental, open source Android firmware browser and USB MIDI updater for
-M-VAVE FM-1. Requires Android 8.0+, USB Host/OTG, Android MIDI and stable power.
+Verification: clean-clone debug build, release/debug lint and JVM tests passed
+(58 passed, 2 optional external-fixture tests skipped). Documentation links were
+checked. An earlier build successfully flashed a physical FM-1 according to a
+user report; this build and automatic USB reconnection still need hardware tests.
 
-This release adds English, Polish and Simplified Chinese, an in-app language
-picker with system-language support, light/dark/system themes, and an offline
-privacy policy. Status messages, safety prompts and notifications are localized.
-Firmware descriptions from external authors remain in their original language.
-Landscape uses a navigation rail, catalog filter sidebar and two-column Flasher
-and package details to keep the main controls visible with less scrolling.
+This is a debug-signed test APK, not a store release. With multiple devices,
+confirm the new port manually after restarts. An interrupted update, wrong
+package or wrong instrument selection can require hardware recovery. The app
+does not provide backups or recovery; back up your instrument first.
 
-The library supports catalog browsing, local favorites, verified downloads and
-offline use. Updating requires an explicitly selected USB MIDI instrument and
-manual port confirmation after restarts when multiple devices are connected. The app does not provide backups or recovery.
+Assets:
+- FM1-Flasher-0.5.1-debug.apk — Android test build.
+- FM1-Flasher-0.5.1-debug.apk.sha256 — SHA-256 checksum of that APK.
+- FM1-Flasher-0.5.1-test-checklist.txt — manual test checklist (Polish).
 
-This build has not yet been verified with a physical FM-1. An interrupted update,
-wrong package or wrong instrument selection can require hardware recovery. Back
-up the instrument using the relevant firmware's own tools before use.
+Source: https://github.com/ekim-pl/android-fm1-flasher
+Documentation: https://ekim-pl.github.io/android-fm1-flasher/
+Privacy: https://ekim-pl.github.io/android-fm1-flasher/privacy/
 
-Files in this material pack:
-- Debug-signed APK for Android testing.
-- Unsigned release AAB to sign with the publisher's own upload key.
-- Localized listing text, screenshots, graphics and static privacy pages.
-
-Source license: MIT. Firmware is not bundled. Independent project, not an official
+MIT source license. Firmware is not bundled. Independent project, not an official
 M-VAVE product. Catalog attribution: The Firmware Hub, CC BY 4.0.
-Contact: ekim.pl@gmail.com
+Author: Ekim. Contact: ekim.pl@gmail.com

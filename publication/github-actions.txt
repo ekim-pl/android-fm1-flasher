@@ -1,5 +1,16 @@
 FM-1 Flasher: GitHub Actions -> Google Play
 
+PUBLICZNE ADRESY I STAN PUBLIKACJI
+
+Repozytorium: https://github.com/ekim-pl/android-fm1-flasher
+Dokumentacja: https://ekim-pl.github.io/android-fm1-flasher/
+Polityka prywatności: https://ekim-pl.github.io/android-fm1-flasher/privacy/en/
+
+Google Play release jest wyłączony w ustawieniach Actions na etapie publikacji
+repozytorium i testowego APK. Po konfiguracji Play Console, klucza uploadu oraz
+sekretów włącz go ponownie przez Actions -> Google Play release -> Enable workflow.
+Opis wydań poniżej zakłada, że workflow został ponownie włączony.
+
 JAK DZIAŁA PIPELINE
 
 1. Push na gałąź / pull request: Android CI uruchamia testy JVM, lintDebug
@@ -20,10 +31,10 @@ Pipeline nie omija przeglądu Google ani wymagań konta i testów zamkniętych.
 
 JEDNORAZOWO: GITHUB I KLUCZ UPLOADU
 
-1. Utwórz repozytorium na GitHub i wyślij źródła, w tym .github/workflows,
-   Gemfile, Gemfile.lock i fastlane/metadata/android. W tym checkout nie ma
-   jeszcze skonfigurowanego zdalnego repozytorium. Ręczne workflow pojawią się
-   w zakładce Actions po dodaniu ich do domyślnej gałęzi.
+1. Publiczne repozytorium i źródła, w tym .github/workflows, Gemfile,
+   Gemfile.lock i fastlane/metadata/android, są pod adresem podanym powyżej.
+   Workflow są dostępne w zakładce Actions. W nowym klonie origin wskazuje
+   to repozytorium; dalsze zmiany wysyłaj do domyślnej gałęzi main.
 
 2. Potrzebujesz własnego klucza uploadu. Jeżeli aplikacja już istnieje w Play,
    użyj klucza, którego certyfikat jest tam zarejestrowany. Dla nowej aplikacji

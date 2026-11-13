@@ -3,7 +3,8 @@ FM-1 Flasher — publication materials
 APP
 Application ID: pl.ekim.fm1_flasher
 Android: 8.0+ (API 26), target/compile API 36
-Contact and publisher: ekim.pl@gmail.com
+Publisher: Ekim
+Contact: ekim.pl@gmail.com
 License: MIT; see ../LICENSE.md for scope and third-party exclusions.
 Languages: English, Polish, Simplified Chinese, or system preference.
 Theme and language controls: Settings in the top bar.
@@ -43,8 +44,10 @@ This helper requires Pillow and DejaVu Sans / Noto Sans CJK fonts.
 
 PRIVACY
 privacy/index.html links to complete English, Polish and Simplified Chinese pages.
-Host this directory on a public HTTPS static site, then put its actual URL in
-Play Console. No hosting account or domain is assumed. The same policy is
+Public policy: https://ekim-pl.github.io/android-fm1-flasher/privacy/
+English URL for Play Console:
+https://ekim-pl.github.io/android-fm1-flasher/privacy/en/
+The same policy is
 available offline inside the app. ../PRIVACY_POLICY.md is the English source
 document for repository readers. The publisher's contact is already filled in.
 
@@ -64,11 +67,13 @@ bundle and debug APK have different publishing purposes; only a correctly
 signed release bundle should be sent to Play Console.
 
 GITHUB / F-DROID
-github-release.txt contains release copy. A public Git remote is not configured
-in this checkout. Publish the source, then tag the exact release commit.
-fdroid/pl.ekim.fm1_flasher.yml.in is a build-recipe template. Replace
-${SOURCE_REPO_URL} and ${RELEASE_TAG}, validate it with fdroidserver and submit
-it with an inclusion request. Catalog and downloaded stock-firmware licensing
+Source: https://github.com/ekim-pl/android-fm1-flasher
+Releases: https://github.com/ekim-pl/android-fm1-flasher/releases
+github-release.txt contains the test APK release notes. The APK is debug signed;
+its SHA-256 checksum and a manual test checklist accompany the prerelease.
+fdroid/pl.ekim.fm1_flasher.yml is a draft build recipe with the public source
+and release tag filled in. Validate it with fdroidserver before submitting
+an inclusion request. Catalog and downloaded stock-firmware licensing
 must be described to the reviewer; acceptance is decided by F-Droid.
 
 PLAY CONSOLE
@@ -80,15 +85,15 @@ if requested by the Play Console foreground-service declaration.
 REMAINING ACCOUNT / HARDWARE STEPS
 1. Verify the complete update flow on a physical phone and FM-1. This release is
    still experimental and the store descriptions state that explicitly.
-2. Publish the source and privacy pages, then insert their real URLs in Console
-   and the F-Droid recipe. A local HTML file is not a public policy URL.
+2. Enter the public source and privacy-policy URLs from play-console.json in
+   Play Console. The F-Droid recipe is not an accepted listing or an APK repository.
 3. Sign the release bundle with your upload key; complete Play account verification,
    content rating, target audience, data safety and foreground-service forms.
 4. Review external catalog/image/firmware server data practices before finalizing
    Data safety. Request URLs, IP addresses and generic User-Agent reach those
    servers even though the app has no publisher telemetry backend.
-5. Complete applicable closed testing and store reviews. No store upload,
-   account action, source publishing or production release has been performed.
+5. Complete applicable closed testing and store reviews. The GitHub prerelease
+   is for testing; no Google Play upload or F-Droid submission has been performed.
 
 VERIFIED FORMAT REFERENCES
 https://support.google.com/googleplay/android-developer/answer/9866151?hl=en

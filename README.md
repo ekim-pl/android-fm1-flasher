@@ -21,6 +21,8 @@ Z opisu aplikacji można otworzyć licencję i politykę prywatności. Odnośnik
 
 ## Strona projektu i dokumentacja online
 
+Publiczne źródła: [GitHub](https://github.com/ekim-pl/android-fm1-flasher). [Strona projektu](https://ekim-pl.github.io/android-fm1-flasher/) udostępnia dokumentację oraz politykę prywatności w trzech językach.
+
 Workflow [GitHub Pages](.github/workflows/pages.yml) buduje stronę informacyjną, dokumentację z tego README, opisy aplikacji w trzech językach oraz politykę prywatności. Pull requesty i gałęzie sprawdzają budowanie; zmiany w domyślnej gałęzi automatycznie publikują stronę. W repozytorium GitHub ustaw **Settings → Pages → Source → GitHub Actions**. [Konfiguracja, lokalne budowanie i edycja strony](website/pages.md).
 
 ## Materiały publikacyjne
@@ -29,7 +31,7 @@ Workflow [GitHub Pages](.github/workflows/pages.yml) buduje stronę informacyjn�
 
 ## Uruchomienie
 
-Gotowy pakiet testowy: `dist/FM1-Flasher-debug.apk`. To APK podpisane kluczem debug, przeznaczone do testów, nie wydanie do sklepu. Pakiet publikacyjny: `dist/FM1-Flasher-publication.zip`.
+Gotowe APK testowe pobierzesz z [wydań na GitHubie](https://github.com/ekim-pl/android-fm1-flasher/releases). To APK podpisane kluczem debug, przeznaczone do testów, nie wydanie do sklepu. Lokalne materiały robocze: `dist/FM1-Flasher-debug.apk` i `dist/FM1-Flasher-publication.zip`; katalog `dist/` nie jest częścią repozytorium.
 
 1. Zainstaluj APK na telefonie obsługującym USB Host/OTG oraz MIDI. Podłącz zasilany hub i instrumenty przewodem do transmisji danych.
 2. W zakładce **Flasher** wybierz port z listy i naciśnij **Połącz z wybranym portem**. Po zgodzie Androida na USB aplikacja odczyta tożsamość tylko tego urządzenia. Nazwa MIDI nie jest kryterium wyboru: adres USB i numer MIDI rozróżniają identycznie nazwane egzemplarze.
@@ -100,6 +102,8 @@ Użytkownik potwierdził udaną aktualizację fizycznego FM‑1. Do dalszej wery
 ## GitHub Actions i Google Play
 
 [Instrukcja konfiguracji](publication/github-actions.txt) prowadzi przez pierwsze wydanie, klucz podpisujący, konto usługi Google i sekrety GitHuba.
+
+Automatyczna publikacja Google Play jest wyłączona w ustawieniach repozytorium do czasu konfiguracji sklepu i kluczy. Poniższe zachowanie workflow wydania dotyczy jego ponownego włączenia.
 
 - **Android CI**: push na gałąź lub PR uruchamia testy JVM, lint i budowanie debug APK. APK i raporty są dostępne jako artefakty.
 - **Google Play release**: push tagu `v<versionName>` uruchamia testy, lint wydania, budowanie podpisanego AAB i wysyłkę na tor `internal` wraz z informacjami o zmianach. Ręczne uruchomienie z wyłączonym `publish` buduje tylko AAB do pierwszego przesłania w Play Console.
