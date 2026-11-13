@@ -1,0 +1,32 @@
+Przeglądaj katalog firmware i przygotuj aktualizacje M-VAVE FM-1 przez USB MIDI z urządzenia z Androidem.
+
+Biblioteka firmware
+• Przeglądaj kategorie, wyszukuj firmware i autorów oraz sortuj wydania.
+• Zapisuj ulubione lokalnie, bez zakładania konta.
+• Pobieraj obsługiwane paczki, zarządzaj biblioteką i sprawdzaj zmiany w katalogu.
+• Korzystaj ze sprawdzonych, wcześniej pobranych paczek bez internetu.
+
+Wybierz instrument
+• Jawnie wskaż jedno urządzenie USB MIDI, także gdy kilka instrumentów korzysta z huba.
+• Automatyczne łączenie po restartach przy jednym urządzeniu USB i jednym porcie MIDI; przy kilku urządzeniach potwierdź port ręcznie.
+• Przed zapisem sprawdź SHA-256 paczki, strukturę UFW, odpowiednie CRC oraz zgodność w katalogu.
+• Obserwuj postęp aktualizacji w powiadomieniu.
+
+Dopasuj interfejs
+Wybierz polski, angielski lub chiński uproszczony albo język systemowy. Korzystaj z jasnego i ciemnego motywu lub automatycznego wyboru Androida.
+
+Wymagania
+Android 8.0 lub nowszy, USB Host/OTG i system MIDI, M-VAVE FM-1, przewód do transmisji danych i stabilne zasilanie. Zalecany jest zasilany hub USB. Pobranie katalogu i nowych paczek wymaga internetu. Opisy firmware pozostają w oryginalnym języku autorów.
+
+Wersja eksperymentalna
+Ta wersja nie została jeszcze sprawdzona z fizycznym FM-1. Aktualizacja może usunąć dane instrumentu. Błędna paczka, utrata zasilania lub wybranie niewłaściwego instrumentu po restarcie może wymagać sprzętowego odzyskania urządzenia. Przed użyciem zrób kopię danych narzędziami danego firmware. Aplikacja nie wykonuje kopii zapasowych, aktualizacji Bluetooth, automatycznego rozpoznawania kości flash ani odzyskiwania sprzętowego.
+
+Niezależny projekt open source na licencji MIT. Nie jest oficjalnym produktem M-VAVE. Firmware i katalog pochodzą od ich autorów; firmware nie jest dołączony do aplikacji. Źródło katalogu: The Firmware Hub, CC BY 4.0. Bez reklam, wymaganego konta i analitycznych SDK.
+
+Pomoc i kontakt w sprawie prywatności: ekim.pl@gmail.com
+
+W trybie poziomym kompaktowy układ pokazuje filtry obok listy oraz wybór urządzenia obok działań paczki.
+
+• Wybieraj pobrany firmware w zakładce Flasher lub przez katalog.
+
+Zakładka O aplikacji wyświetla krótki, dedykowany opis zgodny z językiem interfejsu oraz numer zainstalowanej aplikacji.

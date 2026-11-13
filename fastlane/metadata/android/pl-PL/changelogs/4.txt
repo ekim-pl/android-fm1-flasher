@@ -1,0 +1,4 @@
+• Wybór pobranego firmware bezpośrednio w zakładce Flasher.
+• Automatyczne ponowne łączenie po planowanych restartach przy jednym urządzeniu USB i jednym dozwolonym porcie MIDI.
+• Zachowany wybór przez katalog i kontrola lokalnego pliku.
+Wersja eksperymentalna; automatyczne łączenie wymaga jeszcze testu na fizycznym sprzęcie.

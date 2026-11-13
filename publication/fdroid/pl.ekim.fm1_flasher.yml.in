@@ -1,0 +1,24 @@
+# Template: fill these two tokens after publishing/tagging the source.
+# Review optional proprietary stock-firmware downloads and catalog/image hosts
+# with the F-Droid reviewer before choosing any required AntiFeatures.
+Categories:
+  - Multimedia
+License: MIT
+AuthorEmail: ekim.pl@gmail.com
+SourceCode: ${SOURCE_REPO_URL}
+IssueTracker: ${SOURCE_REPO_URL}/issues
+RepoType: git
+Repo: ${SOURCE_REPO_URL}
+
+Builds:
+  - versionName: 0.5.1-experimental
+    versionCode: 6
+    commit: ${RELEASE_TAG}
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: None
+UpdateCheckMode: None
+CurrentVersion: 0.5.1-experimental
+CurrentVersionCode: 6

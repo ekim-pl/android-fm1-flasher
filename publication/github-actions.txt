@@ -1,0 +1,158 @@
+FM-1 Flasher: GitHub Actions -> Google Play
+
+JAK DZIAŁA PIPELINE
+
+1. Push na gałąź / pull request: Android CI uruchamia testy JVM, lintDebug
+   i assembleDebug. APK oraz raporty są artefaktem android-checks przez 14 dni.
+   Ten workflow nie wymaga sekretów i nie publikuje aplikacji.
+2. Push tagu v<versionName>: Google Play release uruchamia testy JVM,
+   lintRelease, podpisuje AAB i wysyła go na tor internal w Google Play.
+   AAB jest artefaktem google-play-bundle-<run_id> przez 30 dni, także gdy
+   późniejsza wysyłka do Play się nie powiedzie. Raporty są zachowywane 14 dni.
+3. Po sprawdzeniu aplikacji przez testerów: ręcznie uruchamiasz Google Play
+   production, podając version_code już dostępny na internal. Fastlane promuje
+   istniejący pakiet na production. Nie przebudowuje i nie wysyła AAB ponownie.
+
+Wysyłka obejmuje AAB oraz changelogi z fastlane/metadata/android. Opisy, ikony
+i zrzuty sklepu pozostają zarządzane w Play Console. Produkcja używa statusu
+completed (pełne wdrożenie po zatwierdzeniu przez Google), bez rollout procentowego.
+Pipeline nie omija przeglądu Google ani wymagań konta i testów zamkniętych.
+
+JEDNORAZOWO: GITHUB I KLUCZ UPLOADU
+
+1. Utwórz repozytorium na GitHub i wyślij źródła, w tym .github/workflows,
+   Gemfile, Gemfile.lock i fastlane/metadata/android. W tym checkout nie ma
+   jeszcze skonfigurowanego zdalnego repozytorium. Ręczne workflow pojawią się
+   w zakładce Actions po dodaniu ich do domyślnej gałęzi.
+
+2. Potrzebujesz własnego klucza uploadu. Jeżeli aplikacja już istnieje w Play,
+   użyj klucza, którego certyfikat jest tam zarejestrowany. Dla nowej aplikacji
+   utwórz go w Android Studio (Generate Signed Bundle / APK -> Create new)
+   albo poleceniem poniżej. Hasła wpisujesz interaktywnie:
+
+   umask 077
+   mkdir -p "$HOME/.android"
+   keytool -genkeypair -v -storetype JKS \
+     -keystore "$HOME/.android/fm1-upload.jks" \
+     -alias upload -keyalg RSA -keysize 2048 -validity 10000
+
+   Zachowaj kopię keystore oraz haseł w bezpiecznym miejscu poza repozytorium.
+   Nie używaj klucza debug. Play App Signing zarządza osobnym kluczem, którym
+   Google podpisuje APK dostarczane użytkownikom; CI potrzebuje klucza uploadu.
+
+3. GitHub -> repozytorium -> Settings -> Environments: utwórz google-play
+   i dodaj w nim cztery Environment secrets:
+
+   ANDROID_KEYSTORE_BASE64    Zawartość pliku keystore zakodowana w base64.
+   ANDROID_KEYSTORE_PASSWORD  Hasło magazynu kluczy.
+   ANDROID_KEY_ALIAS          Alias klucza, np. upload.
+   ANDROID_KEY_PASSWORD       Hasło klucza o tym aliasie.
+
+   Kodowanie pliku na Linuksie (wynik zapisz poza repozytorium):
+
+   base64 -w 0 "$HOME/.android/fm1-upload.jks" > "$HOME/.android/fm1-upload.b64"
+
+   Na macOS zamiast -w 0 użyj:
+
+   base64 < "$HOME/.android/fm1-upload.jks" | tr -d '\n' > "$HOME/.android/fm1-upload.b64"
+
+   Wklej zawartość .b64 do sekretu ANDROID_KEYSTORE_BASE64. Base64 nie jest
+   szyfrowaniem; ten plik chronisz tak samo jak keystore. Usuń zbędną kopię .b64.
+   CI odtwarza keystore tylko w katalogu tymczasowym runnera i potem go usuwa.
+
+PIERWSZE PRZESŁANIE: PLAY CONSOLE
+
+1. Utwórz aplikację w Play Console z pakietem pl.ekim.fm1_flasher.
+   Skonfiguruj Play App Signing. Nazwa pakietu w AAB musi odpowiadać aplikacji.
+   Uzupełnij wymagane dane konta i aplikacji: opis, grafiki, publiczny URL
+   polityki prywatności, klasyfikację treści, Data safety oraz deklarację usługi
+   foreground. Materiały pomocnicze znajdują się w tym katalogu i w metadata.
+
+2. GitHub -> Actions -> Google Play release -> Run workflow: wybierz domyślną
+   gałąź i WYŁĄCZ publish. To wymaga tylko czterech sekretów podpisujących,
+   bez klucza API Google. Pobierz artefakt google-play-bundle-<run_id>, rozpakuj
+   app-release.aab i prześlij go ręcznie do pierwszego wydania testów wewnętrznych
+   w Play Console. Dokończ wymagane kroki i uruchom pierwsze wydanie w Console.
+   Samo utworzenie pustego wpisu aplikacji nie wystarcza do publikowania przez API.
+
+3. Ten versionCode jest odtąd wykorzystany. Jeżeli pierwszy upload miał kod 4,
+   następne nowe AAB musi mieć co najmniej 5, również na torze internal.
+   Pierwszy przetestowany kod 4 można promować na produkcję bez budowania kodu 5,
+   o ile jest aktywny na internal, a konto ma już dostęp do produkcji.
+
+JEDNORAZOWO: DOSTĘP API GOOGLE
+
+1. W Google Cloud utwórz lub wybierz projekt i włącz Google Play Android
+   Developer API (androidpublisher.googleapis.com).
+2. Utwórz konto usługi (Service Account). W jego Keys -> Add key -> Create new
+   key -> JSON pobierz klucz. Nie dodawaj tego pliku do Git.
+3. W Play Console -> Users and permissions zaproś adres e-mail konta usługi.
+   Przyznaj dostęp do tej konkretnej aplikacji oraz uprawnienia:
+   - View app information (read-only),
+   - Release apps to testing tracks.
+   Do promocji produkcyjnej potrzebne jest również:
+   - Release to production, exclude devices, and use Play App Signing.
+   Nie są potrzebne uprawnienia do płatności ani rola Editor całego projektu Cloud.
+4. W środowisku GitHub google-play dodaj sekret GOOGLE_PLAY_SERVICE_ACCOUNT_JSON
+   zawierający cały JSON konta usługi, bez kodowania base64.
+5. Utwórz też środowisko google-play-production i dodaj w nim sekret o tej samej
+   nazwie. Może zawierać ten sam JSON, jeżeli konto ma uprawnienia produkcyjne,
+   albo JSON osobnego konta z tymi uprawnieniami. Ten workflow nie potrzebuje
+   klucza podpisującego. Produkcję uruchamiaj z zaufanej domyślnej gałęzi.
+
+KOLEJNE WYDANIE
+
+1. W app/build.gradle ustaw nowe versionCode i versionName. Kod musi być większy
+   od wykorzystanych wcześniej kodów na wszystkich torach Play, w tym ręcznych
+   uploadów. Numer wersji nie jest wyliczany z github.run_number.
+2. Dodaj informacje o zmianach w istniejących językach:
+   fastlane/metadata/android/en-US/changelogs/<versionCode>.txt
+   fastlane/metadata/android/pl-PL/changelogs/<versionCode>.txt
+   fastlane/metadata/android/zh-CN/changelogs/<versionCode>.txt
+3. Zacommituj kod, dokumentację i changelogi. Przykład dla versionCode 5
+   i versionName '0.4.1-experimental' (najpierw ustaw te wartości w Gradle):
+
+   git push origin main
+   git tag v0.4.1-experimental
+   git push origin v0.4.1-experimental
+
+   Tag musi wskazywać commit kompletnego wydania, a jego nazwa musi być dokładnie
+   v<versionName>. Niezgodny tag zostanie odrzucony przed zbudowaniem pakietu.
+4. Workflow Google Play release opublikuje podpisany AAB na internal. W Console
+   skonfiguruj listę testerów i udostępnij im link do dołączenia do testów.
+5. Po testach, w tym na fizycznym FM-1, uruchom Actions -> Google Play production
+   -> Run workflow na main i wpisz version_code, np. 5. Musi to być kod obecnie
+   dostępny na internal, nie numer uruchomienia GitHuba ani versionName.
+   Starszą wersję zastąpioną na internal promuj ręcznie z biblioteki w Play Console.
+6. Sprawdź status publikacji w Play Console. Wysłanie edycji przez API nie
+   oznacza natychmiastowej dostępności; Google może wymagać przeglądu i dodatkowych
+   czynności. Testy wewnętrzne nie zastępują testów zamkniętych wymaganych dla
+   niektórych kont przed uzyskaniem dostępu do produkcji.
+
+Nie uruchamiaj wysyłki AAB ponownie dla kodu już skutecznie przesłanego do Play.
+Do produkcji użyj promocji istniejącej wersji. Po błędzie wysyłki najpierw sprawdź
+stan w Console: AAB mógł już zostać przyjęty. Brak uprawnień to zwykle błąd 403;
+błąd application/package not found wymaga sprawdzenia pierwszego ręcznego uploadu
+oraz dostępu konta usługi do właściwej aplikacji. Dla aplikacji w stanie draft
+dokończ pierwsze wydanie w Console przed użyciem automatycznej publikacji completed.
+
+LOKALNE PODPISYWANIE (OPCJONALNIE)
+
+Gradle odczytuje ścieżkę ANDROID_KEYSTORE_FILE oraz ANDROID_KEYSTORE_PASSWORD,
+ANDROID_KEY_ALIAS i ANDROID_KEY_PASSWORD ze środowiska procesu. Po ustawieniu
+ich lokalnie polecenie ./gradlew --no-daemon :app:bundleRelease daje podpisany AAB.
+Nie wpisuj rzeczywistych haseł do śledzonych plików ani historii poleceń.
+Bez tych zmiennych lokalny bundleRelease nadal tworzy niepodpisany pakiet.
+
+ŹRÓDŁA
+
+Podpisywanie i Play App Signing:
+https://developer.android.com/studio/publish/app-signing
+Konto usługi i konfiguracja API:
+https://developers.google.com/android-publisher/getting_started
+Uprawnienia Play Console:
+https://support.google.com/googleplay/android-developer/answer/9844686?hl=en
+Fastlane supply, changelogi i promocja torów:
+https://docs.fastlane.tools/actions/supply/
+Środowiska i sekrety GitHub Actions:
+https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments

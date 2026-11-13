@@ -1,0 +1,3 @@
+• Krótkie, niezależne opisy w zakładce O aplikacji: po polsku, angielsku i chińsku uproszczonym.
+• README projektu i polityka prywatności bez odniesień do konkretnych wydań aplikacji.
+• Opis działa offline; nagłówek pokazuje zainstalowaną wersję.

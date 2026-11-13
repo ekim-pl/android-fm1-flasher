@@ -1,0 +1,3 @@
+• Zakładka O aplikacji renderuje README projektu bez połączenia z internetem.
+• Informacja o wersji aplikacji jest teraz w tej zakładce. Wersje firmware pozostają przy paczkach.
+• Markdown dopasowuje się do jasnego i ciemnego motywu.

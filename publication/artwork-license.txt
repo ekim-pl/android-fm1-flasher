@@ -1,0 +1,14 @@
+Original waveform icon, store graphic layouts and generation code:
+Copyright (c) 2026 ekim.pl@gmail.com. Licensed under the MIT License in
+../LICENSE.md. The graphic-generation script is the editable source.
+
+Screenshots show the app's real interface and its built-in category illustration
+for the stock firmware entry. No manufacturer photographs, store badges or
+third-party product logos were added. The app uses the name M-VAVE to identify
+the compatible instrument and firmware source; this is an independent project.
+
+The Firmware Hub catalog compilation is attributed under CC BY 4.0:
+https://thefirmwarehub.com/
+https://creativecommons.org/licenses/by/4.0/
+Firmware binaries are not included in this publication pack and retain the
+licenses of their respective authors.

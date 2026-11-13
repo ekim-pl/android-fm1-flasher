@@ -1,0 +1,7 @@
+• Kompaktowy katalog, flasher i szczegóły w trybie poziomym.
+• Interfejs po polsku, angielsku i chińsku uproszczonym, w tym komunikaty i błędy.
+• Wybór języka w aplikacji oraz opcja zgodna z systemem.
+• Jasny, ciemny i systemowy motyw.
+• Polityka prywatności dostępna w aplikacji.
+• Dostosowanie do Androida 16.
+Wersja eksperymentalna; potrzebna weryfikacja na fizycznym FM-1.

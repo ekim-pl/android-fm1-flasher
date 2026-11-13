@@ -1,0 +1,100 @@
+{
+  "applicationId": "pl.ekim.fm1_flasher",
+  "versionName": "0.5.1-experimental",
+  "versionCode": 6,
+  "targetSdk": 36,
+  "minSdk": 26,
+  "jvmTests": {
+    "tests": 60,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2
+  },
+  "lint": {
+    "Error": 0,
+    "Warning": 24
+  },
+  "translatedResourceCountPerLanguage": 263,
+  "localeKeysAndFormatArgumentsMatch": true,
+  "device": "Pixel_8_API_36 / Android 16",
+  "uiVerified": [
+    "in-app PL / EN / Simplified Chinese changes",
+    "language persistence after activity recreation and relaunch",
+    "system-language fallback",
+    "system-theme dark/light transition",
+    "favorites retained across languages",
+    "real stock package download and verification",
+    "offline library",
+    "flashing disabled without USB target",
+    "catalog footer crash corrected and navigation exercised",
+    "landscape catalog filter sidebar and results visible together in EN / PL / Simplified Chinese",
+    "landscape USB selector and install button visible together without scrolling in all three languages",
+    "landscape details primary actions visible beside metadata",
+    "catalog anchor and active details preserved through rotation",
+    "portrait / landscape-left / landscape-right Flasher navigation",
+    "Polish landscape Flasher at extra-extra-large text preset",
+    "search from a scrolled catalog reveals matching result",
+    "landscape empty search and clear-filters action",
+    "Flasher downloaded-firmware picker: two real downloads, switching and persistence",
+    "catalog selection and Flasher picker share the saved package",
+    "placeholder cannot silently change the active package",
+    "firmware picker checked in portrait and landscape in all three languages",
+    "short standalone About guides in Polish, English and Simplified Chinese",
+    "short About guide verified in portrait/light and landscape/dark",
+    "project README excluded from APK; bundled local document links resolve",
+    "privacy policies in Markdown, HTML and all in-app languages have no fixed app release references"
+  ],
+  "physicalFirmwareUpdateVerified": false,
+  "releaseBundleSigned": false,
+  "screenshots": {
+    "locales": [
+      "en-US",
+      "pl-PL",
+      "zh-CN"
+    ],
+    "perLocale": 8,
+    "portraitPerLocale": 6,
+    "landscapePerLocale": 2,
+    "rawSizes": {
+      "portrait": [
+        1080,
+        2400
+      ],
+      "landscape": [
+        2400,
+        1080
+      ]
+    },
+    "storeSizes": {
+      "portrait": [
+        1440,
+        2560
+      ],
+      "landscape": [
+        2560,
+        1440
+      ]
+    },
+    "source": "Actual emulator app UI; status/navigation bars removed; centered without stretching"
+  },
+  "artifacts": {
+    "app-debug.apk": {
+      "sha256": "1397313db39e3064df31589aed64ffefe99dde0c1d25bc2dc8c2fde8beae812e",
+      "bytes": 1171301
+    },
+    "app-release.aab": {
+      "sha256": "883ee23cdd07b00e781ce2b66cf725904cfe33dd747036c42984da071f8cfe21",
+      "bytes": 858904
+    }
+  },
+  "softKeyboardVisualVerified": false,
+  "automaticUsbReconnectionUnitTested": true,
+  "automaticUsbReconnectionHardwareVerified": false,
+  "hardwareReports": [
+    {
+      "version": "0.3.0-experimental",
+      "source": "user report",
+      "result": "successful flash on a physical FM-1"
+    }
+  ]
+}

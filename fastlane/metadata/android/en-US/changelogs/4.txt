@@ -1,0 +1,4 @@
+• Choose downloaded firmware directly in the Flasher tab.
+• Automatic port reconnection after planned restarts when one USB device and one eligible MIDI port are present.
+• Catalog selection and local-file validation remain available.
+Experimental build; automatic reconnection still needs physical-hardware testing.

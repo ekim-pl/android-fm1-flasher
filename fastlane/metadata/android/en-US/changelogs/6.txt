@@ -1,0 +1,3 @@
+• Short, dedicated About documents in English, Polish and Simplified Chinese.
+• Project README and privacy policy no longer contain fixed app release references.
+• About works offline and keeps the installed app version in its header.

@@ -1,0 +1,1 @@
+Browse firmware and update M-VAVE FM-1 over USB MIDI, online or offline

@@ -1,0 +1,7 @@
+• Compact landscape catalog, Flasher and package details.
+• English, Polish and Simplified Chinese interface, including status and error messages.
+• In-app language selection with a system-language option.
+• Light, dark and system themes.
+• In-app privacy policy.
+• Android 16 target compatibility.
+Experimental build; physical FM-1 verification is still required.

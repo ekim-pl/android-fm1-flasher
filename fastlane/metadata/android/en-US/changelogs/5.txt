@@ -1,0 +1,3 @@
+• About tab renders the bundled project README offline.
+• App version information is now in About. Firmware versions stay with packages.
+• Markdown follows light and dark appearance.

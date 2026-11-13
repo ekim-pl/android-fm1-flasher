@@ -1,0 +1,29 @@
+FM-1 Flasher — testy przygotowanej paczki
+
+Instalacja
+- Zainstaluj dołączone APK jako aktualizację istniejącej aplikacji.
+- Sprawdź, czy pobrane paczki, ulubione i ostatni wybór firmware pozostały zapisane.
+
+O aplikacji
+- Otwórz zakładkę O aplikacji. Powinien być widoczny krótki opis funkcji,
+  wymagań i prywatności, bez instrukcji budowania ani historii wydań projektu.
+- Numer zainstalowanego pakietu jest pobierany przez aplikację i widoczny
+  wyłącznie w nagłówku tej zakładki; nie jest wpisany do plików README.
+- Przełącz język na polski, angielski i chiński uproszczony. Krótki opis
+  powinien zmienić język razem z interfejsem.
+- Sprawdź jasny, ciemny i systemowy motyw oraz obrót pion/poziom.
+- Otwórz licencję i politykę prywatności z opisu, po czym zamknij dokument.
+- Włącz tryb offline i ponownie otwórz opis oraz dokumenty.
+
+Polityka prywatności
+- Otwórz ją także przez Ustawienia. Nie powinna zawierać odniesień
+  do konkretnych wydań aplikacji, niezależnie od języka.
+
+Kontrole wykonane przed przekazaniem APK
+- Testy JVM i lint oraz budowanie APK i AAB.
+- Zgodność dokumentów w APK z ich plikami źródłowymi.
+- Obecność trzech krótkich opisów i brak technicznego README projektu w APK.
+- Dostępność lokalnych plików wskazanych w odnośnikach.
+
+Zakres: opis aplikacji, dokumenty i pakowanie. Fizycznego flashowania FM-1
+nie powtarzano przy przygotowywaniu tej paczki.

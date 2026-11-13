@@ -1,0 +1,37 @@
+FM-1 Flasher 0.5.1-experimental
+
+New: About uses short, dedicated Markdown documents in Polish, English and
+Simplified Chinese, independent of the project README. Hard-coded app release
+references were removed from the README and all privacy-policy copies.
+
+From 0.4: choose downloaded firmware directly in the Flasher tab. Catalog
+selection still sets the same saved package. After each planned restart, the
+new port is selected automatically when only one USB device and one eligible
+MIDI endpoint are present; Android USB permission is still required.
+
+An experimental, open source Android firmware browser and USB MIDI updater for
+M-VAVE FM-1. Requires Android 8.0+, USB Host/OTG, Android MIDI and stable power.
+
+This release adds English, Polish and Simplified Chinese, an in-app language
+picker with system-language support, light/dark/system themes, and an offline
+privacy policy. Status messages, safety prompts and notifications are localized.
+Firmware descriptions from external authors remain in their original language.
+Landscape uses a navigation rail, catalog filter sidebar and two-column Flasher
+and package details to keep the main controls visible with less scrolling.
+
+The library supports catalog browsing, local favorites, verified downloads and
+offline use. Updating requires an explicitly selected USB MIDI instrument and
+manual port confirmation after restarts when multiple devices are connected. The app does not provide backups or recovery.
+
+This build has not yet been verified with a physical FM-1. An interrupted update,
+wrong package or wrong instrument selection can require hardware recovery. Back
+up the instrument using the relevant firmware's own tools before use.
+
+Files in this material pack:
+- Debug-signed APK for Android testing.
+- Unsigned release AAB to sign with the publisher's own upload key.
+- Localized listing text, screenshots, graphics and static privacy pages.
+
+Source license: MIT. Firmware is not bundled. Independent project, not an official
+M-VAVE product. Catalog attribution: The Firmware Hub, CC BY 4.0.
+Contact: ekim.pl@gmail.com

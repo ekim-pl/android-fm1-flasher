@@ -1,0 +1,32 @@
+Browse a firmware catalog and prepare USB MIDI updates for your M-VAVE FM-1 from an Android device.
+
+Firmware library
+• Explore categories, search by firmware name or author, and sort releases.
+• Keep favorites on your device without an account.
+• Download supported packages, manage your library and check for catalog updates.
+• Use verified, previously downloaded packages offline.
+
+Choose your instrument
+• Explicitly select one USB MIDI device, including when several devices share a hub.
+• Reconnect automatically after restarts with a single USB device and one MIDI port; otherwise confirm the new port manually.
+• Check package SHA-256, UFW structure, relevant CRCs and catalog compatibility before writing.
+• Keep a progress notification during the firmware update.
+
+Make it yours
+Choose English, Polish or Simplified Chinese, or follow the system language. Use light or dark appearance, or let Android choose.
+
+Requirements
+Android 8.0 or later, USB Host/OTG and Android MIDI support, an M-VAVE FM-1, a data cable and stable power. A powered USB hub is recommended. Internet is needed to obtain the catalog and new packages. Firmware descriptions remain in the authors’ original language.
+
+Experimental software
+This version has not yet been verified with a physical FM-1. Firmware updates can erase instrument data. Wrong packages, loss of power or selecting the wrong instrument after a restart can require hardware recovery. Back up instrument data with the firmware’s own tools before use. This app does not provide backups, Bluetooth updates, automatic flash-chip detection or hardware recovery.
+
+Independent, open source project under the MIT license. Not an official M-VAVE product. Firmware packages and the catalog are supplied by their respective authors; firmware is not bundled with the app. Catalog attribution: The Firmware Hub, CC BY 4.0. No advertising, account requirement or analytics SDKs.
+
+Support and privacy contact: ekim.pl@gmail.com
+
+A compact landscape layout places catalog filters beside results and device controls beside package actions.
+
+• Pick downloaded firmware directly in the Flasher tab or use catalog selection.
+
+The About tab displays a short, dedicated app guide in the selected interface language and shows the installed app version.

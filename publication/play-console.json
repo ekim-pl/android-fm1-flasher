@@ -1,0 +1,68 @@
+{
+  "applicationId": "pl.ekim.fm1_flasher",
+  "versionCode": 6,
+  "versionName": "0.5.1-experimental",
+  "defaultListingLanguage": "en-US",
+  "localizedListings": [
+    "pl-PL",
+    "en-US",
+    "zh-CN"
+  ],
+  "appType": "Application",
+  "suggestedCategory": "Music & Audio",
+  "contactEmail": "ekim.pl@gmail.com",
+  "privacyPolicyUrl": null,
+  "sourceRepositoryUrl": null,
+  "containsAds": false,
+  "accountRequired": false,
+  "inAppPurchasesImplemented": false,
+  "reviewerAccess": "No login. Catalog and local library are accessible without hardware. Flashing requires a physical M-VAVE FM-1, USB Host/OTG, MIDI and stable power.",
+  "dataInventory": {
+    "publisherTelemetryBackend": false,
+    "advertisingOrAnalyticsSdks": false,
+    "localOnly": [
+      "favorites",
+      "browsing preferences",
+      "theme and language",
+      "cached catalog",
+      "preview images",
+      "firmware files",
+      "download metadata",
+      "in-memory app log and USB MIDI identity"
+    ],
+    "externalServers": [
+      "thefirmwarehub.com",
+      "GitHub API and download hosts",
+      "preview-image and firmware-author hosts referenced by the catalog"
+    ],
+    "visibleToExternalOperators": [
+      "requested resource URL",
+      "connection IP address",
+      "HTTPS connection metadata",
+      "generic app/version User-Agent"
+    ],
+    "automaticallyRequestedOnline": [
+      "catalog subject to daily source limit",
+      "preview images for displayed entries"
+    ],
+    "userInitiatedRequests": [
+      "firmware release metadata",
+      "firmware package downloads"
+    ],
+    "encryptedInTransit": true,
+    "deletion": "Clear Android app data or uninstall. Individual package removal is available inside the app. There is no app account.",
+    "dataSafetyForm": "Review third-party operators' actual collection and retention before final answers. Do not equate absence of publisher telemetry with absence of data received by external servers."
+  },
+  "foregroundServiceType": "connectedDevice",
+  "requiredManualChoices": [
+    "public HTTPS privacy policy URL",
+    "public source repository URL",
+    "pricing",
+    "content rating questionnaire",
+    "target audience",
+    "final Data safety declaration",
+    "foreground-service declaration and requested physical-device video",
+    "signing/upload key",
+    "applicable account and testing requirements"
+  ]
+}
