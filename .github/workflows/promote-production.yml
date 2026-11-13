@@ -1,0 +1,55 @@
+name: Google Play production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: Tested versionCode currently on the internal track
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: google-play
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: google-play-production
+    env:
+      FASTLANE_SKIP_UPDATE_CHECK: 'true'
+      FASTLANE_OPT_OUT_USAGE: 'true'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+      - name: Promote tested bundle to production
+        env:
+          VERSION_CODE: ${{ inputs.version_code }}
+          SUPPLY_JSON_KEY_DATA: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [[ ! "$VERSION_CODE" =~ ^[1-9][0-9]*$ ]]; then
+            echo '::error::version_code must be a positive integer'
+            exit 1
+          fi
+          : "${SUPPLY_JSON_KEY_DATA:?Missing GOOGLE_PLAY_SERVICE_ACCOUNT_JSON}"
+          bundle exec fastlane supply \
+            --package_name pl.ekim.fm1_flasher \
+            --track internal \
+            --track_promote_to production \
+            --version_code "$VERSION_CODE" \
+            --track_promote_release_status completed \
+            --skip_upload_apk true \
+            --skip_upload_aab true \
+            --skip_upload_metadata true \
+            --skip_upload_changelogs true \
+            --skip_upload_images true \
+            --skip_upload_screenshots true

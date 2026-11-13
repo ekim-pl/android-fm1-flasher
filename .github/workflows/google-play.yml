@@ -1,0 +1,97 @@
+name: Google Play release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Upload to Google Play internal testing (disable for first manual upload)
+        type: boolean
+        default: true
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: google-play
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    environment: google-play
+    env:
+      FM1_RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+      FASTLANE_SKIP_UPDATE_CHECK: 'true'
+      FASTLANE_OPT_OUT_USAGE: 'true'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          packages: 'platforms;android-36 build-tools;35.0.0'
+          log-accepted-android-sdk-licenses: false
+      - name: Test and lint release
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintRelease
+      - name: Build signed bundle
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/fm1-upload.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          : "${ANDROID_KEYSTORE_BASE64:?Missing ANDROID_KEYSTORE_BASE64}"
+          : "${ANDROID_KEYSTORE_PASSWORD:?Missing ANDROID_KEYSTORE_PASSWORD}"
+          : "${ANDROID_KEY_ALIAS:?Missing ANDROID_KEY_ALIAS}"
+          : "${ANDROID_KEY_PASSWORD:?Missing ANDROID_KEY_PASSWORD}"
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_FILE"
+          ./gradlew --no-daemon :app:bundleRelease
+      - name: Save signed bundle
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: google-play-bundle-${{ github.run_id }}
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1
+        if: github.event_name == 'push' || inputs.publish
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+      - name: Publish to internal testing
+        if: github.event_name == 'push' || inputs.publish
+        env:
+          SUPPLY_JSON_KEY_DATA: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          : "${SUPPLY_JSON_KEY_DATA:?Missing GOOGLE_PLAY_SERVICE_ACCOUNT_JSON}"
+          bundle exec fastlane supply \
+            --package_name pl.ekim.fm1_flasher \
+            --aab app/build/outputs/bundle/release/app-release.aab \
+            --track internal \
+            --release_status completed \
+            --metadata_path fastlane/metadata/android \
+            --skip_upload_apk true \
+            --skip_upload_metadata true \
+            --skip_upload_images true \
+            --skip_upload_screenshots true
+      - name: Remove upload key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/fm1-upload.jks"
+      - name: Save reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: google-play-reports-${{ github.run_id }}
+          path: app/build/reports/
+          retention-days: 14
