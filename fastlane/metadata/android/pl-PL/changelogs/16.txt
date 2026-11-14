@@ -1,0 +1,1 @@
+Aktualizacja na podstawie opublikowanego Android FM-1 Flasher 0.8.1: migracja biblioteki do SQLite, zarządzanie i filtrowanie źródeł, opcjonalne sprawdzanie w tle oraz przetłumaczone instrukcje w pełnym interfejsie Compose.

@@ -1,0 +1,19 @@
+Networking and background catalog dependencies
+
+OkHttp 4.12.0 — Square, Inc. and contributors
+https://github.com/square/okhttp/tree/parent-4.12.0
+Okio 3.6.0 — Square, Inc. and contributors
+https://github.com/square/okio/tree/parent-3.6.0
+AndroidX WorkManager 2.11.2 and AndroidX dependencies — The Android Open Source Project
+https://developer.android.com/jetpack/androidx/releases/work
+Kotlin and kotlinx.coroutines — JetBrains s.r.o. and contributors
+https://github.com/Kotlin/kotlinx.coroutines
+Guava ListenableFuture — The Guava Authors
+https://github.com/google/guava
+JSpecify annotations — The JSpecify Authors
+https://github.com/jspecify/jspecify
+
+These libraries are distributed under the Apache License, Version 2.0.
+See Apache-2.0.txt. Dependency versions and SHA-256 verification records are
+maintained in app/gradle.lockfile and gradle/verification-metadata.xml.
+No firmware is included in these libraries or bundled by this feature.

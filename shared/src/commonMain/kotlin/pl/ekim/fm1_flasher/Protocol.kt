@@ -1,6 +1,5 @@
 package pl.ekim.fm1_flasher
 
-import java.io.ByteArrayOutputStream
 
 data class FirmwareIdentity(val model: String, val version: String) {
     val isLoader get() = model.startsWith("ota-", ignoreCase = true)
@@ -20,7 +19,7 @@ object Protocol {
     data class ReadRequest(val flashType: Int, val address: Long, val length: Int)
 
     fun pack7(bytes: ByteArray): ByteArray {
-        val result = ByteArrayOutputStream()
+        val result = ByteAccumulator()
         var buffer = 0
         var bits = 0
         for (byte in bytes) {
@@ -37,7 +36,7 @@ object Protocol {
     }
 
     fun unpack7(bytes: ByteArray): ByteArray? {
-        val result = ByteArrayOutputStream()
+        val result = ByteAccumulator()
         var buffer = 0
         var bits = 0
         for (byte in bytes) {
@@ -69,7 +68,7 @@ object Protocol {
         val payload = decoded.copyOfRange(6, decoded.lastIndex)
         if (checksum(payload) != (decoded.last().toInt() and 255)) {
             // One observed V16 identity retained the V15 checksum. No other exception is accepted.
-            val legacy = "FM-1_016".toByteArray(Charsets.US_ASCII).copyOf(27)
+            val legacy = "FM-1_016".encodeToByteArray().copyOf(27)
             if (command != 0x11 || !payload.contentEquals(legacy) || decoded.last() != 0x19.toByte()) return null
         }
         return payload
@@ -77,18 +76,18 @@ object Protocol {
 
     fun identity(packet: ByteArray): FirmwareIdentity? {
         val payload = body(packet, 0x11)?.takeIf { it.size == 27 } ?: return null
-        val plain = payload.toString(Charsets.ISO_8859_1).trimEnd('\u0000')
+        val plain = payload.latin1().trimEnd('\u0000')
         val match = Regex("([A-Za-z0-9-]+)_([0-9]{1,16})").matchEntire(plain)
         if (match != null) return FirmwareIdentity(match.groupValues[1], match.groupValues[2])
         // Older stock firmware includes a second identity field with ASCII '0' subtracted.
         val separator = payload.indexOf('_'.code.toByte())
         if (separator !in 1..12 || payload.take(separator).any { (it.toInt() and 255) !in 33..126 }) return null
-        val legacyPlain = payload.copyOfRange(0, 8).toString(Charsets.US_ASCII)
+        val legacyPlain = payload.copyOfRange(0, 8).decodeToString()
         if (!Regex("[A-Za-z0-9-]+_[0-9]+").matches(legacyPlain)) return null
         val encoded = payload.copyOfRange(8, 27).map { ((it.toInt() + 48) and 255).toChar() }.joinToString("")
         if (!encoded.startsWith(legacyPlain)) return null
         val version = encoded.drop(separator + 1).takeWhile { it in '0'..'9' }.takeIf { it.isNotEmpty() } ?: return null
-        return FirmwareIdentity(payload.copyOfRange(0, separator).toString(Charsets.US_ASCII), version)
+        return FirmwareIdentity(payload.copyOfRange(0, separator).decodeToString(), version)
     }
 
     fun request(packet: ByteArray): ReadRequest? {
@@ -112,10 +111,13 @@ object Protocol {
 
 /** Android may deliver half a SysEx, several messages, or MIDI clock inside a SysEx. */
 class SysExAssembler(private val emit: (ByteArray) -> Unit) {
-    private val frame = ByteArrayOutputStream()
+    private val frame = ByteAccumulator()
     private var collecting = false
 
-    @Synchronized fun accept(bytes: ByteArray, offset: Int, count: Int) {
+    private val lock = PlatformLock()
+
+    @Throws(Exception::class)
+    fun accept(bytes: ByteArray, offset: Int, count: Int) = lock.locked {
         require(offset >= 0 && count >= 0 && offset <= bytes.size - count)
         for (i in offset until offset + count) {
             val value = bytes[i].toInt() and 255
@@ -127,10 +129,24 @@ class SysExAssembler(private val emit: (ByteArray) -> Unit) {
                 }
                 value >= 0x80 -> { collecting = false; frame.reset() }
                 collecting -> {
-                    check(frame.size() < 1024) { failed(msg(R.string.sysex_too_long)) }
+                    check(frame.size() < 1024) { failed(msg("sysex_too_long")) }
                     frame.write(value)
                 }
             }
         }
     }
+}
+
+private fun ByteArray.latin1() = map { (it.toInt() and 255).toChar() }.joinToString("")
+
+private class ByteAccumulator {
+    private var bytes = ByteArray(64)
+    private var count = 0
+    fun write(value: Int) {
+        if (count == bytes.size) bytes = bytes.copyOf(bytes.size * 2)
+        bytes[count++] = value.toByte()
+    }
+    fun size() = count
+    fun reset() { count = 0 }
+    fun toByteArray() = bytes.copyOf(count)
 }

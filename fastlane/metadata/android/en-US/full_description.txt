@@ -16,7 +16,7 @@ Make it yours
 Choose English, Polish or Simplified Chinese, or follow the system language. Use light or dark appearance, or let Android choose.
 
 Requirements
-Android 8.0 or later, USB Host/OTG and Android MIDI support, an M-VAVE FM-1, a data cable and stable power. A powered USB hub is recommended. Internet is needed to obtain the catalog and new packages. Firmware descriptions remain in the authors’ original language.
+Android 14 or later, USB Host/OTG and Android MIDI support, an M-VAVE FM-1, a data cable and stable power. A powered USB hub is recommended. Internet is needed to obtain the catalog and new packages. Firmware descriptions remain in the authors’ original language.
 
 Experimental software
 This version has not yet been verified with a physical FM-1. Firmware updates can erase instrument data. Wrong packages, loss of power or selecting the wrong instrument after a restart can require hardware recovery. Back up instrument data with the firmware’s own tools before use. This app does not provide backups, Bluetooth updates, automatic flash-chip detection or hardware recovery.

@@ -1,0 +1,50 @@
+name: FM1Flasher
+options:
+  bundleIdPrefix: pl.ekim
+  deploymentTarget:
+    iOS: '15.0'
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    FRAMEWORK_SEARCH_PATHS: '$(inherited) $(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)'
+    OTHER_LDFLAGS: '$(inherited) -framework FM1Compose'
+targets:
+  FM1Flasher:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: ../about
+        type: folder
+        buildPhase: resources
+      - path: ../third_party
+        type: folder
+        buildPhase: resources
+      - path: ../LICENSE.md
+        buildPhase: resources
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: FM-1 Flasher
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        CADisableMinimumFrameDurationOnPhone: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: pl.ekim.multiplatform-fm1-flasher
+        MARKETING_VERSION: '0.8.1'
+        CURRENT_PROJECT_VERSION: '16'
+    preBuildScripts:
+      - name: Build Kotlin framework
+        script: |
+          cd "$SRCROOT/.."
+          ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
+        basedOnDependencyAnalysis: false
+    dependencies:
+      - sdk: CoreMIDI.framework
+schemes:
+  FM1Flasher:
+    build:
+      targets:
+        FM1Flasher: all

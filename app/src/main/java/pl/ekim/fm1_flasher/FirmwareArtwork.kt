@@ -8,7 +8,6 @@ import android.util.LruCache
 import android.view.View
 import java.io.File
 import java.lang.ref.WeakReference
-import java.util.concurrent.Executors
 
 /** Author cover when supplied; otherwise a category illustration, not an invented screenshot. */
 class FirmwareArtwork(context: Context) : View(context) {
@@ -57,10 +56,13 @@ class FirmwareArtwork(context: Context) : View(context) {
     }
 }
 
-class ArtworkLoader(private val directory: File, private val offline: () -> Boolean) {
-    private val worker = Executors.newFixedThreadPool(2)
+class ArtworkLoader(private val directory: File, private val offline: () -> Boolean,
+                    private val source: (String) -> CatalogSource?) {
+    private val worker = java.util.concurrent.ThreadPoolExecutor(1, 1, 0L, java.util.concurrent.TimeUnit.MILLISECONDS,
+        java.util.concurrent.ArrayBlockingQueue(32))
     private val main = Handler(Looper.getMainLooper())
     @Volatile private var closed = false
+    private val waiting = mutableMapOf<String, MutableList<WeakReference<FirmwareArtwork>>>()
     private val cache = object : LruCache<String, Bitmap>(4 * 1024 * 1024) {
         override fun sizeOf(key: String, value: Bitmap) = value.allocationByteCount
     }
@@ -69,30 +71,77 @@ class ArtworkLoader(private val directory: File, private val offline: () -> Bool
         view.entry = entry
         view.tag = entry.cardUrl
         val url = entry.cardUrl ?: return
+        val requestKey = entry.sourceId + "|" + url
+        if (closed) return
         cache.get(url)?.let { view.bitmap = it; return }
-        val target = WeakReference(view)
-        worker.execute {
-            if (closed) return@execute
-            val image = runCatching {
-                directory.mkdirs()
-                val file = File(directory, FirmwarePackage.sha256(url.toByteArray()) + ".img")
-                val bytes = if (file.isFile && file.length() <= 2 * 1024 * 1024) file.readBytes()
-                    else if (!offline()) Network.get(url, 2 * 1024 * 1024) else return@execute
-                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-                check(bounds.outWidth in 1..10000 && bounds.outHeight in 1..10000)
-                val options = BitmapFactory.Options().apply {
-                    inSampleSize = 1
-                    while (bounds.outWidth / inSampleSize > 640 || bounds.outHeight / inSampleSize > 640) inSampleSize *= 2
-                }
-                val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options) ?: return@execute
-                if (!file.exists()) file.writeBytes(bytes)
-                decoded
-            }.getOrNull() ?: return@execute
-            cache.put(url, image)
-            main.post { if (!closed) target.get()?.takeIf { it.tag == url }?.bitmap = image }
+        waiting[requestKey]?.let { targets ->
+            targets.removeAll { it.get()?.tag != url }
+            if (targets.none { it.get() === view }) targets += WeakReference(view)
+            return
         }
+        waiting[requestKey] = mutableListOf(WeakReference(view))
+        try {
+            worker.execute {
+                val image = if (closed) null else runCatching { load(url, entry.sourceId) }.getOrNull()
+                if (image != null) cache.put(url, image)
+                main.post {
+                    val targets = waiting.remove(requestKey).orEmpty()
+                    if (!closed && image != null) targets.forEach { it.get()?.takeIf { it.tag == url }?.bitmap = image }
+                }
+            }
+        } catch (_: java.util.concurrent.RejectedExecutionException) { waiting.remove(requestKey) }
     }
 
-    fun close() { closed = true; worker.shutdownNow() }
+    private fun decode(bytes: ByteArray): Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        if (bounds.outWidth !in 1..10000 || bounds.outHeight !in 1..10000) return null
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = 1
+            while (bounds.outWidth / inSampleSize > 640 || bounds.outHeight / inSampleSize > 640) inSampleSize *= 2
+        }
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+    }
+
+    private fun load(url: String, sourceId: String): Bitmap? {
+        cache.get(url)?.let { return it }
+        directory.mkdirs()
+        val file = File(directory, FirmwarePackage.sha256((sourceId + "|" + url).toByteArray()) + ".img")
+        val legacy = File(directory, FirmwarePackage.sha256(url.toByteArray()) + ".img")
+        if (!file.exists() && legacy.isFile && legacy.length() <= 2 * 1024 * 1024) legacy.copyTo(file)
+        if (file.exists()) {
+            val decoded = if (file.length() in 1..2 * 1024 * 1024) decode(file.readBytes()) else null
+            if (decoded != null) { file.setLastModified(System.currentTimeMillis()); return decoded }
+            file.delete()
+        }
+        if (closed || offline()) return null
+        val policy = source(sourceId) ?: return null
+        if (!policy.active || !policy.permitsArtwork(url)) return null
+        val response = SourceNetwork.request(url, 2 * 1024 * 1024, policy::permitsArtwork, active = {
+            !closed && !offline() && source(sourceId)?.let { it.active && it.revision == policy.revision } == true
+        })
+        if (response.code != 200) return null
+        val bytes = response.bytes
+        val image = decode(bytes) ?: return null
+        val temporary = File(directory, file.name + ".tmp")
+        try {
+            temporary.writeBytes(bytes)
+            java.nio.file.Files.move(temporary.toPath(), file.toPath(), java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            trimPreviewCache(directory)
+        } finally { temporary.delete() }
+        return image
+    }
+
+    fun close() { closed = true; waiting.clear(); worker.shutdownNow() }
+}
+
+internal fun trimPreviewCache(directory: File, limit: Long = 24 * 1024 * 1024) {
+    val files = directory.listFiles().orEmpty().filter { it.extension == "img" }.sortedBy { it.lastModified() }
+    var bytes = files.sumOf { it.length() }
+    for (file in files) {
+        if (bytes <= limit) break
+        val size = file.length()
+        if (file.delete()) bytes -= size
+    }
 }

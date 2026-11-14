@@ -7,18 +7,26 @@ import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
-data class LocalPackage(val entry: CatalogEntry, val downloadedAt: Long, val bytes: Long)
-data class LibrarySettings(val favorites: Set<String> = emptySet(), val offline: Boolean = false, val selectedId: String? = null)
-
-/** Package bytes are immutable by hash. Replacing one atomic metadata file commits an update. */
-class LocalLibrary(private val directory: File) {
+/** Immutable package files are committed before their metadata; legacy JSON is read only for migration. */
+class LocalLibrary(private val directory: File, private val database: CatalogDatabase? = null) {
     private val packages = File(directory, "packages").apply { mkdirs() }
     private val records = File(directory, "records").apply { mkdirs() }
     private val settingsFile = File(directory, "settings.json")
+    var settingsRepaired = false
+        private set
     val problems = mutableListOf<AppText>()
 
     fun list(): List<LocalPackage> {
         problems.clear()
+        if (database != null) {
+            settingsRepaired = database.setting("settingsRepaired") == "true"
+            database.setting("migrationProblems")?.let { problems += msg(R.string.source_migration_warning, it) }
+            return database.downloaded().filter { saved ->
+                val valid = packageFile(saved.entry).length() == saved.bytes && saved.bytes in 960..FirmwarePackage.MAX_SIZE.toLong()
+                if (!valid) problems += msg(R.string.local_package_unreadable, saved.entry.name)
+                valid
+            }.sortedBy { it.entry.name.lowercase() }
+        }
         return records.listFiles().orEmpty().filter { it.extension == "json" }.mapNotNull { file ->
             try {
                 val saved = readRecord(file)
@@ -37,14 +45,15 @@ class LocalLibrary(private val directory: File) {
         val metadata = json.toString().toByteArray(Charsets.UTF_8)
         require(metadata.size <= 128_000) { invalid(msg(R.string.local_metadata_large)) }
         atomicWrite(packageFile(entry), raw)
-        atomicWrite(recordFile(entry.id), metadata)
+        if (database != null) database.savePackage(saved) else atomicWrite(recordFile(entry.id), metadata)
         pruneUnusedBytes()
         return saved
     }
 
     fun load(id: String, catalog: Catalog?): Pair<LocalPackage, FirmwarePackage> {
-        val saved = readRecord(recordFile(id))
-        check(saved.entry.id == id) { failed(msg(R.string.local_record_mismatch)) }
+        val saved = if (database != null) database.downloaded().singleOrNull { it.entry.key == id }
+            ?: failed(msg(R.string.local_file_invalid)) else readRecord(recordFile(id))
+        check((if (database != null) saved.entry.key else saved.entry.id) == id) { failed(msg(R.string.local_record_mismatch)) }
         val effective = localFlashEntry(saved.entry, catalog)
         val file = packageFile(saved.entry)
         check(file.isFile && file.length() == saved.bytes && file.length() <= FirmwarePackage.MAX_SIZE) { failed(msg(R.string.local_file_invalid)) }
@@ -54,21 +63,33 @@ class LocalLibrary(private val directory: File) {
 
     fun remove(id: String) {
         val record = recordFile(id)
-        check(!record.exists() || record.delete()) { failed(msg(R.string.local_remove_error)) }
+        if (database != null) database.removePackage(id)
+        else check(!record.exists() || record.delete()) { failed(msg(R.string.local_remove_error)) }
         val prefs = settings()
         if (prefs.selectedId == id) saveSettings(prefs.copy(selectedId = null))
         pruneUnusedBytes()
     }
 
     fun settings(): LibrarySettings {
+        database?.let { return it.settings() }
         if (!settingsFile.exists()) return LibrarySettings()
-        val json = JSONObject(settingsFile.readText())
-        val favorites = json.optJSONArray("favorites") ?: JSONArray()
-        return LibrarySettings((0 until favorites.length()).map { favorites.getString(it) }.toSet(),
-            json.optBoolean("offline"), json.optString("selectedId").takeIf { !json.isNull("selectedId") && it.isNotBlank() })
+        return try {
+            check(settingsFile.length() in 1..128_000)
+            val json = JSONObject(settingsFile.readText())
+            val favorites = json.optJSONArray("favorites") ?: JSONArray()
+            LibrarySettings((0 until favorites.length()).map { favorites.getString(it) }.toSet(),
+                json.optBoolean("offline"), json.optString("selectedId").takeIf { !json.isNull("selectedId") && it.isNotBlank() })
+        } catch (_: Exception) {
+            val defaults = LibrarySettings(offline = true)
+            java.nio.file.Files.copy(settingsFile.toPath(), File(directory, "settings.invalid").toPath(), StandardCopyOption.REPLACE_EXISTING)
+            saveSettings(defaults)
+            settingsRepaired = true
+            defaults
+        }
     }
 
     fun saveSettings(settings: LibrarySettings) {
+        database?.let { it.saveSettings(settings); return }
         val json = JSONObject().put("favorites", JSONArray(settings.favorites.sorted()))
             .put("offline", settings.offline).put("selectedId", settings.selectedId ?: JSONObject.NULL)
         atomicWrite(settingsFile, json.toString().toByteArray(Charsets.UTF_8))
@@ -88,20 +109,23 @@ class LocalLibrary(private val directory: File) {
 
     private fun pruneUnusedBytes() {
         // A damaged metadata record might still own bytes; keep them until the record is repaired or removed.
-        val valid = runCatching { records.listFiles().orEmpty().filter { it.extension == "json" }.map { readRecord(it).entry.sha256 }.toSet() }.getOrNull() ?: return
+        if (database?.setting("migrationProblems") != null) return
+        val valid = if (database != null) database.downloaded().map { it.entry.sha256 }.toSet() else runCatching { records.listFiles().orEmpty().filter { it.extension == "json" }.map { readRecord(it).entry.sha256 }.toSet() }.getOrNull() ?: return
         packages.listFiles().orEmpty().filter { it.extension == "fwsc" && it.nameWithoutExtension !in valid }.forEach { it.delete() }
     }
 
     companion object {
         fun localFlashEntry(local: CatalogEntry, catalog: Catalog?): CatalogEntry {
             if (catalog == null) return local
-            val latest = catalog.entries.singleOrNull { it.id == local.id }
-                ?: failed(msg(R.string.firmware_removed))
+            check(!catalog.removed(local)) { failed(msg(R.string.firmware_removed)) }
+            val latest = catalog.knownEntries.singleOrNull { it.key == local.key }
+            val effective = if (latest?.sha256 == local.sha256) latest else local
+            check(!catalog.conflicting(effective)) { failed(msg(R.string.source_conflict)) }
             // Compatibility changes for a newer binary must not be applied to an older local version.
-            return if (latest.sha256 == local.sha256) latest else local
+            return effective
         }
 
-        private fun atomicWrite(file: File, data: ByteArray) {
+        internal fun atomicWrite(file: File, data: ByteArray) {
             file.parentFile?.mkdirs()
             val temp = File(file.parentFile, file.name + ".tmp")
             try {
@@ -110,24 +134,26 @@ class LocalLibrary(private val directory: File) {
             } finally { temp.delete() }
         }
 
-        private fun entryToJson(entry: CatalogEntry) = JSONObject().apply {
+        internal fun entryToJson(entry: CatalogEntry) = JSONObject().apply {
             put("id", entry.id); put("name", entry.name); put("author", entry.author); put("description", entry.description)
             put("version", entry.version); put("repo", entry.repo); put("tag", entry.tag ?: JSONObject.NULL)
             put("assetId", entry.assetId ?: JSONObject.NULL); put("sha256", entry.sha256); put("product", entry.product)
             put("chip", entry.chip); put("beta", entry.beta); put("stock", entry.stock)
             put("directUrl", entry.directUrl ?: JSONObject.NULL); put("kinds", JSONArray(entry.kinds.toList()))
             put("date", entry.date); put("cardUrl", entry.cardUrl ?: JSONObject.NULL)
+            put("sourceId", entry.sourceId); put("site", entry.site); put("originalJson", entry.originalJson)
         }
 
-        private fun entryFromJson(json: JSONObject): CatalogEntry {
+        internal fun entryFromJson(json: JSONObject, allowUnsupported: Boolean = false): CatalogEntry {
             fun optional(key: String) = if (json.isNull(key)) null else json.optString(key).takeIf { it.isNotBlank() }
             val kinds = json.optJSONArray("kinds") ?: JSONArray().put("other")
             val entry = CatalogEntry(json.getString("id"), json.getString("name"), json.getString("author"), json.getString("description"),
                 json.getString("version"), json.getString("repo"), optional("tag"), optional("assetId"), json.getString("sha256"),
                 json.getString("product"), json.getString("chip"), json.getBoolean("beta"), json.optBoolean("stock"), optional("directUrl"),
-                (0 until kinds.length()).map { kinds.getString(it) }.toSet(), json.optString("date"), optional("cardUrl"))
-            require(entry.id.length in 1..256 && Regex("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+").matches(entry.repo) &&
-                Regex("[0-9a-f]{64}").matches(entry.sha256) && Regex("FM-1_[0-9]{1,16}").matches(entry.product)) { invalid(msg(R.string.package_metadata_invalid)) }
+                (0 until kinds.length()).map { kinds.getString(it) }.toSet(), json.optString("date"), optional("cardUrl"),
+                json.optString("sourceId", CatalogSource.HUB), optional("site"), json.optString("originalJson"))
+            require(entry.id.length in 1..256 && (entry.repo.isEmpty() || CatalogParser.validRepo(entry.repo)) &&
+                Regex("[0-9a-f]{64}").matches(entry.sha256) && (allowUnsupported || Regex("FM-1_[0-9]{1,16}").matches(entry.product))) { invalid(msg(R.string.package_metadata_invalid)) }
             return entry
         }
     }

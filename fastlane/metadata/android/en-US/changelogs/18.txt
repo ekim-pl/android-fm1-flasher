@@ -1,0 +1,1 @@
+Redesigned About with section cards, readable lists, emphasis and inline links. Added a privacy summary and offline policy access. Awesome FM-1 information now focuses on the repository. Updated all three languages.

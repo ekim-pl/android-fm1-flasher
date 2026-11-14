@@ -2,7 +2,7 @@ FM-1 Flasher — 发布材料
 
 应用
 应用 ID：pl.ekim.fm1_flasher
-Android：8.0+（API 26），目标与编译 API 36
+Android：14+（API 34），目标与编译 API 36
 发布者：Ekim
 联系：ekim.pl@gmail.com
 许可证：MIT；适用范围与第三方排除项见项目根目录的 LICENSE.md。

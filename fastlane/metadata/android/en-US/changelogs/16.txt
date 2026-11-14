@@ -1,0 +1,1 @@
+Updated from published Android FM-1 Flasher 0.8.1: SQLite library migration, firmware source management/filtering, optional background checks and localized source guides in the full Compose application.

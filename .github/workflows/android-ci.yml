@@ -31,7 +31,9 @@ jobs:
           packages: 'platforms;android-36 build-tools;35.0.0'
           log-accepted-android-sdk-licenses: false
       - name: Test, lint and build debug APK
-        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+        run: |
+          python3 tools/sync-resources.py --check
+          ./gradlew --no-daemon :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
       - name: Save APK and reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -40,4 +42,5 @@ jobs:
           path: |
             app/build/outputs/apk/debug/*.apk
             app/build/reports/
+            shared/build/reports/
           retention-days: 14

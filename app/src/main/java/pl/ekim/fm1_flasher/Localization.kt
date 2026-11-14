@@ -4,37 +4,27 @@ import android.app.Activity
 import android.app.LocaleManager
 import android.content.Context
 import android.content.res.Configuration
-import android.content.res.Resources
-import android.os.Build
 import android.os.LocaleList
 import android.view.View
-import java.util.Locale
 
 object AppLanguage {
     val tags = listOf("", "pl", "en", "zh-Hans")
     val names = listOf("Polski", "English", "简体中文")
 
-    fun selected(context: Context): String = if (Build.VERSION.SDK_INT >= 33) {
+    fun selected(context: Context): String =
         context.getSystemService(LocaleManager::class.java).applicationLocales.toLanguageTags()
-    } else context.getSharedPreferences("language", Context.MODE_PRIVATE).getString("tag", "").orEmpty()
 
     fun wrap(context: Context): Context {
         val selected = selected(context)
         val locales = if (selected.isNotBlank()) LocaleList.forLanguageTags(selected)
-            else if (Build.VERSION.SDK_INT >= 33) context.getSystemService(LocaleManager::class.java).systemLocales
-            else Resources.getSystem().configuration.locales
+            else context.getSystemService(LocaleManager::class.java).systemLocales
         val config = Configuration(context.resources.configuration).apply { setLocales(locales) }
         return context.createConfigurationContext(config)
     }
 
     fun choose(activity: Activity, tag: String) {
         require(tag in tags)
-        if (Build.VERSION.SDK_INT >= 33) {
-            activity.getSystemService(LocaleManager::class.java).applicationLocales = LocaleList.forLanguageTags(tag)
-        } else {
-            activity.getSharedPreferences("language", Context.MODE_PRIVATE).edit().putString("tag", tag).apply()
-            activity.recreate()
-        }
+        activity.getSystemService(LocaleManager::class.java).applicationLocales = LocaleList.forLanguageTags(tag)
     }
 }
 
@@ -43,7 +33,7 @@ fun View.s(id: Int, vararg arguments: Any): String = context.getString(id, *argu
 fun Context.resolve(text: AppText): String = when (text) {
     is AppText.Plain -> text.value
     is AppText.Joined -> text.parts.joinToString(text.separator) { resolve(it) }
-    is AppText.Resource -> getString(text.id, *text.arguments.map { if (it is AppText) resolve(it) else it }.toTypedArray())
+    is AppText.Resource -> getString(androidResourceIds.getValue(text.key), *text.arguments.map { if (it is AppText) resolve(it) else it }.toTypedArray())
 }
 
 fun Context.entryTitle(entry: CatalogEntry) = resolve(entryTitleText(entry))

@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 def uploadKeystore = System.getenv('ANDROID_KEYSTORE_FILE')
@@ -9,12 +10,16 @@ def projectDocsAssets = layout.buildDirectory.dir('generated/projectDocsAssets')
 android {
     namespace 'pl.ekim.fm1_flasher'
     compileSdk 36
+    buildFeatures { compose true; buildConfig true }
+    useLibrary "android.test.runner"
+    useLibrary "android.test.base"
     defaultConfig {
-        applicationId 'pl.ekim.fm1_flasher'
-        minSdk 26
+        applicationId 'pl.ekim.multiplatform_fm1_flasher'
+        minSdk 34
         targetSdk 36
-        versionCode 7
-        versionName '0.5.2-experimental'
+        testInstrumentationRunner "android.test.InstrumentationTestRunner"
+        versionCode 18
+        versionName '0.8.1'
     }
     signingConfigs {
         if (uploadKeystore) {
@@ -41,11 +46,13 @@ android {
     kotlinOptions { jvmTarget = '17' }
     testOptions { unitTests.returnDefaultValues = true }
     sourceSets.main.assets.srcDir(projectDocsAssets)
+    sourceSets.test.java.srcDir('src/testSupport/java')
+    sourceSets.androidTest.java.srcDir('src/testSupport/java')
 }
 
 tasks.register('bundleProjectDocs', Sync) {
     from(rootProject.layout.projectDirectory) {
-        include 'about/*.md', 'LICENSE.md', 'PRIVACY_POLICY.md', 'third_party/commonmark-LICENSE.txt', 'third_party/m-flasher-LICENSE.txt', 'third_party/m-flasher-NOTICE.md'
+        include 'about/*.md', 'LICENSE.md', 'PRIVACY_POLICY.md', 'third_party/*.txt', 'third_party/*.md'
     }
     into(projectDocsAssets.map { it.dir('docs') })
 }
@@ -57,7 +64,12 @@ if (releaseTag && releaseTag != "v${android.defaultConfig.versionName}") {
 }
 
 dependencies {
+    implementation project(':shared')
+    implementation project(':composeApp')
+    implementation 'androidx.activity:activity-compose:1.11.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'androidx.work:work-runtime:2.11.2'
     implementation 'org.commonmark:commonmark:0.32.0'
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.json:json:20240303'
+    testImplementation 'org.json:json:20260719'
 }

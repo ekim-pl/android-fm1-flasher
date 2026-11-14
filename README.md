@@ -1,13 +1,48 @@
-# FM‑1 Flasher for Android
+# Multiplatform FM‑1 Flasher
+
+Kotlin Multiplatform / Compose Multiplatform fork of the Android FM‑1 Flasher,
+updated to the functionality of **0.8.1** (experimental Android build 18).
+Android opens the full shared application directly: catalog, favorites, offline
+library, flasher, settings and opt-in experimental tools.
+
+- `shared`: protocol and package integrity, flash sessions, catalog/repository,
+  source models/policy, legacy library repository, compatibility, filters and MIDI log decoding.
+- `composeApp`: shared application UI, three languages, light/dark/system themes,
+  artwork cache and the portable application/session controller.
+- `app`: native Android 14+ MIDI/USB service, permissions, wake lock, ROM recovery,
+  multi-source SQLite library and optional WorkManager catalog checks.
+- `iosApp`: Swift host for the same UI and controller, Core MIDI, native network,
+  atomic storage, log sharing and lifecycle adapters. **iOS sources have not yet
+  been built with Xcode or validated on physical hardware.** Its current repository
+  remains Hub-only; the new Android SQLite/source scheduler is not ported to iOS.
+
+Android downloads and preferences from earlier builds of this fork are retained.
+The application ID remains `pl.ekim.multiplatform_fm1_flasher`, separate from the
+original Android app. This rework is published on the `task/multiplatform-rework`
+branch of [android-fm1-flasher](https://github.com/ekim-pl/android-fm1-flasher/tree/task/multiplatform-rework);
+the original app remains on the main branch.
+See [implementation status, verification and build instructions](MIGRATION.md).
+
+## Functional guide
+
+The following describes Android functionality. On iOS, each restart requires
+manual MIDI port confirmation; keep the app open during flashing. USB ROM recovery
+and JEDEC chip detection require Android and are hidden on iOS.
+
+## Experimental features in 0.7.0
+
+Open **Settings → Experimental features** to enable MIDI Logger, chip detection and ROM recovery. The switch is **off by default**, persists across restarts, and applies to debug and release builds. Disabling it hides these controls, stops the logger and invalidates the prepared recovery plan. It cannot change during an operation. The service also checks the switch before starting experimental operations. Physical USB recovery remains experimental.
+
+Chip detection reports the ROM device and JEDEC ID without changing the selected MIDI target. Reconnect the same physical unit in MIDI mode and confirm its chip type manually. Flashing now requires OTA identity after the loader restart. Download and artwork requests have a total time budget; artwork is limited to the Hub origin and a disposable 24 MiB disk cache. Corrupt library settings are recovered conservatively in offline mode.
 
 The application source code is available under the MIT license; see [LICENSE.md](LICENSE.md).
 Data handling is described in the [privacy policy](PRIVACY_POLICY.md).
 
-An experimental Kotlin/Android 8.0+ app for selecting one M‑VAVE FM‑1 on a USB OTG hub, downloading firmware from a catalog and installing it over USB MIDI SysEx. A user has successfully flashed a physical FM‑1 with an earlier build. Automatic reconnection still needs further hardware testing.
+An experimental Kotlin/Android 14+ app for selecting one M‑VAVE FM‑1 on a USB OTG hub, downloading firmware from a catalog and installing it over USB MIDI SysEx. A user has successfully flashed a physical FM‑1 with an earlier build. Automatic reconnection still needs further hardware testing.
 
 ## Language and appearance
 
-Open **Settings** in the top bar to choose Polish, English, Simplified Chinese or the system language. Android 13+ offers the same choice in its per-app language settings. Earlier Android versions store the choice locally. All three languages are bundled in both APK and AAB files and can be switched without internet access. Warnings, errors, logs and notifications are also translated; descriptions supplied by firmware authors remain in their original language.
+Open **Settings** in the top bar to choose Polish, English, Simplified Chinese or the system language. The same choice is available in Android’s per-app language settings. All three languages are bundled in both APK and AAB files and can be switched without internet access. Warnings, errors, logs and notifications are also translated; descriptions supplied by firmware authors remain in their original language.
 
 Choose a light, dark or system theme. Settings also includes an offline privacy policy.
 
@@ -78,7 +113,7 @@ Download a test APK from [GitHub Releases](https://github.com/ekim-pl/android-fm
 
 A successful identity check confirms a device response, not a readback of all flash memory. Different firmware can share an identity. Power loss, an unsuitable package or selecting the wrong instrument after a restart may require hardware recovery. Automatic reconnection covers planned restarts during an update, not arbitrary connection loss while writing.
 
-Out of scope: Bluetooth updates, batch flashing, preset/memory backups, JEDEC reads, low-level download/UBOOT mode, persistent hub-socket mapping, importing unverified local files and packages with other identities such as `FM1_OFFICIAL_OPEN`.
+The regular MIDI update flow does not support Bluetooth updates, batch flashing, preset/memory backups, bootloader rewriting, hardware USB_KEY generation, persistent hub-socket mapping, importing unverified local files or packages with other identities such as `FM1_OFFICIAL_OPEN`. Chip detection and ROM recovery are separate opt-in experimental features described below; they do not expand normal firmware compatibility.
 
 <a id="budowanie-i-testy"></a>
 
@@ -93,7 +128,7 @@ Requires JDK 17, Android SDK Platform 36 and Build Tools 35.0.0. Set `ANDROID_HO
 APK: `app/build/outputs/apk/debug/app-debug.apk`.
 AAB: `./gradlew :app:bundleRelease`, output `app/build/outputs/bundle/release/app-release.aab`. It is unsigned without key configuration; GitHub Actions signs it with the upload key from secrets.
 
-The 60 JVM tests cover the protocol and UFW packages, catalog, categories, combined filters, sorting, library and preference persistence, SHA‑256 updates, refresh gestures and cancellation, automatic-refresh conditions, retaining an old package after failure, file corruption, older-version compatibility, withdrawn packages, excluding neighboring ports and a three-device session. Two optional tests read real files from disk without bundling firmware in the repository:
+The 97 JVM tests cover the protocol and UFW packages, catalog, categories, combined filters, sorting, library and preference persistence, SHA‑256 updates, refresh gestures and cancellation, automatic-refresh conditions, retaining an old package after failure, file corruption, older-version compatibility, withdrawn packages, neighboring-port exclusion, three-device sessions, MIDI logging and simulated ROM recovery. Four fixture-dependent tests read real files from disk without bundling firmware in the repository:
 
 ```sh
 FM1_TEST_PACKAGES=/path/stock-v15.fwsc:/path/stock-v16.fwsc \
@@ -101,7 +136,7 @@ FM1_TEST_CATALOG=/path/catalog.json \
 ./gradlew :app:testDebugUnitTest
 ```
 
-Automated checks: 58 tests passed and two optional external-fixture tests were skipped. `lintDebug`, `assembleDebug` and `bundleRelease` pass; warnings remain about tooling versions and native views, among other things. An earlier run passed all 51 tests without skips using a catalog downloaded on 2026‑11‑13 and real M‑VAVE and Hortator packages. The Android 16 emulator checks the UI and networking, not physical USB transport.
+Previous release validation: all 84 JVM tests passed with real V15/V16 package fixtures and simulated recovery on both chip types; lint and the debug APK build passed. Physical USB recovery and multi-port MIDI reception still need hardware testing. The Android 16 emulator checks the UI and networking, not physical USB transport.
 
 Emulator checks covered app launch, reading 202 catalog entries, downloading and persisting Hortator 1.0.1 with SHA‑256/CRC validation, saving favorites, combining **Downloaded only** and **Favorites** with a category, sorting, the offline library and the actual pull-to-refresh gesture. Installation stays disabled without a USB device.
 
@@ -140,3 +175,70 @@ After reading the ID, power cycle back into normal MIDI mode, connect in the
 app and select the reported chip type. Detection is not inferred from the
 firmware version or transferred automatically to a different USB connection.
 This USB path still needs validation on physical hardware.
+
+
+## Experimental multi-port MIDI logger
+
+The experimental build uses the original name **FM-1 Flasher** and package ID `pl.ekim.fm1_flasher` (version `0.7.0-experimental`). Android 14+ is required. Data from the separate `.experimental` app is not migrated.
+
+Open **MIDI Logger**, choose one or more instrument **outputs**, grant USB access for each instrument and press **Start**. The logger only receives: it never identifies devices, opens their MIDI inputs or sends MIDI. Multiple ports on a device and multiple USB devices are supported, including devices without MIDI inputs. No firmware change is required; only data actually transmitted by the instrument can appear.
+
+The log shows receive time, device/path/port, channel, decoded MIDI and HEX. Long-press an entry for full HEX. Filters select source/channel/type and can hide Clock/Active Sensing. Pausing scrolling keeps reception active. Clear removes buffered entries; Export saves the entire current buffer as UTF-8 text through Android’s file picker, regardless of filters. Protocol names and diagnostic annotations use technical English. Running status is expanded into complete messages; the export is not a byte-exact recording of callback boundaries.
+
+Memory is bounded to 5000 entries and 4 MiB of raw message data, plus a bounded input queue; a single SysEx is limited to 64 KiB. Evictions, input losses and truncated SysEx are marked. The logger cannot detect messages lost before Android delivers them. It stops when the app enters the background, including when opening the export picker. Rotation retains a running session; reconnecting devices requires selecting their new ports. Flashing, recovery, download-mode requests or chip detection stop the logger first; restart it manually afterward.
+
+Validation for this experiment: parser/buffer unit tests and the existing JVM suite, lint and debug APK build. Physical multi-port USB reception and a 30-minute hardware load test remain to be done. Installation succeeded on the Android 16 emulator; UI automation was blocked by another session holding that emulator.
+## Experimental ROM recovery
+
+The experimental build uses application ID `pl.ekim.fm1_flasher` and version
+`0.7.0-experimental`. Physical USB recovery has **not** been validated.
+
+Open **Flasher → Recovery and backups**. A responding FM-1 can be asked to enter
+ROM download mode; a device already in that mode needs no MIDI connection.
+Connect exactly one download device (`4C4A:8057`, `WL82 UBOOT1.00`) and grant USB
+permission. Download mode is not a filesystem: never format it.
+
+- **Diagnose and back up flash** checks JEDEC ID and chip key, reads the complete
+  1 MiB twice, compares both reads, and syncs the backup and metadata to storage.
+  Both `856014` and `B36014` are accepted with chip key `980F`. An unknown boot
+  area still permits backup, but blocks recovery writing.
+- **Prepare V15 recovery** uses the selected downloaded package. Only official
+  `FM-1_015`, package SHA-256
+  `db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a`, is allowed.
+  Its extracted firmware region is independently hash-checked. A recognized
+  stock V15/V16 boot-area hash is required; m-bootloader and damaged boot areas
+  are deliberately refused in this first version.
+- **Review prepared recovery** shows the device, chip, changed sector count,
+  protected ranges and backup checksum, then asks before writing. The complete
+  flash is compared to the saved backup again before erasing anything. Only
+  changed 4 KiB sectors in `[0x4000, 0x93000)` are erased/programmed. Each is read
+  back, followed by a full-flash comparison including untouched areas. A failed
+  transfer stops the operation; there is no blind retry or automatic resume.
+- **Export a backup** saves a ZIP through Android's document picker. It contains
+  the full flash, metadata/SHA-256, and an operation result when available.
+  Backups remain available after app/process restarts. Uninstalling the app or
+  clearing its data deletes internal copies; export before proceeding.
+
+Successful verification means bytes match, not that the instrument has booted.
+Power cycle and reconnect MIDI to check startup. Existing custom-firmware or V16
+settings/presets may not suit V15; this operation does not repair them. No
+manufacturer firmware is bundled in the APK. The recovery path uses its own
+hash-pinned compatibility policy for both chips, without relaxing MIDI OTA rules.
+
+Devices absent from USB need external USB_KEY hardware or a second instrument
+running [M-Unbricker](https://github.com/jvitkauskas/m-unbricker); this build does
+not implement either. Bootloader repair, arbitrary raw-backup restore and V16
+recovery are excluded.
+
+Recovery tests use a simulated flash with interrupted/corrupt writes, short and
+unstable reads, protected regions, altered backups and changed devices. To also
+exercise the real V15 package parser and complete recovery workflow on simulated
+old/new chips (without redistributing firmware):
+
+```sh
+FM1_RECOVERY_V15=/path/stock-v15.fwsc ./gradlew :app:testDebugUnitTest
+```
+
+Protocol reference: [M-Flasher](https://github.com/jvitkauskas/m-flasher), MIT.
+V15 hashes and conservative recovery layout:
+[MvaveFM1Unbricker](https://github.com/Quixotic7/MvaveFM1Unbricker).

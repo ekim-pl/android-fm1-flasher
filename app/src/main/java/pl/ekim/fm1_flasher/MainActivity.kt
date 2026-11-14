@@ -30,7 +30,10 @@ class MainActivity : Activity() {
     private lateinit var artwork: ArtworkLoader
     private var service: FlasherService? = null
     private var bound = false
-    private var state = UiState()
+    @Volatile private var state = UiState()
+    private var browseLoaded = false
+    private var restoredBrowse = false
+    private var lastSavedBrowse: Map<String, String>? = null
     private var tab = LibraryTab.CATALOG
     private var browseFilters = BrowseFilters()
     private var changingControls = false
@@ -39,6 +42,9 @@ class MainActivity : Activity() {
     private lateinit var about: FrameLayout
     private lateinit var refreshHint: TextView
     private var started = false
+    private lateinit var logger: MidiLoggerPanel
+    private var exportBackupId: String? = null
+    private var exportBackupUri: Uri? = null
     private lateinit var flasher: FlasherPanel
     private lateinit var adapter: FirmwareAdapter
     private lateinit var offline: Switch
@@ -65,6 +71,7 @@ class MainActivity : Activity() {
     private val navigation = mutableMapOf<LibraryTab, LinearLayout>()
     private var visibleEntries = emptyList<CatalogEntry>()
     private var detail: Details? = null
+    private var sourcesDialog: SourceManagerDialog? = null
     private var restoreEntryId: String? = null
     private var restoreDetailsId: String? = null
     private var pendingUsb: Pair<Int, () -> Unit>? = null
@@ -89,14 +96,19 @@ class MainActivity : Activity() {
             if (intent.action != permissionAction) return
             val pending = pendingUsb ?: return
             pendingUsb = null
-            @Suppress("DEPRECATION") val usb = intent.getParcelableExtra<android.hardware.usb.UsbDevice>(UsbManager.EXTRA_DEVICE)
-            if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false) && usb?.deviceId == pending.first) pending.second()
+            // Immutable PendingIntents do not accept the USB result extras; query the actual grant.
+            val manager = getSystemService(UsbManager::class.java)
+            val device = manager.deviceList.values.singleOrNull { it.deviceId == pending.first }
+            if (device != null && manager.hasPermission(device)) pending.second()
             else Toast.makeText(this@MainActivity, s(R.string.usb_permission_denied), Toast.LENGTH_LONG).show()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        restoredBrowse = savedInstanceState != null
+        exportBackupId = savedInstanceState?.getString("exportBackupId")
+        exportBackupUri = savedInstanceState?.getString("exportBackupUri")?.let(Uri::parse)
         val prefs = getSharedPreferences("browse", MODE_PRIVATE)
         val appearance = runCatching { Appearance.valueOf(prefs.getString("appearance", "SYSTEM") ?: "SYSTEM") }
             .getOrDefault(Appearance.SYSTEM)
@@ -107,9 +119,9 @@ class MainActivity : Activity() {
         }
         setTheme(if (dark) R.style.AppTheme_Dark else R.style.AppTheme_Light)
         Ui.setDark(dark)
-        window.statusBarColor = Ui.BG
-        window.navigationBarColor = Ui.BG
-        window.decorView.systemUiVisibility = if (dark) 0 else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        window.setDecorFitsSystemWindows(false)
+        val lightBars = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
         ui = Ui(this)
         restoreEntryId = savedInstanceState?.getString("visibleEntry")
         restoreDetailsId = savedInstanceState?.getString("detailEntry")
@@ -118,11 +130,11 @@ class MainActivity : Activity() {
         browseFilters = BrowseFilters(value("query", ""),
             runCatching { FirmwareCategory.valueOf(value("category", "ALL")) }.getOrDefault(FirmwareCategory.ALL),
             runCatching { FirmwareSort.valueOf(value("sort", "NAME")) }.getOrDefault(FirmwareSort.NAME),
-            value("downloaded", "false").toBoolean(), value("favorites", "false").toBoolean())
-        artwork = ArtworkLoader(File(filesDir, "previews")) { state.offline }
+            value("downloaded", "false").toBoolean(), value("favorites", "false").toBoolean(), value("source", "").ifBlank { null })
+        artwork = ArtworkLoader(File(cacheDir, "previews"), { state.offline }, { id -> state.catalog?.sources?.find { it.id == id } })
         buildUi()
-        if (Build.VERSION.SDK_INT >= 33) registerReceiver(permissionResult, IntentFilter(permissionAction), RECEIVER_NOT_EXPORTED)
-        else { @Suppress("DEPRECATION") registerReceiver(permissionResult, IntentFilter(permissionAction)) }
+        window.insetsController?.setSystemBarsAppearance(if (dark) 0 else lightBars, lightBars)
+        registerReceiver(permissionResult, IntentFilter(permissionAction), RECEIVER_NOT_EXPORTED)
         bound = bindService(Intent(this, FlasherService::class.java), binding, BIND_AUTO_CREATE)
     }
 
@@ -130,12 +142,9 @@ class MainActivity : Activity() {
         val root = ui.column().apply {
             setBackgroundColor(Ui.BG)
             setOnApplyWindowInsetsListener { view, insets ->
-                if (Build.VERSION.SDK_INT >= 30) {
-                    val bars = insets.getInsets(WindowInsets.Type.systemBars())
-                    view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
-                } else {
-                    @Suppress("DEPRECATION") view.setPadding(insets.systemWindowInsetLeft, insets.systemWindowInsetTop, insets.systemWindowInsetRight, insets.systemWindowInsetBottom)
-                }
+                val bars = insets.getInsets(WindowInsets.Type.systemBars() or
+                    WindowInsets.Type.displayCutout() or WindowInsets.Type.ime())
+                view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
                 insets
             }
         }
@@ -225,9 +234,12 @@ class MainActivity : Activity() {
         flasher = FlasherPanel(this,
             connectAction = { target -> withUsbPermission(target) { service?.connect(target.info.id) } },
             resumeAction = { target -> withUsbPermission(target) { service?.resumeWith(target.info.id) } },
-            detectAction = ::detectChip, chipAction = { service?.setChip(it) }, firmwareAction = { service?.useLocal(it) },
+            recoveryAction = ::showRecovery, detectAction = ::detectChip, chipAction = { service?.setChip(it) }, firmwareAction = { service?.useLocal(it) },
             flashAction = ::confirmFlash, logsAction = ::showLogs)
         body.addView(flasher, FrameLayout.LayoutParams(-1, -1))
+        logger = MidiLoggerPanel(this, { service?.monitor }, { state.experimental && !state.busy && !state.flashing },
+            { port, action -> withUsbPermission(port.usb, action) }, { service?.toggleMonitor() }, ::exportMidiLog)
+        body.addView(logger, FrameLayout.LayoutParams(-1, -1))
         about = FrameLayout(this)
         body.addView(about, FrameLayout.LayoutParams(-1, -1))
         val operation = ui.row().apply {
@@ -265,6 +277,7 @@ class MainActivity : Activity() {
         } else {
             root.addView(body, LinearLayout.LayoutParams(-1, 0, 1f)); root.addView(operation); root.addView(nav)
         }
+        navigation[LibraryTab.LOGGER]?.visibility = View.GONE
         setContentView(root); syncControls(); setTab(tab)
     }
 
@@ -376,8 +389,9 @@ class MainActivity : Activity() {
     }
 
     private fun setTab(destination: LibraryTab) {
-        tab = destination
-        browser.visibility = if (tab == LibraryTab.FLASHER || tab == LibraryTab.ABOUT) View.GONE else View.VISIBLE
+        tab = if (destination == LibraryTab.LOGGER && !state.experimental) LibraryTab.CATALOG else destination
+        browser.visibility = if (tab == LibraryTab.FLASHER || tab == LibraryTab.ABOUT || tab == LibraryTab.LOGGER) View.GONE else View.VISIBLE
+        logger.visibility = if (tab == LibraryTab.LOGGER) View.VISIBLE else View.GONE
         flasher.visibility = if (tab == LibraryTab.FLASHER) View.VISIBLE else View.GONE
         about.visibility = if (tab == LibraryTab.ABOUT) View.VISIBLE else View.GONE
         if (tab == LibraryTab.ABOUT && about.childCount == 0) about.addView(AboutPanel(this, ::openUrl), FrameLayout.LayoutParams(-1, -1))
@@ -410,30 +424,48 @@ class MainActivity : Activity() {
             restoreEntryId = null
             list.setSelection(0)
         } else restoreEntryId?.let { id ->
-            val position = visibleEntries.indexOfFirst { it.id == id }
+            val position = visibleEntries.indexOfFirst { it.key == id }
             if (position >= 0 && !state.busy) {
                 restoreEntryId = null
                 list.post { list.setSelectionFromTop(position + list.headerViewsCount, 0) }
             }
         }
-        results.text = s(R.string.results_count, visibleEntries.size) + if (browseFilters.downloadedOnly || tab == LibraryTab.DOWNLOADS) s(R.string.downloaded_suffix) else ""
+        results.text = (browseFilters.sourceId?.let { id -> state.catalog?.sources?.find { it.id == id }?.name + " · " }.orEmpty()) + s(R.string.results_count, visibleEntries.size) + if (browseFilters.downloadedOnly || tab == LibraryTab.DOWNLOADS) s(R.string.downloaded_suffix) else ""
         empty.visibility = if (visibleEntries.isEmpty()) View.VISIBLE else View.GONE
         emptyTitle.text = if (state.busy && state.catalog == null) s(R.string.loading_library) else s(R.string.empty_title)
         emptyBody.text = when {
-            browseFilters.query.isNotBlank() || browseFilters.category != FirmwareCategory.ALL -> s(R.string.empty_filter)
+            browseFilters.query.isNotBlank() || browseFilters.category != FirmwareCategory.ALL || browseFilters.sourceId != null -> s(R.string.empty_filter)
             browseFilters.downloadedOnly || tab == LibraryTab.DOWNLOADS -> s(R.string.empty_downloads)
             browseFilters.favoritesOnly || tab == LibraryTab.FAVORITES -> s(R.string.empty_favorites)
             else -> s(R.string.empty_catalog)
         }
-        getSharedPreferences("browse", MODE_PRIVATE).edit().putString("tab", tab.name)
-            .putString("query", browseFilters.query).putString("category", browseFilters.category.name).putString("sort", browseFilters.sort.name)
-            .putString("downloaded", browseFilters.downloadedOnly.toString()).putString("favorites", browseFilters.favoritesOnly.toString()).apply()
+        if (browseLoaded) {
+            val values = mapOf("tab" to tab.name, "query" to browseFilters.query, "category" to browseFilters.category.name,
+                "sort" to browseFilters.sort.name, "downloaded" to browseFilters.downloadedOnly.toString(),
+                "favorites" to browseFilters.favoritesOnly.toString(), "source" to browseFilters.sourceId.orEmpty())
+            if (values != lastSavedBrowse) { lastSavedBrowse = values; service?.saveBrowse(values) }
+        }
     }
 
     private fun render(next: UiState) {
+        if (!next.busy) dispatchRecoveryExport()
         if (isDestroyed) return
         val previous = state
         state = next
+        if (!browseLoaded && next.browse != null) {
+            browseLoaded = true
+            if (!restoredBrowse) {
+                val b = next.browse
+                browseFilters = BrowseFilters(b["query"].orEmpty(),
+                    runCatching { FirmwareCategory.valueOf(b["category"].orEmpty()) }.getOrDefault(FirmwareCategory.ALL),
+                    runCatching { FirmwareSort.valueOf(b["sort"].orEmpty()) }.getOrDefault(FirmwareSort.NAME),
+                    b["downloaded"] == "true", b["favorites"] == "true", b["source"]?.ifBlank { null })
+                syncControls()
+                setTab(runCatching { LibraryTab.valueOf(b["tab"].orEmpty()) }.getOrDefault(LibraryTab.CATALOG))
+            }
+        }
+        navigation[LibraryTab.LOGGER]?.visibility = if (next.experimental) View.VISIBLE else View.GONE
+        if (!next.experimental && tab == LibraryTab.LOGGER) setTab(LibraryTab.CATALOG)
         changingControls = true; offline.isChecked = next.offline; changingControls = false
         offline.isEnabled = !next.busy
         usbStatus.text = next.identity?.let { "USB · $it" } ?: s(R.string.usb_ports, next.devices.size)
@@ -444,8 +476,10 @@ class MainActivity : Activity() {
         list.refreshEnabled = !next.busy && !next.offline
         list.setRefreshing(next.refreshingCatalog)
         updatePackages.isEnabled = !next.busy && !next.offline && next.downloads.isNotEmpty()
-        val updates = CatalogBrowser.updates(next.catalog, next.downloads).size
-        updatePackages.text = if (updates > 0) s(R.string.updates_count, updates) else s(R.string.update_check)
+        if (previous.catalog !== next.catalog || previous.downloads != next.downloads) {
+            val updates = CatalogBrowser.updates(next.catalog, next.downloads).size
+            updatePackages.text = if (updates > 0) s(R.string.updates_count, updates) else s(R.string.update_check)
+        }
         updatePackages.visibility = if (tab == LibraryTab.DOWNLOADS && next.downloads.isNotEmpty()) View.VISIBLE else View.GONE
         catalogDate.text = next.catalog?.let {
             (if (next.offline) s(R.string.catalog_offline_prefix) else if (!it.fresh) s(R.string.catalog_cached_prefix) else s(R.string.catalog_prefix)) + it.updated.ifBlank { s(R.string.unknown_date) }
@@ -457,10 +491,11 @@ class MainActivity : Activity() {
             previous.busy != next.busy || previous.offline != next.offline) filterEntries()
         if (next.flashing) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         detail?.render(next)
+        sourcesDialog?.render(next)
         if (detail == null && restoreDetailsId != null && (next.catalog != null || !next.busy)) {
             val id = restoreDetailsId
             restoreDetailsId = null
-            (next.catalog?.entries?.find { it.id == id } ?: next.downloads.find { it.entry.id == id }?.entry)?.let(::showEntry)
+            (next.catalog?.entries?.find { it.key == id } ?: next.downloads.find { it.entry.key == id }?.entry)?.let(::showEntry)
         }
     }
 
@@ -475,23 +510,24 @@ class MainActivity : Activity() {
             val entry = getItem(position)
             val row = (convertView?.tag as? RowViews) ?: newRow()
             row.name.text = entryTitle(entry)
-            row.author.text = "${entry.author} · ${entry.version}"
+            row.author.text = "${entry.author} · ${entry.version} · ${state.catalog?.source(entry)?.name.orEmpty()}"
             row.category.text = categoryLabel(entry.kinds)
             row.category.setTextColor(ui.categoryColor(entry))
             row.description.text = entryDescription(entry, true).ifBlank { s(R.string.description_fallback) }
-            val saved = state.downloads.singleOrNull { it.entry.id == entry.id }
-            val latest = state.catalog?.entries?.singleOrNull { it.id == entry.id }
+            val saved = state.downloads.singleOrNull { it.entry.key == entry.key }
+            val latest = state.catalog?.entries?.singleOrNull { it.key == entry.key }
             val hasUpdate = saved != null && latest != null && latest.sha256 != saved.entry.sha256
             row.availability.text = when {
                 saved != null -> s(R.string.saved_version, saved.entry.version) + if (hasUpdate) s(R.string.update_badge) else ""
                 entry.downloadable -> s(R.string.available_download) + if (entry.beta) s(R.string.beta_badge) else ""
                 else -> s(R.string.author_info)
             }
+            if (state.catalog?.source(entry)?.active == false) row.availability.append(" · " + s(R.string.source_disabled))
             row.availability.setTextColor(if (hasUpdate) Ui.WARNING else if (saved != null) Ui.ACCENT else Ui.MUTED)
-            row.star.text = if (entry.id in state.favorites) "★" else "☆"
-            row.star.contentDescription = if (entry.id in state.favorites) s(R.string.remove_favorite_accessibility, entryTitle(entry)) else s(R.string.add_favorite_accessibility, entryTitle(entry))
+            row.star.text = if (entry.key in state.favorites) "★" else "☆"
+            row.star.contentDescription = if (entry.key in state.favorites) s(R.string.remove_favorite_accessibility, entryTitle(entry)) else s(R.string.add_favorite_accessibility, entryTitle(entry))
             row.star.isEnabled = !state.busy
-            row.star.setOnClickListener { service?.toggleFavorite(entry.id) }
+            row.star.setOnClickListener { service?.toggleFavorite(entry.key) }
             row.card.contentDescription = s(R.string.preview_accessibility, entryTitle(entry), entry.version)
             row.card.setOnClickListener { showEntry(entry) }
             artwork.bind(row.artwork, entry)
@@ -559,24 +595,24 @@ class MainActivity : Activity() {
             if (entryDescription(entry, true) != entryDescription(entry)) content.addView(ui.button(s(R.string.full_description)) {
                 description.text = if (description.text.toString() == entryDescription(entry)) entryDescription(entry, true) else entryDescription(entry)
             })
-            favorite = ui.button(s(R.string.favorite_add)) { service?.toggleFavorite(entry.id) }
+            favorite = ui.button(s(R.string.favorite_add)) { service?.toggleFavorite(entry.key) }
             if (!ui.twoColumns) { content.addView(favorite); content.addView(ui.gap(16)) }
             localStatus = ui.text("", 13, Ui.MUTED); actions.addView(localStatus)
             use = ui.button(s(R.string.use_to_flash), true) {
-                service?.useLocal(entry.id); dialog.dismiss(); setTab(LibraryTab.FLASHER)
+                service?.useLocal(entry.key); dialog.dismiss(); setTab(LibraryTab.FLASHER)
             }; actions.addView(use)
             download = ui.button(s(R.string.download_to_device)) {
-                state.catalog?.entries?.singleOrNull { it.id == entry.id }?.let { service?.download(it) }
+                state.catalog?.entries?.singleOrNull { it.key == entry.key }?.let { service?.download(it) }
             }; actions.addView(download)
             if (ui.twoColumns) actions.addView(favorite)
             remove = ui.button(s(R.string.remove_local)) {
                 AlertDialog.Builder(this@MainActivity).setTitle(s(R.string.remove_confirm_title))
                     .setMessage(s(R.string.remove_confirm_message, entryTitle(entry)))
-                    .setNegativeButton(s(R.string.keep), null).setPositiveButton(s(R.string.remove_package)) { _, _ -> service?.removeLocal(entry.id) }.show()
+                    .setNegativeButton(s(R.string.keep), null).setPositiveButton(s(R.string.remove_package)) { _, _ -> service?.removeLocal(entry.key) }.show()
             }; actions.addView(remove)
-            val repository = ui.button(s(R.string.author_repository)) { openUrl(entry.sourceUrl) }
+            val repository = ui.button(s(R.string.author_repository)) { openUrl(entry.sourceUrl) }.apply { isEnabled = entry.sourceUrl.isNotEmpty() }
             val technical = ui.button(s(R.string.technical_info)) {
-                val local = state.downloads.singleOrNull { it.entry.id == entry.id }?.entry
+                val local = state.downloads.singleOrNull { it.entry.key == entry.key }?.entry
                 val shown = local ?: entry
                 AlertDialog.Builder(this@MainActivity).setTitle(s(R.string.package_details))
                     .setMessage(s(R.string.package_technical, shown.version, shown.product,
@@ -603,17 +639,27 @@ class MainActivity : Activity() {
         }
 
         fun render(next: UiState) {
-            val saved = next.downloads.singleOrNull { it.entry.id == entry.id }
-            val latest = next.catalog?.entries?.singleOrNull { it.id == entry.id }
-            val retired = next.catalog != null && latest == null
+            val saved = next.downloads.singleOrNull { it.entry.key == entry.key }
+            val latest = next.catalog?.entries?.singleOrNull { it.key == entry.key }
+            val localCheck = saved?.entry?.let { runCatching { LocalLibrary.localFlashEntry(it, next.catalog) } }
+            val retired = localCheck?.isFailure == true || next.catalog?.removed(entry) == true
             val hasUpdate = saved != null && latest != null && latest.sha256 != saved.entry.sha256
-            favorite.text = if (entry.id in next.favorites) s(R.string.favorite_remove) else s(R.string.favorite_add)
+            favorite.text = if (entry.key in next.favorites) s(R.string.favorite_remove) else s(R.string.favorite_add)
             favorite.isEnabled = !next.busy
             localStatus.text = if (saved == null) s(R.string.package_absent) else
                 s(R.string.local_version, saved.entry.version, android.text.format.Formatter.formatFileSize(this@MainActivity, saved.bytes)) +
                     if (retired) s(R.string.package_retired)
                     else if (hasUpdate) s(R.string.package_update_available, latest?.version.orEmpty())
                     else s(R.string.package_offline_ready)
+            localStatus.append("\n" + (next.catalog?.source(entry)?.let { it.name + if (!it.active) " · " + s(R.string.source_disabled) else "" }.orEmpty()))
+            next.catalog?.source(entry)?.let { source ->
+                localStatus.append("\n" + s(R.string.source_summary, source.entryCount, if (source.checkedAt > 0)
+                    java.text.DateFormat.getDateTimeInstance().format(java.util.Date(source.checkedAt)) else s(R.string.source_never)))
+            }
+            if (entry.date.isNotBlank()) localStatus.append("\n" + s(R.string.source_release_date, entry.date))
+            next.catalog?.downloadBlock(latest ?: entry)?.let { localStatus.append("\n" + resolve(it)) }
+            val effective = localCheck?.getOrNull()
+            if ((effective ?: entry).chip == "unknown") localStatus.append("\n" + s(R.string.source_chip_blocked))
             use.visibility = if (saved != null) View.VISIBLE else View.GONE
             use.isEnabled = !next.busy && saved != null && !retired
             remove.visibility = if (saved != null) View.VISIBLE else View.GONE; remove.isEnabled = !next.busy
@@ -624,8 +670,38 @@ class MainActivity : Activity() {
                 saved != null -> s(R.string.download_again_version, latest.version)
                 else -> s(R.string.download_version, latest.version)
             }
-            download.isEnabled = !next.busy && !next.offline && latest?.downloadable == true && next.catalog?.fresh == true
+            download.isEnabled = !next.busy && !next.offline && latest?.downloadable == true && next.catalog?.canDownload(latest) == true
         }
+    }
+
+    private fun exportMidiLog() {
+        if (service == null || !state.experimental) return
+        startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE); type = "text/plain"
+            putExtra(Intent.EXTRA_TITLE, "midi-log-${System.currentTimeMillis()}.txt")
+        }, 41)
+    }
+
+    @Deprecated("Platform activity result API")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 61) {
+            exportBackupUri = if (resultCode == RESULT_OK) data?.data else null
+            if (exportBackupUri == null) exportBackupId = null
+            dispatchRecoveryExport()
+        }
+        if (requestCode != 41 || !state.experimental) return
+        val snapshot = service?.monitor?.log?.snapshot()
+        val uri = data?.data
+        if (resultCode != RESULT_OK || snapshot == null || uri == null) return
+        Thread {
+            val result = runCatching {
+                checkNotNull(contentResolver.openOutputStream(uri, "wt")).bufferedWriter(Charsets.UTF_8).use { snapshot.writeTo(it) }
+            }
+            runOnUiThread {
+                Toast.makeText(this, s(if (result.isSuccess) R.string.logger_saved else R.string.logger_save_failed), Toast.LENGTH_LONG).show()
+            }
+        }.start()
     }
 
     private fun confirmFlash() {
@@ -637,7 +713,7 @@ class MainActivity : Activity() {
             .setNegativeButton(s(R.string.back), null).setPositiveButton(s(R.string.install_this_device)) { _, _ ->
                 withUsbPermission(target) {
                     if (state.target?.endpoint == target.endpoint && state.ready == entry && !state.busy) {
-                        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+                        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
                             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 5)
                         try { startForegroundService(Intent(this, FlasherService::class.java).setAction("FLASH")) }
                         catch (failure: RuntimeException) { Toast.makeText(this, resolve(failure.appMessage(R.string.flash_result_unknown)), Toast.LENGTH_LONG).show() }
@@ -649,8 +725,88 @@ class MainActivity : Activity() {
     private fun showLogs() = AlertDialog.Builder(this).setTitle(s(R.string.app_log))
         .setMessage(state.logs.joinToString("\n\n") { resolve(it) }.ifEmpty { s(R.string.no_events) }).setPositiveButton(s(R.string.close), null).show()
 
-    private fun detectChip() {
+    private fun showRecovery() {
+        if (!state.experimental) return
         if (state.busy) return
+        val options = arrayOf(s(R.string.recovery_enter), s(R.string.recovery_backup),
+            s(R.string.recovery_prepare), s(R.string.recovery_write_plan), s(R.string.recovery_export), s(R.string.recovery_help_title))
+        AlertDialog.Builder(this).setTitle(s(R.string.recovery_title)).setItems(options) { _, choice ->
+            when (choice) {
+                0 -> {
+                    val target = state.target
+                    if (target == null || state.identity?.isLoader != false) recoveryMessage(s(R.string.recovery_midi_required))
+                    else AlertDialog.Builder(this).setTitle(s(R.string.recovery_enter))
+                        .setMessage(s(R.string.recovery_enter_confirm, target.label))
+                        .setNegativeButton(s(R.string.cancel), null).setPositiveButton(s(R.string.recovery_enter)) { _, _ ->
+                            withUsbPermission(target) {
+                                if (!state.busy && state.target?.endpoint == target.endpoint) service?.enterDownloadMode()
+                            }
+                        }.show()
+                }
+                1 -> startRecovery("RECOVERY_BACKUP")
+                2 -> if (Recovery.eligible(state.ready)) startRecovery("RECOVERY_PREPARE")
+                    else recoveryMessage(s(R.string.recovery_v15_only))
+                3 -> confirmRecovery()
+                4 -> chooseRecoveryExport()
+                5 -> recoveryMessage(s(R.string.recovery_help))
+            }
+        }.setNegativeButton(s(R.string.close), null).show()
+    }
+
+    private fun recoveryMessage(text: String) = AlertDialog.Builder(this).setTitle(s(R.string.recovery_title))
+        .setMessage(text).setPositiveButton(s(R.string.close), null).show()
+
+    private fun startRecovery(action: String, plan: RecoveryPlan? = null) {
+        if (state.busy || !state.experimental) return
+        val devices = getSystemService(UsbManager::class.java).deviceList.values.filter(ChipDetector::supports)
+        if (devices.size != 1) { recoveryMessage(s(R.string.recovery_help)); return }
+        val device = devices.single()
+        withUsbPermission(device) {
+            if (!state.busy) {
+                if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+                    requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 5)
+                try {
+                    startForegroundService(Intent(this, FlasherService::class.java).setAction(action)
+                        .putExtra("deviceName", device.deviceName).putExtra("deviceId", device.deviceId)
+                        .putExtra("token", plan?.token))
+                } catch (failure: RuntimeException) { recoveryMessage(resolve(failure.appMessage(R.string.flash_result_unknown))) }
+            }
+        }
+    }
+
+    private fun confirmRecovery() {
+        val plan = state.recoveryPlan ?: run { recoveryMessage(s(R.string.recovery_no_plan)); return }
+        AlertDialog.Builder(this).setTitle(s(R.string.recovery_write_plan))
+            .setMessage(s(R.string.recovery_confirmation, plan.deviceName, "0x%06X".format(plan.backup.flashId),
+                plan.changedSectors, plan.backup.id, plan.backup.sha256))
+            .setNegativeButton(s(R.string.cancel), null)
+            .setPositiveButton(s(R.string.recovery_write)) { _, _ ->
+                if (state.recoveryPlan?.token == plan.token) startRecovery("RECOVERY_WRITE", plan)
+            }.show()
+    }
+
+    private fun chooseRecoveryExport() {
+        val backups = state.recoveryBackups
+        if (backups.isEmpty()) { recoveryMessage(s(R.string.recovery_no_backups)); return }
+        AlertDialog.Builder(this).setTitle(s(R.string.recovery_export))
+            .setItems(backups.map { "${it.id} · 0x%06X".format(it.flashId) }.toTypedArray()) { _, index ->
+                exportBackupId = backups[index].id
+                startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
+                    .setType("application/zip").putExtra(Intent.EXTRA_TITLE, "fm1-backup-${backups[index].id}.zip"), 61)
+            }.setNegativeButton(s(R.string.cancel), null).show()
+    }
+
+    private fun dispatchRecoveryExport() {
+        val active = service ?: return
+        val id = exportBackupId ?: return
+        val uri = exportBackupUri ?: return
+        if (active.state.busy) return
+        exportBackupId = null; exportBackupUri = null
+        active.exportRecovery(id, uri)
+    }
+
+    private fun detectChip() {
+        if (state.busy || !state.experimental) return
         val devices = getSystemService(UsbManager::class.java).deviceList.values.filter(ChipDetector::supports)
         if (devices.size != 1) {
             AlertDialog.Builder(this).setMessage(s(R.string.detect_chip_help)).setPositiveButton(s(R.string.close), null).show()
@@ -700,15 +856,38 @@ class MainActivity : Activity() {
         AlertDialog.Builder(this)
             .setTitle(s(R.string.settings))
             .setItems(arrayOf(s(R.string.appearance_setting, themes[appearance.ordinal]),
-                s(R.string.language_setting, languageName), s(R.string.privacy_title))) { _, which ->
+                s(R.string.language_setting, languageName), s(R.string.privacy_title),
+                s(R.string.experimental_features), s(R.string.catalog_sources))) { _, which ->
                 when (which) {
                     0 -> showAppearancePicker()
                     1 -> showLanguagePicker()
+                    3 -> showExperimentalSettings()
+                    4 -> { sourcesDialog = SourceManagerDialog(this, { service }, ::filterBySource).also { it.show(state) } }
                     2 -> AlertDialog.Builder(this).setTitle(s(R.string.privacy_title))
                         .setMessage(s(R.string.privacy_body)).setPositiveButton(s(R.string.close), null).show()
                 }
             }
             .setNegativeButton(s(R.string.close), null).show()
+    }
+
+    private fun filterBySource(id: String?) {
+        browseFilters = browseFilters.copy(sourceId = id); filterEntries(resetPosition = true)
+    }
+
+    private fun showExperimentalSettings() {
+        val enabled = CheckBox(this).apply {
+            text = s(R.string.experimental_features)
+            isChecked = state.experimental
+            isEnabled = !state.busy
+        }
+        val content = ui.column().apply {
+            setPadding(ui.dp(24), ui.dp(12), ui.dp(24), ui.dp(12))
+            addView(ui.text(s(R.string.experimental_help), 14, Ui.MUTED))
+            addView(enabled)
+        }
+        AlertDialog.Builder(this).setTitle(R.string.experimental_features).setView(content)
+            .setPositiveButton(android.R.string.ok) { _, _ -> service?.setExperimental(enabled.isChecked) }
+            .setNegativeButton(android.R.string.cancel, null).show()
     }
 
     private fun showLanguagePicker() {
@@ -740,11 +919,14 @@ class MainActivity : Activity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         val visiblePosition = list.firstVisiblePosition - list.headerViewsCount
-        outState.putString("visibleEntry", visibleEntries.getOrNull(visiblePosition)?.id)
-        outState.putString("detailEntry", detail?.entry?.id)
+        outState.putString("visibleEntry", visibleEntries.getOrNull(visiblePosition)?.key)
+        outState.putString("detailEntry", detail?.entry?.key)
+        outState.putString("source", browseFilters.sourceId.orEmpty())
         outState.putString("tab", tab.name); outState.putString("query", browseFilters.query)
         outState.putString("category", browseFilters.category.name); outState.putString("sort", browseFilters.sort.name)
         outState.putString("downloaded", browseFilters.downloadedOnly.toString()); outState.putString("favorites", browseFilters.favoritesOnly.toString())
+        outState.putString("exportBackupId", exportBackupId)
+        outState.putString("exportBackupUri", exportBackupUri?.toString())
         super.onSaveInstanceState(outState)
     }
 
@@ -753,11 +935,11 @@ class MainActivity : Activity() {
     }
 
     override fun onStop() {
-        started = false; service?.onAppClosed(); super.onStop()
+        started = false; if (!isChangingConfigurations) service?.onAppClosed(); super.onStop()
     }
 
     override fun onDestroy() {
-        detail?.dialog?.dismiss(); artwork.close(); service?.unobserve(observer)
+        detail?.dialog?.dismiss(); sourcesDialog?.dismiss(); artwork.close(); service?.unobserve(observer)
         if (bound) unbindService(binding)
         unregisterReceiver(permissionResult)
         super.onDestroy()

@@ -1,0 +1,1 @@
+Przywrócono nazwę FM-1 Flasher i pierwotny pakiet pl.ekim.fm1_flasher. Logger MIDI i odzyskiwanie ROM pozostają dostępne. Dane z osobnej aplikacji experimental nie są przenoszone. Android 14+.

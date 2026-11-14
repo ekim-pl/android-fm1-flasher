@@ -1,0 +1,3 @@
+• Eksperymentalny, pasywny logger wielu wyjść USB MIDI.
+• Dekodowanie komunikatów, HEX, filtry, ograniczony bufor i eksport tekstowy.
+• Logger zatrzymuje się przed flashowaniem i po przejściu aplikacji do tła.

@@ -29,7 +29,7 @@ class CatalogTest {
     }
 
     @Test fun refusesOtherProductsAndMissingHashes() {
-        assertThrows(IllegalArgumentException::class.java) { CatalogParser.parse(source.replace("FM-1_900", "SMK-37_900")) }
+        assertFalse(CatalogParser.parse(source.replace("FM-1_900", "SMK-37_900")).first.single().downloadable)
         assertThrows(IllegalArgumentException::class.java) { CatalogParser.parse(source.replace("a".repeat(64), "")) }
     }
 
@@ -51,21 +51,6 @@ class CatalogTest {
         assertFalse(FlashChip.OLD.allows(entry.copy(chip = "unknown")))
         assertTrue(FlashChip.OLD.allows(entry.copy(chip = "old")))
         assertFalse(FlashChip.UNKNOWN.allows(entry.copy(chip = "unknown", stock = true)))
-    }
-
-    @Test fun staleCatalogCanBeBrowsedButIsNotFreshAndDoesNotFetchAgainWithinDay() {
-        val directory = kotlin.io.path.createTempDirectory().toFile()
-        try {
-            File(directory, "catalog.json").writeText(source)
-            File(directory, "catalog-fetched.txt").writeText("1")
-            File(directory, "catalog-attempt.txt").writeText((CatalogRepository.DAY * 2).toString())
-            val repo = CatalogRepository(directory)
-            assertNotNull(repo.cached(CatalogRepository.DAY * 2 + 1000))
-            assertFalse(repo.cached(CatalogRepository.DAY * 2 + 1000)!!.fresh)
-            assertFalse(repo.load(CatalogRepository.DAY * 2 + 1000).fresh)
-            File(directory, "catalog-fetched.txt").writeText((CatalogRepository.DAY * 2).toString())
-            assertTrue(repo.load(CatalogRepository.DAY * 2 + 1000).fresh)
-        } finally { directory.deleteRecursively() }
     }
 
     @Test fun parsesLiveCatalogFixtureWhenProvided() {

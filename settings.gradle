@@ -3,5 +3,5 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories { google(); mavenCentral() }
 }
-rootProject.name = 'FM1Flasher'
-include ':app'
+rootProject.name = 'multiplatform-fm1-flasher'
+include ':app', ':shared', ':composeApp'

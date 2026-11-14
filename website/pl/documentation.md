@@ -3,11 +3,11 @@
 Kod źródłowy aplikacji jest udostępniany na licencji MIT — zobacz [LICENSE.md](../../LICENSE.md).
 Zasady przetwarzania danych opisuje [polityka prywatności](../../PRIVACY_POLICY.md).
 
-Eksperymentalna aplikacja Kotlin/Android 8.0+ do wybierania jednego M‑VAVE FM‑1 na hubie USB OTG, pobierania firmware z katalogu i instalowania go przez USB MIDI SysEx. Wcześniejsze testy użytkownika potwierdziły udane flashowanie fizycznego FM‑1. Automatyczne ponowne łączenie wymaga dalszych testów na sprzęcie.
+Eksperymentalna aplikacja Kotlin/Android 14+ do wybierania jednego M‑VAVE FM‑1 na hubie USB OTG, pobierania firmware z katalogu i instalowania go przez USB MIDI SysEx. Wcześniejsze testy użytkownika potwierdziły udane flashowanie fizycznego FM‑1. Automatyczne ponowne łączenie wymaga dalszych testów na sprzęcie.
 
 ## Język i wygląd
 
-W **Ustawieniach** w górnym pasku wybierz język: polski, angielski, chiński uproszczony albo systemowy. Android 13+ udostępnia ten sam wybór również w systemowych ustawieniach języka aplikacji. Starsze wersje Androida zapamiętują wybór lokalnie. Wszystkie trzy języki są dołączane do APK i AAB, także do zmiany bez internetu. Przetłumaczone są również ostrzeżenia, błędy, dziennik i powiadomienia; teksty pobierane od autorów firmware zachowują oryginalny język.
+W **Ustawieniach** w górnym pasku wybierz język: polski, angielski, chiński uproszczony albo systemowy. Ten sam wybór jest dostępny również w systemowych ustawieniach języka aplikacji. Wszystkie trzy języki są dołączane do APK i AAB, także do zmiany bez internetu. Przetłumaczone są również ostrzeżenia, błędy, dziennik i powiadomienia; teksty pobierane od autorów firmware zachowują oryginalny język.
 
 Motyw może być jasny, ciemny lub zgodny z systemem. Ustawienia zawierają także dostępną offline politykę prywatności.
 

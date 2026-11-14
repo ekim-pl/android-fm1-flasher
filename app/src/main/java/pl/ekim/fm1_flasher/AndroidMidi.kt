@@ -2,7 +2,6 @@ package pl.ekim.fm1_flasher
 
 import android.hardware.usb.UsbDevice
 import android.media.midi.*
-import android.os.Build
 import android.os.Handler
 import java.io.IOException
 import java.util.concurrent.CountDownLatch
@@ -17,17 +16,30 @@ data class UsbMidi(val info: MidiDeviceInfo, val usb: UsbDevice) {
 }
 
 class AndroidMidi(private val manager: MidiManager?, private val main: Handler) {
-    @Suppress("DEPRECATION")
     fun devices(): List<UsbMidi> {
         val manager = manager ?: return emptyList()
-        val infos = if (Build.VERSION.SDK_INT >= 33) manager.getDevicesForTransport(MidiManager.TRANSPORT_MIDI_BYTE_STREAM)
-            else manager.devices.toSet()
+        val infos = manager.getDevicesForTransport(MidiManager.TRANSPORT_MIDI_BYTE_STREAM)
         return infos.filter { it.type == MidiDeviceInfo.TYPE_USB && it.inputPortCount > 0 && it.outputPortCount > 0 }
-            .mapNotNull { info -> info.properties.getParcelable<UsbDevice>(MidiDeviceInfo.PROPERTY_USB_DEVICE)?.let { UsbMidi(info, it) } }
+            .mapNotNull { info -> info.properties.getParcelable(MidiDeviceInfo.PROPERTY_USB_DEVICE, UsbDevice::class.java)?.let { UsbMidi(info, it) } }
             .sortedBy { it.usb.deviceName }
     }
 
     fun open(target: UsbMidi): MidiConnection {
+        MidiSessionGuard.acquire()
+        try {
+            val connection = openUnlocked(target)
+            return object : MidiConnection by connection {
+                private var closed = false
+                override fun close() {
+                    if (closed) return
+                    closed = true
+                    try { connection.close() } finally { MidiSessionGuard.release() }
+                }
+            }
+        } catch (failure: Exception) { MidiSessionGuard.release(); throw failure }
+    }
+
+    private fun openUnlocked(target: UsbMidi): MidiConnection {
         val manager = manager ?: failed(msg(R.string.midi_unavailable))
         check(devices().any { it.endpoint == target.endpoint }) { failed(msg(R.string.usb_port_gone)) }
         val ready = CountDownLatch(1)
@@ -65,6 +77,12 @@ class AndroidMidi(private val manager: MidiManager?, private val main: Handler) 
         private val queue = LinkedBlockingQueue<ByteArray>(128)
         private val failure = AtomicReference<Exception?>()
         @Volatile private var closed = false
+        @Volatile private var disconnected = false
+        private val callback = object : MidiManager.DeviceCallback() {
+            override fun onDeviceRemoved(info: MidiDeviceInfo) {
+                if (info.id == endpoint.id) disconnected = true
+            }
+        }
         private val assembler = SysExAssembler {
             check(queue.offer(it)) { failed(msg(R.string.midi_buffer_full)) }
         }
@@ -74,7 +92,13 @@ class AndroidMidi(private val manager: MidiManager?, private val main: Handler) 
                 catch (problem: Exception) { failure.compareAndSet(null, problem) }
             }
         }
-        init { output.connect(receiver) }
+        init {
+            manager?.registerDeviceCallback(MidiManager.TRANSPORT_MIDI_BYTE_STREAM, { command -> main.post(command) }, callback)
+            try {
+                check(devices().any { it.endpoint == endpoint }) { failed(msg(R.string.midi_disconnected)) }
+                output.connect(receiver)
+            } catch (failure: Exception) { manager?.unregisterDeviceCallback(callback); throw failure }
+        }
 
         override fun send(bytes: ByteArray) {
             checkAlive()
@@ -93,13 +117,14 @@ class AndroidMidi(private val manager: MidiManager?, private val main: Handler) 
 
         private fun checkAlive() {
             failure.get()?.let { throw IOException(it.message, it) }
-            if (closed || devices().none { it.endpoint == endpoint }) failed(msg(R.string.midi_disconnected))
+            if (closed || disconnected) failed(msg(R.string.midi_disconnected))
         }
 
         override fun close() {
             if (closed) return
             closed = true
-            output.disconnect(receiver)
+            runCatching { manager?.unregisterDeviceCallback(callback) }
+            runCatching { output.disconnect(receiver) }
             runCatching { output.close() }
             runCatching { input.close() }
             runCatching { device.close() }

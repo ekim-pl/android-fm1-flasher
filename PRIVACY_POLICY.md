@@ -2,7 +2,7 @@
 
 ## Publisher and contact
 
-ekim.pl@gmail.com. Effective date: November 13, 2026. This policy describes how FM-1 Flasher processes data.
+ekim.pl@gmail.com. Effective date: November 14, 2026. This policy describes how FM-1 Flasher processes data.
 
 ## Local information
 
@@ -10,7 +10,7 @@ The app requires no account and includes no advertising, analytics or tracking S
 
 ## Network connections
 
-When offline mode is off, the app may automatically request the catalog from thefirmwarehub.com and preview images from servers specified in that catalog. Firmware metadata and packages are downloaded from GitHub and firmware authors’ servers after user action. Catalog refresh requests are limited to once per day. All app requests use HTTPS.
+When online, the app checks enabled catalog sources and may fetch their permitted preview images. The Firmware Hub is enabled by default; awesome-fm1 on raw.githubusercontent.com and custom sources require opt-in. Disabled sources make no automatic requests; Check now is an explicit one-time request even for a disabled source. Firmware downloads contact GitHub release services or approved author URLs only after user action. Each catalog is requested at most once every 24 hours, including failed attempts. Optional background catalog checks use WorkManager and are off by default; offline mode pauses them. All requests use HTTPS. No firmware is installed automatically.
 
 ## Information visible to external services
 
@@ -22,7 +22,7 @@ The app reads the identity of the FM-1 explicitly selected by the user and trans
 
 ## Storage, deletion and offline use
 
-Local data remain on your device until removed in the app, cleared in Android app settings, or deleted by uninstalling the app. Removing a package leaves favorites intact. Clearing app storage or uninstalling removes the library and preferences. Android app data backup is disabled. There is no server account or publisher-held user profile to delete. In offline mode, the app does not refresh the catalog or download packages or preview images; previously saved content remains available.
+Local data remain on your device until removed in the app, cleared in Android app settings, or deleted by uninstalling the app. Removing a package leaves favorites intact. Catalogs, source policies and local-package metadata use SQLite. Removing a subscription retains provenance, known withdrawals, packages and favorites. Clearing app storage or uninstalling removes the library and preferences. Android app data backup is disabled. There is no server account or publisher-held user profile to delete. In offline mode, the app does not refresh the catalog or download packages or preview images; previously saved content remains available.
 
 ## Changes and questions
 

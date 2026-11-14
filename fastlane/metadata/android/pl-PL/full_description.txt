@@ -16,7 +16,7 @@ Dopasuj interfejs
 Wybierz polski, angielski lub chiński uproszczony albo język systemowy. Korzystaj z jasnego i ciemnego motywu lub automatycznego wyboru Androida.
 
 Wymagania
-Android 8.0 lub nowszy, USB Host/OTG i system MIDI, M-VAVE FM-1, przewód do transmisji danych i stabilne zasilanie. Zalecany jest zasilany hub USB. Pobranie katalogu i nowych paczek wymaga internetu. Opisy firmware pozostają w oryginalnym języku autorów.
+Android 14 lub nowszy, USB Host/OTG i system MIDI, M-VAVE FM-1, przewód do transmisji danych i stabilne zasilanie. Zalecany jest zasilany hub USB. Pobranie katalogu i nowych paczek wymaga internetu. Opisy firmware pozostają w oryginalnym języku autorów.
 
 Wersja eksperymentalna
 Ta wersja nie została jeszcze sprawdzona z fizycznym FM-1. Aktualizacja może usunąć dane instrumentu. Błędna paczka, utrata zasilania lub wybranie niewłaściwego instrumentu po restarcie może wymagać sprzętowego odzyskania urządzenia. Przed użyciem zrób kopię danych narzędziami danego firmware. Aplikacja nie wykonuje kopii zapasowych, aktualizacji Bluetooth, automatycznego rozpoznawania kości flash ani odzyskiwania sprzętowego.

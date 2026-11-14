@@ -1,0 +1,24 @@
+plugins {
+    id 'org.jetbrains.kotlin.multiplatform'
+    id 'com.android.library'
+}
+kotlin {
+    androidTarget { compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17 } }
+    jvm { compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17 } }
+    iosArm64()
+    iosSimulatorArm64()
+    applyDefaultHierarchyTemplate()
+    sourceSets {
+        commonMain.dependencies { api 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0' }
+        commonTest.dependencies { implementation kotlin('test') }
+        jvmCommonMain { dependsOn commonMain }
+        androidMain { dependsOn jvmCommonMain }
+        jvmMain { dependsOn jvmCommonMain }
+    }
+}
+android {
+    namespace 'pl.ekim.fm1_flasher.shared'
+    compileSdk 36
+    defaultConfig { minSdk 26 }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}

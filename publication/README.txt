@@ -2,7 +2,7 @@ FM-1 Flasher — publication materials
 
 APP
 Application ID: pl.ekim.fm1_flasher
-Android: 8.0+ (API 26), target/compile API 36
+Android: 14+ (API 34), target/compile API 36
 Publisher: Ekim
 Contact: ekim.pl@gmail.com
 License: MIT; see ../LICENSE.md for scope and third-party exclusions.

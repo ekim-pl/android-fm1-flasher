@@ -1,7 +1,5 @@
 package pl.ekim.fm1_flasher
 
-import java.io.Closeable
-import java.util.BitSet
 
 data class Endpoint(val id: Int, val usbPath: String)
 
@@ -18,58 +16,70 @@ class ReconnectGate(private val previous: Endpoint, before: List<Endpoint>) {
         current.singleOrNull()?.takeIf { usbPaths.singleOrNull() == it.usbPath && it in candidates(current) }
 }
 
-interface MidiConnection : Closeable {
+interface MidiConnection : AutoCloseable {
     val endpoint: Endpoint
-    fun send(bytes: ByteArray)
-    fun receive(timeoutMs: Long): ByteArray?
+    @Throws(Exception::class) fun send(bytes: ByteArray)
+    @Throws(Exception::class) fun receive(timeoutMs: Long): ByteArray?
+    @Throws(Exception::class) override fun close()
 }
 
 class FlashSession(
     private val reconnect: (Endpoint, Boolean) -> MidiConnection,
     private val report: (AppText, Int) -> Unit,
-    private val pause: (Long) -> Unit = { Thread.sleep(it) },
-    private val now: () -> Long = { System.nanoTime() / 1_000_000 },
+    private val pause: (Long) -> Unit = { platformPause(it) },
+    private val now: () -> Long = { monotonicMillis() },
 ) {
+    companion object { const val MAX_SESSION_MS = 15 * 60_000L }
+    private var sessionDeadline = Long.MAX_VALUE
+    private fun checkTime() { check(now() < sessionDeadline) { failed(msg("flash_timeout")) } }
+
     fun identify(link: MidiConnection): FirmwareIdentity {
         repeat(3) {
+            checkTime()
             link.send(Protocol.identityQuery)
-            val deadline = now() + 1200
+            val deadline = minOf(now() + 1200, sessionDeadline)
             while (now() < deadline) {
                 val message = link.receive((deadline - now()).coerceAtLeast(1)) ?: break
                 Protocol.identity(message)?.let { return it }
             }
         }
-        failed(msg(R.string.flash_identity_missing))
+        failed(msg("flash_identity_missing"))
     }
 
     fun flash(image: FirmwarePackage, initial: MidiConnection, expectedCurrent: FirmwareIdentity): FirmwareIdentity {
         var link = initial
         val started = now()
+        sessionDeadline = started + MAX_SESSION_MS
         try {
             val current = identify(link)
             check(current.sameAs(expectedCurrent) && current.baseModel == image.identity.model) {
-                failed(msg(R.string.flash_identity_changed))
+                failed(msg("flash_identity_changed"))
             }
             if (!current.isLoader) {
-                report(msg(R.string.flash_stage_verify), -1)
+                report(msg("flash_stage_verify"), -1)
                 serve(link, image, Protocol.VERIFIED, 15_000, started)
                 pause(3000)
                 val previous = link.endpoint
                 link.close()
+                checkTime()
                 link = reconnect(previous, true)
-                check(identify(link).baseModel == image.identity.model) { failed(msg(R.string.loader_not_fm1)) }
+                checkTime()
+                val loader = identify(link)
+                check(loader.isLoader && loader.baseModel == image.identity.model) { failed(msg("loader_not_fm1")) }
             }
-            report(msg(R.string.flash_stage_write), 0)
+            report(msg("flash_stage_write"), 0)
             serve(link, image, Protocol.FINISHED, 180_000, started)
             pause(1500)
             val previous = link.endpoint
             link.close()
+            checkTime()
             link = reconnect(previous, false)
+            checkTime()
             val installed = identify(link)
             check(installed.sameAs(image.identity)) {
-                failed(msg(R.string.flash_identity_mismatch, installed, image.identity))
+                failed(msg("flash_identity_mismatch", installed, image.identity))
             }
-            report(msg(R.string.flash_completed, installed), 100)
+            report(msg("flash_completed", installed), 100)
             return installed
         } finally {
             link.close()
@@ -77,36 +87,43 @@ class FlashSession(
     }
 
     private fun serve(link: MidiConnection, image: FirmwarePackage, terminal: Long, idleMs: Long, started: Long) {
+        checkTime()
         link.send(Protocol.upgrade)
         pause(2000)
         var lastRequest = now()
-        val covered = BitSet(image.logical.size)
+        val covered = if (terminal == Protocol.FINISHED) BooleanArray(image.logical.size) else null
+        var coveredBytes = 0
         var requests = 0
         var lastPercent = -1
-        while (now() - lastRequest < idleMs && now() - started < 15 * 60_000) {
+        while (now() - lastRequest < idleMs && now() - started < MAX_SESSION_MS) {
             val message = link.receive(500) ?: continue
             val request = Protocol.request(message) ?: continue
             if (request.address == Protocol.VERIFIED || request.address == Protocol.FINISHED) {
                 check(request.address == terminal && request.length == 8 && request.flashType == 0 && requests > 0) {
-                    failed(msg(R.string.flash_stage_unexpected))
+                    failed(msg("flash_stage_unexpected"))
                 }
-                link.send(Protocol.response(request, "success\u0000".toByteArray(Charsets.US_ASCII)))
+                link.send(Protocol.response(request, "success\u0000".encodeToByteArray()))
                 return
             }
             check(request.length in 1..Protocol.MAX_DATA && request.address <= image.logical.size &&
-                request.address + request.length <= image.logical.size) { failed(msg(R.string.flash_out_of_bounds)) }
+                request.address + request.length <= image.logical.size) { failed(msg("flash_out_of_bounds")) }
             val start = request.address.toInt()
             pause(10)
             link.send(Protocol.response(request, image.logical.copyOfRange(start, start + request.length)))
             requests++
-            covered.set(start, start + request.length)
-            val percent = (covered.cardinality() * 100L / image.logical.size).toInt().coerceAtMost(99)
-            if (terminal == Protocol.FINISHED && percent != lastPercent) {
-                lastPercent = percent
-                report(msg(R.string.flash_progress, percent), percent)
+            if (covered != null) {
+                val end = start + request.length
+                for (index in start until end) {
+                    if (!covered[index]) { covered[index] = true; coveredBytes++ }
+                }
+                val percent = (coveredBytes * 100L / image.logical.size).toInt().coerceAtMost(99)
+                if (percent != lastPercent) {
+                    lastPercent = percent
+                    report(msg("flash_progress", percent), percent)
+                }
             }
             lastRequest = now()
         }
-        failed(msg(R.string.flash_timeout))
+        failed(msg("flash_timeout"))
     }
 }

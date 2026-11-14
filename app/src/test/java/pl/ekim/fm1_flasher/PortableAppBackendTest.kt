@@ -1,0 +1,78 @@
+package pl.ekim.fm1_flasher
+
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
+import org.junit.Assert.*
+import org.junit.Test
+import java.util.ArrayDeque
+
+class PortableAppBackendTest {
+    private class Storage : AppStorage {
+        val files = mutableMapOf<String, ByteArray>()
+        override fun read(path: String, limit: Int) = files[path]?.also { check(it.size <= limit) }?.copyOf()
+        override fun write(path: String, bytes: ByteArray) { files[path] = bytes.copyOf() }
+        override fun remove(path: String) { files.remove(path) }
+        override fun size(path: String) = files[path]?.size?.toLong()
+        override fun list(path: String) = files.keys.filter { it.startsWith("$path/") && '/' !in it.removePrefix("$path/") }.map { it.removePrefix("$path/") }
+    }
+    private class Midi : ProbeBackend, PassiveMidiBackend {
+        var current = 1
+        val sent = mutableMapOf<Int, MutableList<ByteArray>>()
+        override val midiLog = MidiLog()
+        override var monitorRunning = false
+        override fun devices() = listOf(ProbePort(current, "Physical FM-1 endpoint $current"))
+        override fun open(id: Int): MidiConnection {
+            check(id == current)
+            return object : MidiConnection {
+                override val endpoint = Endpoint(id, "native:$id")
+                val queue = ArrayDeque<ByteArray>()
+                var closed = false
+                var upgraded = false
+                override fun send(bytes: ByteArray) {
+                    check(!closed); sent.getOrPut(id) { mutableListOf() } += bytes
+                    if (bytes.contentEquals(Protocol.identityQuery)) queue += identity(when(id) { 1 -> "FM-1_015"; 2 -> "ota-FM-1_015"; else -> "FM-1_900" })
+                    if (bytes.contentEquals(Protocol.upgrade)) { upgraded = true; queue += readRequest(0, 4); queue += readRequest(if (id == 1) Protocol.VERIFIED else Protocol.FINISHED, 8) }
+                }
+                override fun receive(timeoutMs: Long) = queue.pollFirst()
+                override fun close() { if (!closed && upgraded) current++; closed = true }
+            }
+        }
+        override fun monitorPorts() = devices()
+        override fun startMonitor(ids: List<Int>) { monitorRunning = ids.isNotEmpty() }
+        override fun stopMonitor() { monitorRunning = false }
+    }
+    private class Host : AppHost {
+        override val systemLanguage = "pl-PL"
+        var flashActive = false
+        override fun setAppearance(theme: String) = Unit
+        override fun setFlashing(active: Boolean) { flashActive = active }
+        override fun document(name: String) = ""
+        override fun openLink(url: String) = Unit
+        override fun exportText(name: String, text: String) = Unit
+    }
+    @Test fun offlineFullFlashRequiresBothExplicitReconnectsAndPersistsConfirmedJournal() = runBlocking {
+        val storage = Storage(); val midi = Midi(); val host = Host(); var requests = 0
+        val http = object : HttpClient { override fun get(url: String, limit: Int, artworkOnly: Boolean): ByteArray { requests++; error("Offline") } }
+        val repository = FirmwareRepository(storage, http, ::epochMillis)
+        val raw = testPackage(); val hash = FirmwarePackage.sha256(raw)
+        val entry = localEntry(raw).copy(chip = "new")
+        repository.save(entry, raw); repository.saveSettings(LibrarySettings(offline = true))
+        val backend = PortableAppBackend(midi, midi, storage, http, host)
+        suspend fun idle() = withTimeout(5000) { backend.state.first { it.initialized && !it.busy } }
+        idle(); assertEquals("pl", backend.state.value.language)
+        backend.perform(AppAction(AppActionKind.USE, entry.id)); idle()
+        backend.perform(AppAction(AppActionKind.CONNECT, "1")); idle()
+        backend.perform(AppAction(AppActionKind.FLASH, "1", hash))
+        withTimeout(15000) { backend.state.first { it.awaitingPort && it.candidates.any { p -> p.id == "2" } } }
+        assertTrue(host.flashActive)
+        assertFalse(midi.sent[2].orEmpty().any { it.contentEquals(Protocol.upgrade) })
+        backend.perform(AppAction(AppActionKind.RECONNECT, "2"))
+        withTimeout(15000) { backend.state.first { it.awaitingPort && it.candidates.any { p -> p.id == "3" } } }
+        backend.perform(AppAction(AppActionKind.RECONNECT, "3")); idle()
+        assertEquals(FirmwareIdentity("FM-1", "900"), backend.state.value.identity)
+        assertEquals(100, backend.state.value.progress)
+        assertFalse(host.flashActive); assertEquals(0, requests)
+        assertTrue(storage.files.getValue("flash-session.json").decodeToString().contains("\"confirmed\""))
+        assertFalse(midi.sent[3].orEmpty().any { it.contentEquals(Protocol.upgrade) })
+    }
+}

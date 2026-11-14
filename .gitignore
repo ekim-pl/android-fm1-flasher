@@ -15,3 +15,8 @@ vendor/bundle/
 fastlane/report.xml
 fastlane/README.md
 __pycache__/
+
+# Generated Xcode project (iosApp/project.yml is authoritative)
+iosApp/*.xcodeproj/
+iosApp/Info.plist
+iosApp/DerivedData/

@@ -1,0 +1,1 @@
+Logger MIDI i recovery są dostępne po włączeniu funkcji eksperymentalnych w ustawieniach. Poprawiono kontrolę urządzenia i OTA, limity pobierania i cache, płynność loggera oraz odzyskiwanie ustawień biblioteki.

@@ -1,0 +1,1 @@
+Fix catalog-refresh crashes: accessibility labels no longer observe the entire application state from recycled catalog nodes. Adds a refresh and scrolling regression test.

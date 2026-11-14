@@ -1,0 +1,1 @@
+Experimental build refresh: localized About guides describe the MIDI logger, chip detection and ROM recovery. No firmware behavior changes. Android 14+.

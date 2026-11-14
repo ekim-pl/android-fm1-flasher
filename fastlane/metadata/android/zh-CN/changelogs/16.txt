@@ -1,0 +1,1 @@
+基于已发布的 Android FM-1 Flasher 0.8.1：SQLite 库迁移、固件来源管理和筛选、可选后台检查，以及完整 Compose 界面的本地化指南。

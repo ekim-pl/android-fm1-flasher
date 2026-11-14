@@ -1,0 +1,1 @@
+Pełny interfejs Compose: katalog, ulubione, biblioteka offline, flasher, ustawienia i narzędzia eksperymentalne. Wspólna logika katalogu i biblioteki oraz obsługa sesji iOS.

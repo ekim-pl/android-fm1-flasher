@@ -1,0 +1,1 @@
+Requires Android 14 or later. Improved USB permission handling and foreground service startup. Updated system bar and keyboard insets.

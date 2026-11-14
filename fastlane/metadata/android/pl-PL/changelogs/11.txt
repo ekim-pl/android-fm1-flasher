@@ -1,0 +1,1 @@
+Aktualizacja wersji eksperymentalnej: opisy w zakładce O aplikacji wyjaśniają działanie loggera MIDI, wykrywania kości i odzyskiwania ROM. Bez zmian w aktualizacji firmware. Android 14+.
