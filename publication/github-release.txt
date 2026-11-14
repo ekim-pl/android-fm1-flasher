@@ -1,28 +1,27 @@
-FM-1 Flasher 0.8.0 experimental — firmware catalogs and source management
+FM-1 Flasher 0.8.1 — localized source guides and Awesome FM-1
 
 ## Changes
-- Adds Settings → Firmware sources: add/edit HTTPS catalogs, enable/disable subscriptions, check status, configure approved package/artwork URLs, filter by source, remove custom subscriptions and restore defaults.
-- The Firmware Hub remains enabled by default. The additional source is named **Awesome FM-1** and is disabled by default. Existing installations receive the new display name without resetting source settings, request limits or saved firmware.
-- Uses a local SQLite library with migration of the previous JSON catalog, downloaded packages, favorites, offline mode, selection and Hub request timestamps. Package metadata snapshots and known withdrawals remain available offline and after unsubscribing.
-- Synchronizes catalogs in the shared Hub JSON format with independent freshness, ETag/304 handling, transactional imports and partial success across sources. Hub checks retain the minimum 24-hour interval, including failed attempts and re-enabling a source.
-- Supports approved direct developer downloads and GitHub assets. Source policies restrict HTTPS hosts, paths, redirects, size and deadlines; catalog JSON cannot expand those permissions. Hub firmware still comes from its authors. SHA/CRC checks, chip compatibility and stock recovery pins remain enforced.
-- Adds optional background catalog checks, off by default. Disabled sources make no automatic requests, including artwork. Flashing uses local packages without network access.
-- Updates English, Polish and Simplified Chinese UI, About and privacy information. Keeps application ID `pl.ekim.fm1_flasher`. Version code: 14. Requires Android 14+.
+- Expands the in-app About page in English, Polish and Simplified Chinese with instructions for adding, configuring, enabling and removing firmware sources, checking status, filtering by source and restoring defaults.
+- Explains refresh limits, optional background checks, offline use and preservation of downloaded packages and favorites.
+- Adds a dedicated **Awesome FM-1** project section: its role as a companion community firmware directory, how to enable the built-in source, publisher-hosted downloads and how to contribute projects or report outdated entries.
+- Updates the same localized content on the project website and links the companion catalog from the main README.
+- Includes the multi-source SQLite library from 0.8.0-experimental. **The Firmware Hub remains enabled by default; Awesome FM-1 remains disabled by default.** Existing source settings and local packages are preserved on update.
+- Uses version name **0.8.1**, version code **15** and application ID `pl.ekim.fm1_flasher`. Requires Android 14+.
 
 ## Validation
-- 110 JVM tests passed without skips using a saved Hub catalog, the hash-verified official V15 package and SHRUB package. V16 was not included in this run.
-- 23 instrumentation tests passed on Android 16, including actual SQLite imports/migrations and source/background state. API 34 and API 36 also have platform jobs in Android CI.
-- An update installed over the existing app preserved catalog rows, downloaded firmware, favorites, selection, offline/background settings and source request budgets. The source manager and catalog display **Awesome FM-1**.
-- Debug APK, unsigned release APK/AAB, instrumentation APK and both lint variants built successfully. Two release-fixture helper tests, the no-skips fixture gate and generated documentation link checks passed.
+- 110 JVM tests passed without skips using a saved Hub catalog and hash-verified V15 and SHRUB packages. V16 was not included.
+- 23 instrumentation tests passed on Android 16, including SQLite migration, source settings and background-work guards. API 34 and API 36 also have platform jobs in Android CI.
+- Installation over the existing app preserved all source records and request limits, catalog entries, downloaded packages, favorites and application settings. The signing certificate matches 0.8.0-experimental.
+- Debug and unsigned release APK/AAB builds and both lint variants passed. The release fixture gate, its two helper tests and checks for 44 generated documentation pages passed. All three updated About documents are bundled in the APK; their localized rendering was checked on the emulator during preparation of this update.
 
 ## Installation
-Install `FM1-Flasher-0.8.0-experimental-debug.apk`. This debug-signed prerelease has the same signing certificate as 0.7.0 and updates the original FM-1 Flasher app while preserving its data. It does not migrate the separate `.experimental` or `.recovery` application IDs. No firmware package is bundled in the APK.
+Install `FM1-Flasher-0.8.1-debug.apk`. This GitHub release follows the existing debug-signed APK distribution and updates 0.8.0-experimental with the same signing certificate. Data from the separate `.experimental` and `.recovery` application IDs is not migrated. No firmware package is bundled in the APK.
 
-Enable Awesome FM-1 in Settings → Firmware sources if you want its additional catalog. Catalogs are initially unsigned. Optional background synchronization remains off on a new installation. Settings → Experimental features still controls MIDI Logger and recovery separately.
+Open **Settings → Firmware sources** to manage catalogs. Enable **Awesome FM-1** there to use its additional catalog. Background catalog checks and **Settings → Experimental features** remain optional and off by default on a new installation.
 
 ## Known limits
-SHRUB package parsing and integrity were checked, but its chip is **unknown**, so flashing remains blocked. No physical SHRUB flashing or USB recovery was tested. Both-chip hardware acceptance and sustained multi-port load testing remain pending. Publisher automation and signed catalog publication for awesome-fm1 are separate work. Existing toolchain dependency advisories are recorded in `docs/reviews/0.7.0-validation.md` and its audit. This is a GitHub prerelease, not a stable or Google Play release.
+The GitHub release channel does not change the existing hardware restrictions. SHRUB still has unknown flash-chip compatibility and remains blocked from flashing. Physical SHRUB flashing, USB ROM recovery, both-chip hardware acceptance and sustained multi-port load testing remain unverified. Catalogs currently have no verified publisher signature; awesome-fm1 publisher automation and catalog signing remain separate work. Existing toolchain dependency advisories are documented in `docs/reviews/0.7.0-validation.md` and its audit.
 
 ## Assets
-- `FM1-Flasher-0.8.0-experimental-debug.apk`
-- `FM1-Flasher-0.8.0-experimental-debug.apk.sha256`
+- `FM1-Flasher-0.8.1-debug.apk`
+- `FM1-Flasher-0.8.1-debug.apk.sha256`

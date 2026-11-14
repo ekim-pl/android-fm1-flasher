@@ -188,7 +188,7 @@ This USB path still needs validation on physical hardware.
 
 ## Experimental multi-port MIDI logger
 
-The experimental build uses the original name **FM-1 Flasher** and package ID `pl.ekim.fm1_flasher` (version `0.8.0-experimental`). Android 14+ is required. Data from the separate `.experimental` app is not migrated.
+The app uses the original name **FM-1 Flasher** and package ID `pl.ekim.fm1_flasher` (version `0.8.1`). Android 14+ is required. Data from the separate `.experimental` app is not migrated.
 
 Open **MIDI Logger**, choose one or more instrument **outputs**, grant USB access for each instrument and press **Start**. The logger only receives: it never identifies devices, opens their MIDI inputs or sends MIDI. Multiple ports on a device and multiple USB devices are supported, including devices without MIDI inputs. No firmware change is required; only data actually transmitted by the instrument can appear.
 
@@ -199,8 +199,8 @@ Memory is bounded to 5000 entries and 4 MiB of raw message data, plus a bounded 
 Validation for this experiment: parser/buffer unit tests and the existing JVM suite, lint and debug APK build. Physical multi-port USB reception and a 30-minute hardware load test remain to be done. Installation succeeded on the Android 16 emulator; UI automation was blocked by another session holding that emulator.
 ## Experimental ROM recovery
 
-The experimental build uses application ID `pl.ekim.fm1_flasher` and version
-`0.8.0-experimental`. Physical USB recovery has **not** been validated.
+The app uses application ID `pl.ekim.fm1_flasher` and version
+`0.8.1`. Physical USB recovery has **not** been validated.
 
 Open **Flasher → Recovery and backups**. A responding FM-1 can be asked to enter
 ROM download mode; a device already in that mode needs no MIDI connection.
