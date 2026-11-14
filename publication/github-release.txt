@@ -1,24 +1,23 @@
-FM-1 Flasher 0.6.0 — Android 14+
+FM-1 Flasher 0.6.3 experimental — localized About documentation
+
+Experimental Android 14+ test build. Package ID:
+`pl.ekim.fm1_flasher.experimental`; version code 11.
 
 ## Changes
-- Requires Android 14 (API 34) or newer; target and compile SDK remain API 36. Android 8–13 are no longer supported.
-- Simplifies MIDI device discovery and callbacks, per-app language settings and permission handling.
-- Checks the actual USB permission grant instead of relying on immutable PendingIntent result extras.
-- Validates the selected USB device before starting the foreground flash service and handles startup failures.
-- Updates system bar, display cutout and keyboard insets; fixes a cold-start crash.
-- Adds device tests for cold launch and immutable permission callbacks.
+- Refreshes the in-app About guide in English, Polish and Simplified Chinese.
+- Documents the receive-only MIDI logger, flash-chip detection and experimental ROM recovery, including the physical-hardware validation limits.
+- No firmware update or recovery behavior changed in this documentation build.
 
 ## Validation
-- JVM tests: 61 passed, 2 optional external-fixture tests skipped.
-- Debug/release lint, debug APK and release AAB builds passed.
-- Android 16 emulator: both instrumentation tests passed (cold launch and immutable USB callback); app launch and catalog loading checked.
-- Documentation build and all 44 generated HTML pages passed link validation.
-- Android 14/15 and physical FM-1 USB flashing still require validation; see the attached acceptance checklist.
+- `:app:assembleDebug` passed.
+- APK signature verified and matches the previous experimental test release.
+- GitHub Pages build produced all translated pages; link and translation checks passed for 44 HTML pages.
+- Android CI tests and lint are required to pass before release publication.
+- Physical USB recovery and multi-port MIDI reception remain unverified on hardware.
 
 ## Installation
-The APK is signed with the same debug key as the previous test release. It is a test build, not a Google Play production artifact. Back up instrument data before firmware updates. Automatic reconnection and download-mode chip detection still require physical hardware testing.
+Install the attached APK as an update to the existing experimental app. It uses the same signing certificate, has a higher version code, and keeps its separate experimental app data. This is a debug-signed test build, not a Google Play artifact.
 
 ## Assets
-- FM1-Flasher-0.6.0-debug.apk — installable Android 14+ build.
-- FM1-Flasher-0.6.0-debug.apk.sha256 — SHA-256 checksum.
-- FM1-Flasher-0.6.0-test-checklist.txt — remaining acceptance checks.
+- `FM1-Flasher-0.6.3-experimental-debug.apk` — installable test build.
+- `FM1-Flasher-0.6.3-experimental-debug.apk.sha256` — SHA-256 checksum.

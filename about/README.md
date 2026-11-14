@@ -8,6 +8,7 @@ An independent, experimental app for browsing firmware and updating an **M‑VAV
 - Select downloaded firmware in the catalog or directly in the Flasher tab.
 - Verify package integrity and compatibility before installation.
 - Reconnect after planned restarts automatically when one USB device and one eligible MIDI port are present.
+- The experimental debug build also includes a receive-only MIDI logger, flash-chip detection and narrowly scoped ROM recovery; recovery has not been validated on physical hardware.
 - Choose a light, dark or system theme and an English, Polish or Simplified Chinese interface.
 
 ## Before updating

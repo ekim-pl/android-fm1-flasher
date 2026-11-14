@@ -10,6 +10,7 @@ FM‑1 Flasher to niezależna, eksperymentalna aplikacja na **Androida 14+** do 
 - **Przygotuj bibliotekę.** Pobierz paczki i korzystaj z nich offline. Aplikacja sprawdza integralność i zgodność przed zapisem.
 - **Wybierz swój FM‑1.** Wskaż konkretny port USB MIDI, również gdy korzystasz z huba z kilkoma instrumentami.
 - **Aktualizuj świadomie.** Sprawdź wybrany instrument i paczkę przed potwierdzeniem instalacji.
+- **Narzędzia eksperymentalne.** Osobna wersja debug zawiera odbiorczy logger MIDI, wykrywanie kości flash i ograniczone odzyskiwanie ROM. Odzyskiwania ROM nie sprawdzono na fizycznym sprzęcie.
 
 ## Zanim rozpoczniesz
 

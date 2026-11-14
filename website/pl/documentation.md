@@ -78,7 +78,7 @@ Gotowe APK testowe pobierzesz z [wydań na GitHubie](https://github.com/ekim-pl/
 
 Pozytywna kontrola tożsamości potwierdza odpowiedź urządzenia, nie odczyt kontrolny całej pamięci. Różne firmware mogą współdzielić tożsamość. Przerwanie zasilania, niewłaściwy pakiet lub błędne ponowne wskazanie instrumentu może wymagać sprzętowego odzyskania urządzenia. Automatyczne łączenie dotyczy zaplanowanych restartów w toku aktualizacji, nie dowolnej utraty połączenia podczas zapisu.
 
-Poza zakresem: aktualizacja Bluetooth, masowe flashowanie, kopie presetów/pamięci, odczyt JEDEC, niskopoziomowy tryb download/UBOOT, trwałe mapowanie gniazd huba, import niezweryfikowanych lokalnych plików i pakiety o innych identyfikatorach, np. `FM1_OFFICIAL_OPEN`.
+Zwykła aktualizacja MIDI nie obsługuje Bluetooth, masowego flashowania, kopii presetów/pamięci, przepisywania bootloadera, generowania sprzętowego USB_KEY, trwałego mapowania gniazd huba, importu niezweryfikowanych plików lokalnych ani pakietów o innych identyfikatorach, np. `FM1_OFFICIAL_OPEN`. Wykrywanie kości i odzyskiwanie ROM to oddzielne funkcje eksperymentalnej wersji debug opisane niżej; nie rozszerzają zgodności zwykłych aktualizacji.
 
 <a id="building-and-testing"></a>
 
@@ -93,7 +93,7 @@ Wymagane JDK 17, Android SDK Platform 36 oraz Build Tools 35.0.0. Ustaw `ANDROID
 APK: `app/build/outputs/apk/debug/app-debug.apk`.
 AAB: `./gradlew :app:bundleRelease`, wynik `app/build/outputs/bundle/release/app-release.aab`. Bez konfiguracji klucza jest niepodpisany; GitHub Actions podpisuje go kluczem uploadu z sekretów.
 
-60 testów JVM obejmuje protokół i pakiety UFW, katalog, kategorie, łączenie filtrów, sortowanie, trwałość biblioteki i ustawień, aktualizacje po SHA‑256, gest odświeżania i jego anulowanie, warunki automatycznego odświeżania, zachowanie starej paczki po błędzie, korupcję pliku, zgodność starszych wersji, wycofane paczki, wykluczanie sąsiednich portów i sesję z trzema urządzeniami. Dwa testy opcjonalnie czytają rzeczywiste pliki z dysku, bez dołączania firmware do repozytorium:
+84 testy JVM obejmują protokół i pakiety UFW, katalog, kategorie, łączenie filtrów, sortowanie, trwałość biblioteki i ustawień, aktualizacje po SHA‑256, gest odświeżania i jego anulowanie, warunki automatycznego odświeżania, zachowanie starej paczki po błędzie, korupcję pliku, zgodność starszych wersji, wycofane paczki, wykluczanie sąsiednich portów, sesje z trzema urządzeniami, logger MIDI i symulowane odzyskiwanie ROM. Dwa testy opcjonalnie czytają rzeczywiste pliki z dysku, bez dołączania firmware do repozytorium:
 
 ```sh
 FM1_TEST_PACKAGES=/path/stock-v15.fwsc:/path/stock-v16.fwsc \
@@ -101,7 +101,7 @@ FM1_TEST_CATALOG=/path/catalog.json \
 ./gradlew :app:testDebugUnitTest
 ```
 
-Kontrola automatyczna: 58 testów zaliczonych, dwa opcjonalne testy z zewnętrznymi plikami pominięte. `lintDebug`, `assembleDebug` i `bundleRelease` przechodzą; pozostają ostrzeżenia dotyczące m.in. wersji narzędzi i natywnych widoków. Wcześniejszy przebieg zweryfikował wszystkie 51 testów bez pominięć z katalogiem pobranym 2026‑11‑13 oraz rzeczywistymi pakietami M‑VAVE i Hortator. Emulator Android 16 służy do sprawdzenia UI i sieci, nie transportu fizycznego USB.
+W najnowszej walidacji wydania wszystkie 84 testy JVM przeszły z rzeczywistymi paczkami V15/V16 oraz symulowanym odzyskiwaniem na obu typach kości; przeszły też lint i budowanie debug APK. Fizyczne odzyskiwanie USB i odbiór MIDI z wielu portów nadal wymagają testów sprzętowych. Emulator Android 16 sprawdza interfejs i sieć, nie fizyczny transport USB.
 
 W emulatorze sprawdzono uruchomienie aplikacji, odczyt 202 pozycji katalogu, pobranie i trwały zapis Hortator 1.0.1 z kontrolą SHA‑256/CRC, zapis ulubionego, łączenie filtrów „Tylko pobrane” i „Ulubione” z kategorią, sortowanie, lokalną bibliotekę w trybie offline oraz rzeczywisty gest odświeżania. Bez urządzenia USB przycisk instalacji pozostaje zablokowany.
 
@@ -126,3 +126,26 @@ Protokół: [AL‑255/FM‑1‑RE](https://github.com/AL-255/FM-1-RE/blob/main/d
 Kompilacja katalogu: The Firmware Hub, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Aplikacja filtruje listę do obsługiwanych tożsamości, wybiera potrzebne pola i dodaje przypięty wpis stock. Opisy należą do autorów; każda pozycja pokazuje autora i link do jego repozytorium. Licencje firmware pozostają przy projektach; żaden firmware nie jest dołączony do APK ani źródeł aplikacji. Gradle Wrapper: [Apache 2.0](https://github.com/gradle/gradle/blob/v8.13.0/LICENSE).
 
 Renderowanie Markdown: [CommonMark Java](https://github.com/commonmark/commonmark-java), [licencja BSD-2-Clause](../../third_party/commonmark-LICENSE.txt), dołączona także do aplikacji.
+
+### Wykrywanie kości flash
+
+Użyj **Wykryj kość (tryb download)** przy dokładnie jednym instrumencie w trybie JieLi USB download (`4C4A:8057`). Aplikacja wgrywa loader do RAM i odczytuje JEDEC ID poleceniem `FC0A`; podczas wykrywania nie kasuje ani nie programuje flash. `856014` to starsza kość FM‑1, `B36014` — nowsza. Inne identyfikatory pozostają nieznane.
+
+Po odczycie odłącz zasilanie, uruchom instrument ponownie w zwykłym trybie MIDI, połącz się w aplikacji i wybierz wykryty typ kości. Wynik nie jest wywnioskowywany z wersji firmware ani przenoszony na inne połączenie USB. Ta ścieżka USB wymaga jeszcze sprawdzenia na fizycznym sprzęcie.
+
+## Eksperymentalny logger MIDI dla wielu portów
+
+Wersja debug instaluje się obok zwykłej aplikacji jako **FM-1 Flasher Experimental** (`pl.ekim.fm1_flasher.experimental`, wersja `0.6.3-experimental`) i wymaga Androida 14+. Ma oddzielną bibliotekę i ustawienia. W **MIDI Logger** wybierz wyjścia instrumentów, udziel dostępu USB i naciśnij **Start**. Logger wyłącznie odbiera dane — nie identyfikuje urządzeń, nie otwiera ich wejść MIDI ani niczego nie wysyła. Obsługuje wiele portów i urządzeń, także bez wejść MIDI.
+
+Dziennik pokazuje czas odbioru, urządzenie/ścieżkę/port, kanał, zdekodowane MIDI oraz HEX. Przytrzymaj wpis, aby zobaczyć pełny HEX. Filtry obejmują źródło, kanał i typ; można ukryć Clock oraz Active Sensing. Eksportuje cały bufor jako UTF‑8 przez systemowy wybór pliku, niezależnie od filtrów. Bufor jest ograniczony do 5000 wpisów i 4 MiB danych; pojedynczy SysEx do 64 KiB. Utracone dane i skrócone SysEx są oznaczane, ale logger nie wykryje utraty przed dostarczeniem danych przez Androida. Zatrzymuje się po przejściu aplikacji w tło, również przy otwieraniu eksportu. Odbiór z wielu portów i 30-minutowy test obciążeniowy wymagają sprawdzenia na sprzęcie.
+
+## Eksperymentalne odzyskiwanie ROM
+
+Funkcja jest dostępna wyłącznie w wersji debug `0.6.3-experimental`. Odzyskiwanie przez USB nie zostało sprawdzone na fizycznym instrumencie. Otwórz **Flasher → Recovery and backups**. Odpowiadający FM‑1 można poprosić o przejście w tryb ROM download; urządzenie już w tym trybie nie wymaga połączenia MIDI. Podłącz dokładnie jedno urządzenie download (`4C4A:8057`, `WL82 UBOOT1.00`) i udziel dostępu USB. Tryb download nie jest systemem plików — nigdy go nie formatuj.
+
+- Diagnostyka sprawdza JEDEC ID i klucz kości, dwukrotnie odczytuje całe 1 MiB, porównuje odczyty i zapisuje kopię wraz z metadanymi. Akceptowane są `856014` i `B36014` z kluczem `980F`. Nieznany obszar rozruchowy pozwala wykonać kopię, ale blokuje zapis naprawczy.
+- Przygotowanie odzyskiwania dopuszcza wyłącznie oficjalny pakiet `FM-1_015` o SHA‑256 `db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a`; sprawdza też hash wyodrębnionego firmware. Wymagany jest rozpoznany fabryczny obszar rozruchowy V15/V16; m-bootloader i uszkodzone obszary są odrzucane.
+- Przed zapisem aplikacja pokazuje urządzenie, kość, zmieniane sektory, chronione zakresy i sumę kopii, a następnie ponownie porównuje całą pamięć z kopią. Zapisuje tylko zmienione sektory 4 KiB z zakresu `[0x4000, 0x93000)`, odczytuje je kontrolnie, a na końcu porównuje całą pamięć. Błąd transferu zatrzymuje operację; nie ma automatycznej ponownej próby ani wznowienia.
+- Kopię można wyeksportować jako ZIP przez systemowy wybór pliku. Zawiera całą flash, metadane/SHA‑256 i dostępny wynik operacji. Kopie wewnętrzne znikają po odinstalowaniu aplikacji lub wyczyszczeniu jej danych — wyeksportuj kopię przed działaniem.
+
+Zgodność bajtów nie potwierdza uruchomienia instrumentu. Po operacji odłącz zasilanie i sprawdź uruchamianie oraz połączenie MIDI. Ustawienia i presety z custom firmware lub V16 mogą nie pasować do V15. Funkcja nie naprawia bootloadera, nie przywraca dowolnych kopii ani V16. Urządzenia niewidoczne przez USB wymagają zewnętrznego sprzętu USB_KEY albo drugiego instrumentu z [M-Unbricker](https://github.com/jvitkauskas/m-unbricker).

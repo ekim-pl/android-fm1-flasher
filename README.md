@@ -78,7 +78,7 @@ Download a test APK from [GitHub Releases](https://github.com/ekim-pl/android-fm
 
 A successful identity check confirms a device response, not a readback of all flash memory. Different firmware can share an identity. Power loss, an unsuitable package or selecting the wrong instrument after a restart may require hardware recovery. Automatic reconnection covers planned restarts during an update, not arbitrary connection loss while writing.
 
-Out of scope: Bluetooth updates, batch flashing, preset/memory backups, bootloader rewriting, hardware USB_KEY generation, persistent hub-socket mapping, importing unverified local files and packages with other identities such as `FM1_OFFICIAL_OPEN`.
+The regular MIDI update flow does not support Bluetooth updates, batch flashing, preset/memory backups, bootloader rewriting, hardware USB_KEY generation, persistent hub-socket mapping, importing unverified local files or packages with other identities such as `FM1_OFFICIAL_OPEN`. Chip detection and ROM recovery are separate experimental debug-build features described below; they do not expand normal firmware compatibility.
 
 <a id="budowanie-i-testy"></a>
 
@@ -93,7 +93,7 @@ Requires JDK 17, Android SDK Platform 36 and Build Tools 35.0.0. Set `ANDROID_HO
 APK: `app/build/outputs/apk/debug/app-debug.apk`.
 AAB: `./gradlew :app:bundleRelease`, output `app/build/outputs/bundle/release/app-release.aab`. It is unsigned without key configuration; GitHub Actions signs it with the upload key from secrets.
 
-The 60 JVM tests cover the protocol and UFW packages, catalog, categories, combined filters, sorting, library and preference persistence, SHA‑256 updates, refresh gestures and cancellation, automatic-refresh conditions, retaining an old package after failure, file corruption, older-version compatibility, withdrawn packages, excluding neighboring ports and a three-device session. Two optional tests read real files from disk without bundling firmware in the repository:
+The 84 JVM tests cover the protocol and UFW packages, catalog, categories, combined filters, sorting, library and preference persistence, SHA‑256 updates, refresh gestures and cancellation, automatic-refresh conditions, retaining an old package after failure, file corruption, older-version compatibility, withdrawn packages, neighboring-port exclusion, three-device sessions, MIDI logging and simulated ROM recovery. Two optional tests read real files from disk without bundling firmware in the repository:
 
 ```sh
 FM1_TEST_PACKAGES=/path/stock-v15.fwsc:/path/stock-v16.fwsc \
@@ -101,7 +101,7 @@ FM1_TEST_CATALOG=/path/catalog.json \
 ./gradlew :app:testDebugUnitTest
 ```
 
-Automated checks: 58 tests passed and two optional external-fixture tests were skipped. `lintDebug`, `assembleDebug` and `bundleRelease` pass; warnings remain about tooling versions and native views, among other things. An earlier run passed all 51 tests without skips using a catalog downloaded on 2026‑11‑13 and real M‑VAVE and Hortator packages. The Android 16 emulator checks the UI and networking, not physical USB transport.
+Latest release validation: all 84 JVM tests passed with real V15/V16 package fixtures and simulated recovery on both chip types; lint and the debug APK build passed. Physical USB recovery and multi-port MIDI reception still need hardware testing. The Android 16 emulator checks the UI and networking, not physical USB transport.
 
 Emulator checks covered app launch, reading 202 catalog entries, downloading and persisting Hortator 1.0.1 with SHA‑256/CRC validation, saving favorites, combining **Downloaded only** and **Favorites** with a category, sorting, the offline library and the actual pull-to-refresh gesture. Installation stays disabled without a USB device.
 
@@ -144,7 +144,7 @@ This USB path still needs validation on physical hardware.
 
 ## Experimental multi-port MIDI logger
 
-The experimental debug build installs alongside the regular app as **FM-1 Flasher Experimental** (`pl.ekim.fm1_flasher.experimental`, version `0.6.2-experimental`). Android 14+ is required. It has its own private library and preferences; existing app data is not shared.
+The experimental debug build installs alongside the regular app as **FM-1 Flasher Experimental** (`pl.ekim.fm1_flasher.experimental`, version `0.6.3-experimental`). Android 14+ is required. It has its own private library and preferences; existing app data is not shared.
 
 Open **MIDI Logger**, choose one or more instrument **outputs**, grant USB access for each instrument and press **Start**. The logger only receives: it never identifies devices, opens their MIDI inputs or sends MIDI. Multiple ports on a device and multiple USB devices are supported, including devices without MIDI inputs. No firmware change is required; only data actually transmitted by the instrument can appear.
 
@@ -156,7 +156,7 @@ Validation for this experiment: parser/buffer unit tests and the existing JVM su
 ## Experimental ROM recovery
 
 The debug build uses application ID `pl.ekim.fm1_flasher.experimental` and version
-`0.6.2-experimental`, so it installs alongside the normal app. Its library and
+`0.6.3-experimental`, so it installs alongside the normal app. Its library and
 backups are separate. Physical USB recovery has **not** been validated.
 
 Open **Flasher → Recovery and backups**. A responding FM-1 can be asked to enter

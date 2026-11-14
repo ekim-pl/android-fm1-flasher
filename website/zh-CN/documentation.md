@@ -77,7 +77,7 @@
 
 标识检查成功只确认设备的回应，不等于读回并校验整个闪存。不同固件可能共用标识。断电、固件包不适用或重启后选错设备，都可能需要硬件恢复。自动重新连接仅用于更新中的计划内重启，不适用于写入期间任意的连接中断。
 
-不支持：蓝牙更新、批量刷写、预设或内存备份、JEDEC 读取、底层 download/UBOOT 模式、固定映射集线器插口、导入未经验证的本地文件，以及使用其他标识（如 `FM1_OFFICIAL_OPEN`）的固件包。
+常规 MIDI 更新不支持蓝牙更新、批量刷写、预设或内存备份、改写引导程序、生成硬件 USB_KEY、固定映射集线器插口、导入未经验证的本地文件，以及使用其他标识（如 `FM1_OFFICIAL_OPEN`）的固件包。芯片检测和 ROM 恢复是下文介绍的独立实验性调试版本功能，不会扩大常规更新的兼容范围。
 
 <a id="building-and-testing"></a>
 
@@ -92,7 +92,7 @@
 APK：`app/build/outputs/apk/debug/app-debug.apk`。
 AAB：运行 `./gradlew :app:bundleRelease`，输出为 `app/build/outputs/bundle/release/app-release.aab`。未配置密钥时不会签名；GitHub Actions 使用 secrets 中的上传密钥签名。
 
-60 个 JVM 测试覆盖协议和 UFW 包、目录、类别、组合筛选、排序、固件库与偏好持久化、SHA‑256 更新、刷新手势及取消、自动刷新条件、失败时保留旧包、文件损坏、旧版本兼容性、撤回的包、排除相邻端口，以及三设备会话。两个可选测试从磁盘读取真实文件，不将固件放入仓库：
+84 个 JVM 测试覆盖协议和 UFW 包、目录、类别、组合筛选、排序、固件库与偏好持久化、SHA‑256 更新、刷新手势及取消、自动刷新条件、失败时保留旧包、文件损坏、旧版本兼容性、撤回的包、相邻端口排除、三设备会话、MIDI 记录和 ROM 恢复模拟。两个可选测试从磁盘读取真实文件，不将固件放入仓库：
 
 ```sh
 FM1_TEST_PACKAGES=/path/stock-v15.fwsc:/path/stock-v16.fwsc \
@@ -100,7 +100,7 @@ FM1_TEST_CATALOG=/path/catalog.json \
 ./gradlew :app:testDebugUnitTest
 ```
 
-自动检查结果：58 个测试通过，两个依赖外部样本的可选测试跳过。`lintDebug`、`assembleDebug` 和 `bundleRelease` 均通过；仍有工具版本、原生视图等警告。较早的一次运行使用 2026‑11‑13 下载的目录及真实 M‑VAVE 和 Hortator 包，通过了全部 51 个测试且未跳过。Android 16 模拟器用于检查界面和网络，不验证实体 USB 传输。
+最近一次发行验证中，84 个 JVM 测试全部通过，使用了真实 V15/V16 固件包，并在两种芯片上模拟恢复；lint 和调试 APK 构建也通过。实体 USB 恢复和多端口 MIDI 接收仍需硬件测试。Android 16 模拟器用于检查界面和网络，不验证实体 USB 传输。
 
 模拟器检查涵盖启动应用、读取 202 个目录条目、下载并持久保存 Hortator 1.0.1（含 SHA‑256/CRC 验证）、收藏、将**仅已下载**及**收藏**与类别组合、排序、离线固件库，以及实际的下拉刷新手势。没有 USB 目标设备时，安装按钮保持禁用。
 
@@ -125,3 +125,26 @@ FM1_TEST_CATALOG=/path/catalog.json \
 目录汇编：The Firmware Hub，[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)。应用仅保留支持的标识、选取需要的字段，并添加固定的原厂条目。说明归各作者所有；每项都会显示作者和仓库链接。固件许可证由各项目保留，APK 和应用源代码均不附带固件。Gradle Wrapper：[Apache 2.0](https://github.com/gradle/gradle/blob/v8.13.0/LICENSE)。
 
 Markdown 渲染：[CommonMark Java](https://github.com/commonmark/commonmark-java)，采用 [BSD-2-Clause 许可证](../../third_party/commonmark-LICENSE.txt)，许可证也随应用提供。
+
+### 闪存芯片检测
+
+连接恰好一台处于 JieLi USB download 模式（`4C4A:8057`）的设备，然后使用**检测芯片（download 模式）**。应用将 loader 上传到 RAM，并通过命令 `FC0A` 读取 JEDEC ID；检测过程中不会擦除或写入闪存。`856014` 是 FM‑1 旧芯片，`B36014` 是新芯片，其他 ID 保持未知。
+
+读取后请断电重启设备，进入普通 MIDI 模式，在应用中连接并选择检测到的芯片类型。该结果不会根据固件版本推断，也不会转移到其他 USB 连接。此 USB 流程仍需在实体设备上验证。
+
+## 实验性多端口 MIDI 记录器
+
+调试版本以 **FM-1 Flasher Experimental**（`pl.ekim.fm1_flasher.experimental`，版本 `0.6.3-experimental`）与正式应用并存，需要 Android 14 及以上版本。它使用独立的固件库和设置。在 **MIDI Logger** 中选择一个或多个乐器输出端口，授予各设备的 USB 权限，然后点击 **Start**。记录器只接收数据：不会识别设备、打开 MIDI 输入端口或发送 MIDI。支持同一设备上的多个端口及多个 USB 设备，包括没有 MIDI 输入的设备。
+
+日志包含接收时间、设备/路径/端口、通道、解码后的 MIDI 和 HEX。长按条目可查看完整 HEX。筛选器可按来源、通道和类型过滤，也可隐藏 Clock/Active Sensing。导出通过 Android 文件选择器保存当前完整缓冲区的 UTF‑8 文本，不受筛选条件影响。缓冲区最多保存 5000 条和 4 MiB 原始消息数据；单条 SysEx 上限为 64 KiB。被清除的条目、输入丢失和截断的 SysEx 会标记出来，但记录器无法检测 Android 回调之前发生的数据丢失。应用进入后台时记录停止，包括打开导出选择器时。实体设备上的多端口接收和 30 分钟负载测试仍待验证。
+
+## 实验性 ROM 恢复
+
+此功能仅在 `0.6.3-experimental` 调试版本中提供，尚未在实体设备上验证 USB 恢复。打开 **Flasher → Recovery and backups**。可请求响应中的 FM‑1 进入 ROM download 模式；若设备已在该模式，则不需要 MIDI 连接。连接恰好一台 download 设备（`4C4A:8057`，`WL82 UBOOT1.00`）并授予 USB 权限。download 模式不是文件系统，切勿格式化。
+
+- 诊断会检查 JEDEC ID 和芯片密钥，将完整 1 MiB 闪存读取两次并比较，然后把备份和元数据同步到存储。芯片 ID `856014` 和 `B36014` 均需密钥 `980F`。未知引导区仍可备份，但会阻止恢复写入。
+- 准备恢复仅接受官方 `FM-1_015` 包，SHA‑256 为 `db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a`，并单独校验解出的固件区域。必须识别到原厂 V15/V16 引导区；m-bootloader 和损坏的引导区会被拒绝。
+- 写入前会显示设备、芯片、变更扇区数、受保护范围及备份校验和，并再次将整片闪存与备份比较。仅擦写 `[0x4000, 0x93000)` 内变更的 4 KiB 扇区；逐扇区回读，最后比较整片闪存。传输失败会停止操作，不会盲目重试或自动续传。
+- 可通过 Android 文件选择器将备份导出为 ZIP，其中包含完整闪存、元数据/SHA‑256 和可用的操作结果。卸载应用或清除数据会删除内部备份，请提前导出。
+
+字节校验成功不代表设备已能启动。操作后请断电重启并检查 MIDI 连接。自定义固件或 V16 的设置/预设可能不适用于 V15。此功能不修复引导程序，也不支持任意备份恢复或 V16 恢复。USB 无法识别的设备需要外部 USB_KEY 硬件，或另一台运行 [M-Unbricker](https://github.com/jvitkauskas/m-unbricker) 的设备。

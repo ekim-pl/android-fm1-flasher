@@ -8,6 +8,7 @@ Niezależna, eksperymentalna aplikacja do przeglądania firmware i aktualizowani
 - Wybór pobranego firmware w katalogu lub bezpośrednio w zakładce Flasher.
 - Sprawdzanie integralności i zgodności paczki przed instalacją.
 - Automatyczne łączenie po planowanym restarcie przy jednym urządzeniu USB i jednym dozwolonym porcie MIDI.
+- Eksperymentalna wersja debug zawiera również odbiorczy logger MIDI, wykrywanie kości flash i ograniczone odzyskiwanie ROM; odzyskiwania nie sprawdzono na fizycznym sprzęcie.
 - Motyw jasny, ciemny lub systemowy; interfejs polski, angielski i chiński uproszczony.
 
 ## Przed aktualizacją
