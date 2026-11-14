@@ -12,7 +12,7 @@ class CatalogBrowserTest {
 
     @Test fun downloadedFilterWorksInsideCatalogAndCombinesWithFavoritesAndCategory() {
         val filters = BrowseFilters(category = FirmwareCategory.SYNTH, downloadedOnly = true, favoritesOnly = true)
-        assertEquals(listOf(a), CatalogBrowser.entries(catalog, saved, setOf("a", "c"), filters, LibraryTab.CATALOG))
+        assertEquals(listOf(a), CatalogBrowser.entries(catalog, saved, setOf(a.key, c.key), filters, LibraryTab.CATALOG))
         assertEquals(listOf(b, a), CatalogBrowser.entries(catalog, saved, emptySet(), BrowseFilters(downloadedOnly = true), LibraryTab.CATALOG))
     }
 
@@ -21,8 +21,8 @@ class CatalogBrowserTest {
     }
 
     @Test fun downloadedAndFavoritesTabsIntersectWithSearch() {
-        assertEquals(listOf(a), CatalogBrowser.entries(catalog, saved, setOf("a", "c"), BrowseFilters(query = "ANNA"), LibraryTab.DOWNLOADS))
-        assertEquals(listOf(c), CatalogBrowser.entries(catalog, saved, setOf("c"), BrowseFilters(), LibraryTab.FAVORITES))
+        assertEquals(listOf(a), CatalogBrowser.entries(catalog, saved, setOf(a.key, c.key), BrowseFilters(query = "ANNA"), LibraryTab.DOWNLOADS))
+        assertEquals(listOf(c), CatalogBrowser.entries(catalog, saved, setOf(c.key), BrowseFilters(), LibraryTab.FAVORITES))
     }
 
     @Test fun sortOptionsAreDeterministicAndUseDatesNotVersionStrings() {

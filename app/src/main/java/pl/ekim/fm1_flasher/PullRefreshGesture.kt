@@ -30,6 +30,6 @@ class PullRefreshGesture(private val threshold: Float, private val slop: Float) 
 }
 
 object CatalogRefreshPolicy {
-    fun shouldRefresh(offline: Boolean, network: Boolean, fetchedAt: Long?, now: Long): Boolean =
-        !offline && network && (fetchedAt == null || now < fetchedAt || now - fetchedAt >= CatalogRepository.DAY)
+    fun shouldRefresh(offline: Boolean, network: Boolean, sources: List<CatalogSource>, now: Long): Boolean =
+        !offline && network && sources.any { it.active && it.due(now) }
 }

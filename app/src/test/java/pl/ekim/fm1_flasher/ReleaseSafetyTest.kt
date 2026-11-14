@@ -63,20 +63,6 @@ class ReleaseSafetyTest {
         assertEquals(entry.sha256, library.load(entry.id, null).second.sha256)
         assertTrue(LocalLibrary(dir).settings().offline)
     }
-    @Test fun corruptCatalogRepairsOnlyAfterDailyBudgetExpires() {
-        val dir = temp.newFolder()
-        File(dir, "catalog.json").writeText("{")
-        val fetched = CatalogRepository.DAY * 2
-        File(dir, "catalog-fetched.txt").writeText(fetched.toString())
-        val valid = """{"firmwares":[{"id":"a","name":"A","repo":"a/b","sha256":"${"a".repeat(64)}","product":"FM-1_900"}]}"""
-        var calls = 0
-        val repository = CatalogRepository(dir) { calls++; valid.toByteArray() }
-        assertThrows(IllegalStateException::class.java) { repository.load(fetched + 1) }
-        assertEquals(0, calls)
-        assertTrue(repository.load(fetched + CatalogRepository.DAY).fresh)
-        assertEquals(1, calls)
-        assertEquals("a", repository.cached(fetched + CatalogRepository.DAY)!!.entries.single().id)
-    }
     @Test fun previewEvictionNeverDeletesOtherFiles() {
         val dir = temp.newFolder()
         val first = File(dir, "a.img").apply { writeBytes(ByteArray(20)); setLastModified(1000) }

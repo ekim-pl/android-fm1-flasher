@@ -6,6 +6,10 @@ import android.test.InstrumentationTestCase
 @Suppress("DEPRECATION")
 class MainActivityLaunchTest : InstrumentationTestCase() {
     fun testColdLaunchCreatesWindow() {
+        val database = CatalogDatabase.get(instrumentation.targetContext)
+        database.migrate(instrumentation.targetContext.filesDir)
+        val preferences = database.settings()
+        database.saveSettings(preferences.copy(offline = true))
         val activity = instrumentation.startActivitySync(
             Intent(instrumentation.targetContext, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
@@ -17,6 +21,7 @@ class MainActivityLaunchTest : InstrumentationTestCase() {
             }
         } finally {
             instrumentation.runOnMainSync { activity.finish() }
+            database.saveSettings(preferences)
         }
     }
 }

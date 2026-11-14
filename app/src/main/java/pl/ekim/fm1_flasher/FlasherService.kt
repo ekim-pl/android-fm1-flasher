@@ -9,12 +9,15 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.*
 import java.io.File
+import kotlin.concurrent.withLock
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 data class UiState(
+    val browse: Map<String, String>? = null,
+    val backgroundSync: Boolean = false,
     val experimental: Boolean = false,
     val recoveryPlan: RecoveryPlan? = null,
     val recoveryBackups: List<RecoveryBackup> = emptyList(),
@@ -48,11 +51,13 @@ class FlasherService : Service() {
     lateinit var monitor: MidiMonitor
         private set
     private lateinit var midi: AndroidMidi
+    private lateinit var database: CatalogDatabase
     private lateinit var repository: CatalogRepository
     private lateinit var recoveryStore: RecoveryStore
     private lateinit var library: LocalLibrary
     private lateinit var journal: FlashJournal
     private var manager: MidiManager? = null
+    @Volatile private var libraryReady = false
     @Volatile private var uiVisible = false
     @Volatile private var refreshWhenIdle = false
     @Volatile var state = UiState()
@@ -75,22 +80,26 @@ class FlasherService : Service() {
         manager = getSystemService(MidiManager::class.java)
         midi = AndroidMidi(manager, main)
         monitor = MidiMonitor(manager, getSystemService(UsbManager::class.java), main)
-        repository = CatalogRepository(filesDir)
+        database = CatalogDatabase.get(this)
+        repository = CatalogRepository(database)
         recoveryStore = RecoveryStore(File(filesDir, "recovery"))
-        library = LocalLibrary(File(filesDir, "library"))
+        library = LocalLibrary(File(filesDir, "library"), database)
         journal = FlashJournal(File(filesDir, "flash-session.json"))
         manager?.registerDeviceCallback(MidiManager.TRANSPORT_MIDI_BYTE_STREAM, mainExecutor, callback)
         getSystemService(NotificationManager::class.java).createNotificationChannel(
             NotificationChannel("flash", AppLanguage.wrap(this).s(R.string.notification_channel), NotificationManager.IMPORTANCE_LOW))
         refreshDevices()
         startService(Intent(this, FlasherService::class.java).setAction("LIBRARY"))
-        worker.execute {
+        execute {
             try {
+                database.migrate(filesDir)
+                libraryReady = true
+                CatalogSyncWorker.schedule(this, database.setting("background") == "true" && !database.settings().offline)
                 File(filesDir, "previews").deleteRecursively()
                 publishLibrary()
                 update { it.copy(recoveryBackups = recoveryStore.list()) }
                 val cached = repository.cached()
-                if (cached != null) {
+                if (cached.entries.isNotEmpty()) {
                     update { it.copy(catalog = cached) }
                     status(msg(R.string.library_ready))
                 } else status(msg(R.string.catalog_missing))
@@ -122,6 +131,8 @@ class FlasherService : Service() {
         if (state.flashing) getSystemService(NotificationManager::class.java).notify(1, notification(text))
     }
 
+    private fun execute(action: () -> Unit) = worker.execute { CatalogOperations.lock.withLock(action) }
+
     fun refreshDevices() { update { it.copy(devices = midi.devices()) } }
 
     private fun hasNetwork(): Boolean {
@@ -135,12 +146,11 @@ class FlasherService : Service() {
         uiVisible = true
         if (state.busy) { refreshWhenIdle = true; return }
         refreshWhenIdle = false
-        val now = System.currentTimeMillis()
-        state.catalog?.let { cached ->
-            val fresh = now >= cached.fetchedAt && now - cached.fetchedAt < CatalogRepository.DAY
-            if (fresh != cached.fresh) update { it.copy(catalog = cached.copy(fresh = fresh)) }
+        libraryTask {
+            if (CatalogRefreshPolicy.shouldRefresh(library.settings().offline, hasNetwork(), database.sources(), System.currentTimeMillis())) repository.load()
+            publishLibrary()
+            restoreSelection()
         }
-        if (CatalogRefreshPolicy.shouldRefresh(state.offline, hasNetwork(), state.catalog?.fetchedAt, now)) refreshCatalog()
     }
 
     fun setExperimental(enabled: Boolean) {
@@ -167,10 +177,11 @@ class FlasherService : Service() {
         if (!state.busy) stopSelf()
     }
 
-    private fun finishLibraryTask() {
+    private fun finishLibraryTask(completion: (() -> Unit)? = null) {
         main.post {
             if (!monitor.running) stopSelf()
             update { it.copy(busy = false, refreshingCatalog = false) }
+            completion?.invoke()
             checkDeferredRefresh()
         }
     }
@@ -182,13 +193,14 @@ class FlasherService : Service() {
     }
 
     fun refreshCatalog() {
+        if (!libraryReady) return
         if (state.busy) return
         if (state.offline) { status(msg(R.string.offline_refresh_blocked)); return }
         if (!hasNetwork()) { status(msg(R.string.no_network_preserved)); return }
         startService(Intent(this, FlasherService::class.java).setAction("LIBRARY"))
         update { it.copy(busy = true, refreshingCatalog = true) }
         status(msg(R.string.checking_catalog))
-        worker.execute { loadCatalog() }
+        execute { loadCatalog() }
     }
 
     private fun loadCatalog() {
@@ -225,7 +237,7 @@ class FlasherService : Service() {
         monitor.stop()
         startService(Intent(this, FlasherService::class.java).setAction("LIBRARY"))
         update { it.copy(busy = true, target = target, identity = null, chip = FlashChip.UNKNOWN) }
-        worker.execute {
+        execute {
             try {
                 val identity = midi.open(target).use { FlashSession({ _, _ -> failed(msg(R.string.not_applicable)) }, { _, _ -> }).identify(it) }
                 check(identity.baseModel == "FM-1") { failed(msg(R.string.wrong_device_identity, identity)) }
@@ -241,7 +253,8 @@ class FlasherService : Service() {
     private fun publishLibrary() {
         val settings = library.settings()
         val downloads = library.list()
-        update { it.copy(downloads = downloads, favorites = settings.favorites, offline = settings.offline) }
+        update { it.copy(downloads = downloads, favorites = settings.favorites, offline = settings.offline,
+            catalog = repository.cached(), backgroundSync = database.setting("background") == "true", browse = database.browseSettings()) }
         if (library.problems.isNotEmpty()) status(AppText.Joined(library.problems.toList()))
         if (library.settingsRepaired) status(msg(R.string.settings_repaired))
     }
@@ -258,25 +271,82 @@ class FlasherService : Service() {
         }
     }
 
-    private fun libraryTask(message: AppText? = null, action: () -> Unit) {
+    private fun libraryTask(message: AppText? = null, completion: (() -> Unit)? = null, action: () -> Unit) {
+        if (!libraryReady) return
         if (state.busy) return
         startService(Intent(this, FlasherService::class.java).setAction("LIBRARY"))
         update { it.copy(busy = true) }
         if (message != null) status(message)
-        worker.execute {
+        execute {
             try { action() }
             catch (failure: Exception) { status(failure.appMessage(R.string.library_change_error)) }
             finally {
                 runCatching { publishLibrary() }.onFailure { status(it.appMessage(R.string.local_library_error)) }
-                finishLibraryTask()
+                finishLibraryTask(completion)
             }
         }
     }
 
+    fun saveBrowse(values: Map<String, String>) = execute {
+        try { database.saveBrowse(values) } catch (e: Exception) { status(e.appMessage(R.string.library_change_error)) }
+    }
+
     fun setOffline(offline: Boolean) = libraryTask {
         library.saveSettings(library.settings().copy(offline = offline))
+        CatalogSyncWorker.schedule(this, database.setting("background") == "true" && !offline)
         refreshWhenIdle = !offline
         status(if (offline) msg(R.string.offline_enabled) else msg(R.string.online_enabled))
+    }
+
+    fun setBackgroundSync(enabled: Boolean) = libraryTask {
+        database.setting("background", enabled.toString())
+        CatalogSyncWorker.schedule(this, enabled && !library.settings().offline)
+    }
+
+    fun setSourceEnabled(id: String, enabled: Boolean) = libraryTask {
+        database.setEnabled(id, enabled)
+        if (enabled && !library.settings().offline && hasNetwork()) repository.load(sourceId = id)
+        publishLibrary(); restoreSelection()
+        if (enabled) sourceResult(id) else status(msg(R.string.source_disabled))
+    }
+
+    fun checkSource(id: String) = libraryTask(msg(R.string.checking_catalog)) {
+        check(!library.settings().offline) { failed(msg(R.string.offline_refresh_blocked)) }
+        check(hasNetwork()) { failed(msg(R.string.no_network_preserved)) }
+        repository.load(sourceId = id)
+        publishLibrary(); restoreSelection()
+        sourceResult(id)
+    }
+
+    private fun sourceResult(id: String) {
+        val source = database.source(id)
+        status(when {
+            library.settings().offline -> msg(R.string.offline_refresh_blocked)
+            source.error != null -> msg(R.string.source_error_retained, source.name, source.error)
+            !hasNetwork() -> msg(R.string.no_network_preserved)
+            else -> msg(R.string.source_waiting, source.name,
+                java.text.DateFormat.getDateTimeInstance().format(java.util.Date(source.nextAttemptAt)))
+        })
+    }
+
+    fun removeSource(id: String) = libraryTask { database.removeSource(id); publishLibrary(); restoreSelection() }
+    fun restoreSources() = libraryTask { database.restoreDefaults(); refreshWhenIdle = true }
+    fun configureSource(id: String?, name: String, url: String, hours: Int, packages: Set<String>, artwork: Set<String>,
+                        checkNow: Boolean, finished: (String?, AppText?) -> Unit) {
+        if (!libraryReady || state.busy) { finished(null, msg(R.string.library_read_error)); return }
+        var savedId: String? = null
+        var failure: AppText? = null
+        libraryTask(completion = { finished(savedId, failure) }) {
+            try {
+                val saved = database.configure(id, name, url, hours, packages, artwork)
+                savedId = saved.id
+                if (checkNow) {
+                    if (!library.settings().offline && hasNetwork()) repository.load(sourceId = saved.id)
+                    else status(msg(R.string.source_check_offline))
+                }
+                publishLibrary(); restoreSelection()
+            } catch (e: Exception) { failure = e.appMessage(R.string.source_invalid_config); throw e }
+        }
     }
 
     fun toggleFavorite(id: String) = libraryTask {
@@ -294,14 +364,16 @@ class FlasherService : Service() {
 
     fun removeLocal(id: String) = libraryTask {
         library.remove(id)
-        if (state.ready?.id == id) update { it.copy(ready = null) }
+        if (state.ready?.key == id) update { it.copy(ready = null) }
         status(msg(R.string.package_removed))
     }
 
     private fun storeDownload(entry: CatalogEntry) {
         check(!state.offline) { failed(msg(R.string.download_offline_blocked)) }
-        library.save(entry, repository.download(entry))
-        if (state.ready?.id == entry.id) {
+        val raw = repository.download(entry)
+        val verified = repository.cached().entries.single { it.key == entry.key && it.sha256 == entry.sha256 }
+        library.save(verified, raw)
+        if (state.ready?.key == entry.key) {
             library.saveSettings(library.settings().copy(selectedId = null))
             update { it.copy(ready = null) }
         }
@@ -316,19 +388,24 @@ class FlasherService : Service() {
         check(!state.offline) { failed(msg(R.string.update_offline_blocked)) }
         val catalog = repository.load()
         update { it.copy(catalog = catalog) }
-        check(catalog.fresh) { failed(msg(R.string.catalog_update_unavailable)) }
         restoreSelection()
         val updates = CatalogBrowser.updates(catalog, library.list())
         val errors = mutableListOf<AppText>()
+        val unavailable = library.list().filter { saved ->
+            catalog.source(saved.entry)?.let { !it.active || !it.fresh() } != false
+        }.map { entryTitleText(it.entry) }
         var completed = 0
         updates.forEachIndexed { index, entry ->
             status(msg(R.string.updating_package, index + 1, updates.size, entryTitleText(entry)))
             try { storeDownload(entry); completed++ }
             catch (failure: Exception) { errors += AppText.Joined(listOf(entryTitleText(entry), failure.appMessage(R.string.local_library_error)), ": ") }
         }
-        status(if (updates.isEmpty()) msg(R.string.packages_current)
-            else AppText.Joined(listOf(msg(R.string.packages_updated, completed, updates.size)) +
-                if (errors.isEmpty()) emptyList() else listOf(msg(R.string.old_packages_kept, AppText.Joined(errors, "; ")))))
+        val report = mutableListOf<AppText>()
+        report += if (updates.isEmpty() && unavailable.isEmpty()) msg(R.string.packages_current)
+            else msg(R.string.packages_updated, completed, updates.size)
+        if (errors.isNotEmpty()) report += msg(R.string.old_packages_kept, AppText.Joined(errors, "; "))
+        if (unavailable.isNotEmpty()) report += msg(R.string.sources_updates_skipped, AppText.Joined(unavailable, ", "))
+        status(AppText.Joined(report))
     }
 
     fun resumeWith(id: Int) {
@@ -366,12 +443,12 @@ class FlasherService : Service() {
             return START_NOT_STICKY
         }
         update { it.copy(busy = true, flashing = true) }
-        worker.execute {
+        execute {
             val wake = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "fm1:flash")
             try {
                 wake.acquire(16 * 60_000L)
                 // Starting a flash never performs a network request, including with an expired catalog.
-                val (saved, firmware) = library.load(entry.id, repository.cached())
+                val (saved, firmware) = library.load(entry.key, repository.cached())
                 check(saved.entry.sha256 == entry.sha256) { failed(msg(R.string.local_package_changed)) }
                 check(snapshot.chip.allows(saved.entry)) { failed(msg(R.string.local_chip_unsupported)) }
                 val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(FlashSession.MAX_SESSION_MS)
@@ -467,12 +544,12 @@ class FlasherService : Service() {
             status(failure.appMessage(R.string.flash_result_unknown)); stopSelf(); return START_NOT_STICKY
         }
         update { it.copy(busy = true, flashing = true, recoveryPlan = null) }
-        worker.execute {
+        execute {
             val wake = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "fm1:recovery")
             try {
                 wake.acquire(16 * 60_000L)
                 status(msg(R.string.recovery_starting))
-                val packageId = if (action == "RECOVERY_WRITE") plan!!.packageId else snapshot.ready?.id
+                val packageId = if (action == "RECOVERY_WRITE") plan!!.packageId else snapshot.ready?.key
                 val image = if (action != "RECOVERY_BACKUP") {
                     val loaded = library.load(checkNotNull(packageId), repository.cached()).second
                     val expected = if (action == "RECOVERY_WRITE") plan!!.packageHash else snapshot.ready!!.sha256

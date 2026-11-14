@@ -51,13 +51,15 @@ class PullRefreshTest {
         assertFalse(gesture.dragging); assertFalse(gesture.finish())
     }
 
-    @Test fun autoRefreshNeedsNetworkOnlineModeAndAnExpiredOrMissingCache() {
-        val day = CatalogRepository.DAY
-        assertFalse(CatalogRefreshPolicy.shouldRefresh(true, true, null, day))
-        assertFalse(CatalogRefreshPolicy.shouldRefresh(false, false, null, day))
-        assertFalse(CatalogRefreshPolicy.shouldRefresh(false, true, 1000, day + 999))
-        assertTrue(CatalogRefreshPolicy.shouldRefresh(false, true, 1000, day + 1000))
-        assertTrue(CatalogRefreshPolicy.shouldRefresh(false, true, null, day))
-        assertTrue(CatalogRefreshPolicy.shouldRefresh(false, true, day, 1000))
+    @Test fun autoRefreshUsesEachEnabledSourcesAttemptBudget() {
+        val now = CatalogRepository.DAY * 10
+        val hub = CatalogSource.hub.copy(attemptedAt = now, nextAttemptAt = now + CatalogRepository.DAY)
+        val sources = listOf(hub, CatalogSource.awesome)
+        assertFalse(CatalogRefreshPolicy.shouldRefresh(true, true, sources, now))
+        assertFalse(CatalogRefreshPolicy.shouldRefresh(false, false, sources, now))
+        assertFalse(CatalogRefreshPolicy.shouldRefresh(false, true, sources, now + 1))
+        assertFalse(CatalogRefreshPolicy.shouldRefresh(false, true, sources, now - 1))
+        assertTrue(CatalogRefreshPolicy.shouldRefresh(false, true, sources, now + CatalogRepository.DAY))
+        assertTrue(CatalogRefreshPolicy.shouldRefresh(false, true, listOf(hub, CatalogSource.awesome.copy(enabled = true)), now))
     }
 }

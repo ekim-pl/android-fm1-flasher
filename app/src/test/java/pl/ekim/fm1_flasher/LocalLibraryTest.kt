@@ -97,9 +97,3 @@ class LocalLibraryTest {
         assertEquals(entry.sha256, library.load(entry.id, null).second.sha256)
     }
 }
-
-internal fun localEntry(raw: ByteArray = testPackage()) = CatalogEntry(
-    "demo", "Demo", "Author", "A synthetic test synthesizer. No manufacturer firmware.", "1", "example/demo", "v1", "123",
-    FirmwarePackage.sha256(raw), "FM-1_900", "new", false, kinds = setOf("synth"), date = "2026-11-01")
-
-internal fun updatedPackage() = testPackage().apply { this[7 * 48 + 47] = ('1'.code + 8).toByte() }

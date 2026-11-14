@@ -78,11 +78,11 @@ class FlasherPanel(context: Context, connectAction: (UsbMidi) -> Unit, resumeAct
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val selected = downloads.getOrNull(position - 1)?.entry
                 if (selected == null) {
-                    val current = downloads.indexOfFirst { it.entry.id == state.ready?.id } + 1
+                    val current = downloads.indexOfFirst { it.entry.key == state.ready?.key } + 1
                     if (current > 0) firmwareSpinner.setSelection(current)
                     return
                 }
-                if (!state.busy && selected.id != state.ready?.id) firmwareAction(selected.id)
+                if (!state.busy && selected.key != state.ready?.key) firmwareAction(selected.key)
             }
         }
         packageCard.addView(firmwareSpinner, LayoutParams(-1, ui.dp(56)))
@@ -132,9 +132,9 @@ class FlasherPanel(context: Context, connectAction: (UsbMidi) -> Unit, resumeAct
         if (downloads != next.downloads) {
             downloads = next.downloads
             val placeholder = s(if (downloads.isEmpty()) R.string.no_downloaded_firmware else R.string.select_downloaded_firmware)
-            firmwareSpinner.adapter = ui.spinner(listOf(placeholder) + downloads.map { "${context.entryTitle(it.entry)} · ${it.entry.version}" }).adapter
+            firmwareSpinner.adapter = ui.spinner(listOf(placeholder) + downloads.map { "${context.entryTitle(it.entry)} · ${it.entry.version} · ${next.catalog?.source(it.entry)?.name.orEmpty()}" }).adapter
         }
-        val firmwarePosition = downloads.indexOfFirst { it.entry.id == next.ready?.id } + 1
+        val firmwarePosition = downloads.indexOfFirst { it.entry.key == next.ready?.key } + 1
         if (firmwareSpinner.selectedItemPosition != firmwarePosition) firmwareSpinner.setSelection(firmwarePosition)
         firmwareSpinner.isEnabled = !next.busy && downloads.isNotEmpty()
         compatibility.text = next.ready?.let {
@@ -144,7 +144,7 @@ class FlasherPanel(context: Context, connectAction: (UsbMidi) -> Unit, resumeAct
         compatibility.setTextColor(if (next.ready != null && !next.chip.allows(next.ready)) Ui.WARNING else Ui.MUTED)
         flash.isEnabled = !next.busy && next.target != null && next.identity != null && next.ready != null &&
             next.chip.allows(next.ready) && next.devices.any { it.endpoint == next.target.endpoint } &&
-            next.downloads.any { it.entry.id == next.ready.id && it.entry.sha256 == next.ready.sha256 }
+            next.downloads.any { it.entry.key == next.ready.key && it.entry.sha256 == next.ready.sha256 }
         status.text = context.resolve(next.status)
         progress.isIndeterminate = next.busy && next.progress < 0
         if (next.progress >= 0) progress.progress = next.progress

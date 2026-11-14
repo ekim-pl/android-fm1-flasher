@@ -30,7 +30,10 @@ class MainActivity : Activity() {
     private lateinit var artwork: ArtworkLoader
     private var service: FlasherService? = null
     private var bound = false
-    private var state = UiState()
+    @Volatile private var state = UiState()
+    private var browseLoaded = false
+    private var restoredBrowse = false
+    private var lastSavedBrowse: Map<String, String>? = null
     private var tab = LibraryTab.CATALOG
     private var browseFilters = BrowseFilters()
     private var changingControls = false
@@ -68,6 +71,7 @@ class MainActivity : Activity() {
     private val navigation = mutableMapOf<LibraryTab, LinearLayout>()
     private var visibleEntries = emptyList<CatalogEntry>()
     private var detail: Details? = null
+    private var sourcesDialog: SourceManagerDialog? = null
     private var restoreEntryId: String? = null
     private var restoreDetailsId: String? = null
     private var pendingUsb: Pair<Int, () -> Unit>? = null
@@ -102,6 +106,7 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        restoredBrowse = savedInstanceState != null
         exportBackupId = savedInstanceState?.getString("exportBackupId")
         exportBackupUri = savedInstanceState?.getString("exportBackupUri")?.let(Uri::parse)
         val prefs = getSharedPreferences("browse", MODE_PRIVATE)
@@ -125,8 +130,8 @@ class MainActivity : Activity() {
         browseFilters = BrowseFilters(value("query", ""),
             runCatching { FirmwareCategory.valueOf(value("category", "ALL")) }.getOrDefault(FirmwareCategory.ALL),
             runCatching { FirmwareSort.valueOf(value("sort", "NAME")) }.getOrDefault(FirmwareSort.NAME),
-            value("downloaded", "false").toBoolean(), value("favorites", "false").toBoolean())
-        artwork = ArtworkLoader(File(cacheDir, "previews")) { state.offline }
+            value("downloaded", "false").toBoolean(), value("favorites", "false").toBoolean(), value("source", "").ifBlank { null })
+        artwork = ArtworkLoader(File(cacheDir, "previews"), { state.offline }, { id -> state.catalog?.sources?.find { it.id == id } })
         buildUi()
         window.insetsController?.setSystemBarsAppearance(if (dark) 0 else lightBars, lightBars)
         registerReceiver(permissionResult, IntentFilter(permissionAction), RECEIVER_NOT_EXPORTED)
@@ -419,24 +424,27 @@ class MainActivity : Activity() {
             restoreEntryId = null
             list.setSelection(0)
         } else restoreEntryId?.let { id ->
-            val position = visibleEntries.indexOfFirst { it.id == id }
+            val position = visibleEntries.indexOfFirst { it.key == id }
             if (position >= 0 && !state.busy) {
                 restoreEntryId = null
                 list.post { list.setSelectionFromTop(position + list.headerViewsCount, 0) }
             }
         }
-        results.text = s(R.string.results_count, visibleEntries.size) + if (browseFilters.downloadedOnly || tab == LibraryTab.DOWNLOADS) s(R.string.downloaded_suffix) else ""
+        results.text = (browseFilters.sourceId?.let { id -> state.catalog?.sources?.find { it.id == id }?.name + " · " }.orEmpty()) + s(R.string.results_count, visibleEntries.size) + if (browseFilters.downloadedOnly || tab == LibraryTab.DOWNLOADS) s(R.string.downloaded_suffix) else ""
         empty.visibility = if (visibleEntries.isEmpty()) View.VISIBLE else View.GONE
         emptyTitle.text = if (state.busy && state.catalog == null) s(R.string.loading_library) else s(R.string.empty_title)
         emptyBody.text = when {
-            browseFilters.query.isNotBlank() || browseFilters.category != FirmwareCategory.ALL -> s(R.string.empty_filter)
+            browseFilters.query.isNotBlank() || browseFilters.category != FirmwareCategory.ALL || browseFilters.sourceId != null -> s(R.string.empty_filter)
             browseFilters.downloadedOnly || tab == LibraryTab.DOWNLOADS -> s(R.string.empty_downloads)
             browseFilters.favoritesOnly || tab == LibraryTab.FAVORITES -> s(R.string.empty_favorites)
             else -> s(R.string.empty_catalog)
         }
-        getSharedPreferences("browse", MODE_PRIVATE).edit().putString("tab", tab.name)
-            .putString("query", browseFilters.query).putString("category", browseFilters.category.name).putString("sort", browseFilters.sort.name)
-            .putString("downloaded", browseFilters.downloadedOnly.toString()).putString("favorites", browseFilters.favoritesOnly.toString()).apply()
+        if (browseLoaded) {
+            val values = mapOf("tab" to tab.name, "query" to browseFilters.query, "category" to browseFilters.category.name,
+                "sort" to browseFilters.sort.name, "downloaded" to browseFilters.downloadedOnly.toString(),
+                "favorites" to browseFilters.favoritesOnly.toString(), "source" to browseFilters.sourceId.orEmpty())
+            if (values != lastSavedBrowse) { lastSavedBrowse = values; service?.saveBrowse(values) }
+        }
     }
 
     private fun render(next: UiState) {
@@ -444,6 +452,18 @@ class MainActivity : Activity() {
         if (isDestroyed) return
         val previous = state
         state = next
+        if (!browseLoaded && next.browse != null) {
+            browseLoaded = true
+            if (!restoredBrowse) {
+                val b = next.browse
+                browseFilters = BrowseFilters(b["query"].orEmpty(),
+                    runCatching { FirmwareCategory.valueOf(b["category"].orEmpty()) }.getOrDefault(FirmwareCategory.ALL),
+                    runCatching { FirmwareSort.valueOf(b["sort"].orEmpty()) }.getOrDefault(FirmwareSort.NAME),
+                    b["downloaded"] == "true", b["favorites"] == "true", b["source"]?.ifBlank { null })
+                syncControls()
+                setTab(runCatching { LibraryTab.valueOf(b["tab"].orEmpty()) }.getOrDefault(LibraryTab.CATALOG))
+            }
+        }
         navigation[LibraryTab.LOGGER]?.visibility = if (next.experimental) View.VISIBLE else View.GONE
         if (!next.experimental && tab == LibraryTab.LOGGER) setTab(LibraryTab.CATALOG)
         changingControls = true; offline.isChecked = next.offline; changingControls = false
@@ -471,10 +491,11 @@ class MainActivity : Activity() {
             previous.busy != next.busy || previous.offline != next.offline) filterEntries()
         if (next.flashing) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         detail?.render(next)
+        sourcesDialog?.render(next)
         if (detail == null && restoreDetailsId != null && (next.catalog != null || !next.busy)) {
             val id = restoreDetailsId
             restoreDetailsId = null
-            (next.catalog?.entries?.find { it.id == id } ?: next.downloads.find { it.entry.id == id }?.entry)?.let(::showEntry)
+            (next.catalog?.entries?.find { it.key == id } ?: next.downloads.find { it.entry.key == id }?.entry)?.let(::showEntry)
         }
     }
 
@@ -489,23 +510,24 @@ class MainActivity : Activity() {
             val entry = getItem(position)
             val row = (convertView?.tag as? RowViews) ?: newRow()
             row.name.text = entryTitle(entry)
-            row.author.text = "${entry.author} · ${entry.version}"
+            row.author.text = "${entry.author} · ${entry.version} · ${state.catalog?.source(entry)?.name.orEmpty()}"
             row.category.text = categoryLabel(entry.kinds)
             row.category.setTextColor(ui.categoryColor(entry))
             row.description.text = entryDescription(entry, true).ifBlank { s(R.string.description_fallback) }
-            val saved = state.downloads.singleOrNull { it.entry.id == entry.id }
-            val latest = state.catalog?.entries?.singleOrNull { it.id == entry.id }
+            val saved = state.downloads.singleOrNull { it.entry.key == entry.key }
+            val latest = state.catalog?.entries?.singleOrNull { it.key == entry.key }
             val hasUpdate = saved != null && latest != null && latest.sha256 != saved.entry.sha256
             row.availability.text = when {
                 saved != null -> s(R.string.saved_version, saved.entry.version) + if (hasUpdate) s(R.string.update_badge) else ""
                 entry.downloadable -> s(R.string.available_download) + if (entry.beta) s(R.string.beta_badge) else ""
                 else -> s(R.string.author_info)
             }
+            if (state.catalog?.source(entry)?.active == false) row.availability.append(" · " + s(R.string.source_disabled))
             row.availability.setTextColor(if (hasUpdate) Ui.WARNING else if (saved != null) Ui.ACCENT else Ui.MUTED)
-            row.star.text = if (entry.id in state.favorites) "★" else "☆"
-            row.star.contentDescription = if (entry.id in state.favorites) s(R.string.remove_favorite_accessibility, entryTitle(entry)) else s(R.string.add_favorite_accessibility, entryTitle(entry))
+            row.star.text = if (entry.key in state.favorites) "★" else "☆"
+            row.star.contentDescription = if (entry.key in state.favorites) s(R.string.remove_favorite_accessibility, entryTitle(entry)) else s(R.string.add_favorite_accessibility, entryTitle(entry))
             row.star.isEnabled = !state.busy
-            row.star.setOnClickListener { service?.toggleFavorite(entry.id) }
+            row.star.setOnClickListener { service?.toggleFavorite(entry.key) }
             row.card.contentDescription = s(R.string.preview_accessibility, entryTitle(entry), entry.version)
             row.card.setOnClickListener { showEntry(entry) }
             artwork.bind(row.artwork, entry)
@@ -573,24 +595,24 @@ class MainActivity : Activity() {
             if (entryDescription(entry, true) != entryDescription(entry)) content.addView(ui.button(s(R.string.full_description)) {
                 description.text = if (description.text.toString() == entryDescription(entry)) entryDescription(entry, true) else entryDescription(entry)
             })
-            favorite = ui.button(s(R.string.favorite_add)) { service?.toggleFavorite(entry.id) }
+            favorite = ui.button(s(R.string.favorite_add)) { service?.toggleFavorite(entry.key) }
             if (!ui.twoColumns) { content.addView(favorite); content.addView(ui.gap(16)) }
             localStatus = ui.text("", 13, Ui.MUTED); actions.addView(localStatus)
             use = ui.button(s(R.string.use_to_flash), true) {
-                service?.useLocal(entry.id); dialog.dismiss(); setTab(LibraryTab.FLASHER)
+                service?.useLocal(entry.key); dialog.dismiss(); setTab(LibraryTab.FLASHER)
             }; actions.addView(use)
             download = ui.button(s(R.string.download_to_device)) {
-                state.catalog?.entries?.singleOrNull { it.id == entry.id }?.let { service?.download(it) }
+                state.catalog?.entries?.singleOrNull { it.key == entry.key }?.let { service?.download(it) }
             }; actions.addView(download)
             if (ui.twoColumns) actions.addView(favorite)
             remove = ui.button(s(R.string.remove_local)) {
                 AlertDialog.Builder(this@MainActivity).setTitle(s(R.string.remove_confirm_title))
                     .setMessage(s(R.string.remove_confirm_message, entryTitle(entry)))
-                    .setNegativeButton(s(R.string.keep), null).setPositiveButton(s(R.string.remove_package)) { _, _ -> service?.removeLocal(entry.id) }.show()
+                    .setNegativeButton(s(R.string.keep), null).setPositiveButton(s(R.string.remove_package)) { _, _ -> service?.removeLocal(entry.key) }.show()
             }; actions.addView(remove)
-            val repository = ui.button(s(R.string.author_repository)) { openUrl(entry.sourceUrl) }
+            val repository = ui.button(s(R.string.author_repository)) { openUrl(entry.sourceUrl) }.apply { isEnabled = entry.sourceUrl.isNotEmpty() }
             val technical = ui.button(s(R.string.technical_info)) {
-                val local = state.downloads.singleOrNull { it.entry.id == entry.id }?.entry
+                val local = state.downloads.singleOrNull { it.entry.key == entry.key }?.entry
                 val shown = local ?: entry
                 AlertDialog.Builder(this@MainActivity).setTitle(s(R.string.package_details))
                     .setMessage(s(R.string.package_technical, shown.version, shown.product,
@@ -617,17 +639,27 @@ class MainActivity : Activity() {
         }
 
         fun render(next: UiState) {
-            val saved = next.downloads.singleOrNull { it.entry.id == entry.id }
-            val latest = next.catalog?.entries?.singleOrNull { it.id == entry.id }
-            val retired = next.catalog != null && latest == null
+            val saved = next.downloads.singleOrNull { it.entry.key == entry.key }
+            val latest = next.catalog?.entries?.singleOrNull { it.key == entry.key }
+            val localCheck = saved?.entry?.let { runCatching { LocalLibrary.localFlashEntry(it, next.catalog) } }
+            val retired = localCheck?.isFailure == true || next.catalog?.removed(entry) == true
             val hasUpdate = saved != null && latest != null && latest.sha256 != saved.entry.sha256
-            favorite.text = if (entry.id in next.favorites) s(R.string.favorite_remove) else s(R.string.favorite_add)
+            favorite.text = if (entry.key in next.favorites) s(R.string.favorite_remove) else s(R.string.favorite_add)
             favorite.isEnabled = !next.busy
             localStatus.text = if (saved == null) s(R.string.package_absent) else
                 s(R.string.local_version, saved.entry.version, android.text.format.Formatter.formatFileSize(this@MainActivity, saved.bytes)) +
                     if (retired) s(R.string.package_retired)
                     else if (hasUpdate) s(R.string.package_update_available, latest?.version.orEmpty())
                     else s(R.string.package_offline_ready)
+            localStatus.append("\n" + (next.catalog?.source(entry)?.let { it.name + if (!it.active) " · " + s(R.string.source_disabled) else "" }.orEmpty()))
+            next.catalog?.source(entry)?.let { source ->
+                localStatus.append("\n" + s(R.string.source_summary, source.entryCount, if (source.checkedAt > 0)
+                    java.text.DateFormat.getDateTimeInstance().format(java.util.Date(source.checkedAt)) else s(R.string.source_never)))
+            }
+            if (entry.date.isNotBlank()) localStatus.append("\n" + s(R.string.source_release_date, entry.date))
+            next.catalog?.downloadBlock(latest ?: entry)?.let { localStatus.append("\n" + resolve(it)) }
+            val effective = localCheck?.getOrNull()
+            if ((effective ?: entry).chip == "unknown") localStatus.append("\n" + s(R.string.source_chip_blocked))
             use.visibility = if (saved != null) View.VISIBLE else View.GONE
             use.isEnabled = !next.busy && saved != null && !retired
             remove.visibility = if (saved != null) View.VISIBLE else View.GONE; remove.isEnabled = !next.busy
@@ -638,7 +670,7 @@ class MainActivity : Activity() {
                 saved != null -> s(R.string.download_again_version, latest.version)
                 else -> s(R.string.download_version, latest.version)
             }
-            download.isEnabled = !next.busy && !next.offline && latest?.downloadable == true && next.catalog?.fresh == true
+            download.isEnabled = !next.busy && !next.offline && latest?.downloadable == true && next.catalog?.canDownload(latest) == true
         }
     }
 
@@ -825,16 +857,21 @@ class MainActivity : Activity() {
             .setTitle(s(R.string.settings))
             .setItems(arrayOf(s(R.string.appearance_setting, themes[appearance.ordinal]),
                 s(R.string.language_setting, languageName), s(R.string.privacy_title),
-                s(R.string.experimental_features))) { _, which ->
+                s(R.string.experimental_features), s(R.string.catalog_sources))) { _, which ->
                 when (which) {
                     0 -> showAppearancePicker()
                     1 -> showLanguagePicker()
                     3 -> showExperimentalSettings()
+                    4 -> { sourcesDialog = SourceManagerDialog(this, { service }, ::filterBySource).also { it.show(state) } }
                     2 -> AlertDialog.Builder(this).setTitle(s(R.string.privacy_title))
                         .setMessage(s(R.string.privacy_body)).setPositiveButton(s(R.string.close), null).show()
                 }
             }
             .setNegativeButton(s(R.string.close), null).show()
+    }
+
+    private fun filterBySource(id: String?) {
+        browseFilters = browseFilters.copy(sourceId = id); filterEntries(resetPosition = true)
     }
 
     private fun showExperimentalSettings() {
@@ -882,8 +919,9 @@ class MainActivity : Activity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         val visiblePosition = list.firstVisiblePosition - list.headerViewsCount
-        outState.putString("visibleEntry", visibleEntries.getOrNull(visiblePosition)?.id)
-        outState.putString("detailEntry", detail?.entry?.id)
+        outState.putString("visibleEntry", visibleEntries.getOrNull(visiblePosition)?.key)
+        outState.putString("detailEntry", detail?.entry?.key)
+        outState.putString("source", browseFilters.sourceId.orEmpty())
         outState.putString("tab", tab.name); outState.putString("query", browseFilters.query)
         outState.putString("category", browseFilters.category.name); outState.putString("sort", browseFilters.sort.name)
         outState.putString("downloaded", browseFilters.downloadedOnly.toString()); outState.putString("favorites", browseFilters.favoritesOnly.toString())
@@ -901,7 +939,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
-        detail?.dialog?.dismiss(); artwork.close(); service?.unobserve(observer)
+        detail?.dialog?.dismiss(); sourcesDialog?.dismiss(); artwork.close(); service?.unobserve(observer)
         if (bound) unbindService(binding)
         unregisterReceiver(permissionResult)
         super.onDestroy()

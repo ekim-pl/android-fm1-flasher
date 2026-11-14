@@ -46,7 +46,7 @@ Download a test APK from [GitHub Releases](https://github.com/ekim-pl/android-fm
 1. Install the APK on a phone with USB Host/OTG and MIDI support. Connect a powered hub and instruments using data cables.
 2. In **Flasher**, select a port and press **Connect to selected port**. After Android grants USB permission, the app reads only that device's identity. The MIDI name is not the selection criterion: the USB address and MIDI ID distinguish identically named devices.
 3. Leave the flash-chip type unknown unless you know this unit's actual JEDEC ID. The selection applies to the current connection and resets when you change instruments.
-4. Open firmware details in the catalog and choose **Download to device**. After downloading, choose **Use for flashing** or select the package from the list in **Flasher**. Both places use the same saved selection. Downloading is separate from writing. The author's repository is available in the details.
+4. Open firmware details in the catalog and choose **Download to device**. After downloading, choose **Use for flashing** or select the package from the list in **Flasher**. Both places use the same saved selection. Downloading is separate from writing. The author's website or repository is available in the details.
 5. Back up your data with the firmware's own tools, check the target port and package in the confirmation dialog, then start the update.
 6. After each restart, the new port is detected automatically if Android sees exactly one USB device and one new eligible MIDI port. Grant Android USB permission if needed. With multiple devices or ports, select and confirm **the same FM‑1's new port**. After the final restart, the app checks the installed firmware's identity.
 
@@ -73,10 +73,28 @@ Download a test APK from [GitHub Releases](https://github.com/ekim-pl/android-fm
 - A new package replaces the old one only after downloading and validation complete. Failed updates leave the previous package intact. Updating the library does not start flashing; if the selected file changes, select a package again. **Download again** can repair a local file. Removing a local package does not remove its favorite or change the instrument's firmware.
 - If the last known catalog has removed a firmware entry, writing that package is blocked. Older saved versions use compatibility information for their own file, not the newer version. Offline use cannot discover changes or withdrawals published after the last catalog download.
 
+## Catalog sources and SQLite
+
+Open **Settings → Firmware sources** to manage independent subscriptions. **The Firmware Hub is enabled by default**. **awesome-fm1 is disabled by default**, using `https://raw.githubusercontent.com/ekim-pl/awesome-fm1/main/catalog.json`. It supplements the Hub; it does not mirror its database or firmware files.
+
+- Add or edit a public HTTPS catalog URL, name, interval (24–168 hours), and approved package/artwork URLs. A trailing `/` grants a directory; otherwise the rule is an exact path. Changing download policies invalidates their previous freshness/validators and requires another check, which still respects the saved minimum interval. GitHub release resolution verifies the declared repository and asset. Catalog redirects must remain at the configured endpoint; package/artwork redirects must stay within their approved scopes.
+- **Save and check** persists a new subscription disabled before making its explicit request, so even failed checks retain the request budget. Review the referenced hosts in Details, then configure approved URLs and enable the source. Plain **Save settings** makes no request. In offline mode, checking waits until you go online and choose **Check now**.
+- **Check now** is also available for a disabled source as a one-time user request. Neither it nor pull-to-refresh bypasses the minimum interval. Hub attempts, including errors and `304`, are limited to one every 24 hours. Re-enabling, deleting/re-adding, migrating and restoring defaults retain that budget.
+- Disabled sources make no automatic catalog, package or artwork requests. Their offers disappear from Catalog; downloaded and favorite records remain with source information. Removing a custom subscription retains provenance, files, favorites and known withdrawals. Restoring defaults enables Hub and disables awesome-fm1 without deleting custom subscriptions.
+- Each source has independent freshness, conditional requests, errors and a transactional snapshot. A valid empty snapshot withdraws its offers; failed or invalid responses preserve the previous snapshot. Downloads and batch updates use the selected source's freshness and report unavailable sources separately. Conflicting compatibility claims for identical bytes block use.
+- **Filter by source** limits the catalog, favorites or downloads. Details show source, release date, last successful check and reasons for blocked downloads. Source details also show the publisher's date, URL policy, license and unsigned status.
+- **Check catalogs in the background** is optional and off by default. One WorkManager job checks enabled catalogs approximately daily when a network is available. It shares the foreground operation lock, pauses offline, respects request limits and never downloads or installs firmware. Android controls the exact execution time.
+
+The platform `SQLiteOpenHelper` database is the app's source of catalog, source-policy, downloaded-package metadata, favorites, selection, offline and browsing state. Each offer is identified by `(source_id, id)`; product names and hashes do not merge projects. Firmware bytes remain in `files/library/packages/<sha256>.fwsc`, with one downloaded version per offer and reference-aware deletion. Theme/language and experimental-feature settings remain Android preferences.
+
+On upgrade, one transaction imports legacy catalog JSON, request timestamps, package records, favorites, selection, offline and browsing settings. Existing package bytes are revalidated and retained; original JSON files remain as recovery copies. A corrupt individual record produces a warning without deleting its files; a database write failure rolls back migration. The app never silently replaces a failed database with an empty library.
+
+Initial catalogs are **unsigned**. SHA-256/CRC and chip checks remain independent of catalog delivery. **SHRUB is downloadable from its developer but remains blocked for flashing with `chip: unknown`**. Its package parser has been checked; hardware compatibility has not. Publisher automation, detached signatures/key rotation and physical SHRUB tests are separate future stages, not completed by this application change. See the [shared implementation plan](https://github.com/ekim-pl/awesome-fm1/blob/main/docs/implementation-plan.pl.md).
+
 ## Protocol and compatibility
 
 - Catalog data: [The Firmware Hub](https://thefirmwarehub.com), [catalog usage terms](https://thefirmwarehub.com/kb/). Downloads are limited to once per day, with an identifying User-Agent and local cache. New downloads require a current catalog; previously verified local packages also work offline.
-- Automatic package downloads require an unambiguous GitHub asset ID and release tag, except for the pinned official package from M‑VAVE's repository. Other entries link to the author. The app does not download packages from the Hub's mirror.
+- Hub downloads require a specific GitHub release tag and asset ID, except for the pinned official package. Additional catalogs can use a direct HTTPS `pkg` in an explicitly approved URL scope. Redirects, public DNS addresses, byte limits and deadlines are checked before accepting data. A catalog cannot grant itself new URL permissions. The app does not download packages from the Hub mirror.
 - Before use, the app checks the catalog's SHA‑256, the `FM-1_<number>` identity, the AC791N processor, UFW header and file-list CRCs, file ranges, and the CRCs of `flash.bin` and `ota.bin`. Auxiliary encrypted manufacturer files carry plaintext CRCs; the full-package SHA‑256 protects them. Their CRCs are not checked against encrypted bytes.
 - Unknown/new flash chip: only packages marked `chip: new` by the catalog are allowed. `chip: old` requires explicitly selecting the older chip. Unknown compatibility blocks writing. The pinned original V15 allows only the older-chip choice because the catalog does not declare new-chip support. A catalog label does not replace testing that firmware.
 - Two-stage updates check frame checksums, SysEx fragments, read ranges and timeouts. Success requires an acknowledgment of the updater's final signal and a matching identity after restart.
@@ -97,15 +115,27 @@ Requires JDK 17, Android SDK Platform 36 and Build Tools 35.0.0. Set `ANDROID_HO
 ```
 
 APK: `app/build/outputs/apk/debug/app-debug.apk`.
+
+Actual SQLite, transactions and migrations are tested on Android, not through the JVM Android stubs:
+
+```sh
+./gradlew :app:connectedDebugAndroidTest
+```
+
+CI runs platform tests on API 34 and 36. Unit tests cover the shared importer, dates, source policies, response validation, retry budgets, redirect/size/deadline protection and source-aware browsing. Instrumentation covers initial defaults, migration/restart/rollback, corrupt legacy records, source removal, conditional responses, partial failures, late responses and shared package files. Tests use synthetic packages; real catalog/package fixtures can be supplied locally.
 AAB: `./gradlew :app:bundleRelease`, output `app/build/outputs/bundle/release/app-release.aab`. It is unsigned without key configuration; GitHub Actions signs it with the upload key from secrets.
 
-The 97 JVM tests cover the protocol and UFW packages, catalog, categories, combined filters, sorting, library and preference persistence, SHA‑256 updates, refresh gestures and cancellation, automatic-refresh conditions, retaining an old package after failure, file corruption, older-version compatibility, withdrawn packages, neighboring-port exclusion, three-device sessions, MIDI logging and simulated ROM recovery. Four fixture-dependent tests read real files from disk without bundling firmware in the repository:
+The JVM tests cover the protocol and UFW packages, catalog, categories, combined filters, sorting, library and preference persistence, SHA‑256 updates, refresh gestures and cancellation, automatic-refresh conditions, retaining an old package after failure, file corruption, older-version compatibility, withdrawn packages, neighboring-port exclusion, three-device sessions, MIDI logging and simulated ROM recovery. Four fixture-dependent tests read real files from disk without bundling firmware in the repository:
 
 ```sh
 FM1_TEST_PACKAGES=/path/stock-v15.fwsc:/path/stock-v16.fwsc \
 FM1_TEST_CATALOG=/path/catalog.json \
 ./gradlew :app:testDebugUnitTest
 ```
+
+Catalog-source validation (November 14, 2026): 108 JVM tests passed with the saved Hub catalog and real SHRUB package; two V15 recovery fixture tests were skipped because `FM1_RECOVERY_V15` was not supplied. All 22 instrumentation tests passed on Android 16, including real SQLite migrations/rollback, WorkManager scheduling and source-specific package selection. `lintDebug` and `assembleDebug` passed (lint retains existing warnings). Manual emulator checks covered EN/PL/zh-Hans screens, disabled defaults, explicit custom-source checks, direct SHRUB downloading/validation, favorites, source filtering, subscription removal and persistence after restart. The Hub fixture was reused without another catalog request. No physical SHRUB flash was attempted; unknown-chip compatibility remains blocked.
+
+The optional repository-wide OSV audit reports 101 advisory matches in previously pinned dependencies (the audit also includes build/test, website and publication tools). The 40 dependency versions added by this change returned no advisory matches. Updating the existing build toolchain is separate from catalog integration.
 
 Previous release validation: all 84 JVM tests passed with real V15/V16 package fixtures and simulated recovery on both chip types; lint and the debug APK build passed. Physical USB recovery and multi-port MIDI reception still need hardware testing. The Android 16 emulator checks the UI and networking, not physical USB transport.
 
@@ -130,6 +160,8 @@ Before every new release, increase `versionCode`, set `versionName` in `app/buil
 Protocol: [AL‑255/FM‑1‑RE](https://github.com/AL-255/FM-1-RE/blob/main/docs/io/11-ota-protocol.md) and its `tools/fm1_ota.py` client (WTFPL), [package format](https://sbegueria.github.io/fm1-dev-wiki/Firmware-Package-Format.html), [Android MIDI API](https://developer.android.com/reference/android/media/midi/MidiManager). The Android implementation is in `app/src/main/java/pl/ekim/fm1_flasher`.
 
 Catalog compilation: The Firmware Hub, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The app filters the list to supported identities, selects the required fields and adds a pinned stock entry. Descriptions belong to their authors; each entry shows its author and repository link. Firmware licenses remain with their projects; no firmware is bundled in the APK or application source. Gradle Wrapper: [Apache 2.0](https://github.com/gradle/gradle/blob/v8.13.0/LICENSE).
+
+Networking and background checks use OkHttp/Okio and AndroidX WorkManager ([Apache 2.0](third_party/Apache-2.0.txt), [notices](third_party/android-libraries-NOTICE.txt)), with pinned and SHA-256-verified dependencies.
 
 Markdown rendering: [CommonMark Java](https://github.com/commonmark/commonmark-java), [BSD-2-Clause license](third_party/commonmark-LICENSE.txt), also bundled with the app.
 

@@ -56,7 +56,8 @@ class FirmwareArtwork(context: Context) : View(context) {
     }
 }
 
-class ArtworkLoader(private val directory: File, private val offline: () -> Boolean) {
+class ArtworkLoader(private val directory: File, private val offline: () -> Boolean,
+                    private val source: (String) -> CatalogSource?) {
     private val worker = java.util.concurrent.ThreadPoolExecutor(1, 1, 0L, java.util.concurrent.TimeUnit.MILLISECONDS,
         java.util.concurrent.ArrayBlockingQueue(32))
     private val main = Handler(Looper.getMainLooper())
@@ -70,24 +71,25 @@ class ArtworkLoader(private val directory: File, private val offline: () -> Bool
         view.entry = entry
         view.tag = entry.cardUrl
         val url = entry.cardUrl ?: return
-        if (closed || !Network.allowed(url, Network.ARTWORK_HOSTS)) return
+        val requestKey = entry.sourceId + "|" + url
+        if (closed) return
         cache.get(url)?.let { view.bitmap = it; return }
-        waiting[url]?.let { targets ->
+        waiting[requestKey]?.let { targets ->
             targets.removeAll { it.get()?.tag != url }
             if (targets.none { it.get() === view }) targets += WeakReference(view)
             return
         }
-        waiting[url] = mutableListOf(WeakReference(view))
+        waiting[requestKey] = mutableListOf(WeakReference(view))
         try {
             worker.execute {
-                val image = if (closed) null else runCatching { load(url) }.getOrNull()
+                val image = if (closed) null else runCatching { load(url, entry.sourceId) }.getOrNull()
                 if (image != null) cache.put(url, image)
                 main.post {
-                    val targets = waiting.remove(url).orEmpty()
+                    val targets = waiting.remove(requestKey).orEmpty()
                     if (!closed && image != null) targets.forEach { it.get()?.takeIf { it.tag == url }?.bitmap = image }
                 }
             }
-        } catch (_: java.util.concurrent.RejectedExecutionException) { waiting.remove(url) }
+        } catch (_: java.util.concurrent.RejectedExecutionException) { waiting.remove(requestKey) }
     }
 
     private fun decode(bytes: ByteArray): Bitmap? {
@@ -101,17 +103,25 @@ class ArtworkLoader(private val directory: File, private val offline: () -> Bool
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
     }
 
-    private fun load(url: String): Bitmap? {
+    private fun load(url: String, sourceId: String): Bitmap? {
         cache.get(url)?.let { return it }
         directory.mkdirs()
-        val file = File(directory, FirmwarePackage.sha256(url.toByteArray()) + ".img")
+        val file = File(directory, FirmwarePackage.sha256((sourceId + "|" + url).toByteArray()) + ".img")
+        val legacy = File(directory, FirmwarePackage.sha256(url.toByteArray()) + ".img")
+        if (!file.exists() && legacy.isFile && legacy.length() <= 2 * 1024 * 1024) legacy.copyTo(file)
         if (file.exists()) {
             val decoded = if (file.length() in 1..2 * 1024 * 1024) decode(file.readBytes()) else null
             if (decoded != null) { file.setLastModified(System.currentTimeMillis()); return decoded }
             file.delete()
         }
         if (closed || offline()) return null
-        val bytes = Network.get(url, 2 * 1024 * 1024, Network.ARTWORK_HOSTS)
+        val policy = source(sourceId) ?: return null
+        if (!policy.active || !policy.permitsArtwork(url)) return null
+        val response = SourceNetwork.request(url, 2 * 1024 * 1024, policy::permitsArtwork, active = {
+            !closed && !offline() && source(sourceId)?.let { it.active && it.revision == policy.revision } == true
+        })
+        if (response.code != 200) return null
+        val bytes = response.bytes
         val image = decode(bytes) ?: return null
         val temporary = File(directory, file.name + ".tmp")
         try {
