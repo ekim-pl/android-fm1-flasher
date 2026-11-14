@@ -1,0 +1,1 @@
+Restores the FM-1 Flasher app name and original package pl.ekim.fm1_flasher. MIDI logger and ROM recovery remain available. Data from the separate experimental app is not migrated. Android 14+.

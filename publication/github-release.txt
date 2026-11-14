@@ -1,23 +1,16 @@
-FM-1 Flasher 0.6.3 experimental — localized About documentation
-
-Experimental Android 14+ test build. Package ID:
-`pl.ekim.fm1_flasher.experimental`; version code 11.
+FM-1 Flasher 0.6.4 experimental — restored app identity
 
 ## Changes
-- Refreshes the in-app About guide in English, Polish and Simplified Chinese.
-- Documents the receive-only MIDI logger, flash-chip detection and experimental ROM recovery, including the physical-hardware validation limits.
-- No firmware update or recovery behavior changed in this documentation build.
-
-## Validation
-- `:app:assembleDebug` passed.
-- APK signature verified and matches the previous experimental test release.
-- GitHub Pages build produced all translated pages; link and translation checks passed for 44 HTML pages.
-- Android CI tests and lint are required to pass before release publication.
-- Physical USB recovery and multi-port MIDI reception remain unverified on hardware.
+- Restores the original FM-1 Flasher name and package ID `pl.ekim.fm1_flasher`.
+- Keeps the MIDI logger, chip detection and ROM recovery features.
+- Updates installation descriptions in English, Polish and Simplified Chinese.
+- Version code: 12. Requires Android 14+.
 
 ## Installation
-Install the attached APK as an update to the existing experimental app. It uses the same signing certificate, has a higher version code, and keeps its separate experimental app data. This is a debug-signed test build, not a Google Play artifact.
+This debug-signed prerelease updates the original FM-1 Flasher app when signed with the same certificate. It does not update or migrate data from the separate `pl.ekim.fm1_flasher.experimental` app. Export any recovery backups from that app before uninstalling it.
+
+Physical USB recovery remains unverified on hardware.
 
 ## Assets
-- `FM1-Flasher-0.6.3-experimental-debug.apk` — installable test build.
-- `FM1-Flasher-0.6.3-experimental-debug.apk.sha256` — SHA-256 checksum.
+- `FM1-Flasher-0.6.4-experimental-debug.apk`
+- `FM1-Flasher-0.6.4-experimental-debug.apk.sha256`

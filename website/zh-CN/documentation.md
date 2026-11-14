@@ -134,13 +134,13 @@ Markdown 渲染：[CommonMark Java](https://github.com/commonmark/commonmark-jav
 
 ## 实验性多端口 MIDI 记录器
 
-调试版本以 **FM-1 Flasher Experimental**（`pl.ekim.fm1_flasher.experimental`，版本 `0.6.3-experimental`）与正式应用并存，需要 Android 14 及以上版本。它使用独立的固件库和设置。在 **MIDI Logger** 中选择一个或多个乐器输出端口，授予各设备的 USB 权限，然后点击 **Start**。记录器只接收数据：不会识别设备、打开 MIDI 输入端口或发送 MIDI。支持同一设备上的多个端口及多个 USB 设备，包括没有 MIDI 输入的设备。
+调试版本恢复原名称 **FM-1 Flasher** 和包名 `pl.ekim.fm1_flasher`（版本 `0.6.4-experimental`），需要 Android 14 及以上版本。独立的 `.experimental` 应用的数据不会迁移。在 **MIDI Logger** 中选择一个或多个乐器输出端口，授予各设备的 USB 权限，然后点击 **Start**。记录器只接收数据：不会识别设备、打开 MIDI 输入端口或发送 MIDI。支持同一设备上的多个端口及多个 USB 设备，包括没有 MIDI 输入的设备。
 
 日志包含接收时间、设备/路径/端口、通道、解码后的 MIDI 和 HEX。长按条目可查看完整 HEX。筛选器可按来源、通道和类型过滤，也可隐藏 Clock/Active Sensing。导出通过 Android 文件选择器保存当前完整缓冲区的 UTF‑8 文本，不受筛选条件影响。缓冲区最多保存 5000 条和 4 MiB 原始消息数据；单条 SysEx 上限为 64 KiB。被清除的条目、输入丢失和截断的 SysEx 会标记出来，但记录器无法检测 Android 回调之前发生的数据丢失。应用进入后台时记录停止，包括打开导出选择器时。实体设备上的多端口接收和 30 分钟负载测试仍待验证。
 
 ## 实验性 ROM 恢复
 
-此功能仅在 `0.6.3-experimental` 调试版本中提供，尚未在实体设备上验证 USB 恢复。打开 **Flasher → Recovery and backups**。可请求响应中的 FM‑1 进入 ROM download 模式；若设备已在该模式，则不需要 MIDI 连接。连接恰好一台 download 设备（`4C4A:8057`，`WL82 UBOOT1.00`）并授予 USB 权限。download 模式不是文件系统，切勿格式化。
+此功能仅在 `0.6.4-experimental` 调试版本中提供，尚未在实体设备上验证 USB 恢复。打开 **Flasher → Recovery and backups**。可请求响应中的 FM‑1 进入 ROM download 模式；若设备已在该模式，则不需要 MIDI 连接。连接恰好一台 download 设备（`4C4A:8057`，`WL82 UBOOT1.00`）并授予 USB 权限。download 模式不是文件系统，切勿格式化。
 
 - 诊断会检查 JEDEC ID 和芯片密钥，将完整 1 MiB 闪存读取两次并比较，然后把备份和元数据同步到存储。芯片 ID `856014` 和 `B36014` 均需密钥 `980F`。未知引导区仍可备份，但会阻止恢复写入。
 - 准备恢复仅接受官方 `FM-1_015` 包，SHA‑256 为 `db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a`，并单独校验解出的固件区域。必须识别到原厂 V15/V16 引导区；m-bootloader 和损坏的引导区会被拒绝。

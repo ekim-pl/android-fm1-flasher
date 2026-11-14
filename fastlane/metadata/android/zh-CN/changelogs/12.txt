@@ -1,0 +1,1 @@
+恢复 FM-1 Flasher 应用名称和原包名 pl.ekim.fm1_flasher。保留 MIDI 日志和 ROM 恢复功能。独立实验应用的数据不会迁移。需要 Android 14 及以上版本。
