@@ -25,6 +25,12 @@ The **About** tab uses short, independent Markdown files in [about](about): [Pol
 
 The app description links to the license and privacy policy. Internet links open the appropriate system app.
 
+## Related community project: Awesome FM-1
+
+[Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) is the companion community-maintained directory of additional M-VAVE FM-1 firmware sources. It accepts pull requests with publisher package (`pkg`) URLs or project repository URLs and stores metadata, not firmware binaries. Visit its website in [English](https://ekim-pl.github.io/awesome-fm1/en/), [Polish](https://ekim-pl.github.io/awesome-fm1/pl/) or [Simplified Chinese](https://ekim-pl.github.io/awesome-fm1/zh-CN/).
+
+Awesome FM-1 maintains the sources; FM-1 Flasher handles browsing and installation in the Android app. Multi-source integration is planned and is not yet implemented. A listing in Awesome FM-1 does not establish availability or hardware compatibility in FM-1 Flasher.
+
 ## Project website and online documentation
 
 Public source: [GitHub](https://github.com/ekim-pl/android-fm1-flasher). The [project website](https://ekim-pl.github.io/android-fm1-flasher/) provides the complete website and documentation in [English](https://ekim-pl.github.io/android-fm1-flasher/en/), [Polish](https://ekim-pl.github.io/android-fm1-flasher/pl/) and [Simplified Chinese](https://ekim-pl.github.io/android-fm1-flasher/zh-CN/).
