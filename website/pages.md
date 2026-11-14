@@ -1,6 +1,6 @@
 # Project website on GitHub Pages
 
-The website, documentation and privacy policy are built from this repository. Every page is available in English, Polish and Simplified Chinese, including navigation, publishing instructions and license translations. The **Polski**, **English** and **简体中文** links switch to the same page in another language.
+The website, documentation and privacy policy are built from this repository. Every page is available in English, Polish and Simplified Chinese, including navigation, publishing instructions and license translations. The **English**, **Polski** and **简体中文** links switch to the same page in another language.
 
 ## First deployment
 

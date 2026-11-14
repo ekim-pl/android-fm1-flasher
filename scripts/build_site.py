@@ -161,7 +161,7 @@ def write_page(language, page, output):
         ])
     languages = ''
     alternates = ''
-    for code in ('pl', 'en', 'zh-CN'):
+    for code in ('en', 'pl', 'zh-CN'):
         target = relative(f'{code}/{page}', output)
         html_language = LANGUAGES[code]['html']
         current = ' aria-current="true"' if code == language else ''
