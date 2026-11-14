@@ -160,7 +160,7 @@ class RecoveryStore(private val root: File) {
     }
     fun result(backup: RecoveryBackup, status: String, packageHash: String) {
         val json = JSONObject().put("status", status).put("packageSha256", packageHash).put("updatedAt", System.currentTimeMillis())
-        durable(File(directory(backup.id), "result.json"), json.toString(2).toByteArray())
+        LocalLibrary.atomicWrite(File(directory(backup.id), "result.json"), json.toString(2).toByteArray())
     }
     fun export(backup: RecoveryBackup, output: OutputStream) {
         load(backup)

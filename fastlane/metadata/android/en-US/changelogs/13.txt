@@ -1,0 +1,1 @@
+Experimental features are now opt-in in Settings. Safer device and OTA checks, bounded downloads and artwork cache, improved logger responsiveness, and recovery of damaged library settings.

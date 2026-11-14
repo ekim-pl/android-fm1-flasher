@@ -30,10 +30,15 @@ class FlashSession(
     private val pause: (Long) -> Unit = { Thread.sleep(it) },
     private val now: () -> Long = { System.nanoTime() / 1_000_000 },
 ) {
+    companion object { const val MAX_SESSION_MS = 15 * 60_000L }
+    private var sessionDeadline = Long.MAX_VALUE
+    private fun checkTime() { check(now() < sessionDeadline) { failed(msg(R.string.flash_timeout)) } }
+
     fun identify(link: MidiConnection): FirmwareIdentity {
         repeat(3) {
+            checkTime()
             link.send(Protocol.identityQuery)
-            val deadline = now() + 1200
+            val deadline = minOf(now() + 1200, sessionDeadline)
             while (now() < deadline) {
                 val message = link.receive((deadline - now()).coerceAtLeast(1)) ?: break
                 Protocol.identity(message)?.let { return it }
@@ -45,6 +50,7 @@ class FlashSession(
     fun flash(image: FirmwarePackage, initial: MidiConnection, expectedCurrent: FirmwareIdentity): FirmwareIdentity {
         var link = initial
         val started = now()
+        sessionDeadline = started + MAX_SESSION_MS
         try {
             val current = identify(link)
             check(current.sameAs(expectedCurrent) && current.baseModel == image.identity.model) {
@@ -56,15 +62,20 @@ class FlashSession(
                 pause(3000)
                 val previous = link.endpoint
                 link.close()
+                checkTime()
                 link = reconnect(previous, true)
-                check(identify(link).baseModel == image.identity.model) { failed(msg(R.string.loader_not_fm1)) }
+                checkTime()
+                val loader = identify(link)
+                check(loader.isLoader && loader.baseModel == image.identity.model) { failed(msg(R.string.loader_not_fm1)) }
             }
             report(msg(R.string.flash_stage_write), 0)
             serve(link, image, Protocol.FINISHED, 180_000, started)
             pause(1500)
             val previous = link.endpoint
             link.close()
+            checkTime()
             link = reconnect(previous, false)
+            checkTime()
             val installed = identify(link)
             check(installed.sameAs(image.identity)) {
                 failed(msg(R.string.flash_identity_mismatch, installed, image.identity))
@@ -77,13 +88,15 @@ class FlashSession(
     }
 
     private fun serve(link: MidiConnection, image: FirmwarePackage, terminal: Long, idleMs: Long, started: Long) {
+        checkTime()
         link.send(Protocol.upgrade)
         pause(2000)
         var lastRequest = now()
-        val covered = BitSet(image.logical.size)
+        val covered = if (terminal == Protocol.FINISHED) BitSet(image.logical.size) else null
+        var coveredBytes = 0
         var requests = 0
         var lastPercent = -1
-        while (now() - lastRequest < idleMs && now() - started < 15 * 60_000) {
+        while (now() - lastRequest < idleMs && now() - started < MAX_SESSION_MS) {
             val message = link.receive(500) ?: continue
             val request = Protocol.request(message) ?: continue
             if (request.address == Protocol.VERIFIED || request.address == Protocol.FINISHED) {
@@ -99,11 +112,16 @@ class FlashSession(
             pause(10)
             link.send(Protocol.response(request, image.logical.copyOfRange(start, start + request.length)))
             requests++
-            covered.set(start, start + request.length)
-            val percent = (covered.cardinality() * 100L / image.logical.size).toInt().coerceAtMost(99)
-            if (terminal == Protocol.FINISHED && percent != lastPercent) {
-                lastPercent = percent
-                report(msg(R.string.flash_progress, percent), percent)
+            if (covered != null) {
+                val end = start + request.length
+                var bit = covered.nextClearBit(start)
+                while (bit < end) { coveredBytes++; bit = covered.nextClearBit(bit + 1) }
+                covered.set(start, end)
+                val percent = (coveredBytes * 100L / image.logical.size).toInt().coerceAtMost(99)
+                if (percent != lastPercent) {
+                    lastPercent = percent
+                    report(msg(R.string.flash_progress, percent), percent)
+                }
             }
             lastRequest = now()
         }

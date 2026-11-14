@@ -1,10 +1,8 @@
 package pl.ekim.fm1_flasher
 
 import org.json.JSONObject
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.URL
-import javax.net.ssl.HttpsURLConnection
 
 enum class FlashChip(val label: Int) {
     UNKNOWN(R.string.chip_unknown), NEW(R.string.chip_new), OLD(R.string.chip_old);
@@ -40,6 +38,7 @@ object CatalogParser {
     }.getOrDefault(false)
 
     fun parse(json: String): Pair<List<CatalogEntry>, String> {
+        JsonLimits.check(json)
         val root = JSONObject(json)
         val entries = mutableListOf<CatalogEntry>()
         val array = root.getJSONArray("firmwares")
@@ -64,7 +63,7 @@ object CatalogParser {
                 date = item.optional("published") ?: item.optional("date") ?: "",
                 cardUrl = item.optional("card")?.let { address ->
                     runCatching { URL(URL("https://thefirmwarehub.com/"), address).toString() }
-                        .getOrNull()?.takeIf { it.startsWith("https://") }
+                        .getOrNull()?.takeIf { Network.allowed(it, Network.ARTWORK_HOSTS) }
                 },
             )
         }
@@ -87,7 +86,9 @@ object CatalogParser {
     private fun JSONObject.optional(key: String) = if (isNull(key)) null else optString(key).takeIf { it.isNotBlank() }
 }
 
-class CatalogRepository(private val directory: File) {
+class CatalogRepository(private val directory: File,
+    private val fetch: () -> ByteArray = { Network.get("https://thefirmwarehub.com/catalog.json", 4 * 1024 * 1024) },
+) {
     companion object { const val DAY = 24 * 60 * 60 * 1000L }
     private val jsonFile = File(directory, "catalog.json")
     private val stampFile = File(directory, "catalog-fetched.txt")
@@ -104,14 +105,16 @@ class CatalogRepository(private val directory: File) {
         val fetched = stampFile.takeIf { it.exists() }?.readText()?.toLongOrNull() ?: 0
         val attempted = attemptFile.takeIf { it.exists() }?.readText()?.toLongOrNull() ?: 0
         val fresh = jsonFile.exists() && now >= fetched && now - fetched < DAY
-        if (fresh) return read(fetched, true)
-        if (now >= attempted && now - attempted < DAY) {
-            check(jsonFile.exists()) { failed(msg(R.string.catalog_retry_later)) }
-            return read(fetched, false)
+        val existing = runCatching { read(fetched, fresh) }.getOrNull()
+        if (fresh && existing != null) return existing
+        // A damaged cache must not bypass the source's daily request limit.
+        val lastRequest = maxOf(fetched, attempted)
+        if (now >= lastRequest && now - lastRequest < DAY) {
+            return existing ?: failed(msg(R.string.catalog_retry_later))
         }
         attemptFile.writeText(now.toString())
         return try {
-            val text = Network.get("https://thefirmwarehub.com/catalog.json", 4 * 1024 * 1024).toString(Charsets.UTF_8)
+            val text = fetch().toString(Charsets.UTF_8)
             CatalogParser.parse(text)
             val temp = File(directory, "catalog.tmp")
             temp.writeText(text)
@@ -119,12 +122,12 @@ class CatalogRepository(private val directory: File) {
             stampFile.writeText(now.toString())
             read(now, true)
         } catch (failure: Exception) {
-            if (!jsonFile.exists()) throw failure
-            read(fetched, false)
+            existing?.copy(fresh = false) ?: throw failure
         }
     }
 
     private fun read(stamp: Long, fresh: Boolean): Catalog {
+        check(jsonFile.length() in 1..4 * 1024 * 1024) { failed(msg(R.string.catalog_invalid)) }
         val (entries, updated) = CatalogParser.parse(jsonFile.readText())
         return Catalog(entries, updated, stamp, fresh)
     }
@@ -137,7 +140,9 @@ class CatalogRepository(private val directory: File) {
         val url = entry.directUrl ?: run {
             check(entry.tag != null && entry.assetId != null) { failed(msg(R.string.release_not_identified)) }
             val tag = java.net.URLEncoder.encode(entry.tag, "UTF-8").replace("+", "%20")
-            val release = JSONObject(Network.get("https://api.github.com/repos/${entry.repo}/releases/tags/$tag", 2 * 1024 * 1024).toString(Charsets.UTF_8))
+            val metadata = Network.get("https://api.github.com/repos/${entry.repo}/releases/tags/$tag", 2 * 1024 * 1024).toString(Charsets.UTF_8)
+            JsonLimits.check(metadata)
+            val release = JSONObject(metadata)
             val assets = release.getJSONArray("assets")
             val matching = (0 until assets.length()).map { assets.getJSONObject(it) }
                 .filter { it.getLong("id").toString() == entry.assetId && it.getString("name").endsWith(".fwsc", true) }
@@ -149,42 +154,5 @@ class CatalogRepository(private val directory: File) {
         val raw = Network.get(url, FirmwarePackage.MAX_SIZE)
         FirmwarePackage.parse(raw, entry.sha256, entry.product)
         return raw
-    }
-}
-
-object Network {
-    fun get(address: String, limit: Int): ByteArray {
-        var url = URL(address)
-        repeat(6) {
-            check(url.protocol == "https") { failed(msg(R.string.https_required)) }
-            val connection = url.openConnection() as HttpsURLConnection
-            try {
-                connection.instanceFollowRedirects = false
-                connection.connectTimeout = 15_000
-                connection.readTimeout = 20_000
-                connection.setRequestProperty("User-Agent", "FM1FlasherAndroid/0.5.1 (+native-android)")
-                val code = connection.responseCode
-                if (code in listOf(301, 302, 303, 307, 308)) {
-                    url = URL(url, connection.getHeaderField("Location") ?: failed(msg(R.string.redirect_missing)))
-                } else {
-                    check(code == 200) { failed(msg(R.string.http_error, code)) }
-                    check(connection.contentLengthLong <= limit) { failed(msg(R.string.download_too_large)) }
-                    return connection.inputStream.use { input ->
-                        val output = ByteArrayOutputStream()
-                        val buffer = ByteArray(8192)
-                        while (true) {
-                            val count = input.read(buffer)
-                            if (count < 0) break
-                            check(output.size() <= limit - count) { failed(msg(R.string.download_too_large)) }
-                            output.write(buffer, 0, count)
-                        }
-                        output.toByteArray()
-                    }
-                }
-            } finally {
-                connection.disconnect()
-            }
-        }
-        failed(msg(R.string.too_many_redirects))
     }
 }

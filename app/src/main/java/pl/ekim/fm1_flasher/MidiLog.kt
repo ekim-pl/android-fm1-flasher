@@ -80,7 +80,14 @@ data class MidiLogEntry(val sequence: Long, val elapsedNs: Long, val timestampNs
             type != "SysEx" && values.isNotEmpty() -> " " + values.joinToString(" ")
             else -> ""
         }
-        val hex = (if (full) bytes.asIterable() else bytes.take(64)).joinToString(" ") { "%02X".format(it.toInt() and 255) }
+        val hex = buildString {
+            val digits = "0123456789ABCDEF"
+            repeat(if (full) bytes.size else minOf(64, bytes.size)) { index ->
+                if (index > 0) append(' ')
+                val value = bytes[index].toInt() and 255
+                append(digits[value ushr 4]); append(digits[value and 15])
+            }
+        }
         return String.format(Locale.ROOT, "%.3f", elapsedNs / 1e9) + " · $source · $type" +
             (channel?.let { " ch=$it" } ?: "") + detail + "\n" + hex +
             (if (!full && bytes.size > 64) " … (${bytes.size} bytes)" else "") +
@@ -90,7 +97,8 @@ data class MidiLogEntry(val sequence: Long, val elapsedNs: Long, val timestampNs
 
 data class MidiLogSnapshot(val revision: Long, val started: String, val entries: List<MidiLogEntry>,
     val evicted: Long, val lostBytes: Long, val total: Long) {
-    fun export() = buildString {
+    fun export(): String = buildString { writeTo(this) }
+    fun writeTo(output: Appendable) = with(output) {
         append("FM1 experimental MIDI logger\nStarted: $started\nTime: monotonic receive seconds; timestamp_ns: Android MIDI (0 = unavailable)\n")
         append("Messages: $total; evicted: $evicted; lost input bytes: $lostBytes\nFilters do not affect export. Running status is expanded to full messages. SysEx may be truncated at 64 KiB.\n\n")
         entries.forEach { append("#${it.sequence} timestamp_ns=${it.timestampNs} "); append(it.line(true)); append('\n') }
@@ -113,5 +121,6 @@ class MidiLog(private val maxEntries: Int = 5000, private val maxBytes: Int = 4 
     }
     @Synchronized fun loss(source: String, bytes: Long) { lost += bytes; add(source, byteArrayOf(), "lost $bytes input bytes; parser reset") }
     @Synchronized fun clear() { entries.clear(); size = 0; sequence = 0; evicted = 0; lost = 0; start = System.nanoTime(); wall = java.time.Instant.now().toString(); revision++ }
+    @Synchronized fun snapshotIfChanged(previous: Long): MidiLogSnapshot? = if (previous == revision) null else snapshot()
     @Synchronized fun snapshot() = MidiLogSnapshot(revision, wall, entries.toList(), evicted, lost, sequence)
 }

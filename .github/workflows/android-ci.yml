@@ -32,6 +32,8 @@ jobs:
           log-accepted-android-sdk-licenses: false
       - name: Test, lint and build debug APK
         run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+      - name: Test release fixture gate
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
       - name: Save APK and reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -41,3 +43,44 @@ jobs:
             app/build/outputs/apk/debug/*.apk
             app/build/reports/
           retention-days: 14
+
+  platform:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [34, 36]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+        with:
+          packages: 'platforms;android-36 build-tools;35.0.0 emulator system-images;android-${{ matrix.api }};google_apis;x86_64'
+          log-accepted-android-sdk-licenses: false
+      - name: Run platform tests
+        env:
+          TEST_API: ${{ matrix.api }}
+        run: |
+          sudo chmod 666 /dev/kvm
+          echo no | avdmanager create avd --force --name test --package "system-images;android-$TEST_API;google_apis;x86_64"
+          "$ANDROID_HOME/emulator/emulator" -avd test -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          trap 'adb emu kill || true' EXIT
+          timeout 180 adb wait-for-device
+          timeout 180 bash -c 'until [[ "$(adb shell getprop sys.boot_completed | tr -d "\r")" == "1" ]]; do sleep 2; done'
+          ./gradlew --no-daemon :app:connectedDebugAndroidTest
+      - name: Save platform reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: platform-api-${{ matrix.api }}
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+            ${{ runner.temp }}/emulator.log

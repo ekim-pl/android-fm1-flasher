@@ -1,16 +1,24 @@
-FM-1 Flasher 0.6.4 experimental — restored app identity
+FM-1 Flasher 0.7.0 experimental — safety and opt-in experimental features
 
 ## Changes
-- Restores the original FM-1 Flasher name and package ID `pl.ekim.fm1_flasher`.
-- Keeps the MIDI logger, chip detection and ROM recovery features.
-- Updates installation descriptions in English, Polish and Simplified Chinese.
-- Version code: 12. Requires Android 14+.
+- Adds Settings → Experimental features, off by default and remembered across restarts. It controls MIDI Logger, chip detection and ROM recovery in both debug and release builds. Disabling it stops the logger and clears the prepared recovery plan; the service also enforces the setting.
+- Prevents ROM chip detection from changing compatibility for a different selected MIDI instrument. Reconnection must report OTA mode before stage-two update traffic.
+- Adds bounded network deadlines, explicit HTTPS origin/redirect policies, a bounded artwork queue and a 24 MiB disposable image cache.
+- Recovers damaged library settings in offline mode while preserving firmware and backups; repairs corrupt catalog data within the provider's daily request limit.
+- Improves logger responsiveness, streamed log export, transfer-progress accounting and operation cleanup; records unconfirmed flash attempts for the next startup.
+- Updates test/site dependencies and adds dependency locking, checksum verification and release-fixture/platform CI checks.
+- Keeps the original application ID `pl.ekim.fm1_flasher`. Version code: 13. Requires Android 14+.
+
+## Validation
+- 97 JVM tests passed without skips using the hash-verified official V15 firmware and a catalog snapshot. V16 was not included in this run.
+- 3 instrumentation tests passed on Android 16, including experimental-feature guards. The settings switch was also checked interactively in the emulator.
+- Debug/release builds and lint passed with no errors; 2 Python tests and 44 generated documentation pages passed their checks.
 
 ## Installation
-This debug-signed prerelease updates the original FM-1 Flasher app when signed with the same certificate. It does not update or migrate data from the separate `pl.ekim.fm1_flasher.experimental` app. Export any recovery backups from that app before uninstalling it.
+Install `FM1-Flasher-0.7.0-experimental-debug.apk`. This debug-signed prerelease uses the same signing certificate as 0.6.4 and updates the original FM-1 Flasher app, preserving its data. It does not update or migrate data from the separate `.experimental` or `.recovery` application IDs.
 
-Physical USB recovery remains unverified on hardware.
+Enable Settings → Experimental features to access MIDI Logger and recovery. Do not use this prerelease as a claim of physical recovery validation: physical USB recovery, both-chip hardware acceptance and sustained multi-port load testing remain pending. Toolchain dependency advisories remain open; details are in `docs/reviews/0.7.0-validation.md` and the accompanying audit. No firmware package is bundled in the APK.
 
 ## Assets
-- `FM1-Flasher-0.6.4-experimental-debug.apk`
-- `FM1-Flasher-0.6.4-experimental-debug.apk.sha256`
+- `FM1-Flasher-0.7.0-experimental-debug.apk`
+- `FM1-Flasher-0.7.0-experimental-debug.apk.sha256`

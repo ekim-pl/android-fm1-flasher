@@ -1,5 +1,7 @@
 # FM‑1 Flasher
 
+Włącz **Ustawienia → Funkcje eksperymentalne**, aby pokazać logger MIDI, wykrywanie pamięci i recovery. Ustawienie jest zapamiętywane i domyślnie wyłączone. Wyłączenie zatrzymuje logger i usuwa plan recovery; podczas operacji nie można go zmienić. Recovery nadal wymaga testów na fizycznym sprzęcie.
+
 Niezależna, eksperymentalna aplikacja do przeglądania firmware i aktualizowania **M‑VAVE FM‑1** przez USB MIDI.
 
 ## Możliwości

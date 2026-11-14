@@ -324,4 +324,12 @@
     <string name="recovery_confirmation">BUILD TESTOWY — odzyskiwanie przez fizyczne USB nie zostało zweryfikowane.\n\nUrządzenie: %1$s\nPamięć: %2$s\nCel: oficjalny V15\nZmieniane sektory 4 KiB: %3$d\nZakres zapisu: 0x4000–0x92FFF\nBootloader i wszystkie pozostałe obszary zostają zachowane. Obecne ustawienia mogą być niezgodne z V15. Operacja nie odzyska utraconych presetów.\n\nKopia: %4$s\nSHA-256: %5$s\n\nPrzed kontynuowaniem wyeksportuj kopię. Utrzymuj zasilanie i połączenie USB przez cały zapis.</string>
     <string name="recovery_write">Przywróć V15 teraz</string>
     <string name="recovery_no_backups">Brak ukończonych kopii zapasowych.</string>
+    <string name="experimental_features">Funkcje eksperymentalne</string>
+    <string name="experimental_help">Włącza logger MIDI, wykrywanie pamięci i recovery ROM. Te funkcje nie są w pełni sprawdzone na sprzęcie. Zapis recovery może uniemożliwić uruchomienie instrumentu. Wyłączenie zatrzymuje logger i usuwa plan recovery. Ustawienia nie można zmienić podczas operacji.</string>
+    <string name="experimental_disabled">Najpierw włącz funkcje eksperymentalne w ustawieniach.</string>
+    <string name="chip_detected_separate">Wykryto %2$s w %1$s. Wynik nie zmienia ustawień wybranego instrumentu MIDI. Po ponownym podłączeniu tego samego urządzenia w trybie MIDI wybierz ręcznie jego typ pamięci.</string>
+    <string name="settings_repaired">Uszkodzone ustawienia biblioteki zostały zresetowane. Firmware i kopie zachowano; włączono tryb offline.</string>
+    <string name="network_url_blocked">Niedozwolony adres pobierania.</string>
+    <string name="network_deadline">Przekroczono czas pobierania. Spróbuj ponownie, gdy będzie to dozwolone.</string>
+    <string name="flash_interrupted">Poprzednia sesja flashowania nie zakończyła się potwierdzonym wynikiem. Sprawdź instrument przed kolejną aktualizacją.</string>
 </resources>

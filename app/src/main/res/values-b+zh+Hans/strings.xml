@@ -324,4 +324,12 @@
     <string name="recovery_confirmation">测试版本 — 尚未验证真实 USB 恢复。\n\n设备：%1$s\n闪存：%2$s\n目标：官方 V15\n更改的 4 KiB 扇区：%3$d\n写入范围：0x4000–0x92FFF\n保留引导程序和所有其他区域。现有设置可能与 V15 不兼容。本操作不会恢复丢失的预设。\n\n备份：%4$s\nSHA-256：%5$s\n\n请先导出备份。写入过程中请保持供电和 USB 连接。</string>
     <string name="recovery_write">立即恢复 V15</string>
     <string name="recovery_no_backups">尚无已完成的备份。</string>
+    <string name="experimental_features">实验性功能</string>
+    <string name="experimental_help">启用 MIDI 日志、闪存检测和 ROM 恢复。这些功能尚未经过完整硬件验证。恢复写入可能导致设备无法启动。关闭此选项会停止日志并清除恢复计划。操作期间无法更改此设置。</string>
+    <string name="experimental_disabled">请先在设置中启用实验性功能。</string>
+    <string name="chip_detected_separate">在 %1$s 上检测到 %2$s。此结果不会更改所选 MIDI 设备的设置。将同一设备重新连接为 MIDI 模式后，请手动选择其闪存类型。</string>
+    <string name="settings_repaired">库设置损坏，已重置。固件和备份已保留，并已启用离线模式。</string>
+    <string name="network_url_blocked">不允许此下载地址。</string>
+    <string name="network_deadline">下载超时。请在允许时重试。</string>
+    <string name="flash_interrupted">上一次刷写未获得确认结果。再次更新前请检查设备。</string>
 </resources>

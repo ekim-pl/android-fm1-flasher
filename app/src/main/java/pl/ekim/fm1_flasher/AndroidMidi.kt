@@ -62,6 +62,12 @@ class AndroidMidi(private val manager: MidiManager?, private val main: Handler) 
         private val queue = LinkedBlockingQueue<ByteArray>(128)
         private val failure = AtomicReference<Exception?>()
         @Volatile private var closed = false
+        @Volatile private var disconnected = false
+        private val callback = object : MidiManager.DeviceCallback() {
+            override fun onDeviceRemoved(info: MidiDeviceInfo) {
+                if (info.id == endpoint.id) disconnected = true
+            }
+        }
         private val assembler = SysExAssembler {
             check(queue.offer(it)) { failed(msg(R.string.midi_buffer_full)) }
         }
@@ -71,7 +77,13 @@ class AndroidMidi(private val manager: MidiManager?, private val main: Handler) 
                 catch (problem: Exception) { failure.compareAndSet(null, problem) }
             }
         }
-        init { output.connect(receiver) }
+        init {
+            manager?.registerDeviceCallback(MidiManager.TRANSPORT_MIDI_BYTE_STREAM, { command -> main.post(command) }, callback)
+            try {
+                check(devices().any { it.endpoint == endpoint }) { failed(msg(R.string.midi_disconnected)) }
+                output.connect(receiver)
+            } catch (failure: Exception) { manager?.unregisterDeviceCallback(callback); throw failure }
+        }
 
         override fun send(bytes: ByteArray) {
             checkAlive()
@@ -90,13 +102,14 @@ class AndroidMidi(private val manager: MidiManager?, private val main: Handler) 
 
         private fun checkAlive() {
             failure.get()?.let { throw IOException(it.message, it) }
-            if (closed || devices().none { it.endpoint == endpoint }) failed(msg(R.string.midi_disconnected))
+            if (closed || disconnected) failed(msg(R.string.midi_disconnected))
         }
 
         override fun close() {
             if (closed) return
             closed = true
-            output.disconnect(receiver)
+            runCatching { manager?.unregisterDeviceCallback(callback) }
+            runCatching { output.disconnect(receiver) }
             runCatching { output.close() }
             runCatching { input.close() }
             runCatching { device.close() }

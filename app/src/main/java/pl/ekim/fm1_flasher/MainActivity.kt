@@ -126,7 +126,7 @@ class MainActivity : Activity() {
             runCatching { FirmwareCategory.valueOf(value("category", "ALL")) }.getOrDefault(FirmwareCategory.ALL),
             runCatching { FirmwareSort.valueOf(value("sort", "NAME")) }.getOrDefault(FirmwareSort.NAME),
             value("downloaded", "false").toBoolean(), value("favorites", "false").toBoolean())
-        artwork = ArtworkLoader(File(filesDir, "previews")) { state.offline }
+        artwork = ArtworkLoader(File(cacheDir, "previews")) { state.offline }
         buildUi()
         window.insetsController?.setSystemBarsAppearance(if (dark) 0 else lightBars, lightBars)
         registerReceiver(permissionResult, IntentFilter(permissionAction), RECEIVER_NOT_EXPORTED)
@@ -232,7 +232,7 @@ class MainActivity : Activity() {
             recoveryAction = ::showRecovery, detectAction = ::detectChip, chipAction = { service?.setChip(it) }, firmwareAction = { service?.useLocal(it) },
             flashAction = ::confirmFlash, logsAction = ::showLogs)
         body.addView(flasher, FrameLayout.LayoutParams(-1, -1))
-        logger = MidiLoggerPanel(this, { service?.monitor }, { !state.busy && !state.flashing },
+        logger = MidiLoggerPanel(this, { service?.monitor }, { state.experimental && !state.busy && !state.flashing },
             { port, action -> withUsbPermission(port.usb, action) }, { service?.toggleMonitor() }, ::exportMidiLog)
         body.addView(logger, FrameLayout.LayoutParams(-1, -1))
         about = FrameLayout(this)
@@ -272,6 +272,7 @@ class MainActivity : Activity() {
         } else {
             root.addView(body, LinearLayout.LayoutParams(-1, 0, 1f)); root.addView(operation); root.addView(nav)
         }
+        navigation[LibraryTab.LOGGER]?.visibility = View.GONE
         setContentView(root); syncControls(); setTab(tab)
     }
 
@@ -383,7 +384,7 @@ class MainActivity : Activity() {
     }
 
     private fun setTab(destination: LibraryTab) {
-        tab = destination
+        tab = if (destination == LibraryTab.LOGGER && !state.experimental) LibraryTab.CATALOG else destination
         browser.visibility = if (tab == LibraryTab.FLASHER || tab == LibraryTab.ABOUT || tab == LibraryTab.LOGGER) View.GONE else View.VISIBLE
         logger.visibility = if (tab == LibraryTab.LOGGER) View.VISIBLE else View.GONE
         flasher.visibility = if (tab == LibraryTab.FLASHER) View.VISIBLE else View.GONE
@@ -443,6 +444,8 @@ class MainActivity : Activity() {
         if (isDestroyed) return
         val previous = state
         state = next
+        navigation[LibraryTab.LOGGER]?.visibility = if (next.experimental) View.VISIBLE else View.GONE
+        if (!next.experimental && tab == LibraryTab.LOGGER) setTab(LibraryTab.CATALOG)
         changingControls = true; offline.isChecked = next.offline; changingControls = false
         offline.isEnabled = !next.busy
         usbStatus.text = next.identity?.let { "USB · $it" } ?: s(R.string.usb_ports, next.devices.size)
@@ -453,8 +456,10 @@ class MainActivity : Activity() {
         list.refreshEnabled = !next.busy && !next.offline
         list.setRefreshing(next.refreshingCatalog)
         updatePackages.isEnabled = !next.busy && !next.offline && next.downloads.isNotEmpty()
-        val updates = CatalogBrowser.updates(next.catalog, next.downloads).size
-        updatePackages.text = if (updates > 0) s(R.string.updates_count, updates) else s(R.string.update_check)
+        if (previous.catalog !== next.catalog || previous.downloads != next.downloads) {
+            val updates = CatalogBrowser.updates(next.catalog, next.downloads).size
+            updatePackages.text = if (updates > 0) s(R.string.updates_count, updates) else s(R.string.update_check)
+        }
         updatePackages.visibility = if (tab == LibraryTab.DOWNLOADS && next.downloads.isNotEmpty()) View.VISIBLE else View.GONE
         catalogDate.text = next.catalog?.let {
             (if (next.offline) s(R.string.catalog_offline_prefix) else if (!it.fresh) s(R.string.catalog_cached_prefix) else s(R.string.catalog_prefix)) + it.updated.ifBlank { s(R.string.unknown_date) }
@@ -638,7 +643,7 @@ class MainActivity : Activity() {
     }
 
     private fun exportMidiLog() {
-        if (service == null) return
+        if (service == null || !state.experimental) return
         startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE); type = "text/plain"
             putExtra(Intent.EXTRA_TITLE, "midi-log-${System.currentTimeMillis()}.txt")
@@ -653,13 +658,13 @@ class MainActivity : Activity() {
             if (exportBackupUri == null) exportBackupId = null
             dispatchRecoveryExport()
         }
-        if (requestCode != 41) return
+        if (requestCode != 41 || !state.experimental) return
         val snapshot = service?.monitor?.log?.snapshot()
         val uri = data?.data
         if (resultCode != RESULT_OK || snapshot == null || uri == null) return
         Thread {
             val result = runCatching {
-                checkNotNull(contentResolver.openOutputStream(uri, "wt")).bufferedWriter(Charsets.UTF_8).use { it.write(snapshot.export()) }
+                checkNotNull(contentResolver.openOutputStream(uri, "wt")).bufferedWriter(Charsets.UTF_8).use { snapshot.writeTo(it) }
             }
             runOnUiThread {
                 Toast.makeText(this, s(if (result.isSuccess) R.string.logger_saved else R.string.logger_save_failed), Toast.LENGTH_LONG).show()
@@ -689,6 +694,7 @@ class MainActivity : Activity() {
         .setMessage(state.logs.joinToString("\n\n") { resolve(it) }.ifEmpty { s(R.string.no_events) }).setPositiveButton(s(R.string.close), null).show()
 
     private fun showRecovery() {
+        if (!state.experimental) return
         if (state.busy) return
         val options = arrayOf(s(R.string.recovery_enter), s(R.string.recovery_backup),
             s(R.string.recovery_prepare), s(R.string.recovery_write_plan), s(R.string.recovery_export), s(R.string.recovery_help_title))
@@ -719,7 +725,7 @@ class MainActivity : Activity() {
         .setMessage(text).setPositiveButton(s(R.string.close), null).show()
 
     private fun startRecovery(action: String, plan: RecoveryPlan? = null) {
-        if (state.busy) return
+        if (state.busy || !state.experimental) return
         val devices = getSystemService(UsbManager::class.java).deviceList.values.filter(ChipDetector::supports)
         if (devices.size != 1) { recoveryMessage(s(R.string.recovery_help)); return }
         val device = devices.single()
@@ -768,7 +774,7 @@ class MainActivity : Activity() {
     }
 
     private fun detectChip() {
-        if (state.busy) return
+        if (state.busy || !state.experimental) return
         val devices = getSystemService(UsbManager::class.java).deviceList.values.filter(ChipDetector::supports)
         if (devices.size != 1) {
             AlertDialog.Builder(this).setMessage(s(R.string.detect_chip_help)).setPositiveButton(s(R.string.close), null).show()
@@ -818,15 +824,33 @@ class MainActivity : Activity() {
         AlertDialog.Builder(this)
             .setTitle(s(R.string.settings))
             .setItems(arrayOf(s(R.string.appearance_setting, themes[appearance.ordinal]),
-                s(R.string.language_setting, languageName), s(R.string.privacy_title))) { _, which ->
+                s(R.string.language_setting, languageName), s(R.string.privacy_title),
+                s(R.string.experimental_features))) { _, which ->
                 when (which) {
                     0 -> showAppearancePicker()
                     1 -> showLanguagePicker()
+                    3 -> showExperimentalSettings()
                     2 -> AlertDialog.Builder(this).setTitle(s(R.string.privacy_title))
                         .setMessage(s(R.string.privacy_body)).setPositiveButton(s(R.string.close), null).show()
                 }
             }
             .setNegativeButton(s(R.string.close), null).show()
+    }
+
+    private fun showExperimentalSettings() {
+        val enabled = CheckBox(this).apply {
+            text = s(R.string.experimental_features)
+            isChecked = state.experimental
+            isEnabled = !state.busy
+        }
+        val content = ui.column().apply {
+            setPadding(ui.dp(24), ui.dp(12), ui.dp(24), ui.dp(12))
+            addView(ui.text(s(R.string.experimental_help), 14, Ui.MUTED))
+            addView(enabled)
+        }
+        AlertDialog.Builder(this).setTitle(R.string.experimental_features).setView(content)
+            .setPositiveButton(android.R.string.ok) { _, _ -> service?.setExperimental(enabled.isChecked) }
+            .setNegativeButton(android.R.string.cancel, null).show()
     }
 
     private fun showLanguagePicker() {

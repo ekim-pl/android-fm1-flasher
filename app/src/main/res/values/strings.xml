@@ -324,4 +324,12 @@
     <string name="recovery_confirmation">TEST BUILD — physical USB recovery has not been validated.\n\nDevice: %1$s\nFlash: %2$s\nTarget: official V15\nChanged 4 KiB sectors: %3$d\nWrite range: 0x4000–0x92FFF\nBootloader and all other areas are preserved. Existing settings may be incompatible with V15. This does not recover lost presets.\n\nBackup: %4$s\nSHA-256: %5$s\n\nExport the backup before proceeding. Keep power and USB connected throughout writing.</string>
     <string name="recovery_write">Restore V15 now</string>
     <string name="recovery_no_backups">No completed backups yet.</string>
+    <string name="experimental_features">Experimental features</string>
+    <string name="experimental_help">Enable MIDI Logger, chip detection, and ROM recovery. These features are not fully validated on physical hardware. Recovery writes may leave the instrument unable to boot. Turning this off stops the logger and clears any recovery plan. This setting cannot change during an operation.</string>
+    <string name="experimental_disabled">Enable experimental features in Settings first.</string>
+    <string name="chip_detected_separate">Detected %2$s on %1$s. This result does not change the selected MIDI instrument. After reconnecting the same unit in MIDI mode, select its chip type manually.</string>
+    <string name="settings_repaired">Library settings were damaged and reset. Firmware and backups were kept; offline mode is enabled.</string>
+    <string name="network_url_blocked">The download address is not allowed.</string>
+    <string name="network_deadline">Download timed out. Try again when permitted.</string>
+    <string name="flash_interrupted">An earlier flash session did not finish with a confirmed result. Check the instrument before starting another update.</string>
 </resources>

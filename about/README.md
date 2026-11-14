@@ -1,5 +1,7 @@
 # FM‑1 Flasher
 
+Enable **Settings → Experimental features** to show MIDI Logger, chip detection and recovery. This persistent setting is off by default. Disabling it stops logging and clears the recovery plan; it cannot change during an operation. Recovery still needs physical hardware validation.
+
 An independent, experimental app for browsing firmware and updating an **M‑VAVE FM‑1** over USB MIDI.
 
 ## Features

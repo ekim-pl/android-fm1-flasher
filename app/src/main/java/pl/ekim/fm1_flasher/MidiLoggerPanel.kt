@@ -12,6 +12,7 @@ import android.widget.*
 class MidiLoggerPanel(context: Context, private val monitor: () -> MidiMonitor?,
     private val allowed: () -> Boolean, private val permission: (MonitorPort, () -> Unit) -> Unit,
     private val toggle: () -> Unit, private val export: () -> Unit) : LinearLayout(context) {
+    private var initialized = false
     private val ui = Ui(context)
     private val handler = Handler(Looper.getMainLooper())
     private var rows = emptyList<MidiLogEntry>()
@@ -41,7 +42,10 @@ class MidiLoggerPanel(context: Context, private val monitor: () -> MidiMonitor?,
             }).apply { text = rows[position].line() }
     }
     private val tick = object : Runnable {
-        override fun run() { refresh(); handler.postDelayed(this, 100) }
+        override fun run() {
+            if (!isShown) return
+            refresh(); handler.postDelayed(this, 100)
+        }
     }
     init {
         orientation = VERTICAL; setPadding(ui.dp(12), ui.dp(8), ui.dp(12), 0)
@@ -61,16 +65,25 @@ class MidiLoggerPanel(context: Context, private val monitor: () -> MidiMonitor?,
                 .setPositiveButton(android.R.string.ok, null).show(); true
         }
         addView(list, LayoutParams(-1, 0, 1f))
+        initialized = true
     }
     override fun onAttachedToWindow() { super.onAttachedToWindow(); handler.post(tick) }
+    override fun onVisibilityChanged(changedView: View, visibility: Int) {
+        super.onVisibilityChanged(changedView, visibility)
+        // View construction can dispatch this before our fields are initialized.
+        if (initialized) {
+            handler.removeCallbacks(tick)
+            if (isShown) handler.post(tick)
+        }
+    }
     override fun onDetachedFromWindow() { handler.removeCallbacks(tick); super.onDetachedFromWindow() }
     private fun refresh(force: Boolean = false) {
         if (visibility != View.VISIBLE && !force) return
         val m = monitor() ?: return
-        start.isEnabled = allowed() || m.running
+        start.isEnabled = !m.draining && (allowed() || m.running)
         select.isEnabled = allowed() && !m.running
         start.text = context.getString(if (m.running) R.string.logger_stop else R.string.logger_start)
-        val snapshot = m.log.snapshot()
+        val snapshot = m.log.snapshotIfChanged(if (force) -1 else revision) ?: return
         status.text = context.getString(R.string.logger_status, snapshot.total, snapshot.evicted, snapshot.lostBytes) +
             "\n" + context.getString(if (m.running) R.string.logger_running else R.string.logger_stopped) +
             " · OUT ${m.activeCount}/${m.selected.size}" +

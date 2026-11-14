@@ -15,6 +15,8 @@ class LocalLibrary(private val directory: File) {
     private val packages = File(directory, "packages").apply { mkdirs() }
     private val records = File(directory, "records").apply { mkdirs() }
     private val settingsFile = File(directory, "settings.json")
+    var settingsRepaired = false
+        private set
     val problems = mutableListOf<AppText>()
 
     fun list(): List<LocalPackage> {
@@ -62,10 +64,19 @@ class LocalLibrary(private val directory: File) {
 
     fun settings(): LibrarySettings {
         if (!settingsFile.exists()) return LibrarySettings()
-        val json = JSONObject(settingsFile.readText())
-        val favorites = json.optJSONArray("favorites") ?: JSONArray()
-        return LibrarySettings((0 until favorites.length()).map { favorites.getString(it) }.toSet(),
-            json.optBoolean("offline"), json.optString("selectedId").takeIf { !json.isNull("selectedId") && it.isNotBlank() })
+        return try {
+            check(settingsFile.length() in 1..128_000)
+            val json = JSONObject(settingsFile.readText())
+            val favorites = json.optJSONArray("favorites") ?: JSONArray()
+            LibrarySettings((0 until favorites.length()).map { favorites.getString(it) }.toSet(),
+                json.optBoolean("offline"), json.optString("selectedId").takeIf { !json.isNull("selectedId") && it.isNotBlank() })
+        } catch (_: Exception) {
+            val defaults = LibrarySettings(offline = true)
+            java.nio.file.Files.copy(settingsFile.toPath(), File(directory, "settings.invalid").toPath(), StandardCopyOption.REPLACE_EXISTING)
+            saveSettings(defaults)
+            settingsRepaired = true
+            defaults
+        }
     }
 
     fun saveSettings(settings: LibrarySettings) {
@@ -101,7 +112,7 @@ class LocalLibrary(private val directory: File) {
             return if (latest.sha256 == local.sha256) latest else local
         }
 
-        private fun atomicWrite(file: File, data: ByteArray) {
+        internal fun atomicWrite(file: File, data: ByteArray) {
             file.parentFile?.mkdirs()
             val temp = File(file.parentFile, file.name + ".tmp")
             try {

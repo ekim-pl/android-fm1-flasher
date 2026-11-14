@@ -8,6 +8,7 @@ def projectDocsAssets = layout.buildDirectory.dir('generated/projectDocsAssets')
 
 android {
     namespace 'pl.ekim.fm1_flasher'
+    buildFeatures { buildConfig true }
     compileSdk 36
     useLibrary "android.test.runner"
     useLibrary "android.test.base"
@@ -16,8 +17,8 @@ android {
         minSdk 34
         targetSdk 36
         testInstrumentationRunner "android.test.InstrumentationTestRunner"
-        versionCode 12
-        versionName '0.6.4-experimental'
+        versionCode 13
+        versionName '0.7.0-experimental'
     }
     signingConfigs {
         if (uploadKeystore) {
@@ -62,5 +63,7 @@ if (releaseTag && releaseTag != "v${android.defaultConfig.versionName}") {
 dependencies {
     implementation 'org.commonmark:commonmark:0.32.0'
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.json:json:20240303'
+    testImplementation 'org.json:json:20260719'
 }
+
+dependencyLocking { lockAllConfigurations() }

@@ -170,3 +170,9 @@ Fastlane supply, changelogs and track promotion:
 https://docs.fastlane.tools/actions/supply/
 GitHub Actions environments and secrets:
 https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments
+
+0.7.0 release fixture gate
+
+Configure FM1_FIXTURE_ARCHIVE_URL and FM1_FIXTURE_ARCHIVE_SHA256 in the google-play environment variables. The HTTPS ZIP must contain permitted external fixtures named v15.fwsc, v16.fwsc and catalog.json. Pin and review its SHA-256; never bundle manufacturer firmware into the app or source repository. The release job fails before signing/upload if the archive is missing, its hash differs, or any JVM test is skipped. Normal branch CI can still run synthetic tests without the archive. Platform CI covers API 34 and 36; physical USB testing remains a separate release requirement.
+
+Gradle dependencies are locked and verified with gradle/verification-metadata.xml. Review dependency updates and checksums before regenerating these files. Run python3 scripts/audit_dependencies.py to check all pinned JVM, Python and Ruby package versions against OSV.

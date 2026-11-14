@@ -23,6 +23,8 @@ class MidiMonitor(private val manager: MidiManager?, private val usb: UsbManager
         private set
     private var generation = 0
     private var worker: ThreadPoolExecutor? = null
+    @Volatile var draining = false
+        private set
     private val opening = mutableSetOf<Int>()
     private val devices = mutableMapOf<Int, MidiDevice>()
     private val outputs = mutableMapOf<String, Pair<MidiOutputPort, MidiReceiver>>()
@@ -40,7 +42,7 @@ class MidiMonitor(private val manager: MidiManager?, private val usb: UsbManager
         }?.sortedBy { it.label } ?: emptyList()
 
     fun start() {
-        stop()
+        if (running || draining) return
         val chosen = ports().filter { it.key in selected }
         if (chosen.isEmpty()) return
         running = true
@@ -134,18 +136,26 @@ class MidiMonitor(private val manager: MidiManager?, private val usb: UsbManager
         opening.clear()
         (outputs.keys + parsers.keys).toSet().forEach(::closePort)
         devices.values.forEach { runCatching { it.close() } }; devices.clear()
-        worker?.let { executor ->
-            executor.shutdown()
-            // Bound the handover: drain queued decoding before flash can take ownership.
-            if (!executor.awaitTermination(2, TimeUnit.SECONDS)) {
-                val dropped = executor.shutdownNow().size
-                log.add("Logger", byteArrayOf(), "STOP discarded $dropped queued packets")
-                check(executor.awaitTermination(1, TimeUnit.SECONDS)) { "MIDI logger did not stop" }
-            }
-        }
-        losses.forEach { (source, count) -> count.getAndSet(0).takeIf { it > 0 }?.let { log.loss(source, it) } }; losses.clear()
-        worker = null; activePorts = emptyList()
-        if (running) log.add("Logger", byteArrayOf(), "STOP")
+        val executor = worker
+        val pendingLosses = losses.toMap()
+        losses.clear(); worker = null; activePorts = emptyList()
+        val wasRunning = running
         running = false
+        if (executor != null) {
+            draining = true
+            executor.shutdown()
+            Thread({
+                try {
+                    if (!executor.awaitTermination(2, TimeUnit.SECONDS)) {
+                        val dropped = executor.shutdownNow().size
+                        log.add("Logger", byteArrayOf(), "STOP discarded $dropped queued packets")
+                        // Ports are already closed. Never block lifecycle callbacks on decoding.
+                        while (!executor.awaitTermination(1, TimeUnit.SECONDS)) Unit
+                    }
+                    pendingLosses.forEach { (source, count) -> count.getAndSet(0).takeIf { it > 0 }?.let { log.loss(source, it) } }
+                    if (wasRunning) log.add("Logger", byteArrayOf(), "STOP")
+                } finally { draining = false }
+            }, "midi-log-drain").apply { isDaemon = true }.start()
+        }
     }
 }

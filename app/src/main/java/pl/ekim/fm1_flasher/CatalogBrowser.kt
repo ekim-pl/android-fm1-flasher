@@ -41,7 +41,8 @@ object CatalogBrowser {
         }
     }
 
-    fun updates(catalog: Catalog?, local: List<LocalPackage>) = local.mapNotNull { saved ->
-        catalog?.entries?.singleOrNull { it.id == saved.entry.id && it.sha256 != saved.entry.sha256 && it.downloadable }
+    fun updates(catalog: Catalog?, local: List<LocalPackage>): List<CatalogEntry> {
+        val latest = catalog?.entries?.associateBy { it.id }.orEmpty()
+        return local.mapNotNull { saved -> latest[saved.entry.id]?.takeIf { it.sha256 != saved.entry.sha256 && it.downloadable } }
     }
 }

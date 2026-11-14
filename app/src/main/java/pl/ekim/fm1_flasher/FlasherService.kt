@@ -15,6 +15,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 data class UiState(
+    val experimental: Boolean = false,
     val recoveryPlan: RecoveryPlan? = null,
     val recoveryBackups: List<RecoveryBackup> = emptyList(),
     val devices: List<UsbMidi> = emptyList(),
@@ -50,6 +51,7 @@ class FlasherService : Service() {
     private lateinit var repository: CatalogRepository
     private lateinit var recoveryStore: RecoveryStore
     private lateinit var library: LocalLibrary
+    private lateinit var journal: FlashJournal
     private var manager: MidiManager? = null
     @Volatile private var uiVisible = false
     @Volatile private var refreshWhenIdle = false
@@ -69,12 +71,14 @@ class FlasherService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        state = state.copy(experimental = getSharedPreferences("features", MODE_PRIVATE).getBoolean("experimental", false))
         manager = getSystemService(MidiManager::class.java)
         midi = AndroidMidi(manager, main)
         monitor = MidiMonitor(manager, getSystemService(UsbManager::class.java), main)
         repository = CatalogRepository(filesDir)
         recoveryStore = RecoveryStore(File(filesDir, "recovery"))
         library = LocalLibrary(File(filesDir, "library"))
+        journal = FlashJournal(File(filesDir, "flash-session.json"))
         manager?.registerDeviceCallback(MidiManager.TRANSPORT_MIDI_BYTE_STREAM, mainExecutor, callback)
         getSystemService(NotificationManager::class.java).createNotificationChannel(
             NotificationChannel("flash", AppLanguage.wrap(this).s(R.string.notification_channel), NotificationManager.IMPORTANCE_LOW))
@@ -82,6 +86,7 @@ class FlasherService : Service() {
         startService(Intent(this, FlasherService::class.java).setAction("LIBRARY"))
         worker.execute {
             try {
+                File(filesDir, "previews").deleteRecursively()
                 publishLibrary()
                 update { it.copy(recoveryBackups = recoveryStore.list()) }
                 val cached = repository.cached()
@@ -90,6 +95,7 @@ class FlasherService : Service() {
                     status(msg(R.string.library_ready))
                 } else status(msg(R.string.catalog_missing))
                 restoreSelection()
+                if (journal.unresolved()) status(msg(R.string.flash_interrupted))
             } catch (failure: Exception) { status(failure.appMessage(R.string.library_read_error)) }
             finally { finishLibraryTask() }
         }
@@ -111,6 +117,7 @@ class FlasherService : Service() {
     }
 
     private fun status(text: AppText, progress: Int = -1) {
+        if (state.status == text && state.progress == progress) return
         update { it.copy(status = text, progress = progress, logs = (it.logs + text).takeLast(100)) }
         if (state.flashing) getSystemService(NotificationManager::class.java).notify(1, notification(text))
     }
@@ -136,7 +143,15 @@ class FlasherService : Service() {
         if (CatalogRefreshPolicy.shouldRefresh(state.offline, hasNetwork(), state.catalog?.fetchedAt, now)) refreshCatalog()
     }
 
+    fun setExperimental(enabled: Boolean) {
+        if (state.busy) return
+        getSharedPreferences("features", MODE_PRIVATE).edit().putBoolean("experimental", enabled).apply()
+        if (!enabled) monitor.stop()
+        update { it.copy(experimental = enabled, recoveryPlan = null) }
+    }
+
     fun toggleMonitor() {
+        if (!state.experimental) return
         if (monitor.running) {
             monitor.stop()
             if (!state.busy) stopSelf()
@@ -153,9 +168,11 @@ class FlasherService : Service() {
     }
 
     private fun finishLibraryTask() {
-        update { it.copy(busy = false, refreshingCatalog = false) }
-        if (!monitor.running) stopSelf()
-        checkDeferredRefresh()
+        main.post {
+            if (!monitor.running) stopSelf()
+            update { it.copy(busy = false, refreshingCatalog = false) }
+            checkDeferredRefresh()
+        }
     }
 
     private fun checkDeferredRefresh() {
@@ -187,24 +204,26 @@ class FlasherService : Service() {
     }
 
     fun detectChip(device: android.hardware.usb.UsbDevice) {
+        if (!state.experimental || state.busy) return
         monitor.stop()
         detectChipStopped(device)
     }
 
     private fun detectChipStopped(device: android.hardware.usb.UsbDevice) = libraryTask {
         val id = ChipDetector.detect(getSystemService(UsbManager::class.java), device, assets)
-        val chip = ChipDetector.classify(id)
-        update { it.copy(chip = chip) }
-        status(msg(R.string.chip_detected, "0x%06X".format(id)))
+        // ROM enumeration is not evidence that this is the selected MIDI instrument.
+        status(msg(R.string.chip_detected_separate, device.deviceName, "0x%06X".format(id)))
     }
 
     fun setChip(chip: FlashChip) {
-        if (!state.busy) update { it.copy(chip = chip) }
+        if (!state.busy && state.target != null && state.identity != null) update { it.copy(chip = chip) }
     }
 
     fun connect(id: Int) {
         if (state.busy) return
         val target = midi.devices().singleOrNull { it.info.id == id } ?: return
+        monitor.stop()
+        startService(Intent(this, FlasherService::class.java).setAction("LIBRARY"))
         update { it.copy(busy = true, target = target, identity = null, chip = FlashChip.UNKNOWN) }
         worker.execute {
             try {
@@ -224,6 +243,7 @@ class FlasherService : Service() {
         val downloads = library.list()
         update { it.copy(downloads = downloads, favorites = settings.favorites, offline = settings.offline) }
         if (library.problems.isNotEmpty()) status(AppText.Joined(library.problems.toList()))
+        if (library.settingsRepaired) status(msg(R.string.settings_repaired))
     }
 
     private fun restoreSelection() {
@@ -349,36 +369,46 @@ class FlasherService : Service() {
         worker.execute {
             val wake = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "fm1:flash")
             try {
-                wake.acquire(15 * 60_000L)
+                wake.acquire(16 * 60_000L)
                 // Starting a flash never performs a network request, including with an expired catalog.
                 val (saved, firmware) = library.load(entry.id, repository.cached())
                 check(saved.entry.sha256 == entry.sha256) { failed(msg(R.string.local_package_changed)) }
                 check(snapshot.chip.allows(saved.entry)) { failed(msg(R.string.local_chip_unsupported)) }
+                val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(FlashSession.MAX_SESSION_MS)
+                journal.record(entry.sha256, target.endpoint.usbPath, "preparing")
                 var before = midi.devices().map { it.endpoint }
                 val session = FlashSession(reconnect = { previous, loader ->
-                    val chosen = awaitReconnect(ReconnectGate(previous, before), loader)
+                    val chosen = awaitReconnect(ReconnectGate(previous, before), loader, deadline)
                     before = midi.devices().map { it.endpoint }
                     update { it.copy(target = chosen, identity = null) }
                     midi.open(chosen)
-                }, report = ::status)
+                }, report = { text, progress ->
+                    if (text == msg(R.string.flash_stage_verify) || text == msg(R.string.flash_stage_write))
+                        journal.record(entry.sha256, target.endpoint.usbPath,
+                            if (text == msg(R.string.flash_stage_verify)) "verification" else "writing")
+                    status(text, progress)
+                })
                 val installed = session.flash(firmware, midi.open(target), identity)
+                journal.record(entry.sha256, target.endpoint.usbPath, "finished", "confirmed")
                 update { it.copy(identity = installed) }
             } catch (failure: Exception) {
                 status(msg(R.string.flash_unconfirmed, failure.appMessage(R.string.flash_result_unknown)))
             } finally {
                 if (wake.isHeld) wake.release()
-                update { it.copy(busy = false, flashing = false, awaitingPort = false, reconnectCandidates = emptyList(), automaticReconnect = null) }
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                stopSelf()
-                refreshDevices()
-                checkDeferredRefresh()
+                main.post {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                    update { it.copy(busy = false, flashing = false, awaitingPort = false, reconnectCandidates = emptyList(), automaticReconnect = null) }
+                    refreshDevices()
+                    checkDeferredRefresh()
+                }
             }
         }
         return START_NOT_STICKY
     }
 
     fun enterDownloadMode() {
-        if (state.busy) return
+        if (state.busy || !state.experimental) return
         monitor.stop()
         enterDownloadModeStopped()
     }
@@ -397,6 +427,7 @@ class FlasherService : Service() {
     }
 
     fun exportRecovery(id: String, uri: android.net.Uri) = libraryTask {
+        check(state.experimental) { failed(msg(R.string.experimental_disabled)) }
         val backup = recoveryStore.list().single { it.id == id }
         val output = checkNotNull(contentResolver.openOutputStream(uri, "wt"))
         output.use { recoveryStore.export(backup, it) }
@@ -404,6 +435,11 @@ class FlasherService : Service() {
     }
 
     private fun startRecovery(intent: Intent): Int {
+        if (!state.experimental) {
+            if (!state.busy) stopSelf()
+            status(msg(R.string.experimental_disabled))
+            return START_NOT_STICKY
+        }
         if (state.busy) {
             if (!state.flashing) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf() }
             return START_NOT_STICKY
@@ -434,7 +470,7 @@ class FlasherService : Service() {
         worker.execute {
             val wake = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "fm1:recovery")
             try {
-                wake.acquire(15 * 60_000L)
+                wake.acquire(16 * 60_000L)
                 status(msg(R.string.recovery_starting))
                 val packageId = if (action == "RECOVERY_WRITE") plan!!.packageId else snapshot.ready?.id
                 val image = if (action != "RECOVERY_BACKUP") {
@@ -464,21 +500,24 @@ class FlasherService : Service() {
                 status(msg(R.string.recovery_failed, failure.appMessage(R.string.flash_result_unknown)))
             } finally {
                 if (wake.isHeld) wake.release()
-                update { it.copy(busy = false, flashing = false, recoveryBackups = recoveryStore.list()) }
-                stopForeground(STOP_FOREGROUND_REMOVE); stopSelf()
-                refreshDevices(); checkDeferredRefresh()
+                val backups = recoveryStore.list()
+                main.post {
+                    stopForeground(STOP_FOREGROUND_REMOVE); stopSelf()
+                    update { it.copy(busy = false, flashing = false, recoveryBackups = backups) }
+                    refreshDevices(); checkDeferredRefresh()
+                }
             }
         }
         return START_NOT_STICKY
     }
 
-    private fun awaitReconnect(gate: ReconnectGate, loader: Boolean): UsbMidi {
+    private fun awaitReconnect(gate: ReconnectGate, loader: Boolean, sessionDeadline: Long): UsbMidi {
         resumePort.clear()
         status(if (loader) msg(R.string.reconnect_loader)
             else msg(R.string.reconnect_final))
         update { it.copy(awaitingPort = true, reconnectCandidates = emptyList(), automaticReconnect = null) }
         val usb = getSystemService(UsbManager::class.java)
-        val deadline = System.nanoTime() + TimeUnit.MINUTES.toNanos(3)
+        val deadline = minOf(sessionDeadline, System.nanoTime() + TimeUnit.MINUTES.toNanos(3))
         while (System.nanoTime() < deadline) {
             val all = midi.devices()
             val allowed = gate.candidates(all.map { it.endpoint }).toSet()
