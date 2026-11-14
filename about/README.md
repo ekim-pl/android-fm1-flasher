@@ -6,20 +6,39 @@ An independent, experimental app for browsing firmware and updating an **M‑VAV
 
 ## Features
 
-- Search the catalog, keep favorites and use downloaded packages offline.
+- Browse firmware from multiple catalogs, search, keep favorites and use downloaded packages offline.
+- Manage catalog sources and filter the library by source.
 - Select downloaded firmware in the catalog or directly in the Flasher tab.
 - Verify package integrity and compatibility before installation.
 - Reconnect after planned restarts automatically when one USB device and one eligible MIDI port are present.
-- The experimental debug build also includes a receive-only MIDI logger, flash-chip detection and narrowly scoped ROM recovery; recovery has not been validated on physical hardware.
+- Optional experimental features include a receive-only MIDI logger, flash-chip detection and narrowly scoped ROM recovery; recovery has not been validated on physical hardware.
 - Choose a light, dark or system theme and an English, Polish or Simplified Chinese interface.
 
-## Firmware sources
+## Managing firmware sources
 
-**Settings → Firmware sources** manages independent catalog subscriptions. The Firmware Hub is enabled by default; [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) is disabled by default. Add an HTTPS catalog, check its contents and configure approved package/artwork URLs. Disabled sources make no automatic requests, including for images. Check now also works as a deliberate one-time check of a disabled source and respects the 24-hour minimum.
+Open **Settings → Firmware sources** to choose the catalogs used by the app. **The Firmware Hub is enabled by default**; **Awesome FM-1 is disabled by default**.
 
-The SQLite library keeps downloaded packages, favorites, selection and source provenance. Removing a subscription retains files and known withdrawals. Each source has its own freshness, errors and download policy; one failed source does not prevent another from updating. The source filter applies to browsing. Background catalog checks are optional and off by default; they never download or install firmware.
+- Enable or disable a source, view its status and last successful check, and see when another check is allowed.
+- Use **Add catalog source** for an HTTPS catalog in the same JSON format as Firmware Hub. Give it a name, set its check interval and configure approved package and artwork URLs. **Save and check** lets you inspect a new catalog before enabling it.
+- Open **Details and configuration** to edit a custom source or use **Check now**. Checks respect each source's interval, with a minimum of 24 hours between attempts, including failures. A failed source does not stop the others from updating.
+- Use **Filter by source** to browse a particular catalog, including its favorites and downloaded packages. Removing a custom subscription keeps downloaded files, favorites and known withdrawals.
+- **Restore default source settings** enables Firmware Hub and disables Awesome FM-1 while keeping your custom subscriptions and downloaded packages.
 
-These catalogs have no verified publisher signature. SHA-256 and package validation remain mandatory; unknown compatibility, including the initial SHRUB entry, blocks flashing. The same product ID does not identify the same project. Offline flashing uses local files without networking and cannot discover withdrawals published since the last successful check.
+Disabled sources make no automatic requests, including for images. You can deliberately use **Check now** on a disabled source without enabling it. **Check catalogs in the background** is optional and off by default; it checks enabled catalogs when a network is available, respects their intervals and never downloads or installs firmware. Offline mode pauses these checks.
+
+The local library remembers downloaded packages, favorites, selection and each package's source. Flashing uses saved files without network access. Offline mode cannot discover withdrawals published since the last successful catalog check.
+
+## Awesome FM-1
+
+[Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) is a companion community directory of firmware projects for the **M-VAVE FM-1**. It supplements Firmware Hub with additional catalogs linking to developers' websites, direct package downloads and project releases on GitHub. The repository stores descriptions, release information and download links; firmware files stay with their publishers.
+
+The source is already configured in the app. To use it, go online, open **Settings → Firmware sources** and enable **Awesome FM-1**. Its entries become available after a successful check, subject to the source's refresh interval. No catalog URL needs to be entered manually.
+
+You can help expand the directory: open an issue to report an outdated entry, or submit a pull request with a firmware project or package URL and a short description. See the contribution guide in the [Awesome FM-1 repository](https://github.com/ekim-pl/awesome-fm1#contributing).
+
+Catalog inclusion does not certify hardware compatibility. The current SHRUB entry has unknown flash-chip compatibility and remains blocked from flashing. These catalogs have no verified publisher signature; package integrity checks and compatibility restrictions still apply.
+
+## Sources and attribution
 
 Catalog attribution: [The Firmware Hub](https://thefirmwarehub.com), CC BY 4.0; descriptions and images belong to their authors. Additional catalogs declare their own licenses. Firmware is downloaded from authors, not the Hub package mirror.
 
