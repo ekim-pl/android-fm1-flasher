@@ -1,0 +1,1 @@
+Eksperymentalne odzyskiwanie przez ROM: podwójny odczyt pełnej pamięci, eksport kopii ZIP i zweryfikowane przywracanie V15. Zachowuje bootloader i chronione dane. Zawiera logger wielu portów MIDI. Odzyskiwanie przez fizyczne USB pozostaje niezweryfikowane. Android 14+.

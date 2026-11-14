@@ -1,0 +1,1 @@
+Experimental ROM recovery: double-read full-flash backup, ZIP export and verified stock V15 restore. Preserves the bootloader and protected data. Includes the multi-port MIDI logger. Physical USB recovery remains unverified. Android 14+.

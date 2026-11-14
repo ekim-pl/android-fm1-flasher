@@ -15,6 +15,8 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 data class UiState(
+    val recoveryPlan: RecoveryPlan? = null,
+    val recoveryBackups: List<RecoveryBackup> = emptyList(),
     val devices: List<UsbMidi> = emptyList(),
     val target: UsbMidi? = null,
     val identity: FirmwareIdentity? = null,
@@ -46,6 +48,7 @@ class FlasherService : Service() {
         private set
     private lateinit var midi: AndroidMidi
     private lateinit var repository: CatalogRepository
+    private lateinit var recoveryStore: RecoveryStore
     private lateinit var library: LocalLibrary
     private var manager: MidiManager? = null
     @Volatile private var uiVisible = false
@@ -70,6 +73,7 @@ class FlasherService : Service() {
         midi = AndroidMidi(manager, main)
         monitor = MidiMonitor(manager, getSystemService(UsbManager::class.java), main)
         repository = CatalogRepository(filesDir)
+        recoveryStore = RecoveryStore(File(filesDir, "recovery"))
         library = LocalLibrary(File(filesDir, "library"))
         manager?.registerDeviceCallback(MidiManager.TRANSPORT_MIDI_BYTE_STREAM, mainExecutor, callback)
         getSystemService(NotificationManager::class.java).createNotificationChannel(
@@ -79,6 +83,7 @@ class FlasherService : Service() {
         worker.execute {
             try {
                 publishLibrary()
+                update { it.copy(recoveryBackups = recoveryStore.list()) }
                 val cached = repository.cached()
                 if (cached != null) {
                     update { it.copy(catalog = cached) }
@@ -311,6 +316,7 @@ class FlasherService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action?.startsWith("RECOVERY_") == true) return startRecovery(intent)
         if (intent?.action != "FLASH") return START_NOT_STICKY
         if (state.busy) {
             if (!state.flashing) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf() }
@@ -366,6 +372,101 @@ class FlasherService : Service() {
                 stopSelf()
                 refreshDevices()
                 checkDeferredRefresh()
+            }
+        }
+        return START_NOT_STICKY
+    }
+
+    fun enterDownloadMode() {
+        if (state.busy) return
+        monitor.stop()
+        enterDownloadModeStopped()
+    }
+
+    private fun enterDownloadModeStopped() = libraryTask {
+        val target = state.target ?: failed(msg(R.string.flash_missing_requirements))
+        val expected = state.identity ?: failed(msg(R.string.flash_missing_requirements))
+        check(!expected.isLoader) { failed(msg(R.string.recovery_midi_required)) }
+        midi.open(target).use { link ->
+            val current = FlashSession({ _, _ -> failed(msg(R.string.not_applicable)) }, { _, _ -> }).identify(link)
+            check(current.sameAs(expected) && current.model == "FM-1") { failed(msg(R.string.flash_identity_changed)) }
+            link.send(Protocol.hex("f0 22 24 35 7d f7"))
+        }
+        update { it.copy(target = null, identity = null, chip = FlashChip.UNKNOWN, recoveryPlan = null) }
+        status(msg(R.string.recovery_key_sent))
+    }
+
+    fun exportRecovery(id: String, uri: android.net.Uri) = libraryTask {
+        val backup = recoveryStore.list().single { it.id == id }
+        val output = checkNotNull(contentResolver.openOutputStream(uri, "wt"))
+        output.use { recoveryStore.export(backup, it) }
+        status(msg(R.string.recovery_exported))
+    }
+
+    private fun startRecovery(intent: Intent): Int {
+        if (state.busy) {
+            if (!state.flashing) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf() }
+            return START_NOT_STICKY
+        }
+        try { monitor.stop() } catch (failure: Exception) {
+            status(failure.appMessage(R.string.flash_result_unknown))
+            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf()
+            return START_NOT_STICKY
+        }
+        val snapshot = state
+        val action = intent.action
+        val plan = snapshot.recoveryPlan
+        val usb = getSystemService(UsbManager::class.java)
+        val device = usb.deviceList.values.singleOrNull { ChipDetector.supports(it) }
+        if (action !in listOf("RECOVERY_BACKUP", "RECOVERY_PREPARE", "RECOVERY_WRITE") || device == null ||
+            device.deviceName != intent.getStringExtra("deviceName") || device.deviceId != intent.getIntExtra("deviceId", -1) ||
+            !usb.hasPermission(device) ||
+            (action == "RECOVERY_PREPARE" && !Recovery.eligible(snapshot.ready)) ||
+            (action == "RECOVERY_WRITE" && (plan == null || plan.token != intent.getStringExtra("token") ||
+                plan.deviceName != device.deviceName || plan.deviceId != device.deviceId))) {
+            status(msg(R.string.recovery_changed)); stopSelf(); return START_NOT_STICKY
+        }
+        try { startForeground(1, notification(msg(R.string.recovery_starting))) }
+        catch (failure: RuntimeException) {
+            status(failure.appMessage(R.string.flash_result_unknown)); stopSelf(); return START_NOT_STICKY
+        }
+        update { it.copy(busy = true, flashing = true, recoveryPlan = null) }
+        worker.execute {
+            val wake = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "fm1:recovery")
+            try {
+                wake.acquire(15 * 60_000L)
+                status(msg(R.string.recovery_starting))
+                val packageId = if (action == "RECOVERY_WRITE") plan!!.packageId else snapshot.ready?.id
+                val image = if (action != "RECOVERY_BACKUP") {
+                    val loaded = library.load(checkNotNull(packageId), repository.cached()).second
+                    val expected = if (action == "RECOVERY_WRITE") plan!!.packageHash else snapshot.ready!!.sha256
+                    check(loaded.sha256 == expected) { failed(msg(R.string.local_package_changed)) }
+                    Recovery.region(loaded)
+                    loaded
+                } else null
+                UsbBootConnection.open(usb, device, assets).use { flash ->
+                    if (action == "RECOVERY_WRITE") {
+                        Recovery.restore(flash, recoveryStore, plan!!, image!!, ::status)
+                        status(msg(R.string.recovery_complete), 100)
+                    } else {
+                        val backup = Recovery.backup(flash, recoveryStore, ::status)
+                        update { it.copy(recoveryBackups = recoveryStore.list()) }
+                        status(msg(R.string.recovery_backup_done, backup.id, "0x%06X".format(backup.flashId),
+                            if (Recovery.knownBoot(backup.bootHash)) msg(R.string.recovery_boot_known) else msg(R.string.recovery_boot_unknown)), 100)
+                        if (action == "RECOVERY_PREPARE") {
+                            val prepared = Recovery.plan(backup, recoveryStore, image!!, device.deviceName, device.deviceId, packageId!!)
+                            update { it.copy(recoveryPlan = prepared) }
+                            status(msg(R.string.recovery_plan_ready, prepared.changedSectors), 100)
+                        }
+                    }
+                }
+            } catch (failure: Exception) {
+                status(msg(R.string.recovery_failed, failure.appMessage(R.string.flash_result_unknown)))
+            } finally {
+                if (wake.isHeld) wake.release()
+                update { it.copy(busy = false, flashing = false, recoveryBackups = recoveryStore.list()) }
+                stopForeground(STOP_FOREGROUND_REMOVE); stopSelf()
+                refreshDevices(); checkDeferredRefresh()
             }
         }
         return START_NOT_STICKY
