@@ -42,6 +42,7 @@ jobs:
           path: |
             app/build/outputs/apk/debug/*.apk
             app/build/reports/
+            build/reports/dependency-verification/
           retention-days: 14
 
   platform:
@@ -67,9 +68,11 @@ jobs:
       - name: Run platform tests
         env:
           TEST_API: ${{ matrix.api }}
+          ANDROID_AVD_HOME: ${{ runner.temp }}/avd
         run: |
           sudo chmod 666 /dev/kvm
-          echo no | avdmanager create avd --force --name test --package "system-images;android-$TEST_API;google_apis;x86_64"
+          mkdir -p "$ANDROID_AVD_HOME"
+          echo no | avdmanager create avd --force --name test --path "$ANDROID_AVD_HOME/test.avd" --package "system-images;android-$TEST_API;google_apis;x86_64"
           "$ANDROID_HOME/emulator/emulator" -avd test -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > "$RUNNER_TEMP/emulator.log" 2>&1 &
           trap 'adb emu kill || true' EXIT
           timeout 180 adb wait-for-device
