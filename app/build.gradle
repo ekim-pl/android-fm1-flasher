@@ -13,8 +13,8 @@ android {
         applicationId 'pl.ekim.fm1_flasher'
         minSdk 26
         targetSdk 36
-        versionCode 6
-        versionName '0.5.1-experimental'
+        versionCode 7
+        versionName '0.5.2-experimental'
     }
     signingConfigs {
         if (uploadKeystore) {
@@ -45,7 +45,7 @@ android {
 
 tasks.register('bundleProjectDocs', Sync) {
     from(rootProject.layout.projectDirectory) {
-        include 'about/*.md', 'LICENSE.md', 'PRIVACY_POLICY.md', 'third_party/commonmark-LICENSE.txt'
+        include 'about/*.md', 'LICENSE.md', 'PRIVACY_POLICY.md', 'third_party/commonmark-LICENSE.txt', 'third_party/m-flasher-LICENSE.txt', 'third_party/m-flasher-NOTICE.md'
     }
     into(projectDocsAssets.map { it.dir('docs') })
 }

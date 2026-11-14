@@ -1,0 +1,1 @@
+Dodano wykrywanie kości flash w trybie USB download z loaderem RAM m-flasher. Rozpoznawanie starszej i nowej kości FM-1. Po detekcji uruchom ponownie w trybie MIDI i wybierz odczytany typ. Detekcja wymaga jeszcze sprawdzenia na fizycznym sprzęcie.

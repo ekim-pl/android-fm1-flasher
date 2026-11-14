@@ -263,4 +263,7 @@
     <string name="about_version">Version %1$s</string>
     <string name="about_document_unavailable">This document is available in the project repository; it is not bundled with the app.</string>
     <string name="about_document">about/README.md</string>
+    <string name="detect_chip">Detect chip (download mode)</string>
+    <string name="detect_chip_help">Connect only one instrument in USB download mode. Detection loads code into RAM without writing flash. After detection, power cycle into MIDI mode, connect, and select the reported chip type.</string>
+    <string name="chip_detected">Flash ID: %1$s. Power cycle into MIDI mode, connect, then select the reported chip type.</string>
 </resources>

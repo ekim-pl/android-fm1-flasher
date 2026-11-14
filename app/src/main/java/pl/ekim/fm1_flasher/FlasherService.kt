@@ -163,6 +163,13 @@ class FlasherService : Service() {
         finally { finishLibraryTask() }
     }
 
+    fun detectChip(device: android.hardware.usb.UsbDevice) = libraryTask {
+        val id = ChipDetector.detect(getSystemService(UsbManager::class.java), device, assets)
+        val chip = ChipDetector.classify(id)
+        update { it.copy(chip = chip) }
+        status(msg(R.string.chip_detected, "0x%06X".format(id)))
+    }
+
     fun setChip(chip: FlashChip) {
         if (!state.busy) update { it.copy(chip = chip) }
     }

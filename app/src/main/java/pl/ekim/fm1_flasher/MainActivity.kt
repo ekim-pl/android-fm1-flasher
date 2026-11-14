@@ -225,7 +225,7 @@ class MainActivity : Activity() {
         flasher = FlasherPanel(this,
             connectAction = { target -> withUsbPermission(target) { service?.connect(target.info.id) } },
             resumeAction = { target -> withUsbPermission(target) { service?.resumeWith(target.info.id) } },
-            chipAction = { service?.setChip(it) }, firmwareAction = { service?.useLocal(it) },
+            detectAction = ::detectChip, chipAction = { service?.setChip(it) }, firmwareAction = { service?.useLocal(it) },
             flashAction = ::confirmFlash, logsAction = ::showLogs)
         body.addView(flasher, FrameLayout.LayoutParams(-1, -1))
         about = FrameLayout(this)
@@ -649,13 +649,26 @@ class MainActivity : Activity() {
     private fun showLogs() = AlertDialog.Builder(this).setTitle(s(R.string.app_log))
         .setMessage(state.logs.joinToString("\n\n") { resolve(it) }.ifEmpty { s(R.string.no_events) }).setPositiveButton(s(R.string.close), null).show()
 
-    private fun withUsbPermission(target: UsbMidi, action: () -> Unit) {
+    private fun detectChip() {
+        if (state.busy) return
+        val devices = getSystemService(UsbManager::class.java).deviceList.values.filter(ChipDetector::supports)
+        if (devices.size != 1) {
+            AlertDialog.Builder(this).setMessage(s(R.string.detect_chip_help)).setPositiveButton(s(R.string.close), null).show()
+            return
+        }
+        val device = devices.single()
+        withUsbPermission(device) { service?.detectChip(device) }
+    }
+
+    private fun withUsbPermission(target: UsbMidi, action: () -> Unit) = withUsbPermission(target.usb, action)
+
+    private fun withUsbPermission(target: android.hardware.usb.UsbDevice, action: () -> Unit) {
         val usb = getSystemService(UsbManager::class.java)
-        if (usb.hasPermission(target.usb)) { action(); return }
+        if (usb.hasPermission(target)) { action(); return }
         if (pendingUsb != null) return
-        pendingUsb = target.usb.deviceId to action
+        pendingUsb = target.deviceId to action
         val intent = Intent(permissionAction).setPackage(packageName)
-        usb.requestPermission(target.usb, PendingIntent.getBroadcast(this, target.usb.deviceId, intent,
+        usb.requestPermission(target, PendingIntent.getBroadcast(this, target.deviceId, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
     }
 

@@ -1,38 +1,25 @@
-First public GitHub test release of the experimental Android firmware browser
-and USB MIDI updater for M-VAVE FM-1.
+Experimental Android test release with USB download-mode flash chip detection.
 
-Requires Android 8.0+, USB Host/OTG, Android MIDI and stable instrument power.
-Download FM1-Flasher-0.5.1-debug.apk from Assets and install it on your phone.
-The APK uses the same debug signing key as the previously shared test build.
+## Changes
+- Added Detect chip (download mode) to the Flasher screen.
+- Uses the m-flasher RAM loader and ONLINE_DEVICE command (0xFC0A) to read JEDEC ID.
+- Recognizes older FM-1 flash (0x856014) and newer flash (0xB36014); other IDs remain unknown.
+- Detection does not erase or program flash. Loader sources and MIT attribution are included.
+- Added detection instructions and English, Polish and Simplified Chinese UI strings.
 
-Features:
-- Firmware catalog, favorites, verified downloads and an offline library.
-- Downloaded-firmware picker in Flasher; catalog selection sets the same package.
-- Automatic reconnection after planned restarts when exactly one USB device
-  and one eligible MIDI endpoint are present. Android USB permission is required.
-- English, Polish and Simplified Chinese; light, dark and system themes.
-- Portrait and landscape layouts.
-- Short, dedicated offline About documents, license and privacy policy.
+## Usage
+Connect exactly one instrument in JieLi USB download mode (4C4A:8057), open Flasher and choose Detect chip. After reading the ID, power cycle into MIDI mode, connect and select the reported chip type. Results are not transferred automatically to a new USB connection.
 
-Verification: clean-clone debug build, release/debug lint and JVM tests passed
-(58 passed, 2 optional external-fixture tests skipped). Documentation links were
-checked. An earlier build successfully flashed a physical FM-1 according to a
-user report; this build and automatic USB reconnection still need hardware tests.
+## Validation
+- Debug APK and release AAB builds passed.
+- Debug and release lint passed.
+- JVM tests: 61 passed, 2 optional fixture tests skipped, no failures.
+- Emulator: Flasher button and no-device instructions checked.
+- APK signature matches the previous 0.5.1 test release.
 
-This is a debug-signed test APK, not a store release. With multiple devices,
-confirm the new port manually after restarts. An interrupted update, wrong
-package or wrong instrument selection can require hardware recovery. The app
-does not provide backups or recovery; back up your instrument first.
+The new detection path has not been validated on a physical FM-1. This is a debug-signed test APK for Android 8.0+ with USB Host/OTG, not a Google Play release. Back up instrument data before firmware updates.
 
-Assets:
-- FM1-Flasher-0.5.1-debug.apk — Android test build.
-- FM1-Flasher-0.5.1-debug.apk.sha256 — SHA-256 checksum of that APK.
-- FM1-Flasher-0.5.1-test-checklist.txt — manual test checklist (Polish).
-
-Source: https://github.com/ekim-pl/android-fm1-flasher
-Documentation: https://ekim-pl.github.io/android-fm1-flasher/
-Privacy: https://ekim-pl.github.io/android-fm1-flasher/privacy/
-
-MIT source license. Firmware is not bundled. Independent project, not an official
-M-VAVE product. Catalog attribution: The Firmware Hub, CC BY 4.0.
-Author: Ekim. Contact: ekim.pl@gmail.com
+## Assets
+- FM1-Flasher-0.5.2-debug.apk — installable test build.
+- FM1-Flasher-0.5.2-debug.apk.sha256 — SHA-256 checksum.
+- FM1-Flasher-0.5.2-test-checklist.txt — manual detection test checklist.

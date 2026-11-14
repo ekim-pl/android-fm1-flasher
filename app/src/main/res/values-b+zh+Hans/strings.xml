@@ -263,4 +263,7 @@
     <string name="about_version">版本 %1$s</string>
     <string name="about_document_unavailable">此文档可在项目代码仓库中查看，未随应用附带。</string>
     <string name="about_document">about/README.zh-Hans.md</string>
+    <string name="detect_chip">检测芯片（下载模式）</string>
+    <string name="detect_chip_help">请仅连接一台处于 USB 下载模式的设备。检测仅加载 RAM，不写入闪存。完成后重新启动为 MIDI 模式，连接并选择检测到的芯片类型。</string>
+    <string name="chip_detected">闪存 ID：%1$s。请重新启动为 MIDI 模式，连接并选择检测到的芯片类型。</string>
 </resources>

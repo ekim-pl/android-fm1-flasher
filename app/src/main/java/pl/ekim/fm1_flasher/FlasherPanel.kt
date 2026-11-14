@@ -5,7 +5,7 @@ import android.view.View
 import android.widget.*
 
 class FlasherPanel(context: Context, connectAction: (UsbMidi) -> Unit, resumeAction: (UsbMidi) -> Unit,
-    chipAction: (FlashChip) -> Unit, firmwareAction: (String) -> Unit, flashAction: () -> Unit, logsAction: () -> Unit) : LinearLayout(context) {
+    detectAction: () -> Unit, chipAction: (FlashChip) -> Unit, firmwareAction: (String) -> Unit, flashAction: () -> Unit, logsAction: () -> Unit) : LinearLayout(context) {
     private val ui = Ui(context)
     private val deviceSpinner = ui.spinner(listOf(s(R.string.select_port)))
     private val chipSpinner = ui.spinner(FlashChip.entries.map { s(it.label) })
@@ -61,6 +61,7 @@ class FlasherPanel(context: Context, connectAction: (UsbMidi) -> Unit, resumeAct
         }
         target.addView(ui.gap(8))
         target.addView(ui.text(s(R.string.flash_chip_help), 12, Ui.MUTED))
+        target.addView(ui.button(s(R.string.detect_chip), action = detectAction))
         val packageCard = ui.card()
         if (ui.twoColumns) {
             packageCard.addView(ui.row().apply {

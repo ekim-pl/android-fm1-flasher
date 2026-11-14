@@ -126,3 +126,17 @@ Protocol: [AL‑255/FM‑1‑RE](https://github.com/AL-255/FM-1-RE/blob/main/doc
 Catalog compilation: The Firmware Hub, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The app filters the list to supported identities, selects the required fields and adds a pinned stock entry. Descriptions belong to their authors; each entry shows its author and repository link. Firmware licenses remain with their projects; no firmware is bundled in the APK or application source. Gradle Wrapper: [Apache 2.0](https://github.com/gradle/gradle/blob/v8.13.0/LICENSE).
 
 Markdown rendering: [CommonMark Java](https://github.com/commonmark/commonmark-java), [BSD-2-Clause license](third_party/commonmark-LICENSE.txt), also bundled with the app.
+
+### Flash chip detection
+
+Use **Detect chip (download mode)** with exactly one instrument connected in
+JieLi USB download mode (`4C4A:8057`). Like
+[m-flasher](https://github.com/jvitkauskas/m-flasher/blob/620c0f4c582d4864e1ae23e6fc4560c64441b138/src/jl.rs),
+the app uploads a loader to RAM and reads JEDEC ID with command `FC0A`; it
+never erases or programs flash during detection. `856014` is the older FM-1
+chip; `B36014` is the newer chip. Other IDs remain unknown.
+
+After reading the ID, power cycle back into normal MIDI mode, connect in the
+app and select the reported chip type. Detection is not inferred from the
+firmware version or transferred automatically to a different USB connection.
+This USB path still needs validation on physical hardware.
