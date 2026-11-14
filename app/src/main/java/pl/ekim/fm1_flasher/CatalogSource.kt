@@ -26,7 +26,7 @@ data class CatalogSource(
         const val HOUR = 3_600_000L
         val hub get() = CatalogSource(HUB, "The Firmware Hub", "https://thefirmwarehub.com/catalog.json",
             enabled = true, builtin = true, artworkScopes = setOf("https://thefirmwarehub.com/"))
-        val awesome get() = CatalogSource("awesome-fm1", "awesome-fm1",
+        val awesome get() = CatalogSource("awesome-fm1", "Awesome FM-1",
             "https://raw.githubusercontent.com/ekim-pl/awesome-fm1/main/catalog.json", builtin = true,
             packageScopes = setOf("https://shrub.audio/editor/firmware/"))
         fun key(source: String, id: String) = "$source/$id"

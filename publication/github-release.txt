@@ -1,24 +1,28 @@
-FM-1 Flasher 0.7.0 experimental — safety and opt-in experimental features
+FM-1 Flasher 0.8.0 experimental — firmware catalogs and source management
 
 ## Changes
-- Adds Settings → Experimental features, off by default and remembered across restarts. It controls MIDI Logger, chip detection and ROM recovery in both debug and release builds. Disabling it stops the logger and clears the prepared recovery plan; the service also enforces the setting.
-- Prevents ROM chip detection from changing compatibility for a different selected MIDI instrument. Reconnection must report OTA mode before stage-two update traffic.
-- Adds bounded network deadlines, explicit HTTPS origin/redirect policies, a bounded artwork queue and a 24 MiB disposable image cache.
-- Recovers damaged library settings in offline mode while preserving firmware and backups; repairs corrupt catalog data within the provider's daily request limit.
-- Improves logger responsiveness, streamed log export, transfer-progress accounting and operation cleanup; records unconfirmed flash attempts for the next startup.
-- Updates test/site dependencies and adds dependency locking, checksum verification and release-fixture/platform CI checks.
-- Keeps the original application ID `pl.ekim.fm1_flasher`. Version code: 13. Requires Android 14+.
+- Adds Settings → Firmware sources: add/edit HTTPS catalogs, enable/disable subscriptions, check status, configure approved package/artwork URLs, filter by source, remove custom subscriptions and restore defaults.
+- The Firmware Hub remains enabled by default. The additional source is named **Awesome FM-1** and is disabled by default. Existing installations receive the new display name without resetting source settings, request limits or saved firmware.
+- Uses a local SQLite library with migration of the previous JSON catalog, downloaded packages, favorites, offline mode, selection and Hub request timestamps. Package metadata snapshots and known withdrawals remain available offline and after unsubscribing.
+- Synchronizes catalogs in the shared Hub JSON format with independent freshness, ETag/304 handling, transactional imports and partial success across sources. Hub checks retain the minimum 24-hour interval, including failed attempts and re-enabling a source.
+- Supports approved direct developer downloads and GitHub assets. Source policies restrict HTTPS hosts, paths, redirects, size and deadlines; catalog JSON cannot expand those permissions. Hub firmware still comes from its authors. SHA/CRC checks, chip compatibility and stock recovery pins remain enforced.
+- Adds optional background catalog checks, off by default. Disabled sources make no automatic requests, including artwork. Flashing uses local packages without network access.
+- Updates English, Polish and Simplified Chinese UI, About and privacy information. Keeps application ID `pl.ekim.fm1_flasher`. Version code: 14. Requires Android 14+.
 
 ## Validation
-- 97 JVM tests passed without skips using the hash-verified official V15 firmware and a catalog snapshot. V16 was not included in this run.
-- 3 instrumentation tests passed on Android 16, including experimental-feature guards. The settings switch was also checked interactively in the emulator.
-- Debug/release builds and lint passed with no errors; 2 Python tests and 44 generated documentation pages passed their checks.
+- 110 JVM tests passed without skips using a saved Hub catalog, the hash-verified official V15 package and SHRUB package. V16 was not included in this run.
+- 23 instrumentation tests passed on Android 16, including actual SQLite imports/migrations and source/background state. API 34 and API 36 also have platform jobs in Android CI.
+- An update installed over the existing app preserved catalog rows, downloaded firmware, favorites, selection, offline/background settings and source request budgets. The source manager and catalog display **Awesome FM-1**.
+- Debug APK, unsigned release APK/AAB, instrumentation APK and both lint variants built successfully. Two release-fixture helper tests, the no-skips fixture gate and generated documentation link checks passed.
 
 ## Installation
-Install `FM1-Flasher-0.7.0-experimental-debug.apk`. This debug-signed prerelease uses the same signing certificate as 0.6.4 and updates the original FM-1 Flasher app, preserving its data. It does not update or migrate data from the separate `.experimental` or `.recovery` application IDs.
+Install `FM1-Flasher-0.8.0-experimental-debug.apk`. This debug-signed prerelease has the same signing certificate as 0.7.0 and updates the original FM-1 Flasher app while preserving its data. It does not migrate the separate `.experimental` or `.recovery` application IDs. No firmware package is bundled in the APK.
 
-Enable Settings → Experimental features to access MIDI Logger and recovery. Do not use this prerelease as a claim of physical recovery validation: physical USB recovery, both-chip hardware acceptance and sustained multi-port load testing remain pending. Toolchain dependency advisories remain open; details are in `docs/reviews/0.7.0-validation.md` and the accompanying audit. No firmware package is bundled in the APK.
+Enable Awesome FM-1 in Settings → Firmware sources if you want its additional catalog. Catalogs are initially unsigned. Optional background synchronization remains off on a new installation. Settings → Experimental features still controls MIDI Logger and recovery separately.
+
+## Known limits
+SHRUB package parsing and integrity were checked, but its chip is **unknown**, so flashing remains blocked. No physical SHRUB flashing or USB recovery was tested. Both-chip hardware acceptance and sustained multi-port load testing remain pending. Publisher automation and signed catalog publication for awesome-fm1 are separate work. Existing toolchain dependency advisories are recorded in `docs/reviews/0.7.0-validation.md` and its audit. This is a GitHub prerelease, not a stable or Google Play release.
 
 ## Assets
-- `FM1-Flasher-0.7.0-experimental-debug.apk`
-- `FM1-Flasher-0.7.0-experimental-debug.apk.sha256`
+- `FM1-Flasher-0.8.0-experimental-debug.apk`
+- `FM1-Flasher-0.8.0-experimental-debug.apk.sha256`

@@ -15,7 +15,7 @@ An independent, experimental app for browsing firmware and updating an **M‑VAV
 
 ## Firmware sources
 
-**Settings → Firmware sources** manages independent catalog subscriptions. The Firmware Hub is enabled by default; [awesome-fm1](https://github.com/ekim-pl/awesome-fm1) is disabled by default. Add an HTTPS catalog, check its contents and configure approved package/artwork URLs. Disabled sources make no automatic requests, including for images. Check now also works as a deliberate one-time check of a disabled source and respects the 24-hour minimum.
+**Settings → Firmware sources** manages independent catalog subscriptions. The Firmware Hub is enabled by default; [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) is disabled by default. Add an HTTPS catalog, check its contents and configure approved package/artwork URLs. Disabled sources make no automatic requests, including for images. Check now also works as a deliberate one-time check of a disabled source and respects the 24-hour minimum.
 
 The SQLite library keeps downloaded packages, favorites, selection and source provenance. Removing a subscription retains files and known withdrawals. Each source has its own freshness, errors and download policy; one failed source does not prevent another from updating. The source filter applies to browsing. Background catalog checks are optional and off by default; they never download or install firmware.
 

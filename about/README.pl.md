@@ -15,7 +15,7 @@ Niezależna, eksperymentalna aplikacja do przeglądania firmware i aktualizowani
 
 ## Źródła firmware
 
-**Ustawienia → Źródła firmware** służą do zarządzania niezależnymi katalogami. Firmware Hub jest domyślnie włączony; [awesome-fm1](https://github.com/ekim-pl/awesome-fm1) domyślnie wyłączony. Dodaj katalog HTTPS, sprawdź zawartość i skonfiguruj dozwolone adresy paczek oraz grafik. Wyłączone źródła nie wykonują automatycznych żądań, także po grafiki. Sprawdź teraz pozwala na jawne jednorazowe sprawdzenie źródła wyłączonego i zachowuje minimum 24 godzin między próbami.
+**Ustawienia → Źródła firmware** służą do zarządzania niezależnymi katalogami. Firmware Hub jest domyślnie włączony; [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) domyślnie wyłączony. Dodaj katalog HTTPS, sprawdź zawartość i skonfiguruj dozwolone adresy paczek oraz grafik. Wyłączone źródła nie wykonują automatycznych żądań, także po grafiki. Sprawdź teraz pozwala na jawne jednorazowe sprawdzenie źródła wyłączonego i zachowuje minimum 24 godzin między próbami.
 
 Biblioteka SQLite zachowuje pobrane paczki, ulubione, wybór i pochodzenie. Usunięcie subskrypcji pozostawia pliki i poznane wycofania. Każde źródło ma własną aktualność, błędy i zasady pobierania; błąd jednego nie blokuje aktualizacji pozostałych. Listę można filtrować według źródła. Opcjonalne sprawdzanie katalogów w tle jest domyślnie wyłączone i nie pobiera ani nie instaluje firmware.
 

@@ -1,6 +1,6 @@
 # FM‑1 Flasher for Android
 
-## Experimental features in 0.7.0
+## Experimental features
 
 Open **Settings → Experimental features** to enable MIDI Logger, chip detection and ROM recovery. The switch is **off by default**, persists across restarts, and applies to debug and release builds. Disabling it hides these controls, stops the logger and invalidates the prepared recovery plan. It cannot change during an operation. The service also checks the switch before starting experimental operations. Physical USB recovery remains experimental.
 
@@ -75,12 +75,12 @@ Download a test APK from [GitHub Releases](https://github.com/ekim-pl/android-fm
 
 ## Catalog sources and SQLite
 
-Open **Settings → Firmware sources** to manage independent subscriptions. **The Firmware Hub is enabled by default**. **awesome-fm1 is disabled by default**, using `https://raw.githubusercontent.com/ekim-pl/awesome-fm1/main/catalog.json`. It supplements the Hub; it does not mirror its database or firmware files.
+Open **Settings → Firmware sources** to manage independent subscriptions. **The Firmware Hub is enabled by default**. **Awesome FM-1 is disabled by default**, using `https://raw.githubusercontent.com/ekim-pl/awesome-fm1/main/catalog.json`. The source keeps its internal ID `awesome-fm1` and its existing URL. Upgrades rename the built-in label without resetting its configuration, request budget or saved packages. It supplements the Hub; it does not mirror its database or firmware files.
 
 - Add or edit a public HTTPS catalog URL, name, interval (24–168 hours), and approved package/artwork URLs. A trailing `/` grants a directory; otherwise the rule is an exact path. Changing download policies invalidates their previous freshness/validators and requires another check, which still respects the saved minimum interval. GitHub release resolution verifies the declared repository and asset. Catalog redirects must remain at the configured endpoint; package/artwork redirects must stay within their approved scopes.
 - **Save and check** persists a new subscription disabled before making its explicit request, so even failed checks retain the request budget. Review the referenced hosts in Details, then configure approved URLs and enable the source. Plain **Save settings** makes no request. In offline mode, checking waits until you go online and choose **Check now**.
 - **Check now** is also available for a disabled source as a one-time user request. Neither it nor pull-to-refresh bypasses the minimum interval. Hub attempts, including errors and `304`, are limited to one every 24 hours. Re-enabling, deleting/re-adding, migrating and restoring defaults retain that budget.
-- Disabled sources make no automatic catalog, package or artwork requests. Their offers disappear from Catalog; downloaded and favorite records remain with source information. Removing a custom subscription retains provenance, files, favorites and known withdrawals. Restoring defaults enables Hub and disables awesome-fm1 without deleting custom subscriptions.
+- Disabled sources make no automatic catalog, package or artwork requests. Their offers disappear from Catalog; downloaded and favorite records remain with source information. Removing a custom subscription retains provenance, files, favorites and known withdrawals. Restoring defaults enables Hub and disables Awesome FM-1 without deleting custom subscriptions.
 - Each source has independent freshness, conditional requests, errors and a transactional snapshot. A valid empty snapshot withdraws its offers; failed or invalid responses preserve the previous snapshot. Downloads and batch updates use the selected source's freshness and report unavailable sources separately. Conflicting compatibility claims for identical bytes block use.
 - **Filter by source** limits the catalog, favorites or downloads. Details show source, release date, last successful check and reasons for blocked downloads. Source details also show the publisher's date, URL policy, license and unsigned status.
 - **Check catalogs in the background** is optional and off by default. One WorkManager job checks enabled catalogs approximately daily when a network is available. It shares the foreground operation lock, pauses offline, respects request limits and never downloads or installs firmware. Android controls the exact execution time.
@@ -182,7 +182,7 @@ This USB path still needs validation on physical hardware.
 
 ## Experimental multi-port MIDI logger
 
-The experimental build uses the original name **FM-1 Flasher** and package ID `pl.ekim.fm1_flasher` (version `0.7.0-experimental`). Android 14+ is required. Data from the separate `.experimental` app is not migrated.
+The experimental build uses the original name **FM-1 Flasher** and package ID `pl.ekim.fm1_flasher` (version `0.8.0-experimental`). Android 14+ is required. Data from the separate `.experimental` app is not migrated.
 
 Open **MIDI Logger**, choose one or more instrument **outputs**, grant USB access for each instrument and press **Start**. The logger only receives: it never identifies devices, opens their MIDI inputs or sends MIDI. Multiple ports on a device and multiple USB devices are supported, including devices without MIDI inputs. No firmware change is required; only data actually transmitted by the instrument can appear.
 
@@ -194,7 +194,7 @@ Validation for this experiment: parser/buffer unit tests and the existing JVM su
 ## Experimental ROM recovery
 
 The experimental build uses application ID `pl.ekim.fm1_flasher` and version
-`0.7.0-experimental`. Physical USB recovery has **not** been validated.
+`0.8.0-experimental`. Physical USB recovery has **not** been validated.
 
 Open **Flasher → Recovery and backups**. A responding FM-1 can be asked to enter
 ROM download mode; a device already in that mode needs no MIDI connection.

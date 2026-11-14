@@ -41,6 +41,7 @@ class CatalogDatabaseTest : InstrumentationTestCase() {
         repository.load(now)
         assertEquals(listOf(CatalogSource.HUB), calls)
         assertFalse(database.source("awesome-fm1").enabled)
+        assertEquals("Awesome FM-1", database.source("awesome-fm1").name)
         repository.load(now + 1)
         assertEquals(1, calls.size)
     }
@@ -255,6 +256,27 @@ class CatalogDatabaseTest : InstrumentationTestCase() {
         assertEquals(1, calls)
         repository.load(now + 2 * CatalogRepository.DAY)
         assertEquals(2, calls)
+    }
+
+    fun testVersionOneUpgradeRenamesOnlyTheBuiltInSourceAndPreservesItsState() {
+        val id = CatalogSource.awesome.id
+        val original = CatalogSource.awesome.copy(name = "awesome-fm1", enabled = true, revision = 9,
+            intervalHours = 48, attemptedAt = now, nextAttemptAt = now + 48 * CatalogSource.HOUR,
+            snapshot = true, checkedAt = now, etag = "preserved", error = "previous error")
+        database.putSource(original)
+        val custom = database.configure(null, "awesome-fm1", "https://example.org/catalog.json", 24, emptySet(), emptySet())
+        val entry = localEntry().copy(sourceId = id)
+        val library = LocalLibrary(File(directory, "library"), database)
+        library.save(entry, testPackage())
+        database.saveSettings(LibrarySettings(setOf(entry.key), true, entry.key))
+        database.writableDatabase.version = 1
+        database.close()
+        database = CatalogDatabase(instrumentation.targetContext, databaseName)
+        assertEquals(original.copy(name = "Awesome FM-1"), database.source(id))
+        assertEquals(custom, database.source(custom.id))
+        assertEquals(LibrarySettings(setOf(entry.key), true, entry.key), database.settings())
+        assertEquals(entry.sha256, LocalLibrary(File(directory, "library"), database).load(entry.key, null).second.sha256)
+        assertEquals(2, database.readableDatabase.version)
     }
 
 }

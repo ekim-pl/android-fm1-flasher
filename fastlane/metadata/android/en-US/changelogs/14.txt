@@ -1,0 +1,1 @@
+Adds multiple firmware catalogs with a local SQLite library and migration. Manage sources in Settings; The Firmware Hub stays enabled by default and Awesome FM-1 is opt-in. Optional background checks, source-specific refresh limits and safer direct downloads. Unknown SHRUB chip compatibility still blocks flashing.

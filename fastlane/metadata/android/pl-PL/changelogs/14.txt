@@ -1,0 +1,1 @@
+Dodano katalogi z wielu źródeł i lokalną bazę SQLite z migracją danych. Źródłami zarządzasz w ustawieniach; Firmware Hub pozostaje domyślnie włączony, a Awesome FM-1 wymaga włączenia. Opcjonalne sprawdzanie w tle, osobne limity źródeł i bezpieczne pobieranie od autorów. Nieznana zgodność SHRUB nadal blokuje flashowanie.

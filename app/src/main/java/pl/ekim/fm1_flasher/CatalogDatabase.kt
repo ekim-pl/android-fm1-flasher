@@ -13,7 +13,7 @@ import java.util.concurrent.locks.ReentrantLock
 /** Shared by foreground tasks and WorkManager. No background import during a flash. */
 object CatalogOperations { val lock = ReentrantLock() }
 
-class CatalogDatabase(private val context: Context, name: String = "firmware-library.db") : SQLiteOpenHelper(context, name, null, 1) {
+class CatalogDatabase(private val context: Context, name: String = "firmware-library.db") : SQLiteOpenHelper(context, name, null, 2) {
     override fun onConfigure(db: SQLiteDatabase) { db.setForeignKeyConstraintsEnabled(true) }
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE sources (id TEXT PRIMARY KEY, url TEXT NOT NULL UNIQUE, json TEXT NOT NULL)")
@@ -25,7 +25,12 @@ class CatalogDatabase(private val context: Context, name: String = "firmware-lib
         listOf(CatalogSource.hub, CatalogSource.awesome).forEach { putSource(db, it) }
     }
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        error("Unsupported database migration $oldVersion → $newVersion")
+        check(oldVersion == 1 && newVersion == 2) { "Unsupported database migration $oldVersion → $newVersion" }
+        val preset = CatalogSource.awesome
+        val source = db.rawQuery("SELECT json FROM sources WHERE id=?", arrayOf(preset.id)).use { cursor ->
+            if (cursor.moveToFirst()) sourceFromJson(JSONObject(cursor.getString(0))) else null
+        }
+        if (source?.builtin == true && source.name == "awesome-fm1") putSource(db, source.copy(name = preset.name))
     }
 
     fun <T> transaction(action: () -> T): T {
