@@ -1,40 +1,55 @@
-# Strona projektu na GitHub Pages
+# Project website on GitHub Pages
 
-Strona informacyjna, dokumentacja oraz polityka prywatności powstają ze źródeł w tym repozytorium. Zmiana `README.md` lub plików `about/` aktualizuje również dokumentację internetową.
+The website, documentation and privacy policy are built from this repository. Every page is available in English, Polish and Simplified Chinese, including navigation, publishing instructions and license translations. The **Polski**, **English** and **简体中文** links switch to the same page in another language.
 
-## Pierwsza publikacja
+## First deployment
 
-1. Wyślij projekt do repozytorium GitHub wraz z `.github/workflows/pages.yml`, `website/` i `scripts/build_site.py`.
-2. W **Settings → Pages → Build and deployment → Source** wybierz **GitHub Actions**.
-3. W **Actions → GitHub Pages → Run workflow** wybierz domyślną gałąź. Kolejne zmiany w tej gałęzi publikują stronę automatycznie.
-4. Adres strony znajdziesz w podsumowaniu wdrożenia oraz w **Settings → Pages**. Zwykle ma postać `https://LOGIN.github.io/NAZWA-REPOZYTORIUM/`.
+1. Push the project to GitHub, including `.github/workflows/pages.yml`, `website/` and `scripts/build_site.py`.
+2. In **Settings → Pages → Build and deployment → Source**, choose **GitHub Actions**.
+3. In **Actions → GitHub Pages → Run workflow**, select the default branch. Subsequent changes to that branch deploy automatically.
+4. The published site is [ekim-pl.github.io/android-fm1-flasher](https://ekim-pl.github.io/android-fm1-flasher/). Forks usually use `https://LOGIN.github.io/REPOSITORY/`; check the deployment summary or **Settings → Pages**.
 
-Jeżeli środowisko `github-pages` ogranicza dozwolone gałęzie, dopuść w nim domyślną gałąź projektu. Workflow buduje stronę także dla pull requestów i pozostałych gałęzi, ale publikuje tylko z domyślnej gałęzi. Nie wymaga sekretów aplikacji ani dostępu do Google Play.
+If the `github-pages` environment restricts deployment branches, allow the project's default branch. The workflow also builds pull requests and other branches but only deploys from the default branch. It needs no application secrets or Google Play access.
 
-Polityka prywatności jest dostępna pod `privacy/`, z wersjami językowymi pod `privacy/pl/`, `privacy/en/` i `privacy/zh-CN/`. Adres odpowiedniej wersji możesz podać w Play Console.
+## Languages and stable addresses
 
-## Budowanie lokalne
+- `en/`: the English website, also served at the site root for existing links.
+- `pl/`: the complete Polish website.
+- `zh-CN/`: the complete Simplified Chinese website.
 
-Uruchom z katalogu głównego projektu:
+Each language has a home page, technical guide, About page, privacy policy, license, publication materials, Google Play setup guide and website deployment guide. The language switcher keeps the page you are reading. Navigation, accessibility labels, titles, descriptions and footers follow the selected language.
+
+Existing links such as `documentation.html`, `about/pl.html` and `privacy/en/` remain available. The public policy URLs `privacy/pl/`, `privacy/en/` and `privacy/zh-CN/` can still be used in Play Console.
+
+## Local build
+
+Run from the project root:
 
 ```sh
 python3 -m venv .venv-pages
 .venv-pages/bin/pip install -r website/requirements.txt
 .venv-pages/bin/python scripts/build_site.py
+.venv-pages/bin/python scripts/check_site.py
 ```
 
-Otwórz `build/site/index.html`. Witryna używa względnych ścieżek i działa także pod prefiksem repozytorium na Pages. Wynik budowania zawiera tylko publiczną dokumentację i zasoby strony.
+Open `build/site/index.html`. Relative paths work under the repository prefix on Pages. The output contains only public documentation and website assets.
 
-W CI adres źródeł jest pobierany z `GITHUB_SERVER_URL`, `GITHUB_REPOSITORY` i `GITHUB_REF_NAME`. Przy lokalnym budowaniu możesz ustawić te same zmienne, aby dodać odnośniki do źródeł i wydań na GitHubie.
+CI reads source links from `GITHUB_SERVER_URL`, `GITHUB_REPOSITORY` and `GITHUB_REF_NAME`. Set the same variables locally to include GitHub source and release links.
 
-## Edycja treści
+## Editing content
 
-- `website/index.md`: strona główna.
-- `README.md`: pełna instrukcja i dokumentacja techniczna.
-- `about/README*.md`: opisy aplikacji po polsku, angielsku i chińsku.
-- `publication/privacy/`: gotowe strony polityki prywatności.
-- `website/style.css`: wspólny wygląd dokumentacji.
+- `README.md`, `website/index.md` and `website/pages.md`: the English technical guide, home page and deployment guide.
+- `publication/README.txt` and `publication/github-actions.txt`: English publication and Google Play guides.
+- `website/pl/` and `website/zh-CN/`: complete website translations, including license and privacy-policy text.
+- `about/README*.md`: the app's existing localized About documents, also used on the website.
+- `PRIVACY_POLICY.md`: the English privacy policy. Keep website translations consistent with the static copies in `publication/privacy/` and app resources.
+- `LICENSE.md`: the original English license. Website translations are provided for understanding; the original remains authoritative.
+- `website/style.css`: shared styling.
 
-## Wspólna publikacja z repozytorium F-Droid
+Update all three website versions when changing shared content. Missing page translations fail the build instead of silently showing English. The link checker verifies each page's language and language-switching targets as well as files and anchors.
 
-GitHub Pages ma jedno aktywne wdrożenie strony dla repozytorium. Po dodaniu publikacji F-Droid należy dołączać jego katalog `fdroid/repo/` do `build/site/` przed wysłaniem artefaktu Pages. Strona i repozytorium APK muszą być publikowane razem; osobny workflow wdrażający wyłącznie APK zastąpiłby stronę, a wdrożenie samej strony usunęłoby APK. Obecny workflow publikuje stronę i dokumentację.
+Repository documentation is in English. App About documents, app resources and store listings intentionally retain all supported languages.
+
+## Sharing deployment with an F-Droid repository
+
+GitHub Pages has one active site deployment per repository. If F-Droid publishing is added, include `fdroid/repo/` in `build/site/` before uploading the Pages artifact. The website and APK repository must deploy together: an APK-only workflow would replace the website, and a website-only deployment would remove the APK repository. The current workflow publishes the website and documentation.

@@ -1,29 +1,30 @@
-FM-1 Flasher — testy przygotowanej paczki
+FM-1 Flasher — prepared-build test checklist
 
-Instalacja
-- Zainstaluj dołączone APK jako aktualizację istniejącej aplikacji.
-- Sprawdź, czy pobrane paczki, ulubione i ostatni wybór firmware pozostały zapisane.
+Installation
+- Install the supplied APK as an update to the existing app.
+- Check that downloaded packages, favorites and the last firmware selection remain saved.
 
-O aplikacji
-- Otwórz zakładkę O aplikacji. Powinien być widoczny krótki opis funkcji,
-  wymagań i prywatności, bez instrukcji budowania ani historii wydań projektu.
-- Numer zainstalowanego pakietu jest pobierany przez aplikację i widoczny
-  wyłącznie w nagłówku tej zakładki; nie jest wpisany do plików README.
-- Przełącz język na polski, angielski i chiński uproszczony. Krótki opis
-  powinien zmienić język razem z interfejsem.
-- Sprawdź jasny, ciemny i systemowy motyw oraz obrót pion/poziom.
-- Otwórz licencję i politykę prywatności z opisu, po czym zamknij dokument.
-- Włącz tryb offline i ponownie otwórz opis oraz dokumenty.
+About
+- Open About. It should contain a short description of features, requirements
+  and privacy, without build instructions or the project's release history.
+- The installed package version is read by the app and shown only in the About
+  header; it is not hard-coded into README files.
+- Switch between Polish, English and Simplified Chinese. The short description
+  should follow the interface language.
+- Check light, dark and system themes and portrait/landscape rotation.
+- Open the license and privacy policy from About, then close each document.
+- Enable offline mode and open About and the documents again.
 
-Polityka prywatności
-- Otwórz ją także przez Ustawienia. Nie powinna zawierać odniesień
-  do konkretnych wydań aplikacji, niezależnie od języka.
+Privacy policy
+- Open it from Settings as well. It should not reference specific app releases,
+  regardless of language.
 
-Kontrole wykonane przed przekazaniem APK
-- Testy JVM i lint oraz budowanie APK i AAB.
-- Zgodność dokumentów w APK z ich plikami źródłowymi.
-- Obecność trzech krótkich opisów i brak technicznego README projektu w APK.
-- Dostępność lokalnych plików wskazanych w odnośnikach.
+Checks completed before handing over the APK
+- JVM tests and lint, plus APK and AAB builds.
+- Bundled documents match their source files.
+- All three short descriptions are present and the technical project README
+  is absent from the APK.
+- Files referenced by local document links are available.
 
-Zakres: opis aplikacji, dokumenty i pakowanie. Fizycznego flashowania FM-1
-nie powtarzano przy przygotowywaniu tej paczki.
+Scope: About content, documents and packaging. Physical FM-1 flashing was not
+repeated when preparing this build.

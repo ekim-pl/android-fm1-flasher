@@ -1,0 +1,107 @@
+FM-1 Flasher — materiały publikacyjne
+
+APLIKACJA
+Identyfikator aplikacji: pl.ekim.fm1_flasher
+Android: 8.0+ (API 26), docelowe/kompilowane API 36
+Wydawca: Ekim
+Kontakt: ekim.pl@gmail.com
+Licencja: MIT; zakres i wyłączenia dotyczące podmiotów trzecich w LICENSE.md
+w katalogu głównym projektu.
+Języki: angielski, polski, chiński uproszczony lub zgodny z systemem.
+Wybór motywu i języka: Ustawienia w górnym pasku.
+Opis aplikacji: krótkie, niezależne pliki Markdown w about/ w katalogu głównym,
+w trzech językach. Techniczny README projektu nie jest dołączany do aplikacji.
+
+MATERIAŁY SKLEPOWE
+Ścieżki względem katalogu głównego projektu:
+fastlane/metadata/android/en-US/
+fastlane/metadata/android/pl-PL/
+fastlane/metadata/android/zh-CN/
+
+Każdy język zawiera title.txt, short_description.txt (maks. 80 znaków),
+full_description.txt (maks. 4000 znaków), changelogs/<versionCode>.txt,
+images/icon.png (512x512 RGBA), images/featureGraphic.png (1024x500 RGB),
+images/phoneScreenshots/ (sześć pionowych PNG 1440x2560 i dwa poziome
+2560x1440 RGB) oraz teksty alternatywne zrzutów.
+Struktura jest przydatna dla fastlane supply i importera metadanych F-Droid.
+Opcjonalny JSON tekstów alternatywnych służy do kopiowania do Play Console,
+nie do automatycznej wysyłki.
+
+Zrzuty pokazują rzeczywisty interfejs na Pixel_8_API_36 z Androidem 16.
+Wybrana paczka oryginalnego firmware została pobrana i zweryfikowana
+w emulatorze. Nie wykonano flashowania przez USB. Materiały nie zawierają
+bajtów firmware. Przykładowa ilustracja firmware jest generowana przez aplikację,
+nie jest zdjęciem produktu producenta.
+
+Surowe zrzuty 1080x2400 / 2400x1080 są w publication/screenshots/raw/<locale>/.
+Kopie sklepowe usuwają wyłącznie paski stanu i nawigacji Androida. Obraz jest
+wyśrodkowany bez zniekształceń na płótnie 9:16 lub 16:9. Nie sfabrykowano
+żadnych elementów aplikacji, danych ani wyników aktualizacji.
+01: katalog/wyszukiwanie, jasny; 02: ulubione, jasny; 03: pobrane offline, jasny;
+04: szczegóły paczki, ciemny; 05: wybór pobranego firmware i instalacja, ciemny;
+06: wybór języka, ciemny.
+07: poziomy katalog z bocznymi filtrami; 08: poziomy Flasher w dwóch kolumnach.
+
+Grafiki używają istniejącej fali z ikony i oryginalnych kształtów wektorowych.
+Edytowalna ikona to assets/icon.svg. Aby odtworzyć PNG i oprawić surowe zrzuty:
+python3 publication/build_graphics.py
+Narzędzie wymaga Pillow oraz czcionek DejaVu Sans / Noto Sans CJK.
+
+PRYWATNOŚĆ
+publication/privacy/index.html prowadzi do pełnych wersji w trzech językach.
+Publiczna polityka: https://ekim-pl.github.io/android-fm1-flasher/privacy/
+Angielski adres do Play Console:
+https://ekim-pl.github.io/android-fm1-flasher/privacy/en/
+Ta sama polityka jest dostępna offline w aplikacji. PRIVACY_POLICY.md
+w katalogu głównym to angielski dokument dla czytelników repozytorium.
+Kontakt do wydawcy jest już uzupełniony.
+
+BUDOWANIE
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:bundleRelease
+Testowe APK: app/build/outputs/apk/debug/app-debug.apk (podpis debug).
+Pakiet wydania: app/build/outputs/bundle/release/app-release.aab (niepodpisany,
+chyba że ustawiono zmienne ANDROID_KEYSTORE_* / ANDROID_KEY_*).
+Przed wysłaniem do Google Play podpisz go własnym kluczem uploadu przez
+Generate Signed Bundle / APK w Android Studio i włącz Play App Signing.
+Można też użyć pipeline GitHub Actions opisanego w instrukcji Google Play.
+Buduje podpisany pakiet do pierwszego ręcznego przesłania, publikuje kolejne
+wersje na internal i promuje przetestowaną wersję na produkcję bez powtórnego
+wysyłania tego samego versionCode.
+Keystore, hasła i klucze konta usługi trzymaj poza Git. Niepodpisany pakiet
+i debug APK mają inne przeznaczenie; do Play Console należy wysłać poprawnie
+podpisany pakiet wydania.
+
+GITHUB / F-DROID
+Źródła: https://github.com/ekim-pl/android-fm1-flasher
+Wydania: https://github.com/ekim-pl/android-fm1-flasher/releases
+publication/github-release.txt zawiera angielski opis wydania testowego.
+APK jest podpisane kluczem debug; wydaniu towarzyszą suma SHA-256 i lista testów.
+publication/fdroid/pl.ekim.fm1_flasher.yml to projekt receptury budowania
+z uzupełnionym adresem źródeł i tagiem. Przed zgłoszeniem do F-Droid sprawdź go
+narzędziem fdroidserver. Wyjaśnij recenzentowi licencje katalogu i pobieranego
+oryginalnego firmware; o przyjęciu decyduje F-Droid.
+
+PLAY CONSOLE
+publication/play-console.json zawiera faktyczne dane do formularzy sklepu.
+publication/foreground-service.txt opisuje usługę connectedDevice i scenariusz
+demonstracji dla recenzenta. Jeśli Play Console wymaga nagrania, nadal trzeba
+wykonać je na fizycznym urządzeniu.
+
+POZOSTAŁE KROKI KONTA I SPRZĘTU
+1. Sprawdź pełną aktualizację na fizycznym telefonie i FM-1. Wydanie pozostaje
+   eksperymentalne i opisy sklepowe wyraźnie to zaznaczają.
+2. Wprowadź w Play Console publiczne adresy z play-console.json. Receptura
+   F-Droid nie jest zaakceptowanym wpisem w katalogu ani repozytorium APK.
+3. Podpisz pakiet kluczem uploadu; zakończ weryfikację konta Play, klasyfikację
+   treści, grupę odbiorców, Data safety i deklarację usługi pierwszego planu.
+4. Przed ostatecznym Data safety sprawdź praktyki serwerów katalogu, grafik
+   i firmware. Otrzymują URL żądania, IP i ogólny User-Agent, mimo że aplikacja
+   nie ma serwera telemetrycznego wydawcy.
+5. Ukończ wymagane testy zamknięte i przeglądy sklepowe. Wydanie GitHub jest
+   testowe; nie przeprowadzono wysyłki do Google Play ani zgłoszenia do F-Droid.
+
+ŹRÓDŁA FORMATÓW
+https://support.google.com/googleplay/android-developer/answer/9866151?hl=en
+https://developer.android.com/guide/topics/resources/app-languages
+https://docs.fastlane.tools/actions/supply/
+https://f-droid.org/docs/All_About_Descriptions_Graphics_and_Screenshots/

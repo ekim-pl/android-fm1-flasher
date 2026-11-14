@@ -14,3 +14,4 @@ vendor/bundle/
 .venv-pages/
 fastlane/report.xml
 fastlane/README.md
+__pycache__/
