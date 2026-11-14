@@ -1,0 +1,1 @@
+Wymaga Androida 14 lub nowszego. Poprawiono obsługę zgody USB i uruchamianie usługi flashowania. Dostosowano obszar pasków systemowych i klawiatury.

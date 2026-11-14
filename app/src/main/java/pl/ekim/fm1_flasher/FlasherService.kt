@@ -67,7 +67,7 @@ class FlasherService : Service() {
         midi = AndroidMidi(manager, main)
         repository = CatalogRepository(filesDir)
         library = LocalLibrary(File(filesDir, "library"))
-        manager?.registerDeviceCallback(callback, main)
+        manager?.registerDeviceCallback(MidiManager.TRANSPORT_MIDI_BYTE_STREAM, mainExecutor, callback)
         getSystemService(NotificationManager::class.java).createNotificationChannel(
             NotificationChannel("flash", AppLanguage.wrap(this).s(R.string.notification_channel), NotificationManager.IMPORTANCE_LOW))
         refreshDevices()
@@ -289,7 +289,6 @@ class FlasherService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action != "FLASH") return START_NOT_STICKY
-        startForeground(1, notification(msg(R.string.flash_preparing)))
         if (state.busy) {
             if (!state.flashing) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf() }
             return START_NOT_STICKY
@@ -303,6 +302,13 @@ class FlasherService : Service() {
             !getSystemService(UsbManager::class.java).hasPermission(target.usb)) {
             status(msg(R.string.flash_missing_requirements))
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf()
+            return START_NOT_STICKY
+        }
+        try {
+            startForeground(1, notification(msg(R.string.flash_preparing)))
+        } catch (failure: RuntimeException) {
+            status(failure.appMessage(R.string.flash_result_unknown))
+            stopSelf()
             return START_NOT_STICKY
         }
         update { it.copy(busy = true, flashing = true) }

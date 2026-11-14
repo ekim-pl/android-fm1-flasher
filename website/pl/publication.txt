@@ -2,7 +2,7 @@ FM-1 Flasher — materiały publikacyjne
 
 APLIKACJA
 Identyfikator aplikacji: pl.ekim.fm1_flasher
-Android: 8.0+ (API 26), docelowe/kompilowane API 36
+Android: 14+ (API 34), docelowe/kompilowane API 36
 Wydawca: Ekim
 Kontakt: ekim.pl@gmail.com
 Licencja: MIT; zakres i wyłączenia dotyczące podmiotów trzecich w LICENSE.md

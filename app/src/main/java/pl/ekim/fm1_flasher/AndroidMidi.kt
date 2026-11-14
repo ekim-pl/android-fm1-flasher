@@ -2,7 +2,6 @@ package pl.ekim.fm1_flasher
 
 import android.hardware.usb.UsbDevice
 import android.media.midi.*
-import android.os.Build
 import android.os.Handler
 import java.io.IOException
 import java.util.concurrent.CountDownLatch
@@ -17,13 +16,11 @@ data class UsbMidi(val info: MidiDeviceInfo, val usb: UsbDevice) {
 }
 
 class AndroidMidi(private val manager: MidiManager?, private val main: Handler) {
-    @Suppress("DEPRECATION")
     fun devices(): List<UsbMidi> {
         val manager = manager ?: return emptyList()
-        val infos = if (Build.VERSION.SDK_INT >= 33) manager.getDevicesForTransport(MidiManager.TRANSPORT_MIDI_BYTE_STREAM)
-            else manager.devices.toSet()
+        val infos = manager.getDevicesForTransport(MidiManager.TRANSPORT_MIDI_BYTE_STREAM)
         return infos.filter { it.type == MidiDeviceInfo.TYPE_USB && it.inputPortCount > 0 && it.outputPortCount > 0 }
-            .mapNotNull { info -> info.properties.getParcelable<UsbDevice>(MidiDeviceInfo.PROPERTY_USB_DEVICE)?.let { UsbMidi(info, it) } }
+            .mapNotNull { info -> info.properties.getParcelable(MidiDeviceInfo.PROPERTY_USB_DEVICE, UsbDevice::class.java)?.let { UsbMidi(info, it) } }
             .sortedBy { it.usb.deviceName }
     }
 

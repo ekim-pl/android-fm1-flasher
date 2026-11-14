@@ -1,25 +1,24 @@
-Experimental Android test release with USB download-mode flash chip detection.
+FM-1 Flasher 0.6.0 — Android 14+
 
 ## Changes
-- Added Detect chip (download mode) to the Flasher screen.
-- Uses the m-flasher RAM loader and ONLINE_DEVICE command (0xFC0A) to read JEDEC ID.
-- Recognizes older FM-1 flash (0x856014) and newer flash (0xB36014); other IDs remain unknown.
-- Detection does not erase or program flash. Loader sources and MIT attribution are included.
-- Added detection instructions and English, Polish and Simplified Chinese UI strings.
-
-## Usage
-Connect exactly one instrument in JieLi USB download mode (4C4A:8057), open Flasher and choose Detect chip. After reading the ID, power cycle into MIDI mode, connect and select the reported chip type. Results are not transferred automatically to a new USB connection.
+- Requires Android 14 (API 34) or newer; target and compile SDK remain API 36. Android 8–13 are no longer supported.
+- Simplifies MIDI device discovery and callbacks, per-app language settings and permission handling.
+- Checks the actual USB permission grant instead of relying on immutable PendingIntent result extras.
+- Validates the selected USB device before starting the foreground flash service and handles startup failures.
+- Updates system bar, display cutout and keyboard insets; fixes a cold-start crash.
+- Adds device tests for cold launch and immutable permission callbacks.
 
 ## Validation
-- Debug APK and release AAB builds passed.
-- Debug and release lint passed.
-- JVM tests: 61 passed, 2 optional fixture tests skipped, no failures.
-- Emulator: Flasher button and no-device instructions checked.
-- APK signature matches the previous 0.5.1 test release.
+- JVM tests: 61 passed, 2 optional external-fixture tests skipped.
+- Debug/release lint, debug APK and release AAB builds passed.
+- Android 16 emulator: both instrumentation tests passed (cold launch and immutable USB callback); app launch and catalog loading checked.
+- Documentation build and all 44 generated HTML pages passed link validation.
+- Android 14/15 and physical FM-1 USB flashing still require validation; see the attached acceptance checklist.
 
-The new detection path has not been validated on a physical FM-1. This is a debug-signed test APK for Android 8.0+ with USB Host/OTG, not a Google Play release. Back up instrument data before firmware updates.
+## Installation
+The APK is signed with the same debug key as the previous test release. It is a test build, not a Google Play production artifact. Back up instrument data before firmware updates. Automatic reconnection and download-mode chip detection still require physical hardware testing.
 
 ## Assets
-- FM1-Flasher-0.5.2-debug.apk — installable test build.
-- FM1-Flasher-0.5.2-debug.apk.sha256 — SHA-256 checksum.
-- FM1-Flasher-0.5.2-test-checklist.txt — manual detection test checklist.
+- FM1-Flasher-0.6.0-debug.apk — installable Android 14+ build.
+- FM1-Flasher-0.6.0-debug.apk.sha256 — SHA-256 checksum.
+- FM1-Flasher-0.6.0-test-checklist.txt — remaining acceptance checks.

@@ -1,6 +1,6 @@
 # 固件，触手可及。
 
-FM‑1 Flasher 是独立的实验性 **Android 8.0+** 应用，用于浏览固件并**通过 USB MIDI 更新 M‑VAVE FM‑1**。
+FM‑1 Flasher 是独立的实验性 **Android 14+** 应用，用于浏览固件并**通过 USB MIDI 更新 M‑VAVE FM‑1**。
 
 [阅读使用指南](documentation.md) · [关于应用](../../about/README.zh-Hans.md) · [下载测试 APK](https://github.com/ekim-pl/android-fm1-flasher/releases)
 

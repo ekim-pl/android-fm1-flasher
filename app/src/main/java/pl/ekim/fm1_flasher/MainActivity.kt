@@ -89,8 +89,10 @@ class MainActivity : Activity() {
             if (intent.action != permissionAction) return
             val pending = pendingUsb ?: return
             pendingUsb = null
-            @Suppress("DEPRECATION") val usb = intent.getParcelableExtra<android.hardware.usb.UsbDevice>(UsbManager.EXTRA_DEVICE)
-            if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false) && usb?.deviceId == pending.first) pending.second()
+            // Immutable PendingIntents do not accept the USB result extras; query the actual grant.
+            val manager = getSystemService(UsbManager::class.java)
+            val device = manager.deviceList.values.singleOrNull { it.deviceId == pending.first }
+            if (device != null && manager.hasPermission(device)) pending.second()
             else Toast.makeText(this@MainActivity, s(R.string.usb_permission_denied), Toast.LENGTH_LONG).show()
         }
     }
@@ -107,9 +109,9 @@ class MainActivity : Activity() {
         }
         setTheme(if (dark) R.style.AppTheme_Dark else R.style.AppTheme_Light)
         Ui.setDark(dark)
-        window.statusBarColor = Ui.BG
-        window.navigationBarColor = Ui.BG
-        window.decorView.systemUiVisibility = if (dark) 0 else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        window.setDecorFitsSystemWindows(false)
+        val lightBars = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
         ui = Ui(this)
         restoreEntryId = savedInstanceState?.getString("visibleEntry")
         restoreDetailsId = savedInstanceState?.getString("detailEntry")
@@ -121,8 +123,8 @@ class MainActivity : Activity() {
             value("downloaded", "false").toBoolean(), value("favorites", "false").toBoolean())
         artwork = ArtworkLoader(File(filesDir, "previews")) { state.offline }
         buildUi()
-        if (Build.VERSION.SDK_INT >= 33) registerReceiver(permissionResult, IntentFilter(permissionAction), RECEIVER_NOT_EXPORTED)
-        else { @Suppress("DEPRECATION") registerReceiver(permissionResult, IntentFilter(permissionAction)) }
+        window.insetsController?.setSystemBarsAppearance(if (dark) 0 else lightBars, lightBars)
+        registerReceiver(permissionResult, IntentFilter(permissionAction), RECEIVER_NOT_EXPORTED)
         bound = bindService(Intent(this, FlasherService::class.java), binding, BIND_AUTO_CREATE)
     }
 
@@ -130,12 +132,9 @@ class MainActivity : Activity() {
         val root = ui.column().apply {
             setBackgroundColor(Ui.BG)
             setOnApplyWindowInsetsListener { view, insets ->
-                if (Build.VERSION.SDK_INT >= 30) {
-                    val bars = insets.getInsets(WindowInsets.Type.systemBars())
-                    view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
-                } else {
-                    @Suppress("DEPRECATION") view.setPadding(insets.systemWindowInsetLeft, insets.systemWindowInsetTop, insets.systemWindowInsetRight, insets.systemWindowInsetBottom)
-                }
+                val bars = insets.getInsets(WindowInsets.Type.systemBars() or
+                    WindowInsets.Type.displayCutout() or WindowInsets.Type.ime())
+                view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
                 insets
             }
         }
@@ -637,7 +636,7 @@ class MainActivity : Activity() {
             .setNegativeButton(s(R.string.back), null).setPositiveButton(s(R.string.install_this_device)) { _, _ ->
                 withUsbPermission(target) {
                     if (state.target?.endpoint == target.endpoint && state.ready == entry && !state.busy) {
-                        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+                        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
                             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 5)
                         try { startForegroundService(Intent(this, FlasherService::class.java).setAction("FLASH")) }
                         catch (failure: RuntimeException) { Toast.makeText(this, resolve(failure.appMessage(R.string.flash_result_unknown)), Toast.LENGTH_LONG).show() }

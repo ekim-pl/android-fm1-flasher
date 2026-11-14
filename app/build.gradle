@@ -9,12 +9,15 @@ def projectDocsAssets = layout.buildDirectory.dir('generated/projectDocsAssets')
 android {
     namespace 'pl.ekim.fm1_flasher'
     compileSdk 36
+    useLibrary "android.test.runner"
+    useLibrary "android.test.base"
     defaultConfig {
         applicationId 'pl.ekim.fm1_flasher'
-        minSdk 26
+        minSdk 34
         targetSdk 36
-        versionCode 7
-        versionName '0.5.2-experimental'
+        testInstrumentationRunner "android.test.InstrumentationTestRunner"
+        versionCode 8
+        versionName '0.6.0'
     }
     signingConfigs {
         if (uploadKeystore) {

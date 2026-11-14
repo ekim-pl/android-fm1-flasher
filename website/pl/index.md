@@ -1,6 +1,6 @@
 # Firmware pod ręką.
 
-FM‑1 Flasher to niezależna, eksperymentalna aplikacja na **Androida 8.0+** do przeglądania firmware i aktualizowania **M‑VAVE FM‑1 przez USB MIDI**.
+FM‑1 Flasher to niezależna, eksperymentalna aplikacja na **Androida 14+** do przeglądania firmware i aktualizowania **M‑VAVE FM‑1 przez USB MIDI**.
 
 [Przeczytaj instrukcję](documentation.md) · [O aplikacji](../../about/README.pl.md) · [Pobierz testowe APK](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
