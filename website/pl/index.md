@@ -6,11 +6,11 @@ FM‑1 Flasher to niezależna, eksperymentalna aplikacja na **Androida 14+** do 
 
 ## Od katalogu do instrumentu
 
-- **Znajdź firmware.** Przeglądaj katalog The Firmware Hub, wyszukuj i zapisuj ulubione.
+- **Znajdź firmware.** Przeglądaj The Firmware Hub i opcjonalny katalog [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1), wyszukuj i zapisuj ulubione.
 - **Przygotuj bibliotekę.** Pobierz paczki i korzystaj z nich offline. Aplikacja sprawdza integralność i zgodność przed zapisem.
 - **Wybierz swój FM‑1.** Wskaż konkretny port USB MIDI, również gdy korzystasz z huba z kilkoma instrumentami.
 - **Aktualizuj świadomie.** Sprawdź wybrany instrument i paczkę przed potwierdzeniem instalacji.
-- **Narzędzia eksperymentalne.** Osobna wersja debug zawiera odbiorczy logger MIDI, wykrywanie kości flash i ograniczone odzyskiwanie ROM. Odzyskiwania ROM nie sprawdzono na fizycznym sprzęcie.
+- **Narzędzia eksperymentalne.** Włącz Ustawienia → Funkcje eksperymentalne, aby korzystać z odbiorczy logger MIDI, wykrywanie kości flash i ograniczone odzyskiwanie ROM. Odzyskiwania ROM nie sprawdzono na fizycznym sprzęcie.
 
 ## Zanim rozpoczniesz
 
@@ -22,10 +22,8 @@ Potrzebujesz telefonu z obsługą USB Host/OTG i MIDI, przewodu do transmisji da
 
 - [Instalacja, aktualizacja firmware i praca offline](documentation.md#getting-started)
 - [Kilka instrumentów na hubie USB](documentation.md#multiple-fm1-devices-on-a-hub)
+- [Zarządzanie źródłami firmware](../../about/README.pl.md)
 - [Budowanie aplikacji i testy](documentation.md#building-and-testing)
-- [Konfiguracja publikacji w Google Play](github-actions.txt)
-- [Materiały do publikacji](publication.txt)
-- [Budowanie i publikacja tej strony](pages.md)
 
 ## Prywatność i otwarte źródła
 

@@ -6,11 +6,11 @@ FM‑1 Flasher 是独立的实验性 **Android 14+** 应用，用于浏览固件
 
 ## 从目录到设备
 
-- **寻找固件。** 浏览 The Firmware Hub 目录，搜索并收藏固件。
+- **寻找固件。** 浏览 The Firmware Hub 和可选的 [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) 目录，搜索并收藏固件。
 - **准备固件库。** 下载固件包以供离线使用。写入前，应用会检查完整性与兼容性。
 - **选择你的 FM‑1。** 指定具体的 USB MIDI 端口，也支持连接多台设备的集线器。
 - **谨慎更新。** 确认安装前，检查所选设备和固件包。
-- **实验工具。** 独立的调试版本包含只接收数据的 MIDI 记录器、闪存芯片检测和范围严格受限的 ROM 恢复。实体设备上的 ROM 恢复尚未验证。
+- **实验工具。** 在设置中启用实验性功能后，可使用只接收数据的 MIDI 记录器、闪存芯片检测和范围严格受限的 ROM 恢复。实体设备上的 ROM 恢复尚未验证。
 
 ## 开始前
 
@@ -22,10 +22,8 @@ FM‑1 Flasher 是独立的实验性 **Android 14+** 应用，用于浏览固件
 
 - [安装、固件更新与离线使用](documentation.md#getting-started)
 - [USB 集线器上的多台设备](documentation.md#multiple-fm1-devices-on-a-hub)
+- [管理固件来源](../../about/README.zh-Hans.md)
 - [构建与测试应用](documentation.md#building-and-testing)
-- [Google Play 发布设置](github-actions.txt)
-- [发布材料](publication.txt)
-- [构建与部署本网站](pages.md)
 
 ## 隐私与开源
 

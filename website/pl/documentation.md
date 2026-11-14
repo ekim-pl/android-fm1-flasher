@@ -71,10 +71,14 @@ Gotowe APK testowe pobierzesz z [wydań na GitHubie](https://github.com/ekim-pl/
 - Nowa paczka zastępuje starą dopiero po kompletnym pobraniu i poprawnej walidacji. Błąd aktualizacji pozostawia poprzednią wersję. Aktualizacja biblioteki nie rozpoczyna flashowania; po zmianie wybranego pliku trzeba wskazać paczkę ponownie. **Pobierz ponownie** pozwala naprawić lokalny plik. Usunięcie lokalnej paczki nie usuwa ulubionego ani nie zmienia firmware instrumentu.
 - Jeśli ostatni znany katalog usunął dany firmware, zapis tej paczki jest blokowany. Dla starszej zapisanej wersji używamy informacji o zgodności należących do jej pliku, a nie do nowszej wersji. Offline nie da się poznać zmian ani wycofań, które pojawiły się po ostatnim pobraniu katalogu.
 
+## Źródła firmware
+
+W **Ustawienia → Źródła firmware** zarządzasz katalogami: The Firmware Hub jest domyślnie włączony, a społecznościowy [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) domyślnie wyłączony. Możesz dodawać źródła HTTPS, ustalać dozwolone adresy paczek i grafik oraz sprawdzać lub filtrować źródła. Wyłączone źródła nie wykonują automatycznych żądań. Szczegółową instrukcję i zasady pracy offline znajdziesz w [informacjach o aplikacji](../../about/README.pl.md).
+
 ## Protokół i zgodność
 
 - Dane katalogu: [The Firmware Hub](https://thefirmwarehub.com), [warunki wykorzystania katalogu](https://thefirmwarehub.com/kb/). Pobranie najwyżej raz na dobę, z identyfikującym User-Agent i lokalnym cache. Nowe pobrania wymagają aktualnego katalogu; lokalne, wcześniej sprawdzone paczki działają także offline.
-- Automatycznie pobierane są pakiety z jednoznacznym numerem zasobu GitHub i tagiem wydania oraz przypięty oficjalny pakiet z repozytorium M‑VAVE. Pozostałe pozycje udostępniają link do autora. Aplikacja nie pobiera pakietów z mirrora Hubu.
+- Automatycznie pobierane są pakiety z jednoznacznym numerem zasobu GitHub i tagiem wydania oraz przypięty oficjalny pakiet z repozytorium M‑VAVE. Dodatkowe źródła mogą wskazywać bezpośrednie adresy HTTPS paczek w zatwierdzonym zakresie. Aplikacja nie pobiera pakietów z mirrora Hubu.
 - Przed użyciem: zgodność SHA‑256 z katalogiem, tożsamość `FM-1_<numer>`, procesor AC791N, CRC nagłówka i listy UFW, zakresy plików oraz CRC `flash.bin` i `ota.bin`. Pomocnicze zaszyfrowane pliki producenta mają CRC tekstu jawnego; chroni je suma SHA‑256 całego pakietu, nie sprawdzamy ich CRC na zaszyfrowanych bajtach.
 - Nieznana/nowa kość: dopuszczane tylko pakiety oznaczone przez katalog `chip: new`. `chip: old` wymaga jawnego wyboru starszej kości. Nieznana zgodność blokuje zapis. Dla przypiętego oryginalnego V15 dostępny jest tylko wybór starszej kości, bo katalog nie deklaruje obsługi nowej. Oznaczenie w katalogu nie zastępuje testu danego firmware.
 - Dwustopniowa aktualizacja, kontrola sum ramek, fragmentów SysEx, zakresów odczytów i timeoutów. Sukces wymaga odpowiedzi na końcowy sygnał programu aktualizującego oraz zgodnej tożsamości po restarcie.
@@ -82,7 +86,7 @@ Gotowe APK testowe pobierzesz z [wydań na GitHubie](https://github.com/ekim-pl/
 
 Pozytywna kontrola tożsamości potwierdza odpowiedź urządzenia, nie odczyt kontrolny całej pamięci. Różne firmware mogą współdzielić tożsamość. Przerwanie zasilania, niewłaściwy pakiet lub błędne ponowne wskazanie instrumentu może wymagać sprzętowego odzyskania urządzenia. Automatyczne łączenie dotyczy zaplanowanych restartów w toku aktualizacji, nie dowolnej utraty połączenia podczas zapisu.
 
-Zwykła aktualizacja MIDI nie obsługuje Bluetooth, masowego flashowania, kopii presetów/pamięci, przepisywania bootloadera, generowania sprzętowego USB_KEY, trwałego mapowania gniazd huba, importu niezweryfikowanych plików lokalnych ani pakietów o innych identyfikatorach, np. `FM1_OFFICIAL_OPEN`. Wykrywanie kości i odzyskiwanie ROM to oddzielne funkcje eksperymentalnej wersji debug opisane niżej; nie rozszerzają zgodności zwykłych aktualizacji.
+Zwykła aktualizacja MIDI nie obsługuje Bluetooth, masowego flashowania, kopii presetów/pamięci, przepisywania bootloadera, generowania sprzętowego USB_KEY, trwałego mapowania gniazd huba, importu niezweryfikowanych plików lokalnych ani pakietów o innych identyfikatorach, np. `FM1_OFFICIAL_OPEN`. Wykrywanie kości i odzyskiwanie ROM to oddzielne opcjonalne funkcje eksperymentalne opisane niżej; nie rozszerzają zgodności zwykłych aktualizacji.
 
 <a id="building-and-testing"></a>
 
@@ -105,7 +109,7 @@ FM1_TEST_CATALOG=/path/catalog.json \
 ./gradlew :app:testDebugUnitTest
 ```
 
-W najnowszej walidacji wydania wszystkie 84 testy JVM przeszły z rzeczywistymi paczkami V15/V16 oraz symulowanym odzyskiwaniem na obu typach kości; przeszły też lint i budowanie debug APK. Fizyczne odzyskiwanie USB i odbiór MIDI z wielu portów nadal wymagają testów sprzętowych. Emulator Android 16 sprawdza interfejs i sieć, nie fizyczny transport USB.
+Wyniki testów i zakres walidacji znajdziesz w opisie konkretnego wydania na GitHubie. Fizyczne odzyskiwanie USB i odbiór MIDI z wielu portów nadal wymagają testów sprzętowych. Emulator Android 16 sprawdza interfejs i sieć, nie fizyczny transport USB.
 
 W emulatorze sprawdzono uruchomienie aplikacji, odczyt 202 pozycji katalogu, pobranie i trwały zapis Hortator 1.0.1 z kontrolą SHA‑256/CRC, zapis ulubionego, łączenie filtrów „Tylko pobrane” i „Ulubione” z kategorią, sortowanie, lokalną bibliotekę w trybie offline oraz rzeczywisty gest odświeżania. Bez urządzenia USB przycisk instalacji pozostaje zablokowany.
 
@@ -139,13 +143,13 @@ Po odczycie odłącz zasilanie, uruchom instrument ponownie w zwykłym trybie MI
 
 ## Eksperymentalny logger MIDI dla wielu portów
 
-Wersja debug ma pierwotną nazwę **FM-1 Flasher** i identyfikator `pl.ekim.fm1_flasher` (wersja `0.7.0-experimental`) i wymaga Androida 14+. Dane z osobnej aplikacji `.experimental` nie są przenoszone. W **MIDI Logger** wybierz wyjścia instrumentów, udziel dostępu USB i naciśnij **Start**. Logger wyłącznie odbiera dane — nie identyfikuje urządzeń, nie otwiera ich wejść MIDI ani niczego nie wysyła. Obsługuje wiele portów i urządzeń, także bez wejść MIDI.
+Aplikacja **FM-1 Flasher** ma identyfikator `pl.ekim.fm1_flasher` i wymaga Androida 14+. Włącz **Ustawienia → Funkcje eksperymentalne**, aby korzystać z loggera. Dane z osobnej aplikacji `.experimental` nie są przenoszone. W **MIDI Logger** wybierz wyjścia instrumentów, udziel dostępu USB i naciśnij **Start**. Logger wyłącznie odbiera dane — nie identyfikuje urządzeń, nie otwiera ich wejść MIDI ani niczego nie wysyła. Obsługuje wiele portów i urządzeń, także bez wejść MIDI.
 
 Dziennik pokazuje czas odbioru, urządzenie/ścieżkę/port, kanał, zdekodowane MIDI oraz HEX. Przytrzymaj wpis, aby zobaczyć pełny HEX. Filtry obejmują źródło, kanał i typ; można ukryć Clock oraz Active Sensing. Eksportuje cały bufor jako UTF‑8 przez systemowy wybór pliku, niezależnie od filtrów. Bufor jest ograniczony do 5000 wpisów i 4 MiB danych; pojedynczy SysEx do 64 KiB. Utracone dane i skrócone SysEx są oznaczane, ale logger nie wykryje utraty przed dostarczeniem danych przez Androida. Zatrzymuje się po przejściu aplikacji w tło, również przy otwieraniu eksportu. Odbiór z wielu portów i 30-minutowy test obciążeniowy wymagają sprawdzenia na sprzęcie.
 
 ## Eksperymentalne odzyskiwanie ROM
 
-Funkcja jest dostępna wyłącznie w wersji debug `0.7.0-experimental`. Odzyskiwanie przez USB nie zostało sprawdzone na fizycznym instrumencie. Otwórz **Flasher → Recovery and backups**. Odpowiadający FM‑1 można poprosić o przejście w tryb ROM download; urządzenie już w tym trybie nie wymaga połączenia MIDI. Podłącz dokładnie jedno urządzenie download (`4C4A:8057`, `WL82 UBOOT1.00`) i udziel dostępu USB. Tryb download nie jest systemem plików — nigdy go nie formatuj.
+Włącz **Ustawienia → Funkcje eksperymentalne**, aby korzystać z tej funkcji. Odzyskiwanie przez USB nie zostało sprawdzone na fizycznym instrumencie. Otwórz **Flasher → Recovery and backups**. Odpowiadający FM‑1 można poprosić o przejście w tryb ROM download; urządzenie już w tym trybie nie wymaga połączenia MIDI. Podłącz dokładnie jedno urządzenie download (`4C4A:8057`, `WL82 UBOOT1.00`) i udziel dostępu USB. Tryb download nie jest systemem plików — nigdy go nie formatuj.
 
 - Diagnostyka sprawdza JEDEC ID i klucz kości, dwukrotnie odczytuje całe 1 MiB, porównuje odczyty i zapisuje kopię wraz z metadanymi. Akceptowane są `856014` i `B36014` z kluczem `980F`. Nieznany obszar rozruchowy pozwala wykonać kopię, ale blokuje zapis naprawczy.
 - Przygotowanie odzyskiwania dopuszcza wyłącznie oficjalny pakiet `FM-1_015` o SHA‑256 `db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a`; sprawdza też hash wyodrębnionego firmware. Wymagany jest rozpoznany fabryczny obszar rozruchowy V15/V16; m-bootloader i uszkodzone obszary są odrzucane.

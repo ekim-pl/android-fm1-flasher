@@ -6,11 +6,11 @@ FM‑1 Flasher is an independent, experimental **Android 14+** app for browsing 
 
 ## From catalog to instrument
 
-- **Find firmware.** Browse The Firmware Hub catalog, search and save favorites.
+- **Find firmware.** Browse The Firmware Hub and optional [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) catalog, search and save favorites.
 - **Prepare your library.** Download packages for offline use. The app checks integrity and compatibility before writing.
 - **Choose your FM‑1.** Select a specific USB MIDI port, including on a hub with several instruments.
 - **Update carefully.** Check the selected instrument and package before confirming installation.
-- **Experimental tools.** A separate debug build includes a receive-only MIDI logger, flash-chip detection and narrowly scoped ROM recovery. Physical ROM recovery has not been validated.
+- **Experimental tools.** Enable Settings → Experimental features for a receive-only MIDI logger, flash-chip detection and narrowly scoped ROM recovery. Physical ROM recovery has not been validated.
 
 ## Before you start
 
@@ -22,10 +22,8 @@ You need a phone with USB Host/OTG and MIDI support, a data cable and stable ins
 
 - [Installation, firmware updates and offline use](../README.md#getting-started)
 - [Multiple instruments on a USB hub](../README.md#multiple-fm1-devices-on-a-hub)
+- [Manage firmware sources](../README.md#catalog-sources-and-sqlite)
 - [Building and testing the app](../README.md#building-and-testing)
-- [Google Play publishing setup](../publication/github-actions.txt)
-- [Publication materials](../publication/README.txt)
-- [Building and deploying this website](pages.md)
 
 ## Privacy and open source
 
