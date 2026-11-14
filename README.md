@@ -220,7 +220,7 @@ permission. Download mode is not a filesystem: never format it.
 - **Review prepared recovery** shows the device, chip, changed sector count,
   protected ranges and backup checksum, then asks before writing. The complete
   flash is compared to the saved backup again before erasing anything. Only
-  changed 4 KiB sectors in `[0x4000, 0x93000)` are erased/programmed. Each is read
+  changed 4 KiB sectors from `0x4000` inclusive to `0x93000` exclusive are erased/programmed. Each is read
   back, followed by a full-flash comparison including untouched areas. A failed
   transfer stops the operation; there is no blind retry or automatic resume.
 - **Export a backup** saves a ZIP through Android's document picker. It contains
