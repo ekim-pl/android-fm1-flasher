@@ -78,7 +78,7 @@ Download a test APK from [GitHub Releases](https://github.com/ekim-pl/android-fm
 
 A successful identity check confirms a device response, not a readback of all flash memory. Different firmware can share an identity. Power loss, an unsuitable package or selecting the wrong instrument after a restart may require hardware recovery. Automatic reconnection covers planned restarts during an update, not arbitrary connection loss while writing.
 
-Out of scope: Bluetooth updates, batch flashing, preset/memory backups, JEDEC reads, low-level download/UBOOT mode, persistent hub-socket mapping, importing unverified local files and packages with other identities such as `FM1_OFFICIAL_OPEN`.
+Out of scope: Bluetooth updates, batch flashing, preset/memory backups, bootloader rewriting, hardware USB_KEY generation, persistent hub-socket mapping, importing unverified local files and packages with other identities such as `FM1_OFFICIAL_OPEN`.
 
 <a id="budowanie-i-testy"></a>
 
@@ -140,3 +140,59 @@ After reading the ID, power cycle back into normal MIDI mode, connect in the
 app and select the reported chip type. Detection is not inferred from the
 firmware version or transferred automatically to a different USB connection.
 This USB path still needs validation on physical hardware.
+
+## Experimental ROM recovery (test worktree)
+
+The debug build uses application ID `pl.ekim.fm1_flasher.recovery` and version
+suffix `-recovery-test`, so it installs alongside the normal app. Its library and
+backups are separate. Physical USB recovery has **not** been validated.
+
+Open **Flasher → Recovery and backups**. A responding FM-1 can be asked to enter
+ROM download mode; a device already in that mode needs no MIDI connection.
+Connect exactly one download device (`4C4A:8057`, `WL82 UBOOT1.00`) and grant USB
+permission. Download mode is not a filesystem: never format it.
+
+- **Diagnose and back up flash** checks JEDEC ID and chip key, reads the complete
+  1 MiB twice, compares both reads, and syncs the backup and metadata to storage.
+  Both `856014` and `B36014` are accepted with chip key `980F`. An unknown boot
+  area still permits backup, but blocks recovery writing.
+- **Prepare V15 recovery** uses the selected downloaded package. Only official
+  `FM-1_015`, package SHA-256
+  `db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a`, is allowed.
+  Its extracted firmware region is independently hash-checked. A recognized
+  stock V15/V16 boot-area hash is required; m-bootloader and damaged boot areas
+  are deliberately refused in this first version.
+- **Review prepared recovery** shows the device, chip, changed sector count,
+  protected ranges and backup checksum, then asks before writing. The complete
+  flash is compared to the saved backup again before erasing anything. Only
+  changed 4 KiB sectors in `[0x4000, 0x93000)` are erased/programmed. Each is read
+  back, followed by a full-flash comparison including untouched areas. A failed
+  transfer stops the operation; there is no blind retry or automatic resume.
+- **Export a backup** saves a ZIP through Android's document picker. It contains
+  the full flash, metadata/SHA-256, and an operation result when available.
+  Backups remain available after app/process restarts. Uninstalling the app or
+  clearing its data deletes internal copies; export before proceeding.
+
+Successful verification means bytes match, not that the instrument has booted.
+Power cycle and reconnect MIDI to check startup. Existing custom-firmware or V16
+settings/presets may not suit V15; this operation does not repair them. No
+manufacturer firmware is bundled in the APK. The recovery path uses its own
+hash-pinned compatibility policy for both chips, without relaxing MIDI OTA rules.
+
+Devices absent from USB need external USB_KEY hardware or a second instrument
+running [M-Unbricker](https://github.com/jvitkauskas/m-unbricker); this build does
+not implement either. Bootloader repair, arbitrary raw-backup restore and V16
+recovery are excluded.
+
+Recovery tests use a simulated flash with interrupted/corrupt writes, short and
+unstable reads, protected regions, altered backups and changed devices. To also
+exercise the real V15 package parser and complete recovery workflow on simulated
+old/new chips (without redistributing firmware):
+
+```sh
+FM1_RECOVERY_V15=/path/stock-v15.fwsc ./gradlew :app:testDebugUnitTest
+```
+
+Protocol reference: [M-Flasher](https://github.com/jvitkauskas/m-flasher), MIT.
+V15 hashes and conservative recovery layout:
+[MvaveFM1Unbricker](https://github.com/Quixotic7/MvaveFM1Unbricker).

@@ -5,7 +5,7 @@ import android.view.View
 import android.widget.*
 
 class FlasherPanel(context: Context, connectAction: (UsbMidi) -> Unit, resumeAction: (UsbMidi) -> Unit,
-    detectAction: () -> Unit, chipAction: (FlashChip) -> Unit, firmwareAction: (String) -> Unit, flashAction: () -> Unit, logsAction: () -> Unit) : LinearLayout(context) {
+    recoveryAction: () -> Unit, detectAction: () -> Unit, chipAction: (FlashChip) -> Unit, firmwareAction: (String) -> Unit, flashAction: () -> Unit, logsAction: () -> Unit) : LinearLayout(context) {
     private val ui = Ui(context)
     private val deviceSpinner = ui.spinner(listOf(s(R.string.select_port)))
     private val chipSpinner = ui.spinner(FlashChip.entries.map { s(it.label) })
@@ -23,6 +23,7 @@ class FlasherPanel(context: Context, connectAction: (UsbMidi) -> Unit, resumeAct
     private var state = UiState()
     private val connect = ui.button(s(if (ui.twoColumns) R.string.connect_short else R.string.connect_selected)) { devices.getOrNull(deviceSpinner.selectedItemPosition - 1)?.let(connectAction) }
     private val resume = ui.button(s(R.string.resume_port), true) { candidates.getOrNull(reconnectSpinner.selectedItemPosition - 1)?.let(resumeAction) }
+    private val recovery = ui.button(s(R.string.recovery_title), action = recoveryAction)
     private val flash = ui.button(s(R.string.install_selected), true, flashAction)
 
     init {
@@ -62,6 +63,7 @@ class FlasherPanel(context: Context, connectAction: (UsbMidi) -> Unit, resumeAct
         target.addView(ui.gap(8))
         target.addView(ui.text(s(R.string.flash_chip_help), 12, Ui.MUTED))
         target.addView(ui.button(s(R.string.detect_chip), action = detectAction))
+        target.addView(recovery)
         val packageCard = ui.card()
         if (ui.twoColumns) {
             packageCard.addView(ui.row().apply {
@@ -116,6 +118,7 @@ class FlasherPanel(context: Context, connectAction: (UsbMidi) -> Unit, resumeAct
             deviceSpinner.adapter = ui.spinner(listOf(s(R.string.select_port)) + devices.map { it.label }).adapter
             deviceSpinner.setSelection(devices.indexOfFirst { it.endpoint == selected }.let { if (it < 0) 0 else it + 1 })
         }
+        recovery.isEnabled = !next.busy
         deviceSpinner.isEnabled = !next.busy
         connect.isEnabled = !next.busy && devices.isNotEmpty()
         chipSpinner.isEnabled = !next.busy && next.target != null

@@ -7,6 +7,7 @@ class FirmwarePackage private constructor(
     val logical: ByteArray,
     val sha256: String,
     val rawSize: Int,
+    val flashImage: ByteArray,
 ) {
     companion object {
         const val MAX_SIZE = 4 * 1024 * 1024
@@ -39,7 +40,7 @@ class FirmwarePackage private constructor(
             val listEnd = 64 + count * 80
             require(listEnd <= 940 && listEnd <= logical.size &&
                 crc16(logical, 64, listEnd) == Protocol.uint(header, 2, 2).toInt()) { invalid(msg(R.string.ufw_list_crc)) }
-            var hasFlash = false
+            var flashImage: ByteArray? = null
             var hasLoader = false
             val ranges = mutableListOf<LongRange>()
             repeat(count) { i ->
@@ -60,11 +61,14 @@ class FirmwarePackage private constructor(
                         invalid(msg(R.string.ufw_file_crc, name))
                     }
                 }
-                if (name == "flash.bin" && type == 0 && size >= 0x4000) hasFlash = true
+                if (name == "flash.bin" && type == 0 && size >= 0x4000) {
+                    require(flashImage == null) { invalid(msg(R.string.ufw_overlap)) }
+                    flashImage = logical.copyOfRange(offset.toInt(), (offset + size).toInt())
+                }
                 if (name == "ota.bin" && type == 100 && size > 0) hasLoader = true
             }
-            require(hasFlash && hasLoader) { invalid(msg(R.string.ufw_missing_images)) }
-            return FirmwarePackage(FirmwareIdentity("FM-1", product.substringAfter('_')), logical, expectedHash.lowercase(), raw.size)
+            require(flashImage != null && hasLoader) { invalid(msg(R.string.ufw_missing_images)) }
+            return FirmwarePackage(FirmwareIdentity("FM-1", product.substringAfter('_')), logical, expectedHash.lowercase(), raw.size, checkNotNull(flashImage))
         }
 
         fun sha256(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256").digest(bytes)

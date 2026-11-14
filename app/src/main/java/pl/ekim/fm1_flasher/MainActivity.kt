@@ -39,6 +39,8 @@ class MainActivity : Activity() {
     private lateinit var about: FrameLayout
     private lateinit var refreshHint: TextView
     private var started = false
+    private var exportBackupId: String? = null
+    private var exportBackupUri: Uri? = null
     private lateinit var flasher: FlasherPanel
     private lateinit var adapter: FirmwareAdapter
     private lateinit var offline: Switch
@@ -99,6 +101,8 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        exportBackupId = savedInstanceState?.getString("exportBackupId")
+        exportBackupUri = savedInstanceState?.getString("exportBackupUri")?.let(Uri::parse)
         val prefs = getSharedPreferences("browse", MODE_PRIVATE)
         val appearance = runCatching { Appearance.valueOf(prefs.getString("appearance", "SYSTEM") ?: "SYSTEM") }
             .getOrDefault(Appearance.SYSTEM)
@@ -224,7 +228,7 @@ class MainActivity : Activity() {
         flasher = FlasherPanel(this,
             connectAction = { target -> withUsbPermission(target) { service?.connect(target.info.id) } },
             resumeAction = { target -> withUsbPermission(target) { service?.resumeWith(target.info.id) } },
-            detectAction = ::detectChip, chipAction = { service?.setChip(it) }, firmwareAction = { service?.useLocal(it) },
+            recoveryAction = ::showRecovery, detectAction = ::detectChip, chipAction = { service?.setChip(it) }, firmwareAction = { service?.useLocal(it) },
             flashAction = ::confirmFlash, logsAction = ::showLogs)
         body.addView(flasher, FrameLayout.LayoutParams(-1, -1))
         about = FrameLayout(this)
@@ -430,6 +434,7 @@ class MainActivity : Activity() {
     }
 
     private fun render(next: UiState) {
+        if (!next.busy) dispatchRecoveryExport()
         if (isDestroyed) return
         val previous = state
         state = next
@@ -648,6 +653,95 @@ class MainActivity : Activity() {
     private fun showLogs() = AlertDialog.Builder(this).setTitle(s(R.string.app_log))
         .setMessage(state.logs.joinToString("\n\n") { resolve(it) }.ifEmpty { s(R.string.no_events) }).setPositiveButton(s(R.string.close), null).show()
 
+    private fun showRecovery() {
+        if (state.busy) return
+        val options = arrayOf(s(R.string.recovery_enter), s(R.string.recovery_backup),
+            s(R.string.recovery_prepare), s(R.string.recovery_write_plan), s(R.string.recovery_export), s(R.string.recovery_help_title))
+        AlertDialog.Builder(this).setTitle(s(R.string.recovery_title)).setItems(options) { _, choice ->
+            when (choice) {
+                0 -> {
+                    val target = state.target
+                    if (target == null || state.identity?.isLoader != false) recoveryMessage(s(R.string.recovery_midi_required))
+                    else AlertDialog.Builder(this).setTitle(s(R.string.recovery_enter))
+                        .setMessage(s(R.string.recovery_enter_confirm, target.label))
+                        .setNegativeButton(s(R.string.cancel), null).setPositiveButton(s(R.string.recovery_enter)) { _, _ ->
+                            withUsbPermission(target) {
+                                if (!state.busy && state.target?.endpoint == target.endpoint) service?.enterDownloadMode()
+                            }
+                        }.show()
+                }
+                1 -> startRecovery("RECOVERY_BACKUP")
+                2 -> if (Recovery.eligible(state.ready)) startRecovery("RECOVERY_PREPARE")
+                    else recoveryMessage(s(R.string.recovery_v15_only))
+                3 -> confirmRecovery()
+                4 -> chooseRecoveryExport()
+                5 -> recoveryMessage(s(R.string.recovery_help))
+            }
+        }.setNegativeButton(s(R.string.close), null).show()
+    }
+
+    private fun recoveryMessage(text: String) = AlertDialog.Builder(this).setTitle(s(R.string.recovery_title))
+        .setMessage(text).setPositiveButton(s(R.string.close), null).show()
+
+    private fun startRecovery(action: String, plan: RecoveryPlan? = null) {
+        if (state.busy) return
+        val devices = getSystemService(UsbManager::class.java).deviceList.values.filter(ChipDetector::supports)
+        if (devices.size != 1) { recoveryMessage(s(R.string.recovery_help)); return }
+        val device = devices.single()
+        withUsbPermission(device) {
+            if (!state.busy) {
+                if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+                    requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 5)
+                try {
+                    startForegroundService(Intent(this, FlasherService::class.java).setAction(action)
+                        .putExtra("deviceName", device.deviceName).putExtra("deviceId", device.deviceId)
+                        .putExtra("token", plan?.token))
+                } catch (failure: RuntimeException) { recoveryMessage(resolve(failure.appMessage(R.string.flash_result_unknown))) }
+            }
+        }
+    }
+
+    private fun confirmRecovery() {
+        val plan = state.recoveryPlan ?: run { recoveryMessage(s(R.string.recovery_no_plan)); return }
+        AlertDialog.Builder(this).setTitle(s(R.string.recovery_write_plan))
+            .setMessage(s(R.string.recovery_confirmation, plan.deviceName, "0x%06X".format(plan.backup.flashId),
+                plan.changedSectors, plan.backup.id, plan.backup.sha256))
+            .setNegativeButton(s(R.string.cancel), null)
+            .setPositiveButton(s(R.string.recovery_write)) { _, _ ->
+                if (state.recoveryPlan?.token == plan.token) startRecovery("RECOVERY_WRITE", plan)
+            }.show()
+    }
+
+    private fun chooseRecoveryExport() {
+        val backups = state.recoveryBackups
+        if (backups.isEmpty()) { recoveryMessage(s(R.string.recovery_no_backups)); return }
+        AlertDialog.Builder(this).setTitle(s(R.string.recovery_export))
+            .setItems(backups.map { "${it.id} · 0x%06X".format(it.flashId) }.toTypedArray()) { _, index ->
+                exportBackupId = backups[index].id
+                startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
+                    .setType("application/zip").putExtra(Intent.EXTRA_TITLE, "fm1-backup-${backups[index].id}.zip"), 61)
+            }.setNegativeButton(s(R.string.cancel), null).show()
+    }
+
+    @Deprecated("Platform activity result API")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 61) {
+            exportBackupUri = if (resultCode == RESULT_OK) data?.data else null
+            if (exportBackupUri == null) exportBackupId = null
+            dispatchRecoveryExport()
+        }
+    }
+
+    private fun dispatchRecoveryExport() {
+        val active = service ?: return
+        val id = exportBackupId ?: return
+        val uri = exportBackupUri ?: return
+        if (active.state.busy) return
+        exportBackupId = null; exportBackupUri = null
+        active.exportRecovery(id, uri)
+    }
+
     private fun detectChip() {
         if (state.busy) return
         val devices = getSystemService(UsbManager::class.java).deviceList.values.filter(ChipDetector::supports)
@@ -744,6 +838,8 @@ class MainActivity : Activity() {
         outState.putString("tab", tab.name); outState.putString("query", browseFilters.query)
         outState.putString("category", browseFilters.category.name); outState.putString("sort", browseFilters.sort.name)
         outState.putString("downloaded", browseFilters.downloadedOnly.toString()); outState.putString("favorites", browseFilters.favoritesOnly.toString())
+        outState.putString("exportBackupId", exportBackupId)
+        outState.putString("exportBackupUri", exportBackupUri?.toString())
         super.onSaveInstanceState(outState)
     }
 
