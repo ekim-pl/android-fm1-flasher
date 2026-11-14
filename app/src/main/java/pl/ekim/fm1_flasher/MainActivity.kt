@@ -39,6 +39,7 @@ class MainActivity : Activity() {
     private lateinit var about: FrameLayout
     private lateinit var refreshHint: TextView
     private var started = false
+    private lateinit var logger: MidiLoggerPanel
     private lateinit var flasher: FlasherPanel
     private lateinit var adapter: FirmwareAdapter
     private lateinit var offline: Switch
@@ -227,6 +228,9 @@ class MainActivity : Activity() {
             detectAction = ::detectChip, chipAction = { service?.setChip(it) }, firmwareAction = { service?.useLocal(it) },
             flashAction = ::confirmFlash, logsAction = ::showLogs)
         body.addView(flasher, FrameLayout.LayoutParams(-1, -1))
+        logger = MidiLoggerPanel(this, { service?.monitor }, { !state.busy && !state.flashing },
+            { port, action -> withUsbPermission(port.usb, action) }, { service?.toggleMonitor() }, ::exportMidiLog)
+        body.addView(logger, FrameLayout.LayoutParams(-1, -1))
         about = FrameLayout(this)
         body.addView(about, FrameLayout.LayoutParams(-1, -1))
         val operation = ui.row().apply {
@@ -376,7 +380,8 @@ class MainActivity : Activity() {
 
     private fun setTab(destination: LibraryTab) {
         tab = destination
-        browser.visibility = if (tab == LibraryTab.FLASHER || tab == LibraryTab.ABOUT) View.GONE else View.VISIBLE
+        browser.visibility = if (tab == LibraryTab.FLASHER || tab == LibraryTab.ABOUT || tab == LibraryTab.LOGGER) View.GONE else View.VISIBLE
+        logger.visibility = if (tab == LibraryTab.LOGGER) View.VISIBLE else View.GONE
         flasher.visibility = if (tab == LibraryTab.FLASHER) View.VISIBLE else View.GONE
         about.visibility = if (tab == LibraryTab.ABOUT) View.VISIBLE else View.GONE
         if (tab == LibraryTab.ABOUT && about.childCount == 0) about.addView(AboutPanel(this, ::openUrl), FrameLayout.LayoutParams(-1, -1))
@@ -627,6 +632,31 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun exportMidiLog() {
+        if (service == null) return
+        startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE); type = "text/plain"
+            putExtra(Intent.EXTRA_TITLE, "midi-log-${System.currentTimeMillis()}.txt")
+        }, 41)
+    }
+
+    @Deprecated("Platform activity result API")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != 41) return
+        val snapshot = service?.monitor?.log?.snapshot()
+        val uri = data?.data
+        if (resultCode != RESULT_OK || snapshot == null || uri == null) return
+        Thread {
+            val result = runCatching {
+                checkNotNull(contentResolver.openOutputStream(uri, "wt")).bufferedWriter(Charsets.UTF_8).use { it.write(snapshot.export()) }
+            }
+            runOnUiThread {
+                Toast.makeText(this, s(if (result.isSuccess) R.string.logger_saved else R.string.logger_save_failed), Toast.LENGTH_LONG).show()
+            }
+        }.start()
+    }
+
     private fun confirmFlash() {
         val entry = state.ready ?: return
         val target = state.target ?: return
@@ -752,7 +782,7 @@ class MainActivity : Activity() {
     }
 
     override fun onStop() {
-        started = false; service?.onAppClosed(); super.onStop()
+        started = false; if (!isChangingConfigurations) service?.onAppClosed(); super.onStop()
     }
 
     override fun onDestroy() {

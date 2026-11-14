@@ -42,6 +42,8 @@ class FlasherService : Service() {
     private val worker = Executors.newSingleThreadExecutor()
     private val listeners = CopyOnWriteArraySet<(UiState) -> Unit>()
     private val resumePort = LinkedBlockingQueue<Int>(1)
+    lateinit var monitor: MidiMonitor
+        private set
     private lateinit var midi: AndroidMidi
     private lateinit var repository: CatalogRepository
     private lateinit var library: LocalLibrary
@@ -54,6 +56,7 @@ class FlasherService : Service() {
     private val callback = object : MidiManager.DeviceCallback() {
         override fun onDeviceAdded(info: MidiDeviceInfo) = refreshDevices()
         override fun onDeviceRemoved(info: MidiDeviceInfo) {
+            monitor.removed(info.id)
             refreshDevices()
             if (!state.flashing && state.target?.info?.id == info.id) {
                 update { it.copy(target = null, identity = null, chip = FlashChip.UNKNOWN) }
@@ -65,6 +68,7 @@ class FlasherService : Service() {
         super.onCreate()
         manager = getSystemService(MidiManager::class.java)
         midi = AndroidMidi(manager, main)
+        monitor = MidiMonitor(manager, getSystemService(UsbManager::class.java), main)
         repository = CatalogRepository(filesDir)
         library = LocalLibrary(File(filesDir, "library"))
         manager?.registerDeviceCallback(MidiManager.TRANSPORT_MIDI_BYTE_STREAM, mainExecutor, callback)
@@ -127,11 +131,25 @@ class FlasherService : Service() {
         if (CatalogRefreshPolicy.shouldRefresh(state.offline, hasNetwork(), state.catalog?.fetchedAt, now)) refreshCatalog()
     }
 
-    fun onAppClosed() { uiVisible = false; refreshWhenIdle = false }
+    fun toggleMonitor() {
+        if (monitor.running) {
+            monitor.stop()
+            if (!state.busy) stopSelf()
+        } else if (!state.busy && !state.flashing) {
+            startService(Intent(this, FlasherService::class.java).setAction("MONITOR"))
+            monitor.start()
+            if (!monitor.running) stopSelf()
+        }
+    }
+
+    fun onAppClosed() {
+        uiVisible = false; refreshWhenIdle = false; monitor.stop()
+        if (!state.busy) stopSelf()
+    }
 
     private fun finishLibraryTask() {
         update { it.copy(busy = false, refreshingCatalog = false) }
-        stopSelf()
+        if (!monitor.running) stopSelf()
         checkDeferredRefresh()
     }
 
@@ -163,7 +181,12 @@ class FlasherService : Service() {
         finally { finishLibraryTask() }
     }
 
-    fun detectChip(device: android.hardware.usb.UsbDevice) = libraryTask {
+    fun detectChip(device: android.hardware.usb.UsbDevice) {
+        monitor.stop()
+        detectChipStopped(device)
+    }
+
+    private fun detectChipStopped(device: android.hardware.usb.UsbDevice) = libraryTask {
         val id = ChipDetector.detect(getSystemService(UsbManager::class.java), device, assets)
         val chip = ChipDetector.classify(id)
         update { it.copy(chip = chip) }
@@ -293,6 +316,11 @@ class FlasherService : Service() {
             if (!state.flashing) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf() }
             return START_NOT_STICKY
         }
+        try { monitor.stop() } catch (failure: Exception) {
+            status(failure.appMessage(R.string.flash_result_unknown))
+            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf()
+            return START_NOT_STICKY
+        }
         val snapshot = state
         val target = snapshot.target
         val entry = snapshot.ready
@@ -384,6 +412,7 @@ class FlasherService : Service() {
     }
 
     override fun onDestroy() {
+        monitor.stop()
         manager?.unregisterDeviceCallback(callback)
         worker.shutdownNow()
         listeners.clear()

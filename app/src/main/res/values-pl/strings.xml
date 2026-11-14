@@ -266,4 +266,25 @@
     <string name="detect_chip">Wykryj kość (tryb download)</string>
     <string name="detect_chip_help">Podłącz tylko jeden instrument w trybie USB download. Detekcja uruchamia kod w RAM bez zapisu flash. Następnie uruchom instrument ponownie w trybie MIDI, połącz i wybierz odczytany typ kości.</string>
     <string name="chip_detected">ID flash: %1$s. Uruchom ponownie w trybie MIDI, połącz i wybierz odczytany typ kości.</string>
+    <string name="tab_logger">Logger MIDI</string>
+    <string name="logger_help">Eksperymentalny · pasywny odbiór USB MIDI z wybranych wyjść instrumentów. Przytrzymaj wpis, aby zobaczyć pełny HEX. Eksport obejmuje cały bufor.</string>
+    <string name="logger_ports">Wybierz wyjścia</string>
+    <string name="logger_start">Start</string>
+    <string name="logger_stop">Stop</string>
+    <string name="logger_export">Eksport</string>
+    <string name="logger_filters">Filtry</string>
+    <string name="logger_pause">Pauza przewijania</string>
+    <string name="logger_paused">Przewijanie wstrzymane</string>
+    <string name="logger_clear">Wyczyść</string>
+    <string name="logger_status">Zdarzenia: %1$d · usunięte: %2$d · utracone bajty: %3$d</string>
+    <string name="logger_running">Odbiór (błędy portów w logu)</string>
+    <string name="logger_stopped">Zatrzymany</string>
+    <string name="logger_no_ports">Brak dostępnych portów wyjściowych USB MIDI.</string>
+    <string name="logger_all">Wszystkie</string>
+    <string name="logger_source">Źródło</string>
+    <string name="logger_channel">Kanał</string>
+    <string name="logger_type">Typ komunikatu</string>
+    <string name="logger_saved">Zapisano log MIDI.</string>
+    <string name="logger_save_failed">Nie udało się zapisać logu MIDI.</string>
+    <string name="logger_hide_timing">Ukryj Clock i Active Sensing</string>
 </resources>

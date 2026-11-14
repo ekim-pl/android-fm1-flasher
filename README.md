@@ -140,3 +140,16 @@ After reading the ID, power cycle back into normal MIDI mode, connect in the
 app and select the reported chip type. Detection is not inferred from the
 firmware version or transferred automatically to a different USB connection.
 This USB path still needs validation on physical hardware.
+
+
+## Experimental multi-port MIDI logger
+
+The experimental debug build installs alongside the regular app as **FM1 Logger Experimental** (`pl.ekim.fm1_flasher.experimental`, version `0.6.1-experimental`). Android 14+ is required. It has its own private library and preferences; existing app data is not shared.
+
+Open **MIDI Logger**, choose one or more instrument **outputs**, grant USB access for each instrument and press **Start**. The logger only receives: it never identifies devices, opens their MIDI inputs or sends MIDI. Multiple ports on a device and multiple USB devices are supported, including devices without MIDI inputs. No firmware change is required; only data actually transmitted by the instrument can appear.
+
+The log shows receive time, device/path/port, channel, decoded MIDI and HEX. Long-press an entry for full HEX. Filters select source/channel/type and can hide Clock/Active Sensing. Pausing scrolling keeps reception active. Clear removes buffered entries; Export saves the entire current buffer as UTF-8 text through Android’s file picker, regardless of filters. Protocol names and diagnostic annotations use technical English. Running status is expanded into complete messages; the export is not a byte-exact recording of callback boundaries.
+
+Memory is bounded to 5000 entries and 4 MiB of raw message data, plus a bounded input queue; a single SysEx is limited to 64 KiB. Evictions, input losses and truncated SysEx are marked. The logger cannot detect messages lost before Android delivers them. It stops when the app enters the background, including when opening the export picker. Rotation retains a running session; reconnecting devices requires selecting their new ports. Flashing or chip detection stops the logger first; restart it manually afterward.
+
+Validation for this experiment: parser/buffer unit tests and the existing JVM suite, lint and debug APK build. Physical multi-port USB reception and a 30-minute hardware load test remain to be done. Installation succeeded on the Android 16 emulator; UI automation was blocked by another session holding that emulator.

@@ -266,4 +266,25 @@
     <string name="detect_chip">检测芯片（下载模式）</string>
     <string name="detect_chip_help">请仅连接一台处于 USB 下载模式的设备。检测仅加载 RAM，不写入闪存。完成后重新启动为 MIDI 模式，连接并选择检测到的芯片类型。</string>
     <string name="chip_detected">闪存 ID：%1$s。请重新启动为 MIDI 模式，连接并选择检测到的芯片类型。</string>
+    <string name="tab_logger">MIDI 日志</string>
+    <string name="logger_help">实验性功能 · 被动接收所选乐器输出端口的 USB MIDI。长按消息可查看完整 HEX。导出包含整个缓冲区。</string>
+    <string name="logger_ports">选择输出</string>
+    <string name="logger_start">开始</string>
+    <string name="logger_stop">停止</string>
+    <string name="logger_export">导出</string>
+    <string name="logger_filters">筛选</string>
+    <string name="logger_pause">暂停滚动</string>
+    <string name="logger_paused">滚动已暂停</string>
+    <string name="logger_clear">清除</string>
+    <string name="logger_status">事件：%1$d · 已移除：%2$d · 丢失字节：%3$d</string>
+    <string name="logger_running">正在接收（端口错误见日志）</string>
+    <string name="logger_stopped">已停止</string>
+    <string name="logger_no_ports">没有可用的 USB MIDI 输出端口。</string>
+    <string name="logger_all">全部</string>
+    <string name="logger_source">来源</string>
+    <string name="logger_channel">通道</string>
+    <string name="logger_type">消息类型</string>
+    <string name="logger_saved">MIDI 日志已保存。</string>
+    <string name="logger_save_failed">无法保存 MIDI 日志。</string>
+    <string name="logger_hide_timing">隐藏 Clock 和 Active Sensing</string>
 </resources>

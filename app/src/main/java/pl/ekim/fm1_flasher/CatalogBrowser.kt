@@ -12,7 +12,7 @@ enum class FirmwareCategory(val key: String?, val label: Int) {
 enum class FirmwareSort(val label: Int) { NAME(R.string.sort_name), NEWEST(R.string.sort_newest), AUTHOR(R.string.sort_author), DOWNLOADED(R.string.sort_downloaded) }
 enum class LibraryTab(val label: Int, val icon: String) {
     CATALOG(R.string.tab_catalog, "▦"), FAVORITES(R.string.tab_favorites, "★"), DOWNLOADS(R.string.tab_downloads, "↓"),
-    FLASHER(R.string.tab_flasher, "↗"), ABOUT(R.string.tab_about, "ⓘ")
+    LOGGER(R.string.tab_logger, "≋"), FLASHER(R.string.tab_flasher, "↗"), ABOUT(R.string.tab_about, "ⓘ")
 }
 data class BrowseFilters(val query: String = "", val category: FirmwareCategory = FirmwareCategory.ALL,
     val sort: FirmwareSort = FirmwareSort.NAME, val downloadedOnly: Boolean = false, val favoritesOnly: Boolean = false)
