@@ -15,7 +15,6 @@ internal class OAuthManager(
 ) {
     companion object {
         const val REDIRECT = "pl.ekim.fm1-flasher://oauth/callback"
-        internal const val LEGACY_REDIRECT = "pl.ekim.multiplatform-fm1-flasher://oauth/callback"
         private val NETWORK_LOCK = Any()
         private const val PENDING = "_oauth_pending"
         internal fun challenge(verifier: String) = Base64.getUrlEncoder().withoutPadding().encodeToString(MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray(Charsets.US_ASCII)))
@@ -38,16 +37,14 @@ internal class OAuthManager(
     private fun finishLocked(uri: Uri, source: (String) -> CatalogSource): String {
         val pending = store.readOpaque(PENDING)?.let(::JSONObject) ?: failed(msg("oauth_callback_error"))
         fun single(name: String) = uri.getQueryParameters(name).singleOrNull()
-        // Pending requests created before the rename have no saved redirect.
-        val redirect = pending.optString("redirect", LEGACY_REDIRECT)
-        check(redirect in setOf(REDIRECT, LEGACY_REDIRECT) && uri.buildUpon().clearQuery().fragment(null).build().toString() == redirect && uri.fragment == null &&
+        check(pending.optString("redirect") == REDIRECT && uri.buildUpon().clearQuery().fragment(null).build().toString() == REDIRECT && uri.fragment == null &&
             single("state")?.let { MessageDigest.isEqual(it.toByteArray(), pending.getString("state").toByteArray()) } == true && now() < pending.getLong("expires")) { failed(msg("oauth_callback_error")) }
         store.remove(PENDING)
         val current = source(pending.getString("source"))
         check(current.revision == pending.getLong("revision") && !current.deleted && current.authMethod == HttpAuthMethod.OAUTH2) { failed(msg("source_changed")) }
         val code = single("code")?.takeIf { it.length <= 8192 && it.isNotBlank() } ?: failed(msg("oauth_callback_error"))
         val (old, version) = store.readStamped(current.id) ?: failed(msg("auth_login_required"))
-        exchange(current.id, old, mapOf("grant_type" to "authorization_code", "code" to code, "redirect_uri" to redirect, "code_verifier" to pending.getString("verifier")), version)
+        exchange(current.id, old, mapOf("grant_type" to "authorization_code", "code" to code, "redirect_uri" to REDIRECT, "code_verifier" to pending.getString("verifier")), version)
         return current.id
     }
     fun authorizeClient(source: CatalogSource): HttpCredentials = synchronized(NETWORK_LOCK) { authorizeClientLocked(source) }

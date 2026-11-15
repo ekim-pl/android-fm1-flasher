@@ -3,6 +3,7 @@
 
 from html.parser import HTMLParser
 from pathlib import Path
+import re
 from urllib.parse import unquote, urlsplit
 
 from build_site import ALIASES, LANGUAGES, PAGES
@@ -71,6 +72,8 @@ def check():
     for path, document in documents.items():
         language, page = expected[path]
         prefix = str(path.relative_to(ROOT))
+        if re.search(r'pl\.ekim\.[a-z0-9.-]*multiplatform', path.read_text(encoding='utf-8'), re.IGNORECASE):
+            errors.append(f'{prefix}: outdated application identifier')
         if (document.html_language != LANGUAGES[language]['html']
                 or document.language != language or document.page != page):
             errors.append(f'{prefix}: wrong page language or identity')

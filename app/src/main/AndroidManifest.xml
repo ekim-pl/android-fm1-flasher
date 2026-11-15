@@ -20,7 +20,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="pl.ekim.fm1-flasher" android:host="oauth" android:path="/callback" />
-                <data android:scheme="pl.ekim.multiplatform-fm1-flasher" android:host="oauth" android:path="/callback" />
             </intent-filter>
         </activity>
         <service android:name=".FlasherService" android:exported="false"

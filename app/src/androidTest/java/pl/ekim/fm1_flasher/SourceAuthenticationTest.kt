@@ -71,26 +71,20 @@ class SourceAuthenticationTest : InstrumentationTestCase() {
         assertEquals("refresh_token", calls.last()["grant_type"])
         assertEquals("refresh-secret", calls.last()["refresh_token"])
     }
-    fun testLegacyPendingAuthorizationSurvivesUpgrade() = fixture { store, _ ->
+    fun testCallbackMustMatchPendingRedirect() = fixture { store, _ ->
         val config = OAuthConfiguration(OAuthGrant.PKCE, "client", "https://auth.example/authorize", "https://auth.example/token")
         val source = CatalogSource("source", "Private", "https://publisher.example/catalog.json", authMethod = HttpAuthMethod.OAUTH2, oauth = config)
         store.write(source.id, HttpCredentials(HttpAuthMethod.OAUTH2, oauth = config))
-        val manager = OAuthManager(store, { _, fields, _ ->
-            assertEquals(OAuthManager.LEGACY_REDIRECT, fields["redirect_uri"])
-            CatalogResponse(200, """{"access_token":"token","token_type":"Bearer"}""".toByteArray())
-        }, { 100_000L })
-        val authorization = Uri.parse(manager.begin(source))
-        val state = authorization.getQueryParameter("state")!!
-        fun callback(redirect: String) = Uri.parse(redirect).buildUpon().appendQueryParameter("state", state).appendQueryParameter("code", "code").build()
-        var rejected = false
-        try { manager.finish(callback(OAuthManager.LEGACY_REDIRECT)) { source } } catch (_: OperationFailed) { rejected = true }
-        assertTrue("A new request cannot be completed through the old redirect", rejected)
+        var calls = 0
+        val manager = OAuthManager(store, { _, _, _ -> calls++; CatalogResponse(200, """{"access_token":"token","token_type":"Bearer"}""".toByteArray()) }, { 100_000L })
+        val state = Uri.parse(manager.begin(source)).getQueryParameter("state")!!
+        val callback = Uri.parse(OAuthManager.REDIRECT).buildUpon().appendQueryParameter("state", state).appendQueryParameter("code", "code").build()
         val pending = JSONObject(store.readOpaque("_oauth_pending")!!).apply { remove("redirect") }
         store.writeOpaque("_oauth_pending", pending.toString())
-        rejected = false
-        try { manager.finish(callback(OAuthManager.REDIRECT)) { source } } catch (_: OperationFailed) { rejected = true }
-        assertTrue("An old request cannot be completed through the new redirect", rejected)
-        assertEquals(source.id, manager.finish(callback(OAuthManager.LEGACY_REDIRECT)) { source })
+        var rejected = false
+        try { manager.finish(callback) { source } } catch (_: OperationFailed) { rejected = true }
+        assertTrue("An older pending request must restart authorization", rejected)
+        assertEquals(0, calls)
     }
 
     fun testClientCredentialsBasicAndPostAndExpiredTokens() = fixture { store, _ ->

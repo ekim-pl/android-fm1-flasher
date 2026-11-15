@@ -1,0 +1,10 @@
+FM-1 Flasher 0.9.4-experimental.28 — build 28
+
+APK: FM1-Flasher-0.9.4-experimental.28.apk
+SHA-256: 5a0555d6c7739e7181f6ced5b0e2803e76fd0cafd55d83db701756f851126f74
+Debug signing certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
+Application ID: pl.ekim.fm1_flasher; minimum Android: 14 (API 34).
+
+Validation: shared JVM and Android JVM tests, debug lint, debug APK and Android test APK builds, resource synchronization, website build and link checks. Four Android JVM tests requiring external fixtures were skipped. Seven SourceAuthenticationTest instrumentation tests passed on an Android 16 emulator, including rejection of a pending request without the current redirect.
+
+Build 28 accepts the current OAuth redirect only. Login attempts started in build 26 or older must be restarted after upgrading. Existing OAuth issuers must register pl.ekim.fm1-flasher://oauth/callback for new sign-ins. No physical instrument flash was performed. This is a debug-signed experimental APK, not a Play-signed release.
