@@ -13,7 +13,7 @@ object NoAnalytics : AnalyticsSink {
     override fun configure(enabled: Boolean, reset: Boolean) {}
     override fun record(name: String, parameters: Map<String, String>) {}
 }
-enum class AnalyticsConsent { UNKNOWN, DENIED, GRANTED }
+enum class AnalyticsPreference { DEFAULT, DISABLED, ENABLED }
 enum class AnalyticsOperation(val event: String) {
     CATALOG("catalog_refresh_completed"), DOWNLOAD("firmware_download_completed"),
     CONNECT("device_connection_completed"), FLASH("flash_completed"), RECOVERY("recovery_completed")
@@ -38,42 +38,57 @@ fun analyticsStage(text: AppText): AnalyticsStage? = when ((text as? AppText.Res
     "flash_stage_reconnect", "ios_reconnect" -> AnalyticsStage.RECONNECTING
     else -> null
 }
-private data class AnalyticsDecision(val consent: AnalyticsConsent, val version: Int, val decidedAt: Long)
+private data class AnalyticsDecision(val preference: AnalyticsPreference, val version: Int, val decidedAt: Long)
 
-/** No queue: disabled events and operations begun before consent are discarded, never replayed. */
+/** Opt-out preference; disabled events and operations are discarded, never replayed. */
 class AnalyticsController(private val sink: AnalyticsSink, private val storage: AppStorage) {
     private val lock = PlatformLock()
-    private var decision = runCatching {
-        storage.read("analytics-consent.json", 4096)?.decodeToString()?.let {
-            val value = Json.parseToJsonElement(it).jsonObject
-            AnalyticsDecision(AnalyticsConsent.valueOf(value.getValue("consent").jsonPrimitive.content),
-                value.getValue("version").jsonPrimitive.int, value.getValue("decidedAt").jsonPrimitive.long)
+    private var decision = readDecision()
+    private fun readDecision(): AnalyticsDecision? = try {
+        // Keep an explicit opt-out from the earlier consent-based release proposal.
+        val bytes = storage.read("analytics-preference.json", 4096)
+            ?: storage.read("analytics-consent.json", 4096)
+        bytes?.let {
+            val value = Json.parseToJsonElement(it.decodeToString()).jsonObject
+            val preference = value["preference"]?.jsonPrimitive?.content?.let(AnalyticsPreference::valueOf)
+                ?: when (value.getValue("consent").jsonPrimitive.content) {
+                    "DENIED" -> AnalyticsPreference.DISABLED
+                    "GRANTED" -> AnalyticsPreference.ENABLED
+                    "UNKNOWN" -> AnalyticsPreference.DEFAULT
+                    else -> error("Invalid analytics preference")
+                }
+            // A notice revision must never silently turn a saved opt-out back on.
+            AnalyticsDecision(preference, value.getValue("version").jsonPrimitive.int,
+                value.getValue("decidedAt").jsonPrimitive.long)
         }
-    }.getOrNull()?.takeIf { it.version == NOTICE_VERSION }
+    } catch (_: Exception) {
+        // A damaged/unreadable preference may represent an opt-out: fail closed.
+        AnalyticsDecision(AnalyticsPreference.DISABLED, NOTICE_VERSION, 0)
+    }
     val available get() = sink.available
-    val consent get() = lock.locked { decision?.consent ?: AnalyticsConsent.UNKNOWN }
+    val preference get() = lock.locked { decision?.preference ?: AnalyticsPreference.DEFAULT }
     private var offline = true // Fail closed until persistent application settings have loaded.
     private var enabled = false
     private var generation = 0L
     private var lastScreen: AnalyticsScreen? = null
     fun setOffline(value: Boolean) = lock.locked { offline = value; applyPolicy() }
-    fun decide(value: AnalyticsConsent) = lock.locked {
-        require(value != AnalyticsConsent.UNKNOWN)
-        if (value == AnalyticsConsent.DENIED) {
+    fun setPreference(value: AnalyticsPreference) = lock.locked {
+        require(value != AnalyticsPreference.DEFAULT)
+        if (value == AnalyticsPreference.DISABLED) {
             enabled = false; generation++; lastScreen = null
             decision = AnalyticsDecision(value, NOTICE_VERSION, epochMillis())
             runCatching { sink.configure(false, true) }
         }
         val next = AnalyticsDecision(value, NOTICE_VERSION, epochMillis())
-        // Persist before enabling. A failed write must never grant consent.
-        storage.write("analytics-consent.json", buildJsonObject {
-            put("consent", next.consent.name); put("version", next.version); put("decidedAt", next.decidedAt)
+        // Save an explicit enable before applying it; failed writes leave an opt-out in effect.
+        storage.write("analytics-preference.json", buildJsonObject {
+            put("preference", next.preference.name); put("version", next.version); put("decidedAt", next.decidedAt)
         }.toString().encodeToByteArray())
         decision = next
         applyPolicy()
     }
     private fun applyPolicy() {
-        val next = available && !offline && decision?.consent == AnalyticsConsent.GRANTED
+        val next = available && !offline && decision?.preference != AnalyticsPreference.DISABLED
         if (next == enabled) return
         enabled = false; generation++; lastScreen = null
         runCatching { sink.configure(next, !next) }.onSuccess { enabled = next }
@@ -104,7 +119,7 @@ class AnalyticsController(private val sink: AnalyticsSink, private val storage: 
         // Analytics must never affect device operations, even when an SDK adapter fails.
         runCatching { sink.record(name, parameters) }
     }
-    companion object { const val NOTICE_VERSION = 1 }
+    companion object { const val NOTICE_VERSION = 2 }
 }
 class AnalyticsMeasurement internal constructor(
     private val controller: AnalyticsController, internal val operation: AnalyticsOperation,

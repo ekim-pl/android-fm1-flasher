@@ -6,34 +6,42 @@ The normal Android build and base iOS project contain no Firebase SDK and show n
 
 ## Architecture and behavior
 
-`shared/Analytics.kt` owns the closed event schema, versioned consent stored in
-`analytics-consent.json`, a platform lock, screen deduplication and operation measurements.
+`shared/Analytics.kt` owns the closed event schema, the persistent preference stored in
+`analytics-preference.json`, a platform lock, screen deduplication and operation measurements.
 `AnalyticsSink` is injected at the platform boundary. No application strings, URLs,
 exception messages, device identities or package identifiers can be supplied to event fields.
 Android's singleton is shared by ComposeActivity, FlasherService and WorkManager;
 iOS injects NativeAnalytics into PortableAppBackend from SwiftUI.
 
-Consent defaults to unknown and collection is disabled. Refusal is saved and not prompted
-again. Both choices are equally accessible; the card does not block using the app.
-Settings allows withdrawal even during an operation. Consent notice version changes require
-a fresh choice. A failed consent write never enables collection; a failed withdrawal write
-stops collection for the current process and reports the failure (retry to persist it).
-SDK failures are isolated from all device operations. This is separate from the local operation log.
+**Firebase-enabled builds collect by default from the first online launch.** There is no
+consent prompt or accept/decline dialog. Settings → Usage statistics → Share usage statistics
+is initially on and can be turned off even during an operation. This is an opt-out preference,
+not evidence of explicit consent. SDK-free builds still contain no analytics SDK or switch.
 
-Firebase is initialized lazily only after saved settings are loaded, consent is granted
-and offline mode is off. Automatic Android provider initialization is removed. Both SDKs
-start with analytics/ad consent denied and automatic screen reporting disabled.
-No user ID or advertising consent is set; Android removes AD_ID, AdServices attribution/ad-ID and install-referrer permissions; iOS uses
-FirebaseAnalyticsCore without the advertising identity product and disables IDFV collection and SKAdNetwork registration.
-SDK-generated lifecycle events, app-instance IDs and technical metadata still exist;
-these measurements are pseudonymous, not anonymous.
+An explicit disable is saved and survives restarts and notice-version changes. The earlier
+`analytics-consent.json` format is read for compatibility: a stored DENIED remains disabled.
+A new explicit choice writes `analytics-preference.json` and takes precedence over the old file.
+A damaged/unreadable preference fails closed to avoid accidentally overriding an opt-out.
+A failed disable write stops collection for the current process and reports the failure;
+retry to persist the choice for future launches. A failed enable write leaves a saved disable
+in effect. SDK failures are isolated from device operations. The local operation log is separate.
+
+Firebase is initialized only after saved settings have loaded, the preference permits collection
+and offline mode is off. Android's automatic initialization provider is removed. Both SDKs
+start with collection disabled and analytics/ad storage denied, so a persisted opt-out or
+offline preference can be applied before any initialization. The controller then enables
+analytics storage and collection automatically for the default/enabled preference.
+Advertising storage, advertising user data and personalization remain denied. No user ID is set.
+Android removes AD_ID, AdServices attribution/ad-ID and install-referrer permissions; iOS uses
+FirebaseAnalyticsCore without the advertising identity product and disables IDFV collection
+and SKAdNetwork registration. SDK lifecycle events, app-instance IDs, technical metadata and
+approximate location derived from IP still exist; these data are pseudonymous, not anonymous.
 
 Offline mode disables collection and requests a reset of local SDK analytics data.
-There is no app-owned replay queue. An operation crossing a consent/offline transition
-is discarded, so enabling later cannot replay events from before permission.
-An SDK upload already in progress may finish. Do not promise network cancellation or
-server-side erasure; capture actual traffic on both platforms before publication.
-Withdrawal resets local data; it does not delete previously uploaded server data.
+There is no app-owned replay queue. Operations crossing an off/on or offline/online transition
+are discarded. Events during disabled periods are never replayed. Re-enabling collects only
+new events. An SDK upload already in progress may finish; verify actual network behavior on
+both platforms. Disabling/resetting local data does not delete previously uploaded server data.
 
 ## Android configuration
 
@@ -102,7 +110,7 @@ Do not upgrade the minimum iOS version just to add analytics.
 | flash_completed | Backend outcome, including unconfirmed failure |
 | recovery_completed | Android recovery attempt after validation; iOS recovery is unavailable |
 
-Operation events contain only result, error_category, stage, initiator, duration_ms and
+Operation completion events contain only result, error_category, stage, initiator, duration_ms and
 schema_version. Durations/schema are numeric in Firebase. Result is success/failure/cancelled;
 error and stage values are fixed enums. Unknown exceptions map to other. Stage tracking
 covers write, verify and reconnection. No progress-per-packet events, search text, OAuth
@@ -116,21 +124,21 @@ missing completion is a confirmed hardware failure.
 These are account/device actions; code changes do not perform them:
 
 1. Register real TEST/PRODUCTION apps, add configs and verify each project's destination.
-2. Set user/event-data retention to **2 months**; turn off Google signals, ad personalization,
+2. Set and verify user/event-data retention to **2 months** (not verified in the provided projects); turn off Google signals, ad personalization,
    advertising sharing/integrations and unnecessary granular collection. Aggregates can outlive
    user/event retention. Restrict console access to maintainers.
 3. Verify the SDK's actual automatic data (including identifiers, device/app metadata and any
    derived approximate location). Complete Google Play Data safety and Apple App Privacy based
    on the chosen binary and enabled console features; this is not a declaration of no collection.
    `publication/analytics-0.9.5.json` is a draft inventory, not a submitted store form.
-4. Verify startup, refusal, grant, restart, offline, withdrawal, in-flight operations and SDK
+4. Verify default-on startup, persistent disable, re-enable, restart, offline, in-flight operations and SDK
    buffering/network behavior with real test configs on Android and iOS.
 5. Use Firebase DebugView in TEST to validate event names, parameters, deduplication and outcomes.
    Confirm no production events originate from debug builds. Debug mode is not enabled in code.
 6. Register event-scoped dimensions result, error_category, stage, initiator and schema_version;
    use built-in screen dimensions and register duration_ms as an event metric. Create reports for
    downloads to flash starts, completion rates, errors by platform/app version and operation times.
-   These reports cover consenting installations; there is no account-level cross-device funnel.
+   These reports cover installations with statistics enabled; there is no account-level cross-device funnel.
 7. Check merged Android manifest for removed auto-init/AD_ID, inspect iOS linked products/manifests,
    compare the final SDK-free and Firebase binaries, update license notices if required, and sign
    only after hardware, privacy and store validation. Keep historical publication records unchanged.
@@ -145,17 +153,19 @@ Crashlytics, Remote Config, ads, BigQuery export and a custom telemetry server a
 
 ## Verification
 
+Current results: [default-on behavior and documentation review](../publication/qa/0.9.5-default-on.txt).
+
 ```sh
 python3 tools/sync-resources.py --check
 ./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
 python3 -m unittest discover -s scripts -p 'test_*.py'
 # Compile Firebase against the deliberately invalid CI fixture:
 mkdir -p app/firebase/test
-cp tools/fixtures/google-services.test.json app/firebase/test/google-services.json
+test -f app/firebase/test/google-services.json || cp tools/fixtures/google-services.test.json app/firebase/test/google-services.json
 ./gradlew -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=test :app:assembleDebug :app:lintDebug
 ```
 
-Common tests verify no pre-consent collection, persistent refusal/grant, offline restart,
-no retroactive completion, withdrawal, deduplication, closed payloads, obsolete/corrupt consent,
+Common tests verify default-on startup, persistent disable/re-enable, legacy opt-out migration,
+notice-version changes, offline restart, no replay, deduplication, closed payloads, damaged preferences,
 and isolation of storage/SDK failures. Instrumentation/network and iOS build results must be
 recorded separately; a Linux JVM/Android build does not establish iOS runtime correctness.

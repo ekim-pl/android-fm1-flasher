@@ -1,5 +1,6 @@
 PROPOSAL: 0.9.5-experimental.26 / Android code 26 / iOS build 26.
 Optional analytics implementation: ../docs/ANALYTICS.md. Not published.
+Current default-on analytics verification: qa/0.9.5-default-on.txt.
 Historical release records below remain unchanged.
 
 FM-1 Flasher — publication documentation

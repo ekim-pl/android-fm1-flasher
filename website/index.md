@@ -28,7 +28,7 @@ Use data cables and stable power; a powered hub is recommended. The app cannot c
 
 ## Privacy and open source
 
-No account or advertising. Standard builds have no analytics SDK; optional Firebase builds collect usage statistics only after consent. The library, instrument names, observed serials and task history remain local. External catalog/download services receive connection metadata.
+No account or advertising. Standard builds have no analytics SDK; Firebase-enabled builds collect usage statistics by default; you can turn them off in Settings → Usage statistics. The library, instrument names, observed serials and task history remain local. External catalog/download services receive connection metadata.
 
 [Privacy policy](../PRIVACY_POLICY.md) · [MIT license](../LICENSE.md) · [CommonMark license](../third_party/commonmark-LICENSE.txt)
 

@@ -35,7 +35,7 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
         try {
             readConfiguration()
             analytics.setOffline(repository.settings().offline)
-            state.update { it.copy(analyticsAvailable = analytics.available, analyticsConsent = analytics.consent) }
+            state.update { it.copy(analyticsAvailable = analytics.available, analyticsPreference = analytics.preference) }
             host.setAppearance(state.value.appearance)
             state.update { it.copy(initialized = true) }
             publishLibrary()
@@ -115,10 +115,10 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
     override fun perform(action: AppAction) {
         if (action.kind !in listOf(AppActionKind.LOGGER_REFRESH, AppActionKind.LOG_CLEAR)) logEvent("ACTION_${action.kind}")
         when (action.kind) {
-            AppActionKind.ANALYTICS_CONSENT -> {
-                runCatching { analytics.decide(AnalyticsConsent.valueOf(action.id)) }
+            AppActionKind.ANALYTICS_PREFERENCE -> {
+                runCatching { analytics.setPreference(AnalyticsPreference.valueOf(action.id)) }
                     .onFailure { report(msg("analytics_save_failed")) }
-                state.update { it.copy(analyticsConsent = analytics.consent) }
+                state.update { it.copy(analyticsPreference = analytics.preference) }
             }
             AppActionKind.LOG_EXPORT -> if (state.value.experimental && !state.value.busy) logScope.launch {
                 runCatching { host.exportText("fm1-operations-${epochMillis()}.jsonl", operationLog.export()) }

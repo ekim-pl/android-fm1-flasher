@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
                 send(AppAction(AppActionKind.APPEARANCE, it))
             }
         }
+        if (state.analyticsAvailable) AnalyticsSettingsCard(state, language, send, privacy)
         SettingsCard(t("settings_library")) {
             SettingSwitch(t("offline_mode"), state.offline, !state.busy) { send(AppAction(AppActionKind.OFFLINE, it.toString())) }
             if (state.catalog?.sources?.isNotEmpty() == true) OutlinedButton(sources, Modifier.fillMaxWidth()) { Text(t("catalog_sources")) }
@@ -75,7 +76,6 @@ import androidx.compose.ui.unit.dp
                 OutlinedButton({ confirm(AppAction(AppActionKind.LOG_CLEAR), msg("operation_log_clear_confirm")) }, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(t("operation_log_clear")) }
             }
         }
-        if (state.analyticsAvailable) AnalyticsConsentCard(state, language, send, privacy)
         SettingsCard(t("settings_app")) {
             if (state.fleetAvailable) OutlinedButton({ navigate(LibraryTab.ABOUT) }, Modifier.fillMaxWidth()) { Text(t("tab_about")) }
             OutlinedButton(privacy, Modifier.fillMaxWidth()) { Text(t("privacy_title")) }
@@ -110,17 +110,12 @@ import androidx.compose.ui.unit.dp
     }
 }
 
-@Composable internal fun AnalyticsConsentCard(state: AppSnapshot, language: String, send: (AppAction) -> Unit, privacy: () -> Unit) {
+@Composable internal fun AnalyticsSettingsCard(state: AppSnapshot, language: String, send: (AppAction) -> Unit, privacy: () -> Unit) {
     fun t(key: String) = resolveCoreText(msg(key), language)
     SettingsCard(t("analytics_title")) {
         Text(t("analytics_notice"), style = MaterialTheme.typography.bodySmall)
-        if (state.analyticsConsent == AnalyticsConsent.UNKNOWN) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton({ send(AppAction(AppActionKind.ANALYTICS_CONSENT, "DENIED")) }) { Text(t("analytics_decline")) }
-                OutlinedButton({ send(AppAction(AppActionKind.ANALYTICS_CONSENT, "GRANTED")) }) { Text(t("analytics_accept")) }
-            }
-        } else SettingSwitch(t("analytics_enabled"), state.analyticsConsent == AnalyticsConsent.GRANTED, true) {
-            send(AppAction(AppActionKind.ANALYTICS_CONSENT, if (it) "GRANTED" else "DENIED"))
+        SettingSwitch(t("analytics_enabled"), state.analyticsPreference != AnalyticsPreference.DISABLED, true) {
+            send(AppAction(AppActionKind.ANALYTICS_PREFERENCE, if (it) "ENABLED" else "DISABLED"))
         }
         if (state.offline) Text(t("analytics_offline"), style = MaterialTheme.typography.bodySmall)
         TextButton(privacy) { Text(t("privacy_title")) }

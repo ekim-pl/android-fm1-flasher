@@ -511,8 +511,6 @@ internal val androidResourceKeys = mapOf(
     R.string.about_privacy_action to "about_privacy_action",
     R.string.analytics_title to "analytics_title",
     R.string.analytics_notice to "analytics_notice",
-    R.string.analytics_decline to "analytics_decline",
-    R.string.analytics_accept to "analytics_accept",
     R.string.analytics_enabled to "analytics_enabled",
     R.string.analytics_offline to "analytics_offline",
     R.string.analytics_save_failed to "analytics_save_failed",

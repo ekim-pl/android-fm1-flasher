@@ -10,7 +10,7 @@ on:
         required: true
 
       analytics:
-        description: Include optional consent-based Firebase analytics (requires production config and store privacy review)
+        description: Include optional default-on Firebase analytics with a Settings opt-out (requires production config and store privacy review)
         type: boolean
         default: false
         required: true

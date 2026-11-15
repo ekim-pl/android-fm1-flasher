@@ -103,7 +103,7 @@ APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outp
 
 ## 隐私与署名
 
-无需账户且无广告。标准构建不含分析 SDK；可选 Firebase 构建仅在同意后收集使用统计。固件库、名称、序列号观察值、芯片选择和任务历史保存在本地。外部目录/图片/下载服务器收到连接元数据，应用不会附加乐器身份。详见[隐私政策](privacy.md)。
+无需账户且无广告。标准构建不含分析 SDK；Firebase 构建默认收集使用统计，可在“设置 → 使用统计”中关闭。固件库、名称、序列号观察值、芯片选择和任务历史保存在本地。外部目录/图片/下载服务器收到连接元数据，应用不会附加乐器身份。详见[隐私政策](privacy.md)。
 
 应用代码：[MIT](../../LICENSE.md)。[The Firmware Hub](https://thefirmwarehub.com) 目录使用 CC BY 4.0，固件遵循其作者的许可证。[Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) 是可选目录。依赖声明见 [third_party](../../third_party/)。联系：[ekim.pl@gmail.com](mailto:ekim.pl@gmail.com)。
 

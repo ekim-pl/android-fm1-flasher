@@ -1,0 +1,65 @@
+0.9.5-experimental.26 — default-on analytics and documentation review
+Date: 2026-11-15
+Branch: proposal/analytics-0.9.5
+Base for this change: e4be2d3
+Supersedes the opt-in behavior verified in 0.9.5-proposal.txt; that report remains historical.
+
+BEHAVIOR
+Firebase-enabled builds collect from the first online launch after settings load.
+Settings → Usage statistics → Share usage statistics is on by default and can be disabled.
+SDK-free builds still contain no Firebase SDK and expose no analytics switch.
+The default is a preference, not a stored record of explicit user consent.
+An explicit opt-out survives restart, updates, and privacy-notice version changes.
+Legacy analytics-consent.json DENIED migrates as disabled; new choices are stored in
+analytics-preference.json. Damaged/unreadable preferences fail closed.
+Offline and disabled events are discarded, never replayed on re-enable.
+
+AUTOMATED VERIFICATION
+- Shared JVM tests: 73, zero failures/errors/skips (11 analytics tests).
+- Android unit tests: 133, zero failures/errors, 4 external firmware fixture skips.
+  CatalogTest: 1; FirmwarePackageTest: 1; RecoveryTest: 2. Full release fixture gate remains outstanding.
+- Real Firebase TEST project ekim-3c534: shared/Android unit tests, lintDebug,
+  assembleDebug and assembleDebugAndroidTest passed.
+- SDK-free: lintDebug, assembleDebug and assembleDebugAndroidTest passed.
+- Real Firebase PRODUCTION project fm-1-flasher: lintRelease and bundleRelease passed.
+- Resources synchronized; app/public privacy paragraphs agree in English, Polish and Chinese.
+- Documentation website rebuilt; all 44 HTML pages passed link/translation checks.
+- Python release-fixture helper tests: 2 passed (not the real firmware fixture gate).
+- Workflow/XcodeGen YAML and publication inventory checked; git diff --check passed.
+
+ANDROID DEVICE CHECK
+Host local; emulator FM1_Flasher_API_36 / emulator-5556 / Android 16.
+UI driven through the device panel's agent-device command.
+1. Opened the Firebase TEST build: no consent dialog; statistics switch was checked.
+2. Switched it off: UI unchecked; analytics-preference.json stored DISABLED, notice version 2.
+3. Read the SDK preferences: measurement_enabled=false.
+4. Relaunched the app through agent-device and reopened Settings: switch still unchecked.
+5. Re-enabled: stored preference ENABLED; Firebase measurement_enabled=true.
+6. Disabled again, leaving the emulator with statistics off.
+Screenshot: dist/0.9.5-proposal/qa/analytics-disabled.png (local ignored artifact).
+This verifies the switch, persistence and SDK collection setting, not server erasure or
+cancellation of an upload already in progress. It is not a packet capture or DebugView audit.
+
+DOCUMENTATION REVIEW
+Updated in-app privacy/settings/About texts, public policies, guides, store descriptions,
+release notes, SDK notices and publication inventory in EN/PL/ZH.
+Removed old promises of explicit opt-in and unsupported fixed retention claims. Actual GA4
+retention has not been inspected; two months remains a planned console setting, not an assertion.
+Clarified pseudonymous identifiers/technical metadata/approximate location, persistent opt-out,
+local reset versus previously uploaded data, and possible completion of an in-flight upload.
+The publication inventory describes the absence of a consent prompt, not a legal conclusion
+about whether consent is required. No legal basis or remote account/store declarations were verified.
+
+LOCAL ARTIFACTS (ignored by Git)
+dist/0.9.5-proposal/fm1-flasher-0.9.5-firebase-test-debug.apk
+SHA-256: 00e714b4331bd3326f73ea0745c75983b3274b87ae93386c6b1a47f7fc8702dc
+dist/0.9.5-proposal/fm1-flasher-0.9.5-sdk-free-debug.apk
+SHA-256: 1303c7a2738bd7a89187f74610be727a1366c1f740be959860146d8be999800b
+dist/0.9.5-proposal/fm1-flasher-0.9.5-firebase-production.aab
+Build logs: dist/0.9.5-proposal/qa/default-on-*.log
+Firebase configuration files remain local/ignored. No publication or push performed.
+
+OUTSTANDING
+- iOS compilation and runtime testing: local device host reports iOS needs macOS/Xcode.
+- Actual network/DebugView verification, console retention and store disclosures.
+- Firmware fixture release gate, physical FM-1 tests and production signing/publication.

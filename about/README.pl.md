@@ -42,7 +42,7 @@ Android wymaga **14+**, USB Host/OTG, MIDI, przewodu danych i stabilnego zasilan
 
 ## Prywatność i licencje
 
-Aplikacja nie wymaga konta i nie zawiera reklam. Standardowe kompilacje nie zawierają SDK analityki. Opcjonalne kompilacje z analityką zawierają Google Analytics for Firebase, wyłączone do czasu wyraźnej zgody. Nazwy urządzeń, odczytane seriale i historia zadań pozostają lokalnie wraz z biblioteką. Zewnętrzne serwery katalogów/pobrań otrzymują metadane połączenia, bez dołączanej przez aplikację tożsamości instrumentu. Przeczytaj pełną [politykę prywatności](../PRIVACY_POLICY.md).
+Aplikacja nie wymaga konta i nie zawiera reklam. Standardowe kompilacje nie zawierają SDK analityki. Wersje skonfigurowane z Google Analytics for Firebase domyślnie zbierają statystyki od pierwszego uruchomienia online. Możesz je wyłączyć w każdej chwili w Ustawienia → Statystyki użytkowania. Nazwy urządzeń, odczytane seriale i historia zadań pozostają lokalnie wraz z biblioteką. Zewnętrzne serwery katalogów/pobrań otrzymują metadane połączenia, bez dołączanej przez aplikację tożsamości instrumentu. Przeczytaj pełną [politykę prywatności](../PRIVACY_POLICY.md).
 
 Katalog: [The Firmware Hub](https://thefirmwarehub.com), CC BY 4.0; opisy, grafiki i firmware zachowują prawa autorów. Aplikacja: [MIT](../LICENSE.md). Markdown: [CommonMark, BSD-2-Clause](../third_party/commonmark-LICENSE.txt). Biblioteki sieciowe/pracy w tle: [Apache 2.0](../third_party/Apache-2.0.txt), [informacje](../third_party/android-libraries-NOTICE.txt).
 

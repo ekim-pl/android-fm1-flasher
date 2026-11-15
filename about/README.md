@@ -42,7 +42,7 @@ Android requires **14+**, USB Host/OTG, MIDI, a data cable and stable power. A p
 
 ## Privacy and licenses
 
-The app requires no account and contains no advertising. Standard builds contain no analytics SDK. Optional analytics-enabled builds include Google Analytics for Firebase, disabled until explicit consent. Device names, observed serials and task history stay locally with the library. External catalog/download servers receive connection metadata, not instrument identities attached by the app. Read the full [privacy policy](../PRIVACY_POLICY.md).
+The app requires no account and contains no advertising. Standard builds contain no analytics SDK. Builds configured with Google Analytics for Firebase collect usage statistics by default from the first online launch. You can turn statistics off at any time in Settings → Usage statistics. Device names, observed serials and task history stay locally with the library. External catalog/download servers receive connection metadata, not instrument identities attached by the app. Read the full [privacy policy](../PRIVACY_POLICY.md).
 
 Catalog attribution: [The Firmware Hub](https://thefirmwarehub.com), CC BY 4.0; descriptions, artwork and firmware retain their authors’ rights. App: [MIT](../LICENSE.md). Markdown: [CommonMark, BSD-2-Clause](../third_party/commonmark-LICENSE.txt). Networking/background libraries: [Apache 2.0](../third_party/Apache-2.0.txt), [notices](../third_party/android-libraries-NOTICE.txt).
 

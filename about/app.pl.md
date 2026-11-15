@@ -22,6 +22,6 @@ Funkcje eksperymentalne obejmują rejestrator MIDI i oddzielne narzędzia odzysk
 
 ## Prywatność i licencje
 
-Aplikacja nie wymaga konta i nie zawiera reklam. Standardowe kompilacje nie zawierają SDK analityki. Opcjonalne kompilacje z analityką zawierają Google Analytics for Firebase, wyłączone do czasu wyraźnej zgody. Biblioteka, nazwy urządzeń i historia zadań są przechowywane lokalnie. Serwery katalogów i pobierania otrzymują metadane połączenia. Zobacz [politykę prywatności](../PRIVACY_POLICY.md) i [licencję MIT](../LICENSE.md); firmware i komponenty zewnętrzne mają własne licencje.
+Aplikacja nie wymaga konta i nie zawiera reklam. Standardowe kompilacje nie zawierają SDK analityki. Wersje skonfigurowane z Google Analytics for Firebase domyślnie zbierają statystyki od pierwszego uruchomienia online. Możesz je wyłączyć w każdej chwili w Ustawienia → Statystyki użytkowania. Biblioteka, nazwy urządzeń i historia zadań są przechowywane lokalnie. Serwery katalogów i pobierania otrzymują metadane połączenia. Zobacz [politykę prywatności](../PRIVACY_POLICY.md) i [licencję MIT](../LICENSE.md); firmware i komponenty zewnętrzne mają własne licencje.
 
 Warunki opcjonalnego SDK analityki: [informacje Firebase](../third_party/firebase-analytics-NOTICE.md).

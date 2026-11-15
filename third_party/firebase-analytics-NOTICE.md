@@ -12,5 +12,4 @@ The standard Android build and the base iOS project do not include them.
   Binary measurement components have their own terms; the project's MIT license does not relicense them.
 
 [Firebase terms](https://firebase.google.com/terms/) and [Google privacy policy](https://policies.google.com/privacy).
-Advertising storage and personalization are disabled in this integration. Analytics is optional
-and disabled until consent; see the application's privacy policy for the data inventory.
+Advertising storage and personalization are disabled in this integration. In configured builds analytics is on by default and can be disabled in Settings; see the application's privacy policy for the data inventory.

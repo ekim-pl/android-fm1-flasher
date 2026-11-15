@@ -28,7 +28,7 @@ Używaj przewodów danych i stabilnego zasilania; zalecany jest zasilany hub. Ap
 
 ## Prywatność i otwarty kod
 
-Bez konta i reklam. Standardowe kompilacje nie zawierają SDK analityki; opcjonalne kompilacje Firebase zbierają statystyki wyłącznie po zgodzie. Biblioteka, nazwy instrumentów, odczytane seriale i historia zadań pozostają lokalnie. Zewnętrzne serwisy katalogów/pobrań otrzymują metadane połączenia.
+Bez konta i reklam. Standardowe kompilacje nie zawierają SDK analityki; wersje z Firebase domyślnie zbierają statystyki; wyłączysz je w Ustawienia → Statystyki użytkowania. Biblioteka, nazwy instrumentów, odczytane seriale i historia zadań pozostają lokalnie. Zewnętrzne serwisy katalogów/pobrań otrzymują metadane połączenia.
 
 [Polityka prywatności](privacy.md) · [Licencja MIT](license.md) · [Licencja CommonMark](commonmark-license.md)
 

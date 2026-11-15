@@ -7,8 +7,7 @@
   },
   "analyticsBuild": {
     "analyticsSdk": "Google Analytics for Firebase",
-    "defaultCollection": false,
-    "consentRequired": true,
+    "defaultCollection": true,
     "advertising": false,
     "collected": [
       "app interactions and operation results/timings",
@@ -23,13 +22,17 @@
       "operation logs"
     ],
     "purpose": "Analytics",
-    "userAndEventRetentionMonths": 2,
+    "userAndEventRetentionMonths": null,
     "priorServerDataDeletedOnOptOut": false,
     "publicationGate": [
       "verify SDK data inventory and store disclosures",
-      "verify no collection before consent, offline and withdrawal network behavior on both platforms",
-      "set retention in GA4 console",
+      "verify first-launch collection, persistent opt-out, offline and SDK reset behavior on both platforms",
+      "set and verify retention in GA4 console before claiming a specific period",
       "verify Apple privacy manifests and Android merged manifest"
-    ]
+    ],
+    "privacyModel": "Default-on collection with a persistent Settings opt-out; this preference is not evidence of explicit consent",
+    "userControl": "Settings → Usage statistics → Share usage statistics",
+    "plannedUserAndEventRetentionMonths": 2,
+    "explicitConsentPrompt": false
   }
 }

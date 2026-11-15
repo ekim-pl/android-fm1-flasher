@@ -1,6 +1,6 @@
 DRAFT: 0.9.5-experimental.26 — optional analytics
 
-Shared consent policy and typed operation/screen events for Android and iOS.
+Shared default-on preference policy and typed operation/screen events for Android and iOS.
 Native Firebase adapters, optional SDK-free builds, localized privacy controls.
-No Google configuration is bundled. This proposal is not published or signed.
+Firebase configs are supplied locally or through protected CI and are not committed to Git. This proposal is not published.
 See docs/ANALYTICS.md for setup and the outstanding release gates.

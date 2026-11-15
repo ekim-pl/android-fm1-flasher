@@ -44,7 +44,7 @@ fun FlasherApp(backend: AppBackend) {
         detailId != null -> AnalyticsScreen.DETAIL
         else -> AnalyticsScreen.valueOf(tab.name)
     }
-    LaunchedEffect(screen, state.analyticsConsent, state.offline) { backend.screen(screen) }
+    LaunchedEffect(screen, state.analyticsPreference, state.offline) { backend.screen(screen) }
     val settingsScroll = rememberScrollState()
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
     var filtersExpanded by rememberSaveable { mutableStateOf(false) }
@@ -95,9 +95,6 @@ fun FlasherApp(backend: AppBackend) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(text("app_name"), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                         TextButton(onClick = { settings = true }) { Text(text("settings")) }
-                    }
-                    if (state.analyticsAvailable && state.analyticsConsent == AnalyticsConsent.UNKNOWN && !state.busy) {
-                        AnalyticsConsentCard(state, language, backend::perform) { settingsPrivacy = true }
                     }
                     Row(Modifier.weight(1f)) {
                         if (wide) NavigationRail {
