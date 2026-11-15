@@ -43,7 +43,7 @@ CI 从 `GITHUB_SERVER_URL`、`GITHUB_REPOSITORY` 和 `GITHUB_REF_NAME` 读取源
 - `README.md`、`website/index.md` 和 `website/pages.md`：英语技术指南、首页和部署指南。
 - `publication/README.txt` 和 `publication/github-actions.txt`：英语发布与 Google Play 指南。
 - `website/pl/` 和 `website/zh-CN/`：完整网站译本，包括许可证和隐私政策。
-- `about/README*.md`：现有的应用简介译本，也用于网站。
+- `about/README*.md`：网站简介译本；`about/app*.md` 打包进应用。
 - `PRIVACY_POLICY.md`：英语隐私政策。网站译本须与 `publication/privacy/` 中的静态副本和应用资源保持一致。
 - `LICENSE.md`：原始英语许可证。网站译文便于理解，以原文为准。
 - `website/style.css`：共用样式。

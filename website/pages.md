@@ -43,7 +43,7 @@ CI reads source links from `GITHUB_SERVER_URL`, `GITHUB_REPOSITORY` and `GITHUB_
 - `README.md`, `website/index.md` and `website/pages.md`: the English technical guide, home page and deployment guide.
 - `publication/README.txt` and `publication/github-actions.txt`: English publication and Google Play guides.
 - `website/pl/` and `website/zh-CN/`: complete website translations, including license and privacy-policy text.
-- `about/README*.md`: the app's existing localized About documents, also used on the website.
+- `about/README*.md`: localized website About documents; `about/app*.md` is bundled in the app.
 - `PRIVACY_POLICY.md`: the English privacy policy. Keep website translations consistent with the static copies in `publication/privacy/` and app resources.
 - `LICENSE.md`: the original English license. Website translations are provided for understanding; the original remains authoritative.
 - `website/style.css`: shared styling.

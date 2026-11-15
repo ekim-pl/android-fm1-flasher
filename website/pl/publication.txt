@@ -29,7 +29,7 @@ ANDROID_KEY_ALIAS i ANDROID_KEY_PASSWORD pozostaje niepodpisany. APK debug nie j
 podpisanym pakietem produkcyjnym Play.
 
 DOKUMENTY I OPISY
-README.md: instrukcja; MIGRATION.md: architektura; about/README*.md: treści w aplikacji.
+README.md: instrukcja; MIGRATION.md: architektura; about/app*.md: treści w aplikacji.
 fastlane/metadata/android/{en-US,pl-PL,zh-CN}/ zawiera projekty opisów i historię zmian.
 Wpis 19 dotyczy obecnej implementacji; wcześniejsze wpisy są historyczne.
 play-console.json to bieżący projekt danych, nie wysłana ani zatwierdzona deklaracja.

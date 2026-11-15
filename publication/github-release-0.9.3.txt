@@ -1,0 +1,7 @@
+# FM-1 Flasher 0.9.3
+
+Android 14+ release with a shorter in-app guide in English, Polish and Simplified Chinese. Links in the guide open Library, Devices, Tasks and firmware source settings. The repository README and documentation navigation have also been reorganized.
+
+Download `FM1-Flasher-0.9.3.apk` and verify it with `SHA256SUMS.txt`. The APK is signed with the same Android debug certificate as 0.9.2 and can update the existing multiplatform app. It is not a Google Play release.
+
+Shared and Android unit tests, debug lint, APK builds, documentation checks and selected navigation checks on an Android 16 emulator passed. No new physical FM-1/hub or iOS tests were performed; see the repository's 0.9.3 QA report for scope.

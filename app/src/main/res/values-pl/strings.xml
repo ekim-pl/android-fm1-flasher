@@ -262,7 +262,7 @@
     <string name="tab_about">O aplikacji</string>
     <string name="about_version">Wersja %1$s</string>
     <string name="about_document_unavailable">Ten dokument jest dostępny w repozytorium projektu, ale nie jest dołączony do aplikacji.</string>
-    <string name="about_document">about/README.pl.md</string>
+    <string name="about_document">about/app.pl.md</string>
     <string name="detect_chip">Wykryj kość (tryb download)</string>
     <string name="detect_chip_help">Podłącz tylko jeden instrument w trybie USB download. Detekcja uruchamia kod w RAM bez zapisu flash. Następnie uruchom instrument ponownie w trybie MIDI, połącz i wybierz odczytany typ kości.</string>
     <string name="chip_detected">ID flash: %1$s. Uruchom ponownie w trybie MIDI, połącz i wybierz odczytany typ kości.</string>

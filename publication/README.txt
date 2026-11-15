@@ -1,6 +1,6 @@
 FM-1 Flasher — publication documentation
-Stable release: 0.9.2 on main. Release tag: multiplatform-v0.9.2.
-Public assets use version-only names; internal versionCode remains unchanged.
+Stable release: 0.9.3 on main. Release tag: multiplatform-v0.9.3.
+Public assets use version-only names; Android versionCode is 24.
 
 CURRENT APPLICATION
 Android ID: pl.ekim.multiplatform_fm1_flasher (not the original pl.ekim.fm1_flasher).

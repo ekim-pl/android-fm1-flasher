@@ -87,7 +87,7 @@ python3 tools/sync-resources.py --check
 
 APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`。`dist/` 被 Git 忽略；构建 23 的预备副本是本地文件，新克隆不保证包含它。
 
-界面翻译以 `app/src/main/res/values*` XML 为准。修改后运行 `python3 tools/sync-resources.py`。应用内关于文档是 `about/README*.md`，通过 `:app:bundleProjectDocs` 与许可证一起打包；根 README 不是应用内关于文档。
+界面翻译以 `app/src/main/res/values*` XML 为准。修改后运行 `python3 tools/sync-resources.py`。应用内关于文档是 `about/app*.md`，通过 `:app:bundleProjectDocs` 与许可证一起打包；根 README 不是应用内关于文档。
 
 另见[架构与测试命令](../../MIGRATION.md)、[验收清单](../../tests/android14-acceptance.txt)及[网站构建](pages.md)。[继承的 Google Play 工作流仍指向不同应用 ID](github-actions.txt)，发布是独立步骤。
 

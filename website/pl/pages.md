@@ -43,7 +43,7 @@ W CI adres źródeł jest pobierany z `GITHUB_SERVER_URL`, `GITHUB_REPOSITORY` i
 - `README.md`, `website/index.md` i `website/pages.md`: angielska instrukcja techniczna, strona główna i poradnik wdrażania.
 - `publication/README.txt` i `publication/github-actions.txt`: angielskie instrukcje publikacji i Google Play.
 - `website/pl/` i `website/zh-CN/`: pełne tłumaczenia witryny, w tym licencji i polityki prywatności.
-- `about/README*.md`: istniejące tłumaczenia opisu aplikacji, używane także na stronie.
+- `about/README*.md`: tłumaczenia opisu na stronie; `about/app*.md` jest dołączane do aplikacji.
 - `PRIVACY_POLICY.md`: angielska polityka prywatności. Tłumaczenia witryny muszą być zgodne ze statycznymi kopiami w `publication/privacy/` i zasobami aplikacji.
 - `LICENSE.md`: oryginalna angielska licencja. Tłumaczenia witryny ułatwiają zrozumienie; rozstrzygający pozostaje oryginał.
 - `website/style.css`: wspólny wygląd.

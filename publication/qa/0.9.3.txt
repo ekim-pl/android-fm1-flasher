@@ -1,0 +1,10 @@
+FM-1 Flasher 0.9.3 — Android build 24
+
+APK: FM1-Flasher-0.9.3.apk
+SHA-256: b0f77a8e7bddc8b828fda9fdfe3c1b142f250da87ed97e6a51deef54691cb2ee
+Signing certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
+The APK uses the Android debug certificate matching the 0.9.2 release; it is not a Play-signed build.
+
+Checks: shared JVM and Android JVM tests, debug lint, debug APK and instrumentation APK builds; two SettingsUiTest instrumentation tests; resource synchronization; Python release-fixture gate tests; website build and link checks. On the Android 16 emulator the Polish in-app guide opened Library and firmware sources; Back from sources returned to Settings.
+
+No new physical FM-1/hub or iOS tests were performed. The historical 0.9.2 report describes earlier hardware testing and its limits. Production Google Play publishing is not configured for this application ID.

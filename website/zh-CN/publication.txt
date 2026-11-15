@@ -27,7 +27,7 @@ APK：app/build/outputs/apk/debug/app-debug.apk。
 ANDROID_KEY_ALIAS、ANDROID_KEY_PASSWORD 时不签名。调试 APK 不是 Play 签名发布包。
 
 文档与商店文本
-README.md 是指南，MIGRATION.md 是架构说明，about/README*.md 是应用内文档。
+README.md 是指南，MIGRATION.md 是架构说明，about/app*.md 是应用内文档。
 fastlane/metadata/android/{en-US,pl-PL,zh-CN}/ 包含描述草稿和历史变更记录。
 版本 19 对应当前实现，旧记录保留其历史含义。
 play-console.json 是当前事实草稿，不是已提交或批准的声明。编辑文件不会上传商店。
