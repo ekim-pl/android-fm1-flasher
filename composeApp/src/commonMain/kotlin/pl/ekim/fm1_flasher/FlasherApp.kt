@@ -7,6 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
@@ -15,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun FlasherApp(backend: AppBackend) {
     val state by backend.state.collectAsState()
@@ -142,28 +144,55 @@ fun FlasherApp(backend: AppBackend) {
                                             }
                                             if (entries.isEmpty()) item { Text(text("empty_title")); Text(text(when(tab) { LibraryTab.DOWNLOADS -> "empty_downloads"; LibraryTab.FAVORITES -> "empty_favorites"; else -> "empty_filter" })) }
                                             items(entries, key = { it.key }) { entry ->
-                                                ElevatedCard(onClick = { focus.clearFocus(); detailId = entry.key }, modifier = Modifier.fillMaxWidth()) {
-                                                    Column(Modifier.padding(16.dp)) {
-                                                        Cover(entry, state.offline, backend, state.catalog?.source(entry))
-                                                        Row {
-                                                            Column(Modifier.weight(1f)) { Text(title(entry, language), style = MaterialTheme.typography.titleLarge); Text("${entry.author} · ${entry.version}", style = MaterialTheme.typography.bodySmall) }
+                                                OutlinedCard(
+                                                    onClick = { focus.clearFocus(); detailId = entry.key },
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                                ) {
+                                                    Box(Modifier.fillMaxWidth().height(4.dp).background(Color(
+                                                        (state.sourceColors[entry.sourceId] ?: SourceColor.defaultFor(entry.sourceId)).argb)))
+                                                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                        SourceBadge(entry, state)
+                                                        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                                Text(title(entry, language), style = MaterialTheme.typography.titleLarge)
+                                                                if (entry.author.isNotBlank()) Text(entry.author,
+                                                                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                            }
                                                             val favorite = entry.key in state.favorites
                                                             // Do not observe the whole app state from semantics on recyclable nodes.
                                                             val favoriteDescription = text(if (favorite) "remove_favorite_accessibility" else "add_favorite_accessibility", title(entry, language))
-                                                            TextButton({ send(AppActionKind.FAVORITE, entry.key) }, enabled = !state.busy, modifier = Modifier.semantics { contentDescription = favoriteDescription }) { Text(if (favorite) "★" else "☆", fontSize = 24.sp) }
+                                                            IconToggleButton(checked = favorite, onCheckedChange = { send(AppActionKind.FAVORITE, entry.key) },
+                                                                enabled = !state.busy, modifier = Modifier.semantics { contentDescription = favoriteDescription }) {
+                                                                Text(if (favorite) "★" else "☆", fontSize = 28.sp)
+                                                            }
                                                         }
-                                                        SourceBadge(entry, state)
-                                                        Text(entry.kinds.joinToString(" · ") { kind -> text(FirmwareCategory.entries.firstOrNull { it.key == kind }?.labelKey ?: "category_other") }, style = MaterialTheme.typography.labelSmall)
-                                                        Text(if (entry.stock) text("stock_description") else entry.shortDescription)
+                                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                            (listOf(entry.version).filter { it.isNotBlank() } + entry.kinds.map { kind ->
+                                                                text(FirmwareCategory.entries.firstOrNull { it.key == kind }?.labelKey ?: "category_other")
+                                                            }).forEach { label ->
+                                                                Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainer) {
+                                                                    Text(label, Modifier.padding(horizontal = 10.dp, vertical = 5.dp), style = MaterialTheme.typography.labelMedium)
+                                                                }
+                                                            }
+                                                        }
+                                                        Cover(entry, state.offline, backend, state.catalog?.source(entry), compact = true)
+                                                        val description = if (entry.stock) text("stock_description") else entry.shortDescription
+                                                        if (description.isNotBlank()) Text(description, style = MaterialTheme.typography.bodyMedium,
+                                                            maxLines = 3, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                                         val saved = state.downloads.singleOrNull { it.entry.key == entry.key }
-                                                        if (saved != null) Text(text("saved_version", saved.entry.version) + if (state.catalog?.entries?.any { it.key == entry.key && it.sha256 != saved.entry.sha256 } == true) text("update_badge") else "", style = MaterialTheme.typography.labelMedium)
+                                                        if (saved != null) {
+                                                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                                            Text(text("saved_version", saved.entry.version) + if (state.catalog?.entries?.any { it.key == entry.key && it.sha256 != saved.entry.sha256 } == true) text("update_badge") else "",
+                                                                style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                                                        }
                                                     }
                                                 }
                                             }
                                             item {
                                                 val shownSources = state.catalog?.sources.orEmpty().filter { it.active && (sourceFilter.isEmpty() || it.id == sourceFilter) }
                                                 if (shownSources.isEmpty() || shownSources.any { it.id == CatalogSource.HUB }) {
-                                                    TextButton({ send(AppActionKind.OPEN_LINK, "https://thefirmwarehub.com") }) { Text(text("catalog_credit")) }
                                                     TextButton({ send(AppActionKind.OPEN_LINK, "https://creativecommons.org/licenses/by/4.0/") }) { Text(text("catalog_license")) }
                                                 }
                                                 shownSources.filter { it.id != CatalogSource.HUB }.forEach { source ->
@@ -324,14 +353,14 @@ private fun title(entry: CatalogEntry, language: String) = if (entry.stock) reso
 }
 @Composable private fun SelectionContainerText(text: String) { androidx.compose.foundation.text.selection.SelectionContainer { Text(text, fontSize = 12.sp) } }
 
-@Composable private fun Cover(entry: CatalogEntry, offline: Boolean, backend: AppBackend, source: CatalogSource?) {
+@Composable private fun Cover(entry: CatalogEntry, offline: Boolean, backend: AppBackend, source: CatalogSource?, compact: Boolean = false) {
     val image by produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, entry.cardUrl, offline, source) {
         value = null
         try { value = backend.artwork(entry) } catch (cancelled: CancellationException) { throw cancelled } catch (_: Exception) { value = null }
     }
     val bitmap = image
-    if (bitmap != null) Image(bitmap, entry.name, modifier = Modifier.fillMaxWidth().height(160.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-    else Surface(Modifier.fillMaxWidth().height(100.dp), color = MaterialTheme.colorScheme.secondaryContainer) {
+    if (bitmap != null) Image(bitmap, entry.name, modifier = Modifier.fillMaxWidth().height(if (compact) 112.dp else 160.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+    else if (!compact) Surface(Modifier.fillMaxWidth().height(100.dp), color = MaterialTheme.colorScheme.secondaryContainer) {
         Column(Modifier.padding(16.dp)) { Text("FM‑1", style = MaterialTheme.typography.headlineMedium); Text(entry.name, style = MaterialTheme.typography.labelLarge) }
     }
 }
