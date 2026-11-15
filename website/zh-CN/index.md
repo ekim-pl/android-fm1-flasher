@@ -1,8 +1,7 @@
 # 多台 FM-1，一个安装计划。
 
-**实验构建：[0.9.5-experimental.30](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.30)。** 新增每个来源的自定义颜色，并优化固件卡片，分别显示版本、类别和简短描述。此构建默认启用 Firebase 使用统计，可在**设置 → 使用统计**中关闭，之前的关闭选择仍保留。稳定版：**0.9.3**。
+FM-1 Flasher **0.10.0** 正在为 Google Play 发布做准备，包含本地固件库、来源颜色、全屏设置和顺序安装任务。尚未在商店发布。
 
-**FM-1 Flasher 0.9.3** 是稳定版本，提供全屏设置、共享提供程序接口和 Android 来源的 HTTP/OAuth 认证。多台 FM-1 的 OTG 更新仍依次执行。
 
 [当前指南](documentation.md) · [关于应用](../../about/README.zh-Hans.md) · [版本历史](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
@@ -32,13 +31,13 @@
 - [集线器上的多台乐器](documentation.md#multiple-fm1-devices-on-a-hub)
 - [构建与测试](documentation.md#building-and-testing)
 - [架构与平台边界](../../MIGRATION.md)
-- [版本验证报告](../../publication/qa/0.9.2.txt)
+- [版本验证报告](../../publication/qa/0.10.0.txt)
 - [发布状态与工作流限制](publication.txt)
 - [构建网站](pages.md)
 
 ## 隐私与开源
 
-无需账户且无广告。标准构建不含分析 SDK；Firebase 构建默认收集使用统计，可在“设置 → 使用统计”中关闭。固件库、乐器名称、已读取序列号和任务历史保存在本地。外部目录/下载服务会收到连接元数据。
+无需账户且无广告。F-Droid 版本不含分析 SDK；Google Play 构建默认收集使用统计，可在“设置 → 使用统计”中关闭。固件库、乐器名称、已读取序列号和任务历史保存在本地。外部目录/下载服务会收到连接元数据。
 
 [隐私政策](privacy.md) · [MIT 许可证](license.md) · [CommonMark 许可证](commonmark-license.md)
 

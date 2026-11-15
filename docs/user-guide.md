@@ -2,7 +2,7 @@
 
 Detailed instructions for the Android application: local firmware, offline use, firmware sources, sequential updates and experimental tools. Commands in this guide run from the repository root.
 
-This guide follows the current source tree, including experimental features. Stable release: **0.9.3**; current experimental build: **0.9.5-experimental.30**. Features may differ between APKs. See [releases](https://github.com/ekim-pl/android-fm1-flasher/releases) for downloads and [release verification](../publication/qa/0.9.2.txt) for the recorded test scope.
+FM-1 Flasher **0.10.0** is being prepared for Google Play. It includes a local firmware library, source colors, full-screen settings and sequential installation tasks. Store publication is pending.
 
 [Project README](../README.md) · [Polski](../website/pl/documentation.md) · [简体中文](../website/zh-CN/documentation.md) · [Privacy](../PRIVACY_POLICY.md)
 
@@ -16,7 +16,7 @@ The Android application ID is `pl.ekim.fm1_flasher`. English, Polish and Simplif
 
 ## Getting started
 
-1. Install the 0.9.3 APK on Android 14 or newer. The build-24 debug certificate matches earlier builds of this application: install it as an update without uninstalling to retain this fork's library and preferences.
+1. Install the 0.10.0 APK on Android 14 or newer. Updating requires the same signing certificate; a Google Play build may use a different certificate from local test builds.
 2. Open **Library**, find firmware and download it from its detail screen. Downloading verifies the package; it does not start an installation.
 3. Connect instruments with data-capable cables and an OTG hub. A separately powered hub is recommended. The app cannot measure or certify hub power quality.
 4. In **Devices**, use **Read instrument** on each card and grant Android USB access when requested. Only a recognized FM-1 can be added to the plan.
@@ -76,7 +76,7 @@ Manual providers do not infer supported flash chips from filenames. After checki
 
 The source form offers None, HTTP Basic, Bearer, API key in a chosen safe header, and OAuth 2.0. Basic takes username/password; Bearer takes the token without the `Bearer` prefix. API key sends the entered header value literally (including an explicit prefix if using `Authorization`). Passwords, tokens and client secrets are encrypted with Android Keystore, separate from SQLite source metadata, and are not logged. Empty secret fields keep a saved secret only for unchanged source/provider/authentication identity; a different URL cannot inherit it. Source deletion and restoring built-in defaults remove the relevant saved secrets.
 
-**OAuth migration:** The new redirect below applies to Android 0.9.4-experimental.27 and later. Version 0.9.4-experimental.26 and earlier use the redirect shown in that app’s source settings. Register the new redirect with the issuer before upgrading or authorizing again. In build 28, a sign-in started with build 26 or earlier must be restarted after upgrading.
+Register the redirect below with your provider before authorizing. When upgrading an older installation, verify its registered redirect and restart any pending sign-in.
 
 OAuth supports browser Authorization Code with **PKCE S256** and service **Client Credentials**. Configure your issuer, client ID, scope, token endpoint and, for browser sign-in, authorization endpoint. Register `pl.ekim.fm1-flasher://oauth/callback` with the issuer. Client Credentials needs a client secret; a public PKCE client does not. Select `client_secret_basic` or `client_secret_post` as required by the issuer. Save, then choose **Authorize OAuth 2.0** on the source card. Tokens are refreshed when expired if the server supplies a refresh token; Client Credentials can obtain another token. Browser state is one-use, source/revision-bound and expires after ten minutes. No universal OAuth client ID or secret is bundled.
 
@@ -126,7 +126,7 @@ The receive-only MIDI logger has bounded buffers and selected inputs. It stops a
 
 JEDEC detection uses a separate USB ROM/download-mode device. The result is never automatically assigned to a MIDI instrument. ROM recovery is a separate, explicitly approved operation with backup/export and a prepared write plan. It is restricted to the hash-pinned stock V15 application region and recognized boot/chip conditions, and does not write the bootloader. It is not a general-purpose unbricking tool or an automatic fallback after OTA failure. Physical recovery remains unverified.
 
-## Full-screen settings (0.9.2)
+## Full-screen settings
 
 **Settings** is a full screen with Interface, Firmware library, Experimental features and Application cards. Language and theme use inline radio choices. Sources, source editing, per-package compatibility and privacy open as full pages. The header and system Back return one level; the original Library/Devices/Tasks tab and non-secret source drafts survive activity recreation. Password/token inputs are intentionally not saved in activity state. Destructive confirmations and the requested chip-result popup remain dialogs.
 
@@ -171,3 +171,15 @@ The memory selector uses descriptions: **Older memory** supports older firmware;
 Normal installation stays conservative. If the instrument memory is unknown and the package supports only older memory, or the package declares `chip: unknown`, select **Force installation (unknown compatibility)**. Review the instrument, package version and SHA-256, read the additional warning and tick the risk acknowledgement before confirming. On Android this adds a visibly marked task; review the plan in **Tasks** and explicitly start installation. The approval is saved only with that task, never as a global setting. On iOS the usual installation confirmation follows the additional warning.
 
 Wrong firmware can leave the instrument unable to boot and require hardware recovery. Check with the firmware author and back up data first. Explicit incompatibility (older-only firmware on known newer memory), unsupported packages, withdrawn/conflicting packages, hash/product validation and device/reconnection checks cannot be bypassed. Removing the task requires a new approval for another forced attempt.
+
+License links in About open a full-screen **License** page. The header and system Back return to About; the license text is bundled for offline reading.
+
+## Screenshots
+
+[Screenshots — 0.10.0](../website/gallery.md)
+
+[![Library — search, source colors and firmware cards](../fastlane/metadata/android/en-US/images/phoneScreenshots/01.png)](../fastlane/metadata/android/en-US/images/phoneScreenshots/01.png)
+
+[![Devices — no instrument connected](../fastlane/metadata/android/en-US/images/phoneScreenshots/02.png)](../fastlane/metadata/android/en-US/images/phoneScreenshots/02.png)
+
+[![Tasks — an empty installation plan](../fastlane/metadata/android/en-US/images/phoneScreenshots/03.png)](../fastlane/metadata/android/en-US/images/phoneScreenshots/03.png)

@@ -1,7 +1,6 @@
-# Firebase Analytics — 0.9.5 experimental release
+# Firebase Analytics — 0.10.0
 
-The current experimental Android release is
-`0.9.5-experimental.30` (code 30); iOS marketing version is 0.9.5/build 30.
+Android version 0.10.0 uses versionCode 31.
 The normal Android build and base iOS project contain no Firebase SDK and show no analytics prompt.
 
 ## Architecture and behavior
@@ -130,7 +129,7 @@ These are account/device actions; code changes do not perform them:
 3. Verify the SDK's actual automatic data (including identifiers, device/app metadata and any
    derived approximate location). Complete Google Play Data safety and Apple App Privacy based
    on the chosen binary and enabled console features; this is not a declaration of no collection.
-   `publication/analytics-0.9.5.json` is a draft inventory, not a submitted store form.
+   `publication/analytics-0.10.0.json` is a draft inventory, not a submitted store form.
 4. Verify default-on startup, persistent disable, re-enable, restart, offline, in-flight operations and SDK
    buffering/network behavior with real test configs on Android and iOS.
 5. Use Firebase DebugView in TEST to validate event names, parameters, deduplication and outcomes.
@@ -153,7 +152,7 @@ Crashlytics, Remote Config, ads, BigQuery export and a custom telemetry server a
 
 ## Verification
 
-Current results: [default-on behavior and documentation review](../publication/qa/0.9.5-default-on.txt).
+Historical behavior verification: [default-on behavior and documentation review](../publication/qa/0.9.5-default-on.txt).
 
 ```sh
 python3 tools/sync-resources.py --check
@@ -169,3 +168,10 @@ Common tests verify default-on startup, persistent disable/re-enable, legacy opt
 notice-version changes, offline restart, no replay, deduplication, closed payloads, damaged preferences,
 and isolation of storage/SDK failures. Instrumentation/network and iOS build results must be
 recorded separately; a Linux JVM/Android build does not establish iOS runtime correctness.
+
+## Distribution builds
+
+- **Google Play:** `.github/workflows/google-play.yml` always includes Firebase with the production project and builds a signed AAB. Manual dispatch; uploading to internal testing is off by default.
+- **F-Droid:** `.github/workflows/fdroid.yml` explicitly disables Firebase and builds an unsigned release APK without Firebase or Google Play services dependencies. Manual dispatch; no store upload.
+
+Local Google Play test APKs use the test Firebase project. F-Droid test APKs use `-Pfm1Analytics=false`. Both use the same application ID; moving between store distributions requires compatible signing certificates. The F-Droid workflow is build preparation, not confirmation of F-Droid acceptance.

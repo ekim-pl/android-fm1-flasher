@@ -1,15 +1,10 @@
-# Multiplatform FM-1 Flasher 0.9.2
+# FM-1 Flasher 0.10.0 — release preparation
 
-Stabilne wydanie aplikacji dla Androida 14 i nowszego.
+Local firmware library, offline packages, configurable source colors and sequential
+installation tasks for M-VAVE FM-1 on Android 14+.
+Documentation, About, privacy and license information are available in English,
+Polish and Simplified Chinese. Nine current screenshots are included in the documentation and website gallery.
 
-- Pełnoekranowe ustawienia, edycja źródeł katalogów i zgodności paczek oraz polityka prywatności.
-- Providery: thefirmwarehub, awesome-fm1, repo-url (wydania GitHub i ich paczki) oraz pkg-url (bezpośredni plik FWSC).
-- Uwierzytelnianie HTTP: Basic, Bearer, klucz API i OAuth 2.0 — PKCE oraz Client Credentials. Szyfrowane poświadczenia i odświeżanie tokenów.
-- Zarządzanie wieloma FM-1 przez hub OTG, sekwencyjna kolejka instalacji, trwały log operacji i czyszczenie pobranych firmware.
-- Zaktualizowana dokumentacja i interfejs w językach polskim, angielskim i chińskim uproszczonym.
-
-Weryfikacja: 191 zaliczonych testów jednostkowych oraz 44 testy instrumentacyjne Androida. Import publicznych wydań GitHub sprawdzony na 13 paczkach SLOOP.
-
-Instalacja: pobierz `Multiplatform-FM1-Flasher-0.9.2.apk` i zainstaluj jako aktualizację. Podpis zachowuje zgodność z wcześniejszymi wersjami multiplatformowymi.
-
-Nowe adaptery katalogów i uwierzytelniania dotyczą Androida. Natywna aplikacja iOS oraz logowanie u produkcyjnego dostawcy OAuth wymagają osobnej weryfikacji. Narzędzia eksperymentalne pozostają opcjonalne.
+This is milestone 1 toward Google Play. The local debug APK is for testing;
+store signing, hardware acceptance and final publication remain separate steps.
+See publication/qa/0.10.0.txt for test scope and artifact identity.

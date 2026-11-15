@@ -1,16 +1,10 @@
-name: Google Play release
+name: Google Play build (Firebase)
 
 on:
   workflow_dispatch:
     inputs:
       publish:
         description: Upload to Google Play internal testing (disable for first manual upload)
-        type: boolean
-        default: true
-        required: true
-
-      analytics:
-        description: Include optional default-on Firebase analytics with a Settings opt-out (requires production config and store privacy review)
         type: boolean
         default: false
         required: true
@@ -49,12 +43,13 @@ jobs:
           FM1_FIXTURE_ARCHIVE_URL: ${{ vars.FM1_FIXTURE_ARCHIVE_URL }}
           FM1_FIXTURE_ARCHIVE_SHA256: ${{ vars.FM1_FIXTURE_ARCHIVE_SHA256 }}
         run: python3 scripts/release_fixtures.py prepare
-      - name: Test and lint release
-        run: ./gradlew --no-daemon :shared:jvmTest :app:testDebugUnitTest :app:lintRelease
+      - name: Check resources and test shared application logic
+        run: |
+          python3 tools/sync-resources.py --check
+          ./gradlew --no-daemon -Pfm1Analytics=false :shared:jvmTest :app:testDebugUnitTest
       - name: Require all release fixture tests
         run: python3 scripts/release_fixtures.py verify
-      - name: Prepare and lint optional production Firebase variant
-        if: inputs.analytics
+      - name: Prepare and lint production Firebase variant
         env:
           FIREBASE_PRODUCTION_ANDROID_JSON: ${{ secrets.FIREBASE_PRODUCTION_ANDROID_JSON }}
         run: |
@@ -67,7 +62,8 @@ jobs:
           target.write_text(json.dumps(value))
           PYCONFIG
           ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production :app:lintRelease
-          echo 'FM1_ANALYTICS_GRADLE_ARGS=-Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production' >> "$GITHUB_ENV"
+          ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production :app:dependencies --configuration releaseRuntimeClasspath > firebase-dependencies.txt
+          grep -q 'com.google.firebase:firebase-analytics:' firebase-dependencies.txt
       - name: Build signed bundle
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -82,21 +78,21 @@ jobs:
           : "${ANDROID_KEY_PASSWORD:?Missing ANDROID_KEY_PASSWORD}"
           umask 077
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_FILE"
-          ./gradlew --no-daemon ${FM1_ANALYTICS_GRADLE_ARGS:-} :app:bundleRelease
+          ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production :app:bundleRelease
       - name: Save signed bundle
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: google-play-bundle-${{ github.run_id }}
+          name: google-play-firebase-bundle-${{ github.run_id }}
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
       - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1
-        if: github.event_name == 'push' || inputs.publish
+        if: inputs.publish
         with:
           ruby-version: '3.3'
           bundler-cache: true
       - name: Publish to internal testing
-        if: github.event_name == 'push' || inputs.publish
+        if: inputs.publish
         env:
           SUPPLY_JSON_KEY_DATA: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
@@ -111,9 +107,9 @@ jobs:
             --skip_upload_metadata true \
             --skip_upload_images true \
             --skip_upload_screenshots true
-      - name: Remove upload key
+      - name: Remove upload key and Firebase configuration
         if: always()
-        run: rm -f "$RUNNER_TEMP/fm1-upload.jks"
+        run: rm -f "$RUNNER_TEMP/fm1-upload.jks" app/firebase/production/google-services.json
       - name: Save reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6

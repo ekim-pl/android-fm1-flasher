@@ -1,0 +1,38 @@
+{
+  "status": "0.10.0 preparation; final distribution and store disclosures require verification",
+  "versionName": "0.10.0",
+  "versionCode": 31,
+  "standardBuild": {
+    "analyticsSdk": false
+  },
+  "analyticsBuild": {
+    "analyticsSdk": "Google Analytics for Firebase",
+    "defaultCollection": true,
+    "advertising": false,
+    "collected": [
+      "app interactions and operation results/timings",
+      "app instance identifiers",
+      "SDK app, OS and device metadata",
+      "network metadata and derived approximate location where applicable"
+    ],
+    "excluded": [
+      "instrument identities/serials/names",
+      "private URLs and credentials",
+      "firmware/MIDI contents",
+      "operation logs"
+    ],
+    "purpose": "Analytics",
+    "userAndEventRetentionMonths": null,
+    "priorServerDataDeletedOnOptOut": false,
+    "publicationGate": [
+      "verify SDK data inventory and store disclosures",
+      "verify first-launch collection, persistent opt-out, offline and SDK reset behavior on both platforms",
+      "set and verify retention in GA4 console before claiming a specific period",
+      "verify Apple privacy manifests and Android merged manifest"
+    ],
+    "privacyModel": "Default-on collection with a persistent Settings opt-out; this preference is not evidence of explicit consent",
+    "userControl": "Settings \u2192 Usage statistics \u2192 Share usage statistics",
+    "plannedUserAndEventRetentionMonths": 2,
+    "explicitConsentPrompt": false
+  }
+}

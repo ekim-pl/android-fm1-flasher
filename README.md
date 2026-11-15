@@ -8,7 +8,7 @@
 
 Browse, save and install firmware for your **M-VAVE FM-1** from an Android phone. Keep a local firmware library and update one instrument or several in sequence over USB OTG.
 
-**[Download APKs](https://github.com/ekim-pl/android-fm1-flasher/releases)** — stable: **0.9.3** · experimental: **[0.9.5-experimental.30](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.30)**.
+**Version 0.10.0** — preparation for Google Play. [Available APKs](https://github.com/ekim-pl/android-fm1-flasher/releases) · [Build and verification](publication/qa/0.10.0.txt).
 
 ## Project manifesto
 
@@ -49,8 +49,21 @@ The experimental backup tool reads the **entire 1 MiB flash memory** of supporte
 
 ## Privacy and more information
 
-No app account or advertising. The library, device names and task history stay on your phone. Firebase-enabled builds, including the current experimental APK, collect usage statistics by default; turn them off in **Settings → Usage statistics**. External firmware services receive connection metadata. [Privacy policy](PRIVACY_POLICY.md).
+No app account or advertising. The library, device names and task history stay on your phone. Firebase-enabled builds collect usage statistics by default; turn them off in **Settings → Usage statistics**. External firmware services receive connection metadata. [Privacy policy](PRIVACY_POLICY.md).
 
 [Detailed user guide](docs/user-guide.md) · [Project website](https://ekim-pl.github.io/android-fm1-flasher/) · [Polski](website/pl/documentation.md) · [简体中文](website/zh-CN/documentation.md) · [Development and tests](MIGRATION.md) · [Dependency licenses](third_party/README.md)
 
 Questions, feedback or beta testing: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
+
+## Distribution builds
+
+- **Google Play:** `.github/workflows/google-play.yml` always includes Firebase with the production project and builds a signed AAB. Manual dispatch; uploading to internal testing is off by default.
+- **F-Droid:** `.github/workflows/fdroid.yml` explicitly disables Firebase and builds an unsigned release APK without Firebase or Google Play services dependencies. Manual dispatch; no store upload.
+
+Local Google Play test APKs use the test Firebase project. F-Droid test APKs use `-Pfm1Analytics=false`. Both use the same application ID; moving between store distributions requires compatible signing certificates. The F-Droid workflow is build preparation, not confirmation of F-Droid acceptance.
+
+## Screenshots
+
+[Browse the screenshot gallery](website/gallery.md) — seven English screens, plus Polish and Simplified Chinese. Captured from version 0.10.0 on Android 16.
+
+[<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/01.png" width="270" alt="FM-1 Flasher firmware library">](website/gallery.md)

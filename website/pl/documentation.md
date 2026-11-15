@@ -1,10 +1,8 @@
 # FM-1 Flasher — instrukcja
 
-**Wydanie eksperymentalne: [0.9.5-experimental.30](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.30).** Dodaje wybór koloru każdego źródła oraz czytelniejsze kafelki firmware z osobnymi etykietami wersji i kategorii oraz krótszym opisem. Ten build zawiera statystyki Firebase, domyślnie włączone; wyłączysz je w **Ustawienia → Statystyki użytkowania**. Wcześniejsze wyłączenie zostaje zachowane. Wydanie stabilne: **0.9.3**.
+FM-1 Flasher **0.10.0** przygotowujemy do Google Play. Wersja obejmuje lokalną bibliotekę firmware, kolory źródeł, pełnoekranowe ustawienia i sekwencyjną kolejkę instalacji. Publikacja sklepowa jest przed nami.
 
 Niezależny menedżer firmware dla **M-VAVE FM-1** na Androida. Android obsługuje wiele instrumentów przez hub OTG, zapisując firmware **kolejno, na jednym instrumencie naraz**.
-
-Dokument opisuje stabilną wersję **0.9.2** na branchu `main`. Wersja dodaje pełnoekranowe ustawienia, adaptery providerów i uwierzytelnianie HTTP przypisane do źródła. [Raport buildu](../../publication/qa/0.9.2.txt) opisuje weryfikację i ograniczenia. Właściciel potwierdził fizyczne testy FM-1 dla buildu 20; zakres testów źródeł i uwierzytelniania opisano w raporcie.
 
 [English](../../README.md) · [简体中文](../zh-CN/documentation.md) · [Architektura](../../MIGRATION.md) · [Prywatność](privacy.md)
 
@@ -17,7 +15,7 @@ Identyfikator Androida to `pl.ekim.fm1_flasher`. Interfejs obsługuje polski, an
 <a id="getting-started"></a>
 ## Pierwsza instalacja i plan aktualizacji
 
-1. Zainstaluj APK 0.9.2 na Androidzie 14 lub nowszym. Podpis debug buildu 23 odpowiada buildowi 18: instalacja jako aktualizacja, bez odinstalowania, zachowuje bibliotekę i preferencje tego forka.
+1. Zainstaluj APK 0.10.0 na Androidzie 14 lub nowszym. Aktualizacja wymaga tego samego certyfikatu podpisu; wersja Google Play może używać innego certyfikatu niż lokalny build testowy.
 2. W **Bibliotece** znajdź firmware i pobierz paczkę z jej szczegółów. Pobranie sprawdza integralność, ale nie rozpoczyna instalacji.
 3. Podłącz instrumenty przewodami do transmisji danych przez hub OTG. Zalecany jest hub z osobnym zasilaniem. Aplikacja nie mierzy jakości zasilania.
 4. W **Urządzeniach** wybierz **Odczytaj instrument** na każdej karcie. Udziel systemowej zgody USB, gdy będzie potrzebna. Do planu można dodać rozpoznany FM-1.
@@ -103,11 +101,11 @@ Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani og
 
 W buildzie 23 zaliczono **191 testów jednostkowych (62 shared + 129 Android JVM)**; cztery testy zewnętrznych fixture’ów pominięto. Zaliczone są **44 testy instrumentacyjne Androida**, w tym eksport/czyszczenie logu, czyszczenie biblioteki i potwierdzenia w trzech językach. Przeszły debug, lint i kompilacja metadanych iOS. Właściciel potwierdził działanie buildu 20 na fizycznych FM-1; nowych funkcji i wszystkich kombinacji sprzętu nie zweryfikowano fizycznie.
 
-Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.9.2.txt) zawiera identyfikację pliku i zakres prób.
+Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.10.0.txt) zawiera identyfikację pliku i zakres prób.
 
 ## Prywatność i autorstwo
 
-Bez konta i reklam. Standardowe kompilacje nie zawierają SDK analityki; wersje z Firebase domyślnie zbierają statystyki; wyłączysz je w Ustawienia → Statystyki użytkowania. Biblioteka, nazwy, odczytane seriale, wybory pamięci i historia zadań pozostają lokalnie. Serwery katalogów/grafik/paczek otrzymują metadane połączenia; aplikacja nie dołącza tożsamości instrumentów do tych żądań. Szczegóły: [polityka prywatności](privacy.md).
+Bez konta i reklam. Wersja F-Droid nie zawiera SDK analityki; wersja Google Play z Firebase domyślnie zbiera statystyki; wyłączysz je w Ustawienia → Statystyki użytkowania. Biblioteka, nazwy, odczytane seriale, wybory pamięci i historia zadań pozostają lokalnie. Serwery katalogów/grafik/paczek otrzymują metadane połączenia; aplikacja nie dołącza tożsamości instrumentów do tych żądań. Szczegóły: [polityka prywatności](privacy.md).
 
 Kod aplikacji: [MIT](../../LICENSE.md). Katalog [The Firmware Hub](https://thefirmwarehub.com): CC BY 4.0; firmware zachowuje licencje autorów. [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) jest opcjonalnym katalogiem. Informacje o zależnościach: [third_party](../../third_party/). Kontakt: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
 
@@ -119,7 +117,7 @@ Aplikacja stale zapisuje lokalny log operacji (do 256 KiB; najstarsze wpisy są 
 
 **Urządzenia → Tryby i kość pamięci** rozdziela odczyt MIDI, przejście w tryb download i wykrywanie kości na czytelne karty. Wynik detekcji otwiera popup. Potem wyłącz i włącz instrument, aby wrócić do MIDI. Domyślne odłączone wpisy są tymczasowe; własne nazwy i cele kolejki pozostają. Opóźnione odłączenie poprzedniego portu USB nie przerywa kolejnego etapu tej samej aktualizacji. Utrata innego instrumentu lub huba nadal blokuje zapis.
 
-## Pełnoekranowe ustawienia (0.9.2)
+## Pełnoekranowe ustawienia
 
 **Ustawienia** są pełnym ekranem z kartami Interfejs, Biblioteka firmware, Funkcje eksperymentalne i Aplikacja. Język oraz motyw wybiera się bezpośrednio przyciskami radiowymi. Źródła, formularze, zgodność poszczególnych paczek i polityka prywatności otwierają się jako pełne strony. Nagłówek i systemowe Wstecz cofają o poziom; poprzednia zakładka Biblioteka/Urządzenia/Zadania i niesekretne dane formularza przetrwają odtworzenie aktywności. Wpisane hasła/tokeny nie są zapisywane w stanie aktywności. Okna pozostają przy potwierdzeniach usuwania i żądanym wyniku wykrywania kości.
 
@@ -142,13 +140,11 @@ Ręczne providery nie zgadują zgodności kości z nazw plików. Po sprawdzeniu 
 
 Formularz źródła oferuje brak uwierzytelniania, HTTP Basic, Bearer, klucz API we wskazanym bezpiecznym nagłówku i OAuth 2.0. Basic przyjmuje użytkownika/hasło, Bearer sam token bez prefiksu `Bearer`. Klucz API wysyła wartość nagłówka dosłownie, w tym własny prefiks przy nagłówku `Authorization`. Hasła, tokeny i client secret są szyfrowane kluczem Android Keystore, poza metadanymi SQLite, i nie trafiają do logu. Puste pole zachowuje sekret tylko dla niezmienionego źródła/providera/tożsamości uwierzytelniania; inny URL nie dziedziczy go. Usunięcie źródła i odtworzenie ustawień wbudowanych usuwa odpowiednie sekrety.
 
-**Migracja OAuth:** Nowy adres poniżej dotyczy Androida 0.9.4-experimental.27 i nowszych. Wersja 0.9.4-experimental.26 i wcześniejsze używają adresu pokazanego w ustawieniach źródła w aplikacji. Przed aktualizacją lub ponowną autoryzacją zarejestruj nowy adres u dostawcy. W buildzie 28 logowanie rozpoczęte w buildzie 26 lub starszym trzeba po aktualizacji rozpocząć ponownie.
+Przed autoryzacją zarejestruj poniższy adres u dostawcy. Przy aktualizacji starszej instalacji sprawdź zarejestrowany adres i rozpocznij ponownie oczekujące logowanie.
 
 OAuth obsługuje logowanie w przeglądarce Authorization Code z **PKCE S256** oraz usługowy **Client Credentials**. Skonfiguruj serwer, client ID, zakresy, endpoint tokenów i — dla przeglądarki — endpoint autoryzacji. Zarejestruj `pl.ekim.fm1-flasher://oauth/callback` w serwerze. Client Credentials wymaga client secret, publiczny klient PKCE nie. Wybierz `client_secret_basic` lub `client_secret_post` zgodnie z serwerem. Zapisz źródło i wybierz **Autoryzuj OAuth 2.0** na jego karcie. Wygasłe tokeny są odświeżane, gdy serwer zwróci refresh token; Client Credentials może uzyskać nowy token. Stan przeglądarkowego logowania jest jednorazowy, przypisany do źródła/rewizji i wygasa po dziesięciu minutach. Aplikacja nie zawiera uniwersalnego client ID ani sekretu.
 
 Uwierzytelnienie jest ograniczone do pochodzenia źródła (API GitHub dla `repo-url`). Przy zmianie domeny w przekierowaniu, także do CDN, jest usuwane; przekierowania POST tokenów są odrzucane. Nadal obowiązuje HTTPS oraz kontrola publicznych adresów i zakresów URL. Zwykłe sprawdzanie zachowuje harmonogram 24–168 godzin. Jawna zmiana sekretu lub ukończona autoryzacja pozwala sprawdzić źródło ponownie, bez całodobowego oczekiwania po błędzie logowania.
-
-Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani ogłoszonego terminu.
 
 
 ## Wymuszenie przy nieznanej zgodności
@@ -158,3 +154,11 @@ Lista pamięci pokazuje opisy: **Starsza pamięć** obsługuje starsze firmware,
 Zwykła instalacja zachowuje ostrożne reguły. Gdy typ kości instrumentu jest nieznany, a paczka obsługuje tylko starszą pamięć, albo paczka ma `chip: unknown`, wybierz **Wymuś instalację (nieznana zgodność)**. Sprawdź instrument, wersję paczki i SHA-256, przeczytaj dodatkowe ostrzeżenie, zaznacz akceptację ryzyka i potwierdź. Na Androidzie powstanie wyraźnie oznaczone zadanie; przejrzyj plan w **Zadaniach** i uruchom instalację. Zgoda zostaje tylko przy tym zadaniu, nigdy jako ustawienie globalne. Na iOS po dodatkowym ostrzeżeniu pojawia się zwykłe potwierdzenie instalacji.
 
 Niewłaściwy firmware może uniemożliwić uruchomienie instrumentu i wymagać naprawy sprzętowej. Sprawdź zgodność u autora i zrób kopię danych. Wymuszenie nie omija jawnej niezgodności (paczka tylko dla starszej pamięci przy znanej nowszej kości), niewspieranych, wycofanych lub sprzecznych paczek, kontroli hash/produktu ani weryfikacji urządzenia i ponownego połączenia. Po usunięciu zadania kolejna wymuszona próba wymaga nowej zgody.
+
+Odnośniki do licencji w O aplikacji otwierają pełnoekranowy widok **Licencja**. Przycisk w nagłówku i systemowe Wstecz wracają do O aplikacji; teksty licencji są dostępne offline.
+
+## Zrzuty ekranu
+
+[Zrzuty ekranu — 0.10.0](gallery.md)
+
+[![Biblioteka po polsku](../../fastlane/metadata/android/pl-PL/images/phoneScreenshots/01.png)](../../fastlane/metadata/android/pl-PL/images/phoneScreenshots/01.png)

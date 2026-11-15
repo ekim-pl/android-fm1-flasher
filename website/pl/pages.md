@@ -1,6 +1,6 @@
 # Strona projektu na GitHub Pages
 
-Witryna opisuje kompletne wydanie **0.9.3** na Androida. Zmiany wysłane na gałąź domyślną są budowane, sprawdzane i wdrażane przez GitHub Actions.
+Witryna opisuje przygotowania Android **0.10.0** do Google Play.
 
 Witryna, dokumentacja oraz polityka prywatności powstają ze źródeł w tym repozytorium. Każda podstrona jest dostępna po angielsku, polsku i chińsku uproszczonym, wraz z nawigacją, instrukcjami publikacji oraz tłumaczeniami licencji. Odnośniki **Polski**, **English** i **简体中文** przełączają tę samą podstronę na inny język.
 
@@ -55,3 +55,5 @@ Dokumentacja repozytorium jest po angielsku. Opisy aplikacji, jej zasoby i mater
 ## Wspólna publikacja z repozytorium F-Droid
 
 GitHub Pages ma jedno aktywne wdrożenie witryny dla repozytorium. Po dodaniu publikacji F-Droid należy dołączać katalog `fdroid/repo/` do `build/site/` przed wysłaniem artefaktu Pages. Witryna i repozytorium APK muszą być publikowane razem: workflow wdrażający wyłącznie APK zastąpiłby witrynę, a wdrożenie samej witryny usunęłoby repozytorium APK. Obecny workflow publikuje witrynę i dokumentację.
+
+Galeria ma przetłumaczone podpisy i odnośniki do oryginalnych PNG. Używa tych samych dziewięciu zrzutów co materiały sklepowe. Generator kopiuje pliki do witryny i sprawdza galerię w trzech językach.

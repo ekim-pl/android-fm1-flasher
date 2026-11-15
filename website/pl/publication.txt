@@ -1,63 +1,8 @@
-FM-1 Flasher — dokumentacja publikacji
-Stabilne wydanie: 0.9.2 na main. Tag: v0.9.2.
-Publiczne pliki używają wyłącznie wersji; wewnętrzny versionCode pozostaje bez zmian.
+FM-1 Flasher 0.10.0 / 31 — pierwszy etap przygotowań do Google Play.
 
-BIEŻĄCA APLIKACJA
-Android ID: pl.ekim.fm1_flasher.
-Android 14+ / minSdk 34; target i compile SDK 36.
-Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani ogłoszonego terminu.
-Języki: polski, angielski, chiński uproszczony. Kontakt: ekim.pl@gmail.com.
-Android ma Urządzenia / Bibliotekę / Zadania i trwałą sekwencyjną kolejkę.
-
-STAN WYDANIA
-0.9.2 jest stabilnym wydaniem GitHub z aktualną dokumentacją.
-publication/qa/0.9.2.txt opisuje dokładny APK, hash, podpis i zakres sprawdzenia.
-Lokalny dist/0.9.2-test23 jest ignorowany przez Git, więc nie będzie w świeżym klonie.
-publication/github-release.txt to projekt opisu, a nie dowód istnienia wydania.
-Zmiana dokumentów nie zmienia przekazanego APK. Nowy build wymaga własnego hasha
-i weryfikacji pakowania; zachowaj historyczne raporty.
-
-BUDOWANIE I PRZEKAZANIE
-Z katalogu repozytorium:
-  python3 tools/sync-resources.py --check
-  ./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
-APK: app/build/outputs/apk/debug/app-debug.apk.
-Sprawdź apksigner, ID/wersję/minSdk, SHA-256 i ciągłość podpisu aktualizacji.
-Przekaż właścicielowi testowy APK i raport przed publikacją.
-:app:bundleRelease tworzy AAB; bez ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD,
-ANDROID_KEY_ALIAS i ANDROID_KEY_PASSWORD pozostaje niepodpisany. APK debug nie jest
-podpisanym pakietem produkcyjnym Play.
-
-DOKUMENTY I OPISY
-README.md: instrukcja; MIGRATION.md: architektura; about/app*.md: treści w aplikacji.
-fastlane/metadata/android/{en-US,pl-PL,zh-CN}/ zawiera projekty opisów i historię zmian.
-Wpis 19 dotyczy obecnej implementacji; wcześniejsze wpisy są historyczne.
-play-console.json to bieżący projekt danych, nie wysłana ani zatwierdzona deklaracja.
-Edycja tych plików nie publikuje treści w sklepie.
-
-STARSZE MATERIAŁY I WORKFLOW
-Dotychczasowe screenshoty/grafiki pokazują wcześniejszy UI, nie potwierdzają funkcji
-kolejki 0.9.2. Przed publikacją sklepową wykonaj nowe zdjęcia ekranu. Skrypt grafiki
-ramuje/generuje materiały, ale nie wykonuje nowych zrzutów aplikacji.
-publication/validation.json to jawnie historyczny raport oryginalnej aplikacji.
-publication/fdroid/pl.ekim.fm1_flasher.yml to archiwalna recepta oryginału, nie tego forka.
-Przed publikacją sprawdź podpis i konfigurację sklepu. github-actions.txt opisuje wyzwalacze;
-workflow Play uruchamia się ręcznie. Aktualizacja dokumentacji nie zmienia workflow,
-konta sklepowego, tagów ani nie publikuje wydania.
-
-PRYWATNOŚĆ I STRONA
-PRIVACY_POLICY.md, zasoby aplikacji, tłumaczenia witryny i publication/privacy/ opisują
-lokalne nazwy, seriale, typ pamięci, historię zadań, bibliotekę i ruch sieciowy.
-Adres witryny: https://ekim-pl.github.io/android-fm1-flasher/
-Wdrożona gałąź domyślna może różnić się od tego brancha. Lokalny build strony nie
-aktualizuje publicznej witryny. scripts/build_site.py i scripts/check_site.py budują
-oraz sprawdzają dokumentację; szczegóły są w poradniku Pages. Nie zakładaj, że publiczna
-polityka zawiera zmiany z brancha przed jej wdrożeniem.
-
-ODBIÓR
-publication/test-checklist.txt, tests/android14-acceptance.txt i raport QA opisują zakres.
-Rzeczywiste restarty wielu FM-1, zasilanie, seriale i zgody USB wymagają testów fizycznych.
-Automatyczne parowanie wielu urządzeń jest wyłączone. Recovery ROM pozostaje osobne
-i niezweryfikowane sprzętowo. Kolejka iOS i weryfikacja Xcode nie są wykonane.
-Opis usługi foreground-service.txt zawiera scenariusz nagrania sprzętowego, nie twierdzi,
-że takie nagranie już istnieje.
+Zaktualizowano dokumentację, O aplikacji, prywatność i licencje.
+Dwa testowe APK używają lokalnego podpisu debug: Google Play z testowym Firebase oraz F-Droid bez Firebase.
+Nie jest to publikacja w sklepie. Weryfikacja: ../../publication/qa/0.10.0.txt.
+Przed publikacją potrzebne są podpisany AAB, konfiguracja sklepu, ostateczne
+deklaracje danych i odbiór na fizycznym FM-1/hubie.
+Instrukcje budowania: ../../publication/README.txt.

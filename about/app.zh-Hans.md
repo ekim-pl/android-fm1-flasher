@@ -1,4 +1,4 @@
-# FM-1 Flasher
+# FM-1 Flasher 0.10.0
 
 独立的 **M-VAVE FM-1** 固件管理器。需要 Android 14 或更高版本、USB Host/OTG、MIDI、数据线和稳定电源。建议使用独立供电的集线器。
 
@@ -24,6 +24,10 @@ Firmware Hub 默认启用；可在[设置 → 固件来源](app://settings/sourc
 
 ## 隐私和许可
 
-应用无需账户且无广告。标准构建不包含分析 SDK。配置了 Google Analytics for Firebase 的构建从首次联网启动起默认收集使用统计。您可随时在“设置 → 使用统计”中关闭。固件库、设备名称和任务历史保存在本地。目录和下载服务器会收到连接元数据。参阅[隐私政策](../PRIVACY_POLICY.md)和 [MIT 许可证](../LICENSE.md)；固件和第三方组件遵循各自的许可。
+应用无需账户且无广告。F-Droid 版本不包含分析 SDK。包含 Google Analytics for Firebase 的 Google Play 版本从首次联网启动起默认收集使用统计。您可随时在“设置 → 使用统计”中关闭。固件库、设备名称和任务历史保存在本地。目录和下载服务器会收到连接元数据。参阅[隐私政策](../PRIVACY_POLICY.md)和 [MIT 许可证](../LICENSE.md)；固件和第三方组件遵循各自的许可。
 
 可选分析 SDK 条款：[Firebase 声明](../third_party/firebase-analytics-NOTICE.md)。
+
+发布者：**Ekim** · [联系](mailto:ekim.pl@gmail.com) · [第三方许可证](../third_party/README.md)。免费且开源。
+
+[CommonMark (BSD-2-Clause)](../third_party/commonmark-LICENSE.txt) · [Android (Apache 2.0)](../third_party/Apache-2.0.txt) · [m-flasher (MIT)](../third_party/m-flasher-LICENSE.txt)

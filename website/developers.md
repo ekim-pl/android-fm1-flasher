@@ -58,7 +58,7 @@ GitHub may return HTTP 404 for an inaccessible private repository. Check the rep
 
 The source form supports HTTP Basic, Bearer, an API key header, and OAuth 2.0. For individual accounts, use OAuth Authorization Code with PKCE S256 and a public client where the issuer supports it. Configure the client ID, scope, authorization URL and token URL; register this redirect URI exactly:
 
-The redirect below applies to Android 0.9.4-experimental.27 and later. Version 0.9.4-experimental.26 and earlier use the address shown in their source settings. Register the new address before users upgrade or authorize again. In build 28, a sign-in started with build 26 or earlier must be restarted after upgrading.
+Register the redirect below with your provider before authorizing. When upgrading an older installation, verify its registered redirect and restart any pending sign-in.
 
 ```text
 pl.ekim.fm1-flasher://oauth/callback

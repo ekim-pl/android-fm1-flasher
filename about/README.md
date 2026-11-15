@@ -42,7 +42,7 @@ Android requires **14+**, USB Host/OTG, MIDI, a data cable and stable power. A p
 
 ## Privacy and licenses
 
-The app requires no account and contains no advertising. Standard builds contain no analytics SDK. Builds configured with Google Analytics for Firebase collect usage statistics by default from the first online launch. You can turn statistics off at any time in Settings → Usage statistics. Device names, observed serials and task history stay locally with the library. External catalog/download servers receive connection metadata, not instrument identities attached by the app. Read the full [privacy policy](../PRIVACY_POLICY.md).
+The app requires no account and contains no advertising. The F-Droid distribution contains no analytics SDK. Google Play builds with Google Analytics for Firebase collect usage statistics by default from the first online launch. You can turn statistics off at any time in Settings → Usage statistics. Device names, observed serials and task history stay locally with the library. External catalog/download servers receive connection metadata, not instrument identities attached by the app. Read the full [privacy policy](../PRIVACY_POLICY.md).
 
 Catalog attribution: [The Firmware Hub](https://thefirmwarehub.com), CC BY 4.0; descriptions, artwork and firmware retain their authors’ rights. App: [MIT](../LICENSE.md). Markdown: [CommonMark, BSD-2-Clause](../third_party/commonmark-LICENSE.txt). Networking/background libraries: [Apache 2.0](../third_party/Apache-2.0.txt), [notices](../third_party/android-libraries-NOTICE.txt).
 
@@ -56,7 +56,7 @@ In **Settings → Clear downloaded firmware**, confirm once to delete all downlo
 
 **Devices → Modes and flash chip** provides MIDI selection/readout, download-mode entry and chip detection in separate cards. Successful chip detection opens a result popup. Power-cycle back to MIDI afterwards. Default disconnected device entries are temporary; custom names and queued targets are retained. Delayed USB detach events for a retired stage no longer invalidate the next stage of the same update. Unrelated device/hub loss still blocks writes.
 
-## Full-screen settings (0.9.2)
+## Full-screen settings
 
 **Settings** is a full screen with Interface, Firmware library, Experimental features and Application cards. Language and theme use inline radio choices. Sources, source editing, per-package compatibility and privacy open as full pages. The header and system Back return one level; the original Library/Devices/Tasks tab and non-secret source drafts survive activity recreation. Password/token inputs are intentionally not saved in activity state. Destructive confirmations and the requested chip-result popup remain dialogs.
 

@@ -79,7 +79,7 @@ import androidx.compose.ui.unit.dp
         SettingsCard(t("settings_app")) {
             if (state.fleetAvailable) OutlinedButton({ navigate(LibraryTab.ABOUT) }, Modifier.fillMaxWidth()) { Text(t("tab_about")) }
             OutlinedButton(privacy, Modifier.fillMaxWidth()) { Text(t("privacy_title")) }
-            Text(t("about_version", "0.9.5-experimental.30"), style = MaterialTheme.typography.bodySmall)
+            Text(t("about_version", "0.10.0"), style = MaterialTheme.typography.bodySmall)
         }
     }
 }

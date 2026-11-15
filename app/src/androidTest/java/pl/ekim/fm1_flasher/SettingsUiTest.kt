@@ -20,7 +20,7 @@ class SettingsUiTest : InstrumentationTestCase() {
                 catalog = Catalog(emptyList(), "", 0, false, sources = listOf(CatalogSource.hub))))
             override fun perform(action: AppAction) { actions += action }
             override fun saveBrowse(filters: BrowseFilters) = Unit
-            override fun document(name: String) = ""
+            override fun document(name: String) = if (name.startsWith("about/")) "# App\nIntro\n\n## Licenses\n[MIT](../LICENSE.md)" else "MIT license body"
             override suspend fun artwork(entry: CatalogEntry): androidx.compose.ui.graphics.ImageBitmap? = null
         }
         val roots = mutableListOf<ViewRootForTest>()
@@ -67,6 +67,39 @@ class SettingsUiTest : InstrumentationTestCase() {
                 back(); assertPage()
                 back()
                 instrumentation.runOnMainSync { assertTrue(nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == t("fleet_devices") } == true }) }
+                click(t("settings")); click(t("tab_about"))
+                var openedLicense = false
+                for (attempt in 0 until 15) {
+                    instrumentation.waitForIdleSync(); Thread.sleep(60)
+                    var location: androidx.compose.ui.geometry.Offset? = null
+                    instrumentation.runOnMainSync {
+                        val link = nodes().firstOrNull {
+                            it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == "MIT" } == true
+                        }
+                        if (link != null && link.boundsInWindow.height > 0f) location = link.boundsInWindow.center
+                        else nodes().firstOrNull { it.config.getOrNull(SemanticsActions.ScrollBy) != null }
+                            ?.config?.getOrNull(SemanticsActions.ScrollBy)?.action?.invoke(0f, 450f)
+                    }
+                    location?.let { point ->
+                        val now = android.os.SystemClock.uptimeMillis()
+                        for (action in listOf(android.view.MotionEvent.ACTION_DOWN, android.view.MotionEvent.ACTION_UP)) {
+                            val event = android.view.MotionEvent.obtain(now, now + action * 50L, action, point.x, point.y, 0)
+                            instrumentation.sendPointerSync(event); event.recycle()
+                        }
+                        openedLicense = true
+                    }
+                    if (openedLicense) break
+                }
+                assertTrue("Missing About license link", openedLicense)
+                assertPage()
+                instrumentation.runOnMainSync {
+                    val texts = nodes().flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty() }.map { it.text }
+                    assertTrue(texts.contains(t("license_title")))
+                    assertTrue(texts.contains("MIT license body"))
+                    assertFalse(texts.contains("LICENSE.md"))
+                }
+                back(); assertPage()
+                click(t("fleet_devices"))
             }
         } finally {
             instrumentation.runOnMainSync { activity.finish(); ViewRootForTest.onViewCreatedCallback = previous }

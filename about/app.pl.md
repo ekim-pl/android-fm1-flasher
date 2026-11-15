@@ -1,4 +1,4 @@
-# FM-1 Flasher
+# FM-1 Flasher 0.10.0
 
 Niezależny menedżer oprogramowania sprzętowego dla **M-VAVE FM-1**. Wymaga Androida 14 lub nowszego, USB Host/OTG, MIDI, kabla do transmisji danych i stabilnego zasilania. Zalecany jest zasilany hub.
 
@@ -24,6 +24,10 @@ W **Ustawienia → Źródła firmware → Kolor źródła** wybierz jeden z ośm
 
 ## Prywatność i licencje
 
-Aplikacja nie wymaga konta i nie zawiera reklam. Standardowe kompilacje nie zawierają SDK analityki. Wersje skonfigurowane z Google Analytics for Firebase domyślnie zbierają statystyki od pierwszego uruchomienia online. Możesz je wyłączyć w każdej chwili w Ustawienia → Statystyki użytkowania. Biblioteka, nazwy urządzeń i historia zadań są przechowywane lokalnie. Serwery katalogów i pobierania otrzymują metadane połączenia. Zobacz [politykę prywatności](../PRIVACY_POLICY.md) i [licencję MIT](../LICENSE.md); firmware i komponenty zewnętrzne mają własne licencje.
+Aplikacja nie wymaga konta i nie zawiera reklam. Wersja F-Droid nie zawiera SDK analityki. Wersja Google Play z Google Analytics for Firebase domyślnie zbiera statystyki od pierwszego uruchomienia online. Możesz je wyłączyć w każdej chwili w Ustawienia → Statystyki użytkowania. Biblioteka, nazwy urządzeń i historia zadań są przechowywane lokalnie. Serwery katalogów i pobierania otrzymują metadane połączenia. Zobacz [politykę prywatności](../PRIVACY_POLICY.md) i [licencję MIT](../LICENSE.md); firmware i komponenty zewnętrzne mają własne licencje.
 
 Warunki opcjonalnego SDK analityki: [informacje Firebase](../third_party/firebase-analytics-NOTICE.md).
+
+Wydawca: **Ekim** · [Kontakt](mailto:ekim.pl@gmail.com) · [Licencje zależności](../third_party/README.md). Aplikacja bezpłatna i otwartoźródłowa.
+
+[CommonMark (BSD-2-Clause)](../third_party/commonmark-LICENSE.txt) · [Android (Apache 2.0)](../third_party/Apache-2.0.txt) · [m-flasher (MIT)](../third_party/m-flasher-LICENSE.txt)

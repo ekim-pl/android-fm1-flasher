@@ -1,51 +1,50 @@
-GitHub Actions on main — 0.9.2
+GitHub Actions — 0.10.0
 
-This is a description of the checked-in workflows, not a request to run or publish them.
-Android application ID: pl.ekim.fm1_flasher.
-Stable 0.9.2 uses the v0.9.2 GitHub tag; Google Play publication is separate.
+TWO DISTRIBUTION BUILD WORKFLOWS
+Both run only on workflow_dispatch. The Android application ID is
+pl.ekim.fm1_flasher. Tags alone do not start a build or publish a release.
 
-ANDROID CI (.github/workflows/android-ci.yml)
-Runs on branch pushes, pull requests and manual dispatch. Uses JDK 17, Android SDK 36
-and Build Tools 35.0.0. Checks generated resource bridges, shared JVM tests, Android
-JVM tests, debug lint and assembleDebug. Uploads APK/reports as android-checks for
-14 days. The platform matrix separately runs explicit instrumentation classes on Android API 34 and 36.
-It does not run a physical FM-1, create a GitHub Release or build Swift.
+F-DROID (.github/workflows/fdroid.yml)
+Always passes -Pfm1Analytics=false. Runs shared/Android tests and release lint,
+then assembles an unsigned release APK. Rejects Firebase and Google Play services
+in the resolved release runtime dependencies. Artifact: fdroid-no-firebase-apk-<run>.
+No Firebase configuration, signing key or store credentials are used.
+This prepares the SDK-free distribution; it does not submit to F-Droid or establish
+repository acceptance. The old publication/fdroid recipe is historical and is not
+used by this workflow. F-Droid repository signing/build integration is separate.
 
-PAGES (.github/workflows/pages.yml)
-Builds documentation and checks links on every branch/PR or manual dispatch.
-Only non-PR runs on the default branch deploy to Pages, including manual runs.
-Other branches build and validate the site without deploying it.
-The current branch's documentation can differ from the public default-branch site.
-See website/pages.md for local commands and output layout.
+GOOGLE PLAY (.github/workflows/google-play.yml)
+Always passes -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production for release
+lint and bundle assembly, and checks that Firebase Analytics is resolved.
+There is no analytics toggle. Builds a signed AAB in the google-play environment.
+Artifact: google-play-firebase-bundle-<run>. The publish input defaults false;
+explicitly selecting it uploads to the internal testing track. No production
+publication occurs in this workflow.
+Required secrets: FIREBASE_PRODUCTION_ANDROID_JSON, ANDROID_KEYSTORE_BASE64,
+ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD.
+GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is needed only for upload.
 
-GOOGLE PLAY RELEASE (.github/workflows/google-play.yml) — ORIGINAL-APP CONFIGURATION
-Triggered by manual dispatch only. The manual publish input defaults
-true. The workflow builds a signed AAB and can upload it to the internal track.
-The package name is pl.ekim.fm1_flasher. Verify signing and store configuration before publishing. Tags do not start the Play workflow. No automatic GitHub Release creation is defined.
+RELEASE FIXTURES (BOTH BUILD WORKFLOWS)
+Configure FM1_FIXTURE_ARCHIVE_URL and FM1_FIXTURE_ARCHIVE_SHA256 as repository
+variables. The pinned archive supplies v15.fwsc, v16.fwsc and catalog.json.
+Missing fixtures or skipped release tests fail the workflow; they are not bypassed.
+Current local tests may skip these external fixtures and are not release approval.
 
-The Gradle FM1_RELEASE_TAG guard expects v<versionName> when that variable is set.
-A future GitHub prerelease needs a deliberately chosen tag/commit and manually or
-separately uploaded, verified assets. Choosing a tag is not sufficient to adapt Play.
-Keep test handoff, owner/hardware acceptance and publication as separate steps.
+LOCAL TEST BUILDS
+F-Droid equivalent:
+  ./gradlew -Pfm1Analytics=false :app:assembleDebug
+Google Play equivalent, using a TEST project (never production in debug):
+  ./gradlew -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=test :app:assembleDebug
+Place test configuration in app/firebase/test/google-services.json (ignored by Git).
+Both debug APKs use the same app ID and debug certificate; install one at a time.
+Store certificates can differ; moving between stores requires compatible signing.
 
-GOOGLE PLAY PRODUCTION (.github/workflows/promote-production.yml)
-Manual dispatch accepts a positive version_code and promotes an internal-track
-bundle to production. It also targets the original pl.ekim.fm1_flasher package.
-It does not build a new bundle.
+OTHER WORKFLOWS
+android-ci.yml: unit tests, SDK-free and Firebase compile/lint checks, APK artifacts
+and Android API 34/36 instrumentation. This is CI, not distribution publication.
+pages.yml: site validation on branches/PRs; deployment from the default branch.
+promote-production.yml: separate manual promotion of an already-tested internal
+versionCode to production; no build. Uses google-play-production and a service account.
 
-SIGNING CONFIGURATION (CODE FACTS)
-Local Gradle release signing reads ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD,
-ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD. Without the key configuration a local
-bundleRelease is unsigned. Keep all keys/passwords outside Git.
-The inherited release workflow uses the google-play environment and
-ANDROID_KEYSTORE_BASE64 plus the password/alias secrets; publication also uses
-GOOGLE_PLAY_SERVICE_ACCOUNT_JSON. The production workflow uses google-play-production
-and that service-account secret. These facts do not establish account access,
-package registration, signing continuity or readiness for a store release.
-
-BEFORE ADAPTING STORE PUBLICATION
-Resolve the intended application ID, store entry, upload certificate and versionCode;
-review both workflow package_name values, the original-app F-Droid recipe, listing
-assets and current privacy/data inventory. Existing screenshots are from earlier UI.
-Complete physical hardware acceptance and the owner's test-build review first.
-This documentation regeneration does not alter workflows, secrets or store settings.
+Build workflows do not establish Play account access, F-Droid acceptance, signing
+continuity or physical FM-1/hub safety. Complete those checks before publication.

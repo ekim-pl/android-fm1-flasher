@@ -1,0 +1,1 @@
+0.10.0: refreshed About, privacy, licenses and documentation. Local firmware library, source colors and sequential installation tasks. Preparation for Google Play.
