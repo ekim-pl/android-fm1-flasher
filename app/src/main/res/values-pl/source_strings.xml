@@ -48,4 +48,15 @@
     <string name="source_chip_blocked">Nieznana zgodność z pamięcią urządzenia. Zwykła instalacja jest zablokowana; wymuszenie wymaga osobnego potwierdzenia ryzyka.</string>
     <string name="source_saved">Zapisano ustawienia źródła. Nowe źródła pozostają wyłączone do ich jawnego włączenia.</string>
     <string name="github_access_hint">Sprawdź adres repozytorium, dostęp konta, ważność i uprawnienia tokenu, zatwierdzenie organizacji lub limity API GitHub.</string>
+    <string name="source_color">Kolor źródła</string>
+    <string name="source_color_auto">Automatyczny</string>
+    <string name="source_color_help">Kolor jest zapisywany na tym urządzeniu i oznacza firmware z tego źródła, także pobrane paczki. Nazwa źródła jest zawsze widoczna.</string>
+    <string name="source_color_teal">Turkusowy</string>
+    <string name="source_color_blue">Niebieski</string>
+    <string name="source_color_purple">Fioletowy</string>
+    <string name="source_color_orange">Pomarańczowy</string>
+    <string name="source_color_red">Czerwony</string>
+    <string name="source_color_pink">Różowy</string>
+    <string name="source_color_olive">Oliwkowy</string>
+    <string name="source_color_slate">Szary</string>
 </resources>

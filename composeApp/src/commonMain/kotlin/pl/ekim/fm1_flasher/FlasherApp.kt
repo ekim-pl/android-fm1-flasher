@@ -152,7 +152,7 @@ fun FlasherApp(backend: AppBackend) {
                                                             val favoriteDescription = text(if (favorite) "remove_favorite_accessibility" else "add_favorite_accessibility", title(entry, language))
                                                             TextButton({ send(AppActionKind.FAVORITE, entry.key) }, enabled = !state.busy, modifier = Modifier.semantics { contentDescription = favoriteDescription }) { Text(if (favorite) "★" else "☆", fontSize = 24.sp) }
                                                         }
-                                                        state.catalog?.source(entry)?.let { Text(it.name, style = MaterialTheme.typography.labelMedium) }
+                                                        SourceBadge(entry, state)
                                                         Text(entry.kinds.joinToString(" · ") { kind -> text(FirmwareCategory.entries.firstOrNull { it.key == kind }?.labelKey ?: "category_other") }, style = MaterialTheme.typography.labelSmall)
                                                         Text(if (entry.stock) text("stock_description") else entry.shortDescription)
                                                         val saved = state.downloads.singleOrNull { it.entry.key == entry.key }
@@ -200,6 +200,7 @@ fun FlasherApp(backend: AppBackend) {
             AppDialog(title(entry, language), { detailId = null }, text("close")) {
                 Cover(entry, state.offline, backend, state.catalog?.source(entry))
                 Text("${entry.author} · ${entry.version}")
+                SourceBadge(entry, state)
                 MarkdownText(if (entry.stock) text("stock_description") else entry.description) { send(AppActionKind.OPEN_LINK, it) }
                 if (retired) Text(text("package_retired"), color = MaterialTheme.colorScheme.error)
                 if (saved != null) Text(text("local_version", saved.entry.version, "${saved.bytes / 1024} KiB"))

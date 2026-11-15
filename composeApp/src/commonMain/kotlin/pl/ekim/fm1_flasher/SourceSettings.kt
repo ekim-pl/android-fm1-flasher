@@ -28,30 +28,38 @@ internal fun SourceSettings(state: AppSnapshot, language: String, backend: AppBa
             SourceEditor(state, language, backend, editor, { id -> adding = false; editorId = id }) { adding = false; editorId = null }
         }
     } else SettingsPage(text("catalog_sources"), text("back"), close, listScroll, state.busy, resolveCoreText(state.status, language)) {
-        Text(text("sources_help"))
+        Text(text(if (state.sourceManagementAvailable) "sources_help" else "source_color_help"))
         if (state.backgroundAvailable) SettingsCard(text("sources_background")) {
             SettingSwitch(text("sources_background"), state.backgroundSync, !state.busy) { send(AppActionKind.BACKGROUND_SYNC, it.toString()) }
             Text(text("sources_background_help"), style = MaterialTheme.typography.bodySmall)
         }
-        state.catalog?.sources.orEmpty().filter { !it.deleted }.forEach { source -> key(source.id) {
+        val sources = state.catalog?.sources.orEmpty().ifEmpty { if (!state.sourceManagementAvailable) listOf(CatalogSource.hub) else emptyList() }
+        sources.filter { !it.deleted }.forEach { source -> key(source.id) {
             SettingsCard(source.name) {
-                SettingSwitch(source.name, source.enabled, !state.busy) { send(AppActionKind.SOURCE_ENABLE, source.id, it.toString()) }
-                Text("${source.provider.id} · ${text(source.authMethod.labelKey)}", style = MaterialTheme.typography.labelMedium)
-                Text(source.url, style = MaterialTheme.typography.bodySmall)
-                if (source.authMethod == HttpAuthMethod.OAUTH2) OutlinedButton({ send(AppActionKind.AUTH_LOGIN, source.id) }, modifier = Modifier.fillMaxWidth(), enabled = !state.busy && !state.offline) { Text(text("oauth_connect")) }
-                Text(text("source_summary", source.entryCount, if (source.checkedAt == 0L) text("source_never") else formatCatalogTime(source.checkedAt)))
-                Text(text("source_next", if (source.nextAttemptAt == 0L) text("source_never") else formatCatalogTime(source.nextAttemptAt)), style = MaterialTheme.typography.bodySmall)
-                val hosts = state.catalog?.knownEntries.orEmpty().filter { it.sourceId == source.id }.flatMap { listOfNotNull(it.directUrl, it.cardUrl) }.map { it.substringAfter("://").substringBefore('/') }.distinct().sorted()
-                Text(text("source_domains", hosts.joinToString(", ").ifEmpty { "—" }), style = MaterialTheme.typography.bodySmall)
-                source.error?.let { Text(text("source_error_retained", source.name, it), color = MaterialTheme.colorScheme.error) }
-                OutlinedButton({ send(AppActionKind.SOURCE_CHECK, source.id) }, modifier = Modifier.fillMaxWidth(), enabled = !state.busy && !state.offline) { Text(text("source_check")) }
-                OutlinedButton({ editorId = source.id }, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(text("source_edit")) }
-                if (!source.builtin) TextButton({ removing = source }, enabled = !state.busy) { Text(text("source_remove")) }
+                SourceColorPicker(source.id, state.sourceColors[source.id], language, !state.busy) {
+                    send(AppActionKind.SOURCE_COLOR, source.id, it?.name.orEmpty())
+                }
+                if (state.sourceManagementAvailable) {
+                    SettingSwitch(source.name, source.enabled, !state.busy) { send(AppActionKind.SOURCE_ENABLE, source.id, it.toString()) }
+                    Text("${source.provider.id} · ${text(source.authMethod.labelKey)}", style = MaterialTheme.typography.labelMedium)
+                    Text(source.url, style = MaterialTheme.typography.bodySmall)
+                    if (source.authMethod == HttpAuthMethod.OAUTH2) OutlinedButton({ send(AppActionKind.AUTH_LOGIN, source.id) }, modifier = Modifier.fillMaxWidth(), enabled = !state.busy && !state.offline) { Text(text("oauth_connect")) }
+                    Text(text("source_summary", source.entryCount, if (source.checkedAt == 0L) text("source_never") else formatCatalogTime(source.checkedAt)))
+                    Text(text("source_next", if (source.nextAttemptAt == 0L) text("source_never") else formatCatalogTime(source.nextAttemptAt)), style = MaterialTheme.typography.bodySmall)
+                    val hosts = state.catalog?.knownEntries.orEmpty().filter { it.sourceId == source.id }.flatMap { listOfNotNull(it.directUrl, it.cardUrl) }.map { it.substringAfter("://").substringBefore('/') }.distinct().sorted()
+                    Text(text("source_domains", hosts.joinToString(", ").ifEmpty { "—" }), style = MaterialTheme.typography.bodySmall)
+                    source.error?.let { Text(text("source_error_retained", source.name, it), color = MaterialTheme.colorScheme.error) }
+                    OutlinedButton({ send(AppActionKind.SOURCE_CHECK, source.id) }, modifier = Modifier.fillMaxWidth(), enabled = !state.busy && !state.offline) { Text(text("source_check")) }
+                    OutlinedButton({ editorId = source.id }, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(text("source_edit")) }
+                    if (!source.builtin) TextButton({ removing = source }, enabled = !state.busy) { Text(text("source_remove")) }
+                }
             }
         } }
-        Button({ adding = true }, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(text("source_add")) }
-        TextButton({ send(AppActionKind.SOURCE_RESTORE) }, enabled = !state.busy) { Text(text("sources_restore")) }
-        Text(text("source_unsigned"), style = MaterialTheme.typography.bodySmall)
+        if (state.sourceManagementAvailable) {
+            Button({ adding = true }, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(text("source_add")) }
+            TextButton({ send(AppActionKind.SOURCE_RESTORE) }, enabled = !state.busy) { Text(text("sources_restore")) }
+            Text(text("source_unsigned"), style = MaterialTheme.typography.bodySmall)
+        }
     }
     removing?.let { source -> AlertDialog(onDismissRequest = { removing = null }, title = { Text(text("source_remove")) }, text = { Text("${source.name}\n\n${text("source_remove_help")}") },
         confirmButton = { TextButton({ send(AppActionKind.SOURCE_REMOVE, source.id); removing = null }, enabled = !state.busy) { Text(text("source_remove")) } },

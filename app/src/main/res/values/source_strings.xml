@@ -48,4 +48,15 @@
     <string name="source_chip_blocked">Chip compatibility is unknown. Normal installation is blocked; forcing requires a separate risk confirmation.</string>
     <string name="source_saved">Source settings saved. New sources remain disabled until explicitly enabled.</string>
     <string name="github_access_hint">Check the repository URL, account access, token expiry and permissions, organization approval, or GitHub API rate limits.</string>
+    <string name="source_color">Source color</string>
+    <string name="source_color_auto">Automatic</string>
+    <string name="source_color_help">The color is stored on this device and marks firmware from this source, including downloaded packages. The source name is always shown.</string>
+    <string name="source_color_teal">Teal</string>
+    <string name="source_color_blue">Blue</string>
+    <string name="source_color_purple">Purple</string>
+    <string name="source_color_orange">Orange</string>
+    <string name="source_color_red">Red</string>
+    <string name="source_color_pink">Pink</string>
+    <string name="source_color_olive">Olive</string>
+    <string name="source_color_slate">Slate</string>
 </resources>

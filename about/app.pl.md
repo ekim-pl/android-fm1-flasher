@@ -20,6 +20,8 @@ Firmware Hub jest domyślnie włączony; inne źródła skonfigurujesz w [Ustawi
 
 Funkcje eksperymentalne obejmują rejestrator MIDI i oddzielne narzędzia odzyskiwania. Fizyczne odzyskiwanie ROM nie zostało zweryfikowane i nie jest automatyczną metodą po nieudanej aktualizacji.
 
+W **Ustawienia → Źródła firmware → Kolor źródła** wybierz jeden z ośmiu kolorów lub Automatyczny dla każdego źródła. Kropka przy nazwie źródła oznacza jego firmware w bibliotece, pobranych paczkach i szczegółach. Kolory są zapisywane na tym urządzeniu i można je zmieniać offline.
+
 ## Prywatność i licencje
 
 Aplikacja nie wymaga konta i nie zawiera reklam. Standardowe kompilacje nie zawierają SDK analityki. Wersje skonfigurowane z Google Analytics for Firebase domyślnie zbierają statystyki od pierwszego uruchomienia online. Możesz je wyłączyć w każdej chwili w Ustawienia → Statystyki użytkowania. Biblioteka, nazwy urządzeń i historia zadań są przechowywane lokalnie. Serwery katalogów i pobierania otrzymują metadane połączenia. Zobacz [politykę prywatności](../PRIVACY_POLICY.md) i [licencję MIT](../LICENSE.md); firmware i komponenty zewnętrzne mają własne licencje.

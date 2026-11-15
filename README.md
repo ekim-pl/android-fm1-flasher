@@ -52,6 +52,8 @@ Open **Settings → Firmware sources**:
 
 Offline mode suppresses catalog, package and artwork network requests and pauses background checking. Saved packages can be flashed without a network request. Offline use cannot discover a withdrawal that has not yet reached the local catalog. Catalog declarations and hashes do not by themselves establish publisher authenticity.
 
+In **Settings → Firmware sources → Source color**, choose one of eight colors or Automatic for each source. The dot beside the source name marks its firmware in the library, downloaded packages and package details. Colors are stored on this device and can be changed offline.
+
 ## Catalog providers and authentication
 
 Android has adapters behind the shared `CatalogProvider` interface:

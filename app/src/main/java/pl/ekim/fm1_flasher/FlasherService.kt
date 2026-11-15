@@ -20,6 +20,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 data class UiState(
+    val sourceColors: Map<String, SourceColor> = emptyMap(),
     val fleet: List<FleetDevice> = emptyList(), val jobs: List<FlashJob> = emptyList(),
     val undoAvailable: Boolean = false, val queueRunning: Boolean = false, val queueStopping: Boolean = false,
     val browse: Map<String, String>? = null,
@@ -50,6 +51,7 @@ data class UiState(
 
 class FlasherService : Service() {
     inner class LocalBinder : Binder() { val service get() = this@FlasherService }
+    private val sourceColors by lazy { SourceColors(AndroidStorage(filesDir)) }
     private val analytics get() = AndroidAnalytics.get(this)
     private val binder = LocalBinder()
     private val main = Handler(Looper.getMainLooper())
@@ -366,7 +368,7 @@ class FlasherService : Service() {
         val settings = library.settings()
         analytics.setOffline(settings.offline)
         val downloads = library.list()
-        update { it.copy(downloads = downloads, favorites = settings.favorites, offline = settings.offline,
+        update { it.copy(sourceColors = sourceColors.load(), downloads = downloads, favorites = settings.favorites, offline = settings.offline,
             catalog = repository.cached(), backgroundSync = database.setting("background") == "true", browse = database.browseSettings()) }
         if (library.problems.isNotEmpty()) status(AppText.Joined(library.problems.toList()))
         if (library.settingsRepaired) status(msg(R.string.settings_repaired))
@@ -416,6 +418,11 @@ class FlasherService : Service() {
         CatalogSyncWorker.schedule(this, enabled && !library.settings().offline)
     }
 
+    fun setSourceColor(id: String, color: SourceColor?) = libraryTask {
+        check(!database.source(id).deleted)
+        sourceColors.set(id, color)
+    }
+
     fun setSourceEnabled(id: String, enabled: Boolean) = libraryTask {
         database.setEnabled(id, enabled)
         if (enabled && !library.settings().offline && hasNetwork()) trackedCatalog(sourceId = id)
@@ -443,7 +450,7 @@ class FlasherService : Service() {
     }
 
     fun removeSource(id: String) = libraryTask { database.removeSource(id); credentials.remove(id); publishLibrary(); restoreSelection() }
-    fun restoreSources() = libraryTask { database.restoreDefaults(); listOf(CatalogSource.HUB, "awesome-fm1").forEach(credentials::remove); refreshWhenIdle = true }
+    fun restoreSources() = libraryTask { database.restoreDefaults(); listOf(CatalogSource.HUB, "awesome-fm1").forEach { credentials.remove(it); sourceColors.set(it, null) }; refreshWhenIdle = true }
     fun configureSource(id: String?, name: String, url: String, hours: Int, packages: Set<String>, artwork: Set<String>,
                         checkNow: Boolean, provider: CatalogProviderType? = null, authentication: HttpCredentials? = null, packageChips: Map<String, String>? = null,
                         finished: (String?, AppText?) -> Unit) {

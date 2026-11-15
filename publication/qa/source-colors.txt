@@ -1,0 +1,31 @@
+Per-source firmware colors — local development verification
+Base: bda15d9 (0.9.5-experimental.29). This feature is not published to GitHub Releases.
+
+Settings → Firmware sources → Source color offers 8 named colors plus Automatic.
+The source name and colored marker appear on firmware cards (including downloaded
+packages) and in package details. Choice is local, stored in source-colors.json.
+Built-in sources have distinct defaults; other source IDs have stable automatic colors.
+Source removal retains existing color choices for local provenance. Restoring built-in
+source defaults restores their automatic colors. Color changes do not reconfigure
+providers, credentials, catalog freshness or package compatibility.
+
+Shared JVM tests: 76, no failures/errors/skips.
+Android JVM tests: 140, no failures/errors, 4 existing external-fixture skips.
+Includes independent persistence/reset, invalid stored colors, write failure and portable
+backend offline persistence without provider requests.
+SDK-free debug lint, APK and instrumentation-APK compilation passed.
+Firebase TEST debug lint/APK build passed. Resource bridges and diff checks passed.
+Public documentation rebuilt; 48 HTML pages passed language/link checks.
+
+Android 16 emulator FM1_Flasher_API_36 (emulator-5556), driven through agent-device:
+- Installed the development SDK-free APK as an update.
+- Selected Purple for The Firmware Hub; selection and JSON persistence confirmed.
+- Opened Library: purple marker visible beside The Firmware Hub on firmware cards.
+- Relaunched the app and reopened Library: purple marker retained.
+Screenshot: dist/source-colors/qa/catalog-color-after-restart.png (local, ignored).
+The test Firebase APK is dist/source-colors/FM1-Flasher-source-colors-firebase-test.apk.
+It is a local development build, not a replacement asset for the published build 29.
+
+The shared UI and preference store also support the portable/iOS backend's current
+Firmware Hub source. Native iOS compilation/runtime was not verified (requires macOS).
+No physical firmware flashing was performed or needed for this presentation change.

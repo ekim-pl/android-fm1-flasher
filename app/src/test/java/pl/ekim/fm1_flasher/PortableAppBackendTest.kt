@@ -50,6 +50,20 @@ class PortableAppBackendTest {
         override fun openLink(url: String) = Unit
         override fun exportText(name: String, text: String) = Unit
     }
+    @Test fun sourceColorPersistsOfflineWithoutProviderRequests() = runBlocking {
+        val storage = Storage(); val midi = Midi(); var requests = 0
+        val http = object : HttpClient { override fun get(url: String, limit: Int, artworkOnly: Boolean): ByteArray { requests++; error("Network must not be used") } }
+        FirmwareRepository(storage, http, ::epochMillis).saveSettings(LibrarySettings(offline = true))
+        val backend = PortableAppBackend(midi, midi, storage, http, Host())
+        suspend fun idle(instance: PortableAppBackend) = withTimeout(5000) { instance.state.first { it.initialized && !it.busy } }
+        idle(backend); assertFalse(backend.state.value.sourceManagementAvailable)
+        backend.perform(AppAction(AppActionKind.SOURCE_COLOR, CatalogSource.HUB, "BLUE")); idle(backend)
+        assertEquals(SourceColor.BLUE, backend.state.value.sourceColors[CatalogSource.HUB])
+        val restored = PortableAppBackend(midi, midi, storage, http, Host()); idle(restored)
+        assertEquals(SourceColor.BLUE, restored.state.value.sourceColors[CatalogSource.HUB])
+        restored.perform(AppAction(AppActionKind.SOURCE_COLOR, CatalogSource.HUB)); idle(restored)
+        assertTrue(restored.state.value.sourceColors.isEmpty()); assertEquals(0, requests)
+    }
     @Test fun offlineFullFlashRequiresBothExplicitReconnectsAndPersistsConfirmedJournal() = fullFlash("new", false)
     @Test fun unknownPackageRequiresExplicitForceAndStillVerifiesBothReconnects() = fullFlash("unknown", true)
     private fun fullFlash(chip: String, forceUnknown: Boolean) = runBlocking {

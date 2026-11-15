@@ -16,7 +16,8 @@ interface AppHost {
 /** Native hosts provide I/O; catalog, library policy and application orchestration remain common. */
 class PortableAppBackend(private val midi: ProbeBackend, private val monitor: PassiveMidiBackend,
     private val storage: AppStorage, private val http: HttpClient, private val host: AppHost, analyticsSink: AnalyticsSink = NoAnalytics) : AppBackend {
-    override val state = MutableStateFlow(AppSnapshot(language = host.systemLanguage.substringBefore('-').let { if (it in listOf("pl", "zh")) it else "en" }))
+    override val state = MutableStateFlow(AppSnapshot(sourceManagementAvailable = false, language = host.systemLanguage.substringBefore('-').let { if (it in listOf("pl", "zh")) it else "en" }))
+    private val sourceColors = SourceColors(storage)
     private val analytics = AnalyticsController(analyticsSink, storage)
     override fun screen(screen: AnalyticsScreen) = analytics.screen(screen)
     private val operationLog = OperationLog(storage, ::epochMillis)
@@ -82,7 +83,7 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
     private fun publishLibrary() {
         val prefs = repository.settings()
         analytics.setOffline(prefs.offline)
-        state.update { it.copy(downloads = repository.list(), favorites = prefs.favorites.map { id -> if (id.startsWith("firmwarehub/")) id else CatalogSource.key(CatalogSource.HUB, id) }.toSet(), offline = prefs.offline) }
+        state.update { it.copy(sourceColors = sourceColors.load(), downloads = repository.list(), favorites = prefs.favorites.map { id -> if (id.startsWith("firmwarehub/")) id else CatalogSource.key(CatalogSource.HUB, id) }.toSet(), offline = prefs.offline) }
         if (repository.problems.isNotEmpty()) report(AppText.Joined(repository.problems.toList(), "\n"))
         if (repository.settingsRepaired && !settingsRepairReported) { settingsRepairReported = true; report(msg("settings_repaired")) }
     }
@@ -144,6 +145,10 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
     private fun performBlocking(action: AppAction) {
         when(action.kind) {
             AppActionKind.AUTH_LOGIN, AppActionKind.SOURCE_SAVE, AppActionKind.SOURCE_ENABLE, AppActionKind.SOURCE_CHECK, AppActionKind.SOURCE_REMOVE, AppActionKind.SOURCE_RESTORE, AppActionKind.BACKGROUND_SYNC -> failed(msg("not_applicable"))
+            AppActionKind.SOURCE_COLOR -> {
+                check(action.id == CatalogSource.HUB || state.value.catalog?.sources?.any { it.id == action.id && !it.deleted } == true)
+                sourceColors.set(action.id, action.value.takeIf(String::isNotEmpty)?.let(SourceColor::valueOf))
+            }
             AppActionKind.CLEAR_DOWNLOADS -> { repository.clearDownloads(); state.update { it.copy(ready = null) }; report(msg("downloads_cleared")) }
             AppActionKind.PORTS_REFRESH -> refreshPorts()
             AppActionKind.REFRESH -> {

@@ -48,4 +48,15 @@
     <string name="source_chip_blocked">闪存兼容性未知。正常安装被阻止；强制安装需要单独确认风险。</string>
     <string name="source_saved">来源设置已保存。新来源在明确启用前保持禁用。</string>
     <string name="github_access_hint">请检查仓库地址、账户访问权、令牌有效期和权限、组织批准以及 GitHub API 速率限制。</string>
+    <string name="source_color">来源颜色</string>
+    <string name="source_color_auto">自动</string>
+    <string name="source_color_help">颜色保存在本设备，用于标记此来源的固件，包括已下载的固件包。始终显示来源名称。</string>
+    <string name="source_color_teal">青色</string>
+    <string name="source_color_blue">蓝色</string>
+    <string name="source_color_purple">紫色</string>
+    <string name="source_color_orange">橙色</string>
+    <string name="source_color_red">红色</string>
+    <string name="source_color_pink">粉色</string>
+    <string name="source_color_olive">橄榄色</string>
+    <string name="source_color_slate">灰色</string>
 </resources>

@@ -56,7 +56,7 @@ import androidx.compose.ui.unit.dp
         if (state.analyticsAvailable) AnalyticsSettingsCard(state, language, send, privacy)
         SettingsCard(t("settings_library")) {
             SettingSwitch(t("offline_mode"), state.offline, !state.busy) { send(AppAction(AppActionKind.OFFLINE, it.toString())) }
-            if (state.catalog?.sources?.isNotEmpty() == true) OutlinedButton(sources, Modifier.fillMaxWidth()) { Text(t("catalog_sources")) }
+            if (!state.sourceManagementAvailable || state.catalog?.sources?.isNotEmpty() == true) OutlinedButton(sources, Modifier.fillMaxWidth()) { Text(t("catalog_sources")) }
             OutlinedButton({ confirm(AppAction(AppActionKind.CLEAR_DOWNLOADS), msg("downloads_clear_confirm", state.downloads.size)) },
                 modifier = Modifier.fillMaxWidth(), enabled = !state.busy && !pinned) { Text(t("downloads_clear")) }
             if (pinned) Text(t("fleet_package_pinned"), style = MaterialTheme.typography.bodySmall)

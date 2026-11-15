@@ -20,6 +20,8 @@ Firmware Hub is enabled by default; other sources can be configured in [Settings
 
 Experimental features include a MIDI logger and separate recovery tools. Physical ROM recovery remains unverified; it is not an automatic fallback for an unsuccessful update.
 
+In **Settings → Firmware sources → Source color**, choose one of eight colors or Automatic for each source. The dot beside the source name marks its firmware in the library, downloaded packages and package details. Colors are stored on this device and can be changed offline.
+
 ## Privacy and licenses
 
 The app requires no account and contains no advertising. Standard builds contain no analytics SDK. Builds configured with Google Analytics for Firebase collect usage statistics by default from the first online launch. You can turn statistics off at any time in Settings → Usage statistics. Library data, device names and task history are stored locally. Catalog and download servers receive connection metadata. See the [privacy policy](../PRIVACY_POLICY.md) and [MIT license](../LICENSE.md); firmware and third-party components retain their own licenses.

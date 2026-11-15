@@ -66,7 +66,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     private fun port(device: UsbMidi) = AppPort("${device.info.id}:${device.usb.deviceName}:${device.generation}", device.label)
     override fun attachBaseContext(base: Context) { super.attachBaseContext(AppLanguage.wrap(base)) }
     private val observer: (UiState) -> Unit = { next ->
-        state.value = state.value.copy(analyticsAvailable = AndroidAnalytics.get(this).available, analyticsPreference = AndroidAnalytics.get(this).preference, undoAvailable = next.undoAvailable, fleetAvailable = true, fleet = next.fleet, jobs = next.jobs,
+        state.value = state.value.copy(sourceColors = next.sourceColors, analyticsAvailable = AndroidAnalytics.get(this).available, analyticsPreference = AndroidAnalytics.get(this).preference, undoAvailable = next.undoAvailable, fleetAvailable = true, fleet = next.fleet, jobs = next.jobs,
             queueRunning = next.queueRunning, queueStopping = next.queueStopping, catalog = next.catalog, downloads = next.downloads, favorites = next.favorites,
             offline = next.offline, backgroundSync = next.backgroundSync, backgroundAvailable = true, busy = next.busy, flashing = next.flashing, experimental = next.experimental,
             ports = next.devices.map(::port), target = next.target?.let(::port), identity = next.identity, chip = next.chip, chipDetection = next.chipDetection,
@@ -203,6 +203,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
                 foreground(Intent(this, FlasherService::class.java).setAction("QUEUE").putExtra("plan", action.id))
             }
             AppActionKind.BACKGROUND_SYNC -> active.setBackgroundSync(action.id.toBooleanStrict())
+            AppActionKind.SOURCE_COLOR -> active.setSourceColor(action.id, action.value.takeIf(String::isNotEmpty)?.let(SourceColor::valueOf))
             AppActionKind.SOURCE_ENABLE -> active.setSourceEnabled(action.id, action.value.toBooleanStrict())
             AppActionKind.SOURCE_CHECK -> active.checkSource(action.id)
             AppActionKind.SOURCE_REMOVE -> active.removeSource(action.id)
