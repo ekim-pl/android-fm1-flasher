@@ -1,5 +1,5 @@
 Multiplatform FM-1 Flasher — publication documentation
-Snapshot: 0.9.1 / Android versionCode 22, task/multiplatform-rework.
+Snapshot: 0.9.2 / Android versionCode 23, task/multiplatform-rework.
 
 CURRENT APPLICATION
 Android ID: pl.ekim.multiplatform_fm1_flasher (not the original pl.ekim.fm1_flasher).
@@ -9,9 +9,9 @@ Languages: English, Polish, Simplified Chinese. Publisher/contact: ekim.pl@gmail
 The Android workspace is Devices / Library / Tasks with a persistent sequential queue.
 
 RELEASE STATUS
-0.9.1 build 22 is an experimental GitHub Release with regenerated documentation.
-qa/0.9.1-test22.txt identifies that exact APK, checksum, signature and test scope.
-The local dist/0.9.1-test directory is ignored by Git and is not part of a fresh clone.
+0.9.2 build 23 is a prepared experimental test APK with regenerated documentation; no GitHub Release is asserted.
+qa/0.9.2-test23.txt identifies that exact APK, checksum, signature and test scope.
+The local dist/0.9.2-test23 directory is ignored by Git and is not part of a fresh clone.
 github-release.txt is a draft description, not evidence that a release exists.
 Documentation changes do not modify the previously supplied APK. A rebuilt APK needs
 its own checksum and packaging verification before publication; preserve old QA records.
@@ -37,7 +37,7 @@ play-console.json is a current factual draft, not a submitted or approved declar
 
 HISTORICAL ASSETS AND WORKFLOWS
 Existing store screenshots and graphics document earlier UI. They do not demonstrate
-the 0.9.1 fleet workflow; capture fresh images before a store submission. The graphics
+the 0.9.2 fleet workflow; capture fresh images before a store submission. The graphics
 script only frames/generates assets and does not refresh live screenshots.
 validation.json records the original app's earlier build and is explicitly historical.
 fdroid/pl.ekim.fm1_flasher.yml is an archival original-app recipe, not a recipe for this fork.

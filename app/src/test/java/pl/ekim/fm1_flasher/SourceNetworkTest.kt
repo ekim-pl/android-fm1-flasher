@@ -17,6 +17,22 @@ class SourceNetworkTest {
         }.build()
     private fun client(action: (Request) -> Response) = OkHttpClient.Builder().addInterceptor { action(it.request()) }.build()
 
+    @Test fun authenticationNeverFollowsAnAllowedCrossOriginRedirect() {
+        val seen = mutableListOf<Request>()
+        val transport = client { request ->
+            seen += request
+            if (seen.size == 1) reply(request, 302, headers = mapOf("Location" to "https://cdn.example/file")) else reply(request)
+        }
+        SourceNetwork.requestWith(transport, url, 100, { true }, authentication = { mapOf("Authorization" to "Bearer private-token", "X-API-Key" to "private-key") })
+        assertEquals("Bearer private-token", seen.first().header("Authorization"))
+        assertNull(seen.last().header("Authorization")); assertNull(seen.last().header("X-API-Key"))
+    }
+    @Test fun tokenPostRedirectsAreRejectedAndNeverReplayClientSecrets() {
+        var calls = 0
+        val transport = client { request -> calls++; assertEquals("POST", request.method); reply(request, 302, headers = mapOf("Location" to "https://evil.example/token")) }
+        assertThrows(IllegalStateException::class.java) { SourceNetwork.requestWith(transport, url, 100, { true }, form = mapOf("client_secret" to "secret")) }
+        assertEquals(1, calls)
+    }
     @Test fun conditionalHeadersAndStatusesSurviveTheTransport() {
         val transport = client { request ->
             assertEquals("version1", request.header("If-None-Match"))

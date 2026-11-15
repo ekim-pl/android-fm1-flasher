@@ -32,13 +32,14 @@ data class AppSnapshot(
 enum class AppActionKind {
     LOG_EXPORT, LOG_CLEAR, CLEAR_DOWNLOADS,
     UNDO_REMOVE, DEVICE_ALIAS, DEVICE_CHIP, DEVICE_PAIR, QUEUE_ADD, QUEUE_REMOVE, QUEUE_START, QUEUE_STOP,
-    SOURCE_ENABLE, SOURCE_CHECK, SOURCE_REMOVE, SOURCE_RESTORE, SOURCE_SAVE, BACKGROUND_SYNC,
+    AUTH_LOGIN, SOURCE_ENABLE, SOURCE_CHECK, SOURCE_REMOVE, SOURCE_RESTORE, SOURCE_SAVE, BACKGROUND_SYNC,
     PORTS_REFRESH, REFRESH, OFFLINE, FAVORITE, DOWNLOAD, USE, REMOVE, UPDATE_ALL, CONNECT, CHIP, FLASH, RECONNECT,
     EXPERIMENTAL, LOGGER_PORT, LOGGER_TOGGLE, LOGGER_CLEAR, LOGGER_EXPORT, LOGGER_REFRESH,
     DETECT, RECOVERY_ENTER, RECOVERY_BACKUP, RECOVERY_PREPARE, RECOVERY_WRITE, RECOVERY_EXPORT,
     LANGUAGE, APPEARANCE, OPEN_LINK,
 }
-data class SourceConfiguration(val name: String, val url: String, val hours: Int, val packages: Set<String>, val artwork: Set<String>)
+data class SourceConfiguration(val name: String, val url: String, val hours: Int, val packages: Set<String>, val artwork: Set<String>,
+    val provider: CatalogProviderType? = null, val authentication: HttpCredentials? = null, val packageChips: Map<String, String> = emptyMap())
 data class AppAction(val kind: AppActionKind, val id: String = "", val value: String = "", val source: SourceConfiguration? = null)
 interface AppBackend {
     val state: StateFlow<AppSnapshot>

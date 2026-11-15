@@ -27,12 +27,15 @@ fun FlasherApp(backend: AppBackend) {
     fun text(key: String, vararg arguments: Any) = resolveCoreText(msg(key, *arguments), language)
     fun send(kind: AppActionKind, id: String = "", value: String = "") = backend.perform(AppAction(kind, id, value))
     var tabName by rememberSaveable { mutableStateOf(LibraryTab.CATALOG.name) }
+    var workspaceInitialized by rememberSaveable { mutableStateOf(false) }
     val tab = runCatching { LibraryTab.valueOf(tabName) }.getOrDefault(LibraryTab.CATALOG)
     var settings by rememberSaveable { mutableStateOf(false) }
     var detailId by rememberSaveable { mutableStateOf<String?>(null) }
     var dialog by remember { mutableStateOf<Pair<String, AppText>?>(null) }
     var confirmation by remember { mutableStateOf<Pair<AppAction, AppText>?>(null) }
     var sources by rememberSaveable { mutableStateOf(false) }
+    var settingsPrivacy by rememberSaveable { mutableStateOf(false) }
+    val settingsScroll = rememberScrollState()
     var recovery by rememberSaveable { mutableStateOf(false) }
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
     var filtersExpanded by rememberSaveable { mutableStateOf(false) }
@@ -57,14 +60,25 @@ fun FlasherApp(backend: AppBackend) {
     LaunchedEffect(filters) { backend.saveBrowse(filters) }
     LaunchedEffect(state.experimental) { if (!state.experimental && tab == LibraryTab.LOGGER) tabName = LibraryTab.CATALOG.name }
     val dark = state.appearance == "DARK" || (state.appearance == "SYSTEM" && isSystemInDarkTheme())
-    LaunchedEffect(state.fleetAvailable) { if (state.fleetAvailable) tabName = LibraryTab.DEVICES.name }
+    LaunchedEffect(state.fleetAvailable) {
+        if (state.fleetAvailable && !workspaceInitialized) { tabName = LibraryTab.DEVICES.name; workspaceInitialized = true }
+    }
     val tabs = if (state.fleetAvailable) listOf(LibraryTab.DEVICES, LibraryTab.CATALOG, LibraryTab.TASKS)
         else LibraryTab.entries.filter { it !in listOf(LibraryTab.DEVICES, LibraryTab.TASKS) && (it != LibraryTab.LOGGER || state.experimental) }
     MaterialTheme(colorScheme = if (dark) darkColorScheme(primary = Color(0xFF64D8CB), secondary = Color(0xFFA3CCC3), secondaryContainer = Color(0xFF284E48), onSecondaryContainer = Color(0xFFC5EDE4), background = Color(0xFF10161D), surface = Color(0xFF151D26), surfaceContainer = Color(0xFF202B36)) else lightColorScheme(primary = Color(0xFF006B61), secondary = Color(0xFF3F665D), secondaryContainer = Color(0xFFD0E8E1), onSecondaryContainer = Color(0xFF12372F), background = Color(0xFFF3F6F8), surface = Color(0xFFFAFCFE), surfaceContainer = Color(0xFFE8EFF2))) {
         Surface(Modifier.fillMaxSize()) {
             BoxWithConstraints(Modifier.safeDrawingPadding()) {
                 val wide = maxWidth >= 600.dp
-                Column {
+                when {
+                    sources -> SourceSettings(state, language, backend) { sources = false }
+                    settingsPrivacy -> SettingsPage(text("privacy_title"), text("back"), { settingsPrivacy = false }) {
+                        Text(text("privacy_body"))
+                    }
+                    settings -> SettingsScreen(state, language, settingsScroll, backend::perform,
+                        { settings = false }, { sources = true }, { settingsPrivacy = true },
+                        { action, message -> confirmation = action to message },
+                        { destination -> settings = false; tabName = destination.name })
+                    else -> Column {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(text("app_name"), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                         TextButton(onClick = { settings = true }) { Text(text("settings")) }
@@ -150,7 +164,7 @@ fun FlasherApp(backend: AppBackend) {
                                 LibraryTab.FLASHER -> FlasherScreen(state, language, { send(it.kind, it.id, it.value) }, { action, message -> confirmation = action to message }, { recovery = true }, { dialog = text("app_log") to AppText.Joined(state.logs, "\n\n") })
                                 LibraryTab.LOGGER -> LoggerScreen(state, language, backend)
                                 LibraryTab.ABOUT -> AboutScreen(
-                                    backend.document(text("about_document")), text("app_name"), text("about_version", "0.9.1"),
+                                    backend.document(text("about_document")), text("app_name"), text("about_version", "0.9.2"),
                                     if (!state.usbRecovery) text("ios_platform_limits") else null,
                                     text("privacy_title"), text("about_privacy_summary"), text("about_privacy_action"),
                                     { dialog = text("privacy_title") to msg("privacy_body") }, ::openDocumentOrLink)
@@ -161,6 +175,7 @@ fun FlasherApp(backend: AppBackend) {
                         tabs.forEach { item -> NavigationBarItem(selected = tab == item, onClick = { focus.clearFocus(); tabName = item.name },
                             icon = { Text(item.icon) }, label = { Text(text(if (state.fleetAvailable && item == LibraryTab.CATALOG) "fleet_library" else item.labelKey), fontSize = 10.sp, maxLines = 1) }) }
                     }
+                }
                 }
             }
         }
@@ -185,34 +200,6 @@ fun FlasherApp(backend: AppBackend) {
                 Text(text("package_technical", entry.version, entry.product, text(when(entry.chip) { "new" -> "chip_both"; "old" -> "chip_older_only"; else -> "chip_unconfirmed" }), entry.sha256), style = MaterialTheme.typography.bodySmall)
             }
         }
-        if (settings) AppDialog(text("settings"), { settings = false }, text("close")) {
-            if (state.fleetAvailable) {
-                TextButton({ settings = false; tabName = LibraryTab.ABOUT.name }) { Text(text("tab_about")) }
-                if (state.experimental) {
-                    TextButton({ settings = false; tabName = LibraryTab.LOGGER.name }) { Text(text("tab_logger")) }
-                    TextButton({ settings = false; tabName = LibraryTab.FLASHER.name }) { Text(text("device_tools")) }
-                }
-            }
-            if (state.catalog?.sources?.isNotEmpty() == true) TextButton({ settings = false; sources = true }) { Text(text("catalog_sources")) }
-            Choice(text("language_title"), when(state.language) { "pl" -> "Polski"; "zh" -> "简体中文"; else -> "English" }, listOf("pl" to "Polski", "en" to "English", "zh" to "简体中文"), { send(AppActionKind.LANGUAGE, it) })
-            Choice(text("appearance_title"), text(when(state.appearance) { "LIGHT" -> "theme_light"; "DARK" -> "theme_dark"; else -> "system_default" }), listOf("SYSTEM" to text("system_default"), "LIGHT" to text("theme_light"), "DARK" to text("theme_dark")), { send(AppActionKind.APPEARANCE, it) })
-            Row { Checkbox(state.offline, { send(AppActionKind.OFFLINE, it.toString()) }, enabled = !state.busy, modifier = Modifier.semantics { contentDescription = text("offline_mode") }); Text(text("offline_mode"), Modifier.padding(top = 12.dp)) }
-            Row { Checkbox(state.experimental, { send(AppActionKind.EXPERIMENTAL, it.toString()) }, enabled = !state.busy, modifier = Modifier.semantics { contentDescription = text("experimental_features") }); Text(text("experimental_features"), Modifier.padding(top = 12.dp)) }
-            Text(text("experimental_help"), style = MaterialTheme.typography.bodySmall)
-            if (state.experimental) {
-                HorizontalDivider()
-                Text(text("operation_log_title"), style = MaterialTheme.typography.titleMedium)
-                Text(text("operation_log_help"), style = MaterialTheme.typography.bodySmall)
-                TextButton({ send(AppActionKind.LOG_EXPORT) }, enabled = !state.busy) { Text(text("operation_log_export")) }
-                TextButton({ confirmation = AppAction(AppActionKind.LOG_CLEAR) to msg("operation_log_clear_confirm") }, enabled = !state.busy) { Text(text("operation_log_clear")) }
-            }
-            HorizontalDivider()
-            TextButton({ confirmation = AppAction(AppActionKind.CLEAR_DOWNLOADS) to msg("downloads_clear_confirm", state.downloads.size) },
-                enabled = !state.busy && state.jobs.none { it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) }) { Text(text("downloads_clear")) }
-            if (state.jobs.any { it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) }) Text(text("fleet_package_pinned"), style = MaterialTheme.typography.bodySmall)
-            TextButton({ dialog = text("privacy_title") to msg("privacy_body") }) { Text(text("privacy_title")) }
-        }
-        if (sources) SourceSettings(state, language, backend) { sources = false }
         if (recovery) AppDialog(text("recovery_title"), { recovery = false }, text("close")) {
             Text(text("recovery_help"))
             if (state.usbRecovery && state.experimental) {
@@ -317,6 +304,7 @@ private fun title(entry: CatalogEntry, language: String) = if (entry.stock) reso
 
 @Composable private fun Cover(entry: CatalogEntry, offline: Boolean, backend: AppBackend, source: CatalogSource?) {
     val image by produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, entry.cardUrl, offline, source) {
+        value = null
         try { value = backend.artwork(entry) } catch (cancelled: CancellationException) { throw cancelled } catch (_: Exception) { value = null }
     }
     val bitmap = image

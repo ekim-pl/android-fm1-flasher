@@ -9,7 +9,11 @@ class OperationLog(private val storage: AppStorage, private val clock: () -> Lon
     private fun loaded(): List<String> = lines ?: storage.read(PATH, LIMIT)?.decodeToString()?.lineSequence()
         ?.filter { it.isNotBlank() }?.toList().orEmpty().also { lines = it }
     fun append(level: String, event: String, message: String = "") {
-        val clean = message.replace(Regex("(https?://[^\\s?#]+)[?#][^\\s]*"), "$1[redacted]").take(2048)
+        val clean = message
+            .replace(Regex("([A-Za-z][A-Za-z0-9+.-]*://[^\\s?#]+)[?#][^\\s]*"), "$1[redacted]")
+            .replace(Regex("(?i)(authorization\\s*[:=]\\s*)[^\\r\\n]+"), "$1[redacted]")
+            .replace(Regex("(?i)(\"?(?:access_token|refresh_token|client_secret|password)\"?\\s*[:=]\\s*)(\"[^\"]*\"|[^\\s,}]+)"), "$1[redacted]")
+            .take(2048)
         val line = buildJsonObject { put("timeEpochMs", clock()); put("level", level); put("event", event.take(80)); put("message", clean) }.toString()
         var next = loaded() + line
         var bytes = next.sumOf { it.encodeToByteArray().size + 1 }

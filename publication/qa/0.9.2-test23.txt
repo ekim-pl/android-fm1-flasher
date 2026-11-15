@@ -1,0 +1,54 @@
+Multiplatform FM-1 Flasher 0.9.2 prerelease test — Android build 23
+Date: 2026-11-15
+Branch: task/multiplatform-rework
+Status: prepared test APK; no GitHub Release or Pages deployment asserted.
+Application ID: pl.ekim.multiplatform_fm1_flasher
+Android 14+ (minSdk 34), target/compile SDK 36
+APK: Multiplatform-FM1-Flasher-0.9.2-23-debug.apk
+Bytes: 33784233
+SHA-256: df9ece774681045d4f95c6b164af180a322f756635bb8e6386ff7f628a70c074
+Debug signing certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
+Same certificate as previous multiplatform builds; install as update to preserve data.
+
+Changes:
+Full-screen settings, source editor, per-package compatibility and settings privacy page.
+EN/PL/zh-Hans; hierarchical Back; nonsecret draft/tab restoration after Activity recreation.
+Shared CatalogProvider abstraction; Android adapters thefirmwarehub, awesome-fm1,
+repo-url (GitHub releases and FWSC assets), pkg-url (direct package), legacy catalog-json.
+SHA-bound manual compatibility; unknown compatibility prevents installation.
+HTTP Basic/Bearer/API-key headers; OAuth2 S256 PKCE and Client Credentials.
+Encrypted Android Keystore credential storage, token refresh, state/replay checks,
+client_secret_basic/post; origin-restricted headers and no token POST redirects.
+Serialized refresh/CAS prevents late token writes after credential replacement/deletion.
+One Android operation-log owner for foreground and background checks.
+Private artwork uses source authentication; cache invalidated on account changes.
+Updated README, implementation map, privacy, About and website EN/PL/zh-Hans sources.
+
+Verification:
+Shared JVM: 62 passed, 0 skipped/failures.
+Android JVM: 129 passed, 4 skipped external-fixture tests, 0 failures.
+Total: 191 passed unit tests; 4 skipped.
+Dedicated Multiplatform_FM1_API_36 emulator, Android 16: 44 instrumentation tests passed.
+CatalogDatabaseTest 22; SourceAuthenticationTest 6; SettingsUiTest 2;
+FleetUiTest 3; OperationLogServiceTest 2; ExperimentalFeaturesTest 1;
+BackgroundCatalogTest 1; FirmwareSelectionTest 1; UsbPermissionIntentTest 2;
+MainActivityLaunchTest 2; ComposeCatalogUpdatesTest 2.
+Source auth tests cover encryption/AAD, stale writes, PKCE state/replay/challenge,
+refresh, CC Basic/Post/expiry, simultaneous refresh, source-edit rollback.
+Provider JVM fixtures cover releases/assets, package inspection and failure policies.
+Full-screen settings/source/policy/back tested in all three UI languages.
+Debug APK/test APK, lint, resource synchronization and Kotlin iOS metadata passed.
+Final documentation-only APK rebuild passed; bundled About/privacy bytes match sources.
+Debug signature verified. No uninstall/data reset required.
+Manual app UI smoke: full-screen settings/source editor inspected; public GitHub repo
+https://github.com/isod89/sloop-fm1 imported 13 FWSC assets successfully.
+No authentication was needed for this public-source check.
+Website: 44 HTML pages passed links/anchors/translations/language-switching checks.
+
+Limits:
+Owner confirmed physical FM-1 success for build 20, not this build.
+No new physical FM-1/hub/ROM recovery validation; no native iOS/Xcode binary.
+New provider/authentication platform adapters are Android-only; Apple keeps prior Hub path.
+OAuth tests use controlled token responses; no production issuer/account login verified.
+No credentials were requested for this verification. No firmware installed on a device.
+GitHub Pages sources prepared locally; deployment and GitHub Release remain separate.

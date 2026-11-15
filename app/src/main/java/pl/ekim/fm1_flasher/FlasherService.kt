@@ -53,13 +53,9 @@ class FlasherService : Service() {
     private val binder = LocalBinder()
     private val main = Handler(Looper.getMainLooper())
     private val worker = Executors.newSingleThreadExecutor()
-    private val logWorker = Executors.newSingleThreadExecutor()
-    private lateinit var operations: OperationLog
+    private lateinit var operationLogger: AndroidOperationLogger
     fun recordEvent(event: String, message: String = "", level: String = "INFO") {
-        if (!::operations.isInitialized || logWorker.isShutdown) return
-        logWorker.execute { runCatching { operations.append(level, event, message) }.onFailure {
-            android.util.Log.e("FM1Diagnostics", "Could not persist operation log", it)
-        } }
+        if (::operationLogger.isInitialized) operationLogger.record(event, message, level)
     }
     fun recordAction(action: AppAction) {
         if (action.kind !in listOf(AppActionKind.LOG_CLEAR, AppActionKind.LOGGER_REFRESH)) recordEvent("ACTION_${action.kind}")
@@ -67,7 +63,7 @@ class FlasherService : Service() {
     fun recordFailure(failure: Throwable) { recordEvent("ERROR", "${failure.javaClass.simpleName}: ${resolve(failure.appMessage(R.string.library_change_error))}", "ERROR") }
     fun clearOperationLog() {
         if (!state.experimental || state.busy) return
-        logWorker.execute {
+        operationLogger.execute { operations ->
             runCatching { operations.clear() }.onSuccess {
                 update { it.copy(logs = emptyList(), status = msg("operation_log_cleared")) }
             }.onFailure { status(failureText(it, R.string.library_change_error)) }
@@ -75,7 +71,7 @@ class FlasherService : Service() {
     }
     fun exportOperationLog(uri: android.net.Uri) {
         if (!state.experimental || state.busy) return
-        logWorker.execute {
+        operationLogger.execute { operations ->
             runCatching { checkNotNull(contentResolver.openOutputStream(uri, "wt")).bufferedWriter().use { it.write(operations.export()) } }
                 .onSuccess { status(msg("operation_log_saved")) }
                 .onFailure { status(failureText(it, R.string.logger_save_failed)) }
@@ -88,6 +84,8 @@ class FlasherService : Service() {
     private lateinit var midi: AndroidMidi
     private lateinit var database: CatalogDatabase
     private lateinit var repository: CatalogRepository
+    private lateinit var credentials: SourceCredentialStore
+    private lateinit var oauth: OAuthManager
     private lateinit var recoveryStore: RecoveryStore
     private lateinit var library: LocalLibrary
     private var removedPackage: Pair<CatalogEntry, ByteArray>? = null
@@ -134,13 +132,15 @@ class FlasherService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        operations = OperationLog(AndroidStorage(filesDir), System::currentTimeMillis)
+        operationLogger = AndroidOperationLogger.get(this)
         recordEvent("SERVICE_STARTED", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
         state = state.copy(experimental = getSharedPreferences("features", MODE_PRIVATE).getBoolean("experimental", false))
         manager = getSystemService(MidiManager::class.java)
         midi = AndroidMidi(manager, main)
         monitor = MidiMonitor(manager, getSystemService(UsbManager::class.java), main)
         database = CatalogDatabase.get(this)
+        credentials = SourceCredentialStore(this)
+        oauth = OAuthManager(credentials)
         repository = CatalogRepository(database)
         recoveryStore = RecoveryStore(File(filesDir, "recovery"))
         library = LocalLibrary(File(filesDir, "library"), database)
@@ -431,24 +431,63 @@ class FlasherService : Service() {
         })
     }
 
-    fun removeSource(id: String) = libraryTask { database.removeSource(id); publishLibrary(); restoreSelection() }
-    fun restoreSources() = libraryTask { database.restoreDefaults(); refreshWhenIdle = true }
+    fun removeSource(id: String) = libraryTask { database.removeSource(id); credentials.remove(id); publishLibrary(); restoreSelection() }
+    fun restoreSources() = libraryTask { database.restoreDefaults(); listOf(CatalogSource.HUB, "awesome-fm1").forEach(credentials::remove); refreshWhenIdle = true }
     fun configureSource(id: String?, name: String, url: String, hours: Int, packages: Set<String>, artwork: Set<String>,
-                        checkNow: Boolean, finished: (String?, AppText?) -> Unit) {
+                        checkNow: Boolean, provider: CatalogProviderType? = null, authentication: HttpCredentials? = null, packageChips: Map<String, String>? = null,
+                        finished: (String?, AppText?) -> Unit) {
         if (!libraryReady || state.busy) { finished(null, msg(R.string.library_read_error)); return }
         var savedId: String? = null
         var failure: AppText? = null
         libraryTask(completion = { finished(savedId, failure) }) {
             try {
-                val saved = database.configure(id, name, url, hours, packages, artwork)
+                val saved = database.transaction {
+                    val previous = id?.let(database::source)
+                    val next = database.configure(id, name, url, hours, packages, artwork, provider,
+                        authentication?.method, authentication?.username, authentication?.header, authentication?.oauth, packageChips)
+                    if (authentication != null) {
+                        val old = if (next.id == id && previous?.provider == next.provider && previous.url == next.url && previous.authMethod == authentication.method && previous.authUsername == authentication.username && previous.authHeader == authentication.header && authentication.method != HttpAuthMethod.NONE && authentication.secret.isEmpty() && authentication.clientSecret.isEmpty())
+                            credentials.read(next.id) else null
+                        val retainedOAuth = old?.takeIf { it.oauth == authentication.oauth }
+                        val value = HttpCredentials(authentication.method, authentication.username,
+                            if (authentication.method == HttpAuthMethod.OAUTH2) retainedOAuth?.secret.orEmpty() else authentication.secret.ifBlank { old?.secret.orEmpty() },
+                            authentication.header, authentication.oauth, authentication.clientSecret.ifBlank { retainedOAuth?.clientSecret.orEmpty() },
+                            retainedOAuth?.refreshToken.orEmpty(), retainedOAuth?.expiresAt ?: 0)
+                        value.validate()
+                        if (!value.equivalentTo(old)) credentials.write(next.id, value)
+                        if (authentication.secret.isNotEmpty() || authentication.clientSecret.isNotEmpty() || (previous != null && (previous.authMethod != next.authMethod || previous.oauth != next.oauth)))
+                            database.authenticationChanged(next.id)
+                    }
+                    database.source(next.id)
+                }
                 savedId = saved.id
+                if (id != null && id != saved.id) credentials.remove(id)
                 if (checkNow) {
                     if (!library.settings().offline && hasNetwork()) repository.load(sourceId = saved.id)
                     else status(msg(R.string.source_check_offline))
                 }
                 publishLibrary(); restoreSelection()
+                recordEvent("SOURCE_CONFIGURED", "${saved.id} · ${saved.provider.id}")
+                if (checkNow) sourceResult(saved.id) else status(msg(R.string.source_saved))
             } catch (e: Exception) { failure = failureText(e, R.string.source_invalid_config); throw e }
         }
+    }
+
+    fun beginOAuth(id: String, openBrowser: (String) -> Unit) {
+        var address: String? = null
+        libraryTask(completion = { address?.let(openBrowser) }) {
+            val source = database.source(id)
+            check(!state.offline && hasNetwork()) { failed(msg(R.string.no_network_preserved)) }
+            if (source.oauth.grant == OAuthGrant.CLIENT_CREDENTIALS) {
+                oauth.authorizeClient(source); database.authenticationChanged(id); publishLibrary(); status(msg("oauth_authorized"))
+            } else { address = oauth.begin(source); status(msg("oauth_waiting")) }
+        }
+    }
+    fun finishOAuth(uri: android.net.Uri) = libraryTask {
+        recordEvent("OAUTH_CALLBACK_RECEIVED")
+        check(!state.offline && hasNetwork()) { failed(msg(R.string.no_network_preserved)) }
+        val id = oauth.finish(uri, database::source)
+        database.authenticationChanged(id); publishLibrary(); status(msg("oauth_authorized"))
     }
 
     fun toggleFavorite(id: String) = libraryTask {
@@ -793,7 +832,6 @@ class FlasherService : Service() {
         unregisterReceiver(usbEvents)
         manager?.unregisterDeviceCallback(callback)
         recordEvent("SERVICE_STOPPED")
-        logWorker.shutdown()
         worker.shutdownNow()
         listeners.clear()
         super.onDestroy()

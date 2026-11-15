@@ -2,7 +2,7 @@
 
 面向 **M-VAVE FM-1** 的独立固件管理器，使用 Kotlin Multiplatform 和 Compose Multiplatform。Android 可通过 OTG 集线器管理多台乐器，并且**每次只写入一台乐器**。
 
-本文描述 `task/multiplatform-rework` 分支的 **0.9.1，Android 构建 22**。此预发布版本添加持久操作日志和批量清除固件下载。[构建报告](../../publication/qa/0.9.1-test22.txt) 记录验证结果与限制。所有者报告构建 20 已在实体乐器上测试成功；这是用户反馈，不代表完整的硬件验收。
+本文描述 `task/multiplatform-rework` 分支的 **0.9.2，Android 构建 23**。测试版新增全屏设置、目录提供程序适配器和按来源隔离的 HTTP 认证。[构建报告](../../publication/qa/0.9.2-test23.txt) 记录验证与限制。所有者报告构建 20 已在实体 FM-1 上测试成功；新的来源和认证功能需单独验收。
 
 [English](../../README.md) · [Polski](../pl/documentation.md) · [实现说明](../../MIGRATION.md) · [隐私](privacy.md)
 
@@ -23,7 +23,7 @@ Android 应用 ID 是 `pl.ekim.multiplatform_fm1_flasher`。它与原应用 `pl.
 <a id="getting-started"></a>
 ## 开始使用
 
-1. 在 Android 14 或更高版本安装测试 APK。构建 22 的调试签名与构建 18 一致；直接更新、不要卸载，可保留此分支应用的固件库及偏好。
+1. 在 Android 14 或更高版本安装测试 APK。构建 23 的调试签名与构建 18 一致；直接更新、不要卸载，可保留此分支应用的固件库及偏好。
 2. 在**固件库**查找固件，从详情下载。下载会校验固件包，不会开始安装。
 3. 使用支持数据传输的线缆，通过 OTG 集线器连接乐器。建议独立供电；应用不能测量或保证集线器供电质量。
 4. 在**设备**中逐台选择**读取乐器信息**，按需授予 Android USB 权限。只有识别为 FM-1 的设备才能加入计划。
@@ -93,7 +93,7 @@ python3 tools/sync-resources.py --check
 ./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
 ```
 
-APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`。`dist/` 被 Git 忽略；构建 22 的预备副本是本地文件，新克隆不保证包含它。
+APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`。`dist/` 被 Git 忽略；构建 23 的预备副本是本地文件，新克隆不保证包含它。
 
 界面翻译以 `app/src/main/res/values*` XML 为准。修改后运行 `python3 tools/sync-resources.py`。应用内关于文档是 `about/README*.md`，通过 `:app:bundleProjectDocs` 与许可证一起打包；根 README 不是应用内关于文档。
 
@@ -103,13 +103,13 @@ APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outp
 
 已有 Swift 宿主和共享元数据，但尚未验证 Xcode 构建或物理 iPhone 更新。设备记录/队列以及 Android 多来源调度器尚未移植。宿主保留之前的单乐器界面与手动重连。使用时保持前台；有限后台时间不等同于 Android 服务。
 
-Kotlin 目标为 `iosArm64`、`iosSimulatorArm64`，未配置 Intel 模拟器。`iosApp/project.yml` 定义 XcodeGen 项目、bundle ID `pl.ekim.multiplatform-fm1-flasher`、版本 0.9.1/22 和部署目标 iOS 15。macOS/Xcode 步骤见 [MIGRATION.md](../../MIGRATION.md)。Linux 元数据编译不会生成 iOS 应用。
+Kotlin 目标为 `iosArm64`、`iosSimulatorArm64`，未配置 Intel 模拟器。`iosApp/project.yml` 定义 XcodeGen 项目、bundle ID `pl.ekim.multiplatform-fm1-flasher`、版本 0.9.2/23 和部署目标 iOS 15。macOS/Xcode 步骤见 [MIGRATION.md](../../MIGRATION.md)。Linux 元数据编译不会生成 iOS 应用。
 
 ## 验证范围
 
-构建 22 通过 **179 个单元测试（56 shared + 123 Android JVM）**，另有四个外部 fixture 测试跳过；**34 个 Android 仪器化测试**通过，包括日志导出/清除、固件库清理和三种语言的确认流程。Debug、lint 和 iOS 元数据编译通过。所有者报告构建 20 已在实体 FM-1 上正常运行，新功能与所有硬件组合仍需单独验证。
+构建 23 通过 **191 个单元测试（62 shared + 129 Android JVM）**，另有四个外部 fixture 测试跳过；**44 个 Android 仪器化测试**通过，包括日志导出/清除、固件库清理和三种语言的确认流程。Debug、lint 和 iOS 元数据编译通过。所有者报告构建 20 已在实体 FM-1 上正常运行，新功能与所有硬件组合仍需单独验证。
 
-未测试物理 FM-1/集线器或 iOS 二进制。供电、真实模式/描述符变化、序列号唯一性及完整硬件写入仍是验收条件。[构建报告](../../publication/qa/0.9.1-test22.txt)提供文件身份和测试范围。
+未测试物理 FM-1/集线器或 iOS 二进制。供电、真实模式/描述符变化、序列号唯一性及完整硬件写入仍是验收条件。[构建报告](../../publication/qa/0.9.2-test23.txt)提供文件身份和测试范围。
 
 ## 隐私与署名
 
@@ -124,3 +124,32 @@ Kotlin 目标为 `iosArm64`、`iosSimulatorArm64`，未配置 Intel 模拟器。
 **设置 → 清除已下载固件**在一次确认后删除全部下载包与元数据，包括损坏及孤立文件，并清除当前选择和单包撤销记录。收藏、目录来源、乐器名称、任务历史和恢复备份保留。请先删除排队任务；操作进行中或存在排队/运行任务时禁止清理。离线安装前必须重新下载固件。
 
 **设备 → 模式与闪存芯片**提供分开的 MIDI 读取、下载模式和芯片检测卡片。检测成功会弹窗显示结果，之后关闭并重新开启乐器以返回 MIDI 模式。默认离线条目是临时的，自定义名称和排队目标会保留。来自同次更新旧端口的延迟 USB 断开事件不会中止下一阶段；其他乐器或集线器断开仍会阻止写入。
+
+## 全屏设置（0.9.2）
+
+**设置**使用完整页面，并分为界面、固件库、实验功能和应用卡片。语言与主题直接通过单选项选择。来源列表、来源编辑、各固件包兼容性和隐私政策均使用完整页面。顶部返回和系统返回逐级导航；原先的固件库/设备/任务页及非敏感表单草稿在活动重建后保留。密码和令牌输入不会保存到活动状态。仅删除确认和芯片检测结果仍使用弹窗。
+
+## 目录提供程序与认证
+
+Android 适配器实现共享的 `CatalogProvider` 接口：
+
+| Provider | 行为 |
+| --- | --- |
+| `thefirmwarehub` | 内置 Firmware Hub JSON 目录及现有下载策略 |
+| `awesome-fm1` | 内置 Awesome FM-1 JSON 目录及批准的 URL 范围 |
+| `repo-url` | GitHub.com 仓库的正式发布、预发布及 `.fwsc` 附件，不含草稿 |
+| `pkg-url` | 直接 HTTPS `.fwsc` 地址，从实际文件识别产品并计算哈希 |
+
+`catalog-json` 适配器保留原有自定义 JSON 订阅。旧来源 ID、收藏、下载和历史不会删除。保存手动来源后，选择**立即检查**并启用来源以显示其固件。导入有边界限制，失败或未完成的导入保留旧快照。GitHub 分页与附件请求遵守重试延迟；大型仓库可能因 GitHub 限额需要认证。
+
+如果 GitHub 提供 SHA-256，则使用该值并读取固件包前缀来识别产品。缺少摘要的旧附件需要下载并验证完整固件包以计算哈希。检查直接固件包同样会下载并验证文件。因此检查来源可能传输二进制数据，但不会将其标记为离线下载；仍需选择**下载**保存到固件库，不会自动安装。
+
+手动来源不会从文件名推断芯片兼容性。检查来源后，打开**编辑 → 各固件包兼容性**，依据发布者信息为具体 SHA-256 声明兼容性，然后返回并保存。声明仅更新相同字节的元数据，包括匹配的本地副本；同一 URL 的其他文件或不同版本不会继承声明。未知兼容性阻止安装；未知并非与已知数据矛盾，明确的产品或芯片声明冲突仍会阻止使用。
+
+来源表单支持无认证、HTTP Basic、Bearer、指定安全请求头的 API 密钥和 OAuth 2.0。Basic 使用用户名/密码；Bearer 输入令牌本身，不含 `Bearer` 前缀。API 密钥按原样发送请求头值，使用 `Authorization` 时可包含自己的前缀。密码、令牌和客户端密钥由 Android Keystore 密钥加密，与 SQLite 元数据分开，不写入日志。来源、提供程序和认证身份不变时留空可保留已保存的秘密；其他 URL 不会继承。删除来源或恢复内置默认值会移除对应凭据。
+
+OAuth 支持浏览器 Authorization Code **PKCE S256** 与服务 **Client Credentials**。配置发行者、客户端 ID、权限范围、令牌端点，以及浏览器模式的授权端点。向服务器注册 `pl.ekim.multiplatform-fm1-flasher://oauth/callback`。Client Credentials 需要客户端密钥，公共 PKCE 客户端不需要。依据服务器选择 `client_secret_basic` 或 `client_secret_post`。保存后在来源卡片选择 **OAuth 2.0 授权**。有刷新令牌时自动刷新过期令牌，Client Credentials 可重新获取令牌。浏览器状态一次性使用，绑定来源和修订，十分钟后过期。应用没有内置通用客户端 ID 或密钥。
+
+认证只发送给配置的来源原点（`repo-url` 使用 GitHub API 原点）。跨原点跳转（包括 CDN）不携带认证；令牌 POST 跳转会被拒绝。仍要求 HTTPS、公共地址和批准的 URL 范围。常规检查间隔为 24–168 小时；明确替换凭据或完成授权后可重新检查，避免因旧认证失败等待一天。
+
+这些提供程序与认证适配器在 Android 实现。iOS 主机保留原有单一 Hub 仓库；共享接口/UI 已编译元数据，但尚未验证 Apple 二进制或原生凭据适配器。

@@ -22,25 +22,31 @@ import java.io.File
 class ComposeActivity : ComponentActivity(), AppBackend {
     override val state = MutableStateFlow(AppSnapshot())
     override suspend fun artwork(entry: CatalogEntry): androidx.compose.ui.graphics.ImageBitmap? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-        coverLock.withLock {
+        try { coverLock.withLock {
             val catalog = state.value.catalog ?: return@withLock null
             val source = catalog.source(entry) ?: return@withLock null
             val url = entry.cardUrl ?: return@withLock null
             if (!source.permitsArtwork(url)) return@withLock null
             val directory = File(filesDir, "previews-v2").apply { mkdirs() }
-            val file = File(directory, FirmwarePackage.sha256(url.toByteArray()) + ".img")
+            val file = File(directory, FirmwarePackage.sha256("${source.id}:${source.authRevision}:${source.provider}:${source.authMethod}:${source.authUsername}:${source.authHeader}:${source.oauth}:$url".toByteArray()) + ".img")
+            val legacy = File(directory, FirmwarePackage.sha256(url.toByteArray()) + ".img")
             var bytes = file.takeIf { it.length() in 1..2 * 1024 * 1024 }?.readBytes()
+                ?: legacy.takeIf { source.authMethod == HttpAuthMethod.NONE && source.authRevision == 0L && it.length() in 1..2 * 1024 * 1024 }?.readBytes()
             var image = bytes?.let { decodeAndroidArtwork(it) }
             if (image == null && source.active && !state.value.offline) {
+                val authScope = CatalogProviders.authenticationScope(source)
+                val credentials = if (UrlScope.contains(authScope, url)) OAuthManager(SourceCredentialStore(this@ComposeActivity)).credentials(source) else null
                 val response = SourceNetwork.request(url, 2 * 1024 * 1024, source::permitsArtwork, active = {
                     !state.value.offline && state.value.catalog?.sources?.any { it.id == source.id && it.active && it.revision == source.revision } == true
-                })
+                }, authentication = { address -> if (UrlScope.contains(authScope, address)) credentials?.headers().orEmpty() else emptyMap() })
+                if (response.code != 200) service?.recordEvent("ARTWORK_ERROR", "${source.id} · HTTP ${response.code}", "ERROR")
                 check(response.code == 200)
                 bytes = response.bytes; image = decodeAndroidArtwork(bytes)
                 if (image != null) { LocalLibrary.atomicWrite(file, bytes); trimPreviewCache(directory) }
             }
             image
-        }
+        } } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+        catch (failure: Exception) { service?.recordFailure(failure); null }
     }
     private val coverLock = java.util.concurrent.locks.ReentrantLock()
     private var service: FlasherService? = null
@@ -50,6 +56,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     private var pendingUsb: UsbRequest? = null
     private val usbRequests = java.util.ArrayDeque<UsbRequest>()
     private var automaticPermission: Endpoint? = null
+    private var pendingOAuthCallback: Uri? = null
     private var exportOperationLogUri: Uri? = null
     private var exportBackupId: String? = null
     private var exportBackupUri: Uri? = null
@@ -77,6 +84,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         }
         dispatchBackupExport()
         dispatchOperationLogExport()
+        dispatchOAuthCallback()
     }
     private val binding = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
@@ -106,6 +114,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        captureOAuthCallback(intent)
         exportOperationLogUri = savedInstanceState?.getString("exportOperationLogUri")?.let(Uri::parse)
         exportBackupId = savedInstanceState?.getString("exportBackupId")
         exportBackupUri = savedInstanceState?.getString("exportBackupUri")?.let(Uri::parse)
@@ -125,6 +134,20 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             FlasherApp(this)
         }
         bound = bindService(Intent(this, FlasherService::class.java), binding, BIND_AUTO_CREATE)
+    }
+    private fun captureOAuthCallback(incoming: Intent?) {
+        incoming?.data?.takeIf { it.scheme == "pl.ekim.multiplatform-fm1-flasher" }?.let {
+            pendingOAuthCallback = it
+            incoming.data = null
+        }
+    }
+    override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); captureOAuthCallback(intent); dispatchOAuthCallback() }
+    private fun dispatchOAuthCallback() {
+        val active = service ?: return
+        if (active.state.busy) return
+        val uri = pendingOAuthCallback ?: return
+        pendingOAuthCallback = null
+        active.finishOAuth(uri)
     }
     override fun onStart() { super.onStart(); visible = true; service?.onAppOpened() }
     override fun onStop() { visible = false; if (!isChangingConfigurations) service?.onAppClosed(); super.onStop() }
@@ -176,10 +199,11 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             AppActionKind.SOURCE_CHECK -> active.checkSource(action.id)
             AppActionKind.SOURCE_REMOVE -> active.removeSource(action.id)
             AppActionKind.SOURCE_RESTORE -> active.restoreSources()
+            AppActionKind.AUTH_LOGIN -> active.beginOAuth(action.id) { address -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(address))) }
             AppActionKind.SOURCE_SAVE -> {
                 val config = action.source ?: return
                 state.value = state.value.copy(sourceError = null, savedSourceId = null)
-                active.configureSource(action.id.ifEmpty { null }, config.name, config.url, config.hours, config.packages, config.artwork, false) { savedId, failure ->
+                active.configureSource(action.id.ifEmpty { null }, config.name, config.url, config.hours, config.packages, config.artwork, false, config.provider, config.authentication, config.packageChips) { savedId, failure ->
                     state.value = state.value.copy(sourceError = failure, savedSourceId = savedId)
                     failure?.let(::showFailure)
                 }

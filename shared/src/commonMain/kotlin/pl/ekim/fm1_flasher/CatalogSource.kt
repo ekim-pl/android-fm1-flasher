@@ -8,6 +8,9 @@ data class CatalogSource(
     val nextAttemptAt: Long = 0, val snapshot: Boolean = false, val updated: String = "",
     val etag: String? = null, val modified: String? = null, val error: String? = null,
     val license: String = "", val entryCount: Int = 0,
+    val provider: CatalogProviderType = CatalogProviderType.legacy(id),
+    val authMethod: HttpAuthMethod = HttpAuthMethod.NONE, val authUsername: String = "", val authHeader: String = "X-API-Key",
+    val oauth: OAuthConfiguration = OAuthConfiguration(), val packageChips: Map<String, String> = emptyMap(), val authRevision: Long = 0,
 ) {
     val baseUrl: String get() = catalogBaseUrl(url)
     val active get() = enabled && !deleted
@@ -15,7 +18,7 @@ data class CatalogSource(
         now - checkedAt < intervalHours * HOUR
     fun due(now: Long = epochMillis()) = now >= nextAttemptAt &&
         (attemptedAt == 0L || now >= attemptedAt && now - attemptedAt >= intervalHours * HOUR)
-    fun permitsPackage(url: String) = packageScopes.any { UrlScope.contains(it, url) }
+    fun permitsPackage(url: String) = (provider == CatalogProviderType.PKG_URL && url == this.url) || packageScopes.any { UrlScope.contains(it, url) }
     fun permitsArtwork(url: String) = artworkScopes.any { UrlScope.contains(it, url) }
 
     companion object {

@@ -55,3 +55,10 @@ Aplikacja stale zapisuje lokalny log operacji (do 256 KiB; najstarsze wpisy są 
 **Ustawienia → Wyczyść pobrane firmware** usuwa po jednym potwierdzeniu wszystkie pobrane paczki i metadane, w tym uszkodzone i osierocone pliki. Czyści wybór paczki i możliwość cofnięcia pojedynczego usunięcia. Zachowuje ulubione, źródła katalogu, nazwy instrumentów, historię zadań i kopie odzyskiwania. Najpierw usuń oczekujące zadania; czyszczenie jest blokowane podczas pracy oraz przy paczkach przypisanych do oczekujących/trwających zadań. Instalacja offline wymaga ponownego pobrania paczek.
 
 **Urządzenia → Tryby i kość pamięci** rozdziela odczyt MIDI, przejście w tryb download i wykrywanie kości na czytelne karty. Wynik detekcji otwiera popup. Potem wyłącz i włącz instrument, aby wrócić do MIDI. Domyślne odłączone wpisy są tymczasowe; własne nazwy i cele kolejki pozostają. Opóźnione odłączenie poprzedniego portu USB nie przerywa kolejnego etapu tej samej aktualizacji. Utrata innego instrumentu lub huba nadal blokuje zapis.
+
+## Pełnoekranowe ustawienia (0.9.2)
+
+**Ustawienia** są pełnym ekranem z kartami Interfejs, Biblioteka firmware, Funkcje eksperymentalne i Aplikacja. Język oraz motyw wybiera się bezpośrednio przyciskami radiowymi. Źródła, formularze, zgodność poszczególnych paczek i polityka prywatności otwierają się jako pełne strony. Nagłówek i systemowe Wstecz cofają o poziom; poprzednia zakładka Biblioteka/Urządzenia/Zadania i niesekretne dane formularza przetrwają odtworzenie aktywności. Wpisane hasła/tokeny nie są zapisywane w stanie aktywności. Okna pozostają przy potwierdzeniach usuwania i żądanym wyniku wykrywania kości.
+
+
+Źródła katalogów na Androidzie korzystają z thefirmwarehub, awesome-fm1, wydań GitHub (repo-url) lub pliku FWSC (pkg-url). Edycja źródła obsługuje Basic, Bearer, klucz API w nagłówku oraz OAuth 2.0 (PKCE w przeglądarce lub Client Credentials). Poświadczenia są szyfrowane lokalnie. Ręczna deklaracja zgodności dotyczy wyłącznie konkretnego SHA-256. Nowe adaptery sieciowe i autoryzacja dotyczą Androida; backend Apple zachowuje dotychczasową obsługę Hub.

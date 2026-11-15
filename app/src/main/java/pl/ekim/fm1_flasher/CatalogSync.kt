@@ -4,9 +4,6 @@ import org.json.JSONObject
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-internal data class CatalogSnapshot(val entries: List<CatalogEntry>?, val updated: String, val license: String,
-    val etag: String?, val modified: String?)
-
 /** Response validation is independent of Android/SQLite; a snapshot is committed only after this succeeds. */
 internal object CatalogSync {
     fun headers(source: CatalogSource): Map<String, String> = if (!source.snapshot) emptyMap() else buildMap {

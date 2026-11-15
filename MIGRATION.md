@@ -1,6 +1,6 @@
-# Implementation and verification — 0.9.1 / 22
+# Implementation and verification — 0.9.2 / 23
 
-Current architecture of `task/multiplatform-rework`, based on the current branch implementation. This document describes the existing code, not a roadmap or a guarantee of hardware support. For operation instructions see [README](README.md); for recorded build results see [build-22 QA](publication/qa/0.9.1-test22.txt).
+Current architecture of `task/multiplatform-rework`, based on the current branch implementation. This document describes the existing code, not a roadmap or a guarantee of hardware support. For operation instructions see [README](README.md); for recorded build results see [build-23 QA](publication/qa/0.9.2-test23.txt).
 
 ## Modules and entry points
 
@@ -68,9 +68,9 @@ adb -s DEVICE_SERIAL install -r app/build/outputs/apk/androidTest/debug/app-debu
 adb -s DEVICE_SERIAL shell am instrument -w -e class pl.ekim.fm1_flasher.FleetUiTest pl.ekim.multiplatform_fm1_flasher.test/android.test.InstrumentationTestRunner
 ```
 
-Run the explicit classes separately: `ExperimentalFeaturesTest`, `CatalogDatabaseTest`, `BackgroundCatalogTest`, `FirmwareSelectionTest`, `UsbPermissionIntentTest`, `MainActivityLaunchTest`, `ComposeCatalogUpdatesTest`, `FleetUiTest`, `OperationLogServiceTest` (all in `pl.ekim.fm1_flasher`). This avoids the legacy runner's unbounded discovery startup timeout and isolates service/preferences fixtures. The test runner's exit alone is insufficient: inspect the reported OK/failure result.
+Run the explicit classes separately: `ExperimentalFeaturesTest`, `CatalogDatabaseTest`, `BackgroundCatalogTest`, `FirmwareSelectionTest`, `UsbPermissionIntentTest`, `MainActivityLaunchTest`, `ComposeCatalogUpdatesTest`, `FleetUiTest`, `OperationLogServiceTest`, `SettingsUiTest`, `SourceAuthenticationTest` (all in `pl.ekim.fm1_flasher`). This avoids the legacy runner's unbounded discovery startup timeout and isolates service/preferences fixtures. The test runner's exit alone is insufficient: inspect the reported OK/failure result.
 
-Build 22 passed 56 shared JVM tests and 123 Android JVM tests (four external-fixture cases skipped), plus 34 Android instrumentation tests. Debug APK/test APK, lint, generated resources and iOS Kotlin metadata compilation passed. The [current report](publication/qa/0.9.1-test22.txt) records the artifact. Historical build reports remain unchanged.
+Build 23 passed 62 shared JVM tests and 129 Android JVM tests (four external-fixture cases skipped), plus 44 Android instrumentation tests. Debug APK/test APK, lint, generated resources and iOS Kotlin metadata compilation passed. The [current report](publication/qa/0.9.2-test23.txt) records the artifact. Historical build reports remain unchanged.
 
 ## iOS build boundary
 
@@ -92,17 +92,17 @@ Choose scheme `FM1Flasher`; configure a signing team for a physical device. The 
 ./gradlew :shared:iosSimulatorArm64Test
 ```
 
-Linux metadata compilation does not compile Swift, link/sign an iOS application or produce an IPA. No Xcode/native iOS result is available for build 22.
+Linux metadata compilation does not compile Swift, link/sign an iOS application or produce an IPA. No Xcode/native iOS result is available for build 23.
 
 ## Release boundaries
 
-0.9.1/22 is an experimental release artifact. The publication rebuild includes regenerated documentation. Debug signature continuity with build 18 was checked. A future rebuild after document changes has different APK bytes and needs a new checksum and packaging verification. Do not replace the historical report's checksum with one from a different build.
+0.9.2/23 is a prepared experimental test artifact with regenerated documentation; preparing it does not publish a GitHub Release or deploy Pages. Debug signature continuity with build 18 was checked. A future rebuild after document changes has different APK bytes and needs a new checksum and packaging verification. Do not replace the historical report's checksum with one from a different build.
 
 Android CI tests/builds every branch. Pages builds every branch; deployment is allowed from the default branch or manual dispatch on task/multiplatform-rework. The inherited Google Play release and production workflows still target the original package; the F-Droid recipe and older store material also concern the original application. See [publication notes](publication/README.txt). None of these artifacts establishes a store release of this fork.
 
 Physical acceptance requires multiple FM-1 units, the intended powered/passive hubs and real phones; test mode descriptors, serial behavior, grant denial, missed/out-of-order events, safe reconnect faults, interruption and recovery separately. Emulator assertions establish software behavior, not electrical stability or hardware flash success.
 
-## Operation diagnostics and cleanup (0.9.1 / 22)
+## Operation diagnostics and cleanup (0.9.2 / 23)
 
 `OperationLog` stores bounded JSON Lines in `diagnostics/operations.jsonl` (256 KiB, atomic replacement, complete oldest records pruned first). Callers serialize I/O: Android uses a dedicated executor, portable uses a coroutine dispatcher limited to one task. Diagnostic write failures never abort a transfer. Events use epoch-millisecond timestamps, level, stable event keys and bounded messages; URL queries/fragments are removed. Android records service lifecycle, dispatched actions (excluding high-frequency logger polling), USB/MIDI topology changes, status/transfer phases and caught failures. Portable records actions, statuses and task failures. This is an operational trace, not raw MIDI capture or an OS crash dump.
 
@@ -111,3 +111,16 @@ Experimental settings expose export through the native document picker/share UI 
 Android bulk cleanup clears SQLite download rows/selection and private library package/record files, including damaged/orphan files, then refreshes UI. It refuses all queued/running jobs before deletion. Favorites, source configuration, fleet/history, diagnostic logs and recovery backups use separate storage and are retained. Portable repository offers the corresponding package/record cleanup. Bulk removal deliberately has no Undo; ordinary single-package removal keeps its existing Undo. Partial filesystem failures are reported; retrying cleanup removes remaining files.
 
 The owner confirmed successful physical-device testing of build 20. This does not replace acceptance of the new diagnostics/cleanup paths or of ROM recovery on each supported chip.
+
+
+## Full-screen settings and source adapters (0.9.2)
+
+`SettingsScreen` and `SettingsPage` present settings, source editing, per-package compatibility and the settings privacy policy as full pages with hierarchical Back handling. Draft nonsecret fields and the previous workspace tab survive Activity recreation. Secret input fields are deliberately excluded from saved instance state. Destructive confirmations and the chip-detection result remain dialogs.
+
+The public `shared.CatalogProvider` interface separates endpoint/response decoding from Android `CatalogRepository` transport, scheduling and storage. `CatalogProviders` registers `thefirmwarehub`, `awesome-fm1`, `repo-url` and `pkg-url`, retaining `catalog-json` for older custom sources. GitHub repositories import published releases/prereleases and `.fwsc` assets, bounded to 20 pages/5000 packages. Digest-less assets require full validation; digest-bearing assets need a header read, with full hash/product validation before local storage/installation. Manual compatibility is keyed by SHA-256; a new binary never inherits a previous file's declaration. Unknown compatibility blocks installation, while an unknown duplicate does not contradict another known declaration.
+
+Source configuration stores nonsecret authentication metadata and an authentication revision. `SourceCredentialStore` encrypts credentials, tokens and pending PKCE state with Android Keystore AES-GCM and source-ID associated data. HTTP Basic, Bearer, custom API-key headers and OAuth 2.0 are supported. OAuth supports S256 browser PKCE and Client Credentials, client_secret_basic/client_secret_post, refresh tokens, single-use state with a ten-minute expiry, and the exact callback `pl.ekim.multiplatform-fm1-flasher://oauth/callback`. Token POSTs refuse redirects. Resource authorization is confined to the configured source origin; GitHub uses api.github.com, and CDN redirects receive no source credentials. Background/catalog/artwork token refresh is serialized; compare-and-write prevents stale exchanges from restoring deleted or replaced credentials. Error bodies and callback codes are not copied into logs. A singleton Android operation logger serializes foreground/background diagnostic writes.
+
+The shared contracts and settings compile as iOS Kotlin metadata. The new provider transport, Keystore authentication and OAuth callback adapters are Android implementations; the existing portable Apple backend still uses its prior Hub path. Native iOS provider/authentication parity and a real OAuth issuer are not claimed by emulator fixture tests.
+
+Protocol references: [GitHub releases](https://docs.github.com/en/rest/releases/releases), [GitHub assets](https://docs.github.com/en/rest/releases/assets), [OAuth 2.0](https://www.rfc-editor.org/rfc/rfc6749), [PKCE](https://www.rfc-editor.org/rfc/rfc7636).

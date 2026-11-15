@@ -16,12 +16,7 @@ class FirmwarePackage private constructor(
             require(expectedHash.matches(Regex("[0-9a-fA-F]{64}")) && sha256(raw).equals(expectedHash, true)) {
                 invalid(msg("package_hash_mismatch"))
             }
-            val product = buildString {
-                for (i in 0 until 20) {
-                    val marker = raw[i * 48 + 47].toInt() and 255
-                    if (marker != 0x7D) append(((marker - i - 1) and 255).toChar())
-                }
-            }
+            val product = productPrefix(raw)
             require(product == expectedProduct && Regex("FM-1_[0-9]{1,16}").matches(product)) {
                 invalid(msg("package_identity_invalid"))
             }
@@ -69,6 +64,18 @@ class FirmwarePackage private constructor(
             require(flashImage != null && hasLoader) { invalid(msg("ufw_missing_images")) }
             return FirmwarePackage(FirmwareIdentity("FM-1", product.substringAfter('_')), logical, expectedHash.lowercase(), raw.size, checkNotNull(flashImage))
         }
+
+        /** Identifies metadata only. Installation still requires parse() with the pinned hash. */
+        fun productPrefix(raw: ByteArray): String {
+            require(raw.size >= 960) { invalid(msg("package_invalid_size")) }
+            return buildString {
+                for (i in 0 until 20) {
+                    val marker = raw[i * 48 + 47].toInt() and 255
+                    if (marker != 0x7D) append(((marker - i - 1) and 255).toChar())
+                }
+            }
+        }
+        fun inspect(raw: ByteArray) = parse(raw, sha256(raw), productPrefix(raw))
 
         fun sha256(bytes: ByteArray): String = platformSha256(bytes)
 

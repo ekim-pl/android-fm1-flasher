@@ -6,7 +6,7 @@ import java.util.Locale
 /** Grants are configured locally, never read from the downloaded catalog. */
 actual object UrlScope {
     actual fun canonical(address: String): String {
-        val uri = URI(address.trim())
+        val uri = try { URI(address.trim()) } catch (_: java.net.URISyntaxException) { invalid(msg("source_invalid_url")) }
         require(uri.scheme.equals("https", true) && uri.host != null && uri.userInfo == null &&
             uri.port in listOf(-1, 443) && uri.rawFragment == null && uri.rawQuery == null &&
             !uri.rawPath.contains('\\') && !Regex("(?i)%(2e|2f|5c|25)").containsMatchIn(uri.rawPath)) {

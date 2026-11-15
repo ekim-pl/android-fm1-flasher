@@ -9,9 +9,6 @@ import java.net.Proxy
 import java.net.URI
 import java.util.concurrent.TimeUnit
 
-data class CatalogResponse(val code: Int, val bytes: ByteArray = byteArrayOf(), val etag: String? = null,
-    val modified: String? = null, val retryAfter: String? = null)
-
 /** DNS results are validated and used by the same connection, avoiding a separate DNS preflight. */
 object SourceNetwork {
     private val client = OkHttpClient.Builder().proxy(Proxy.NO_PROXY).followRedirects(false).followSslRedirects(false).retryOnConnectionFailure(false)
@@ -38,12 +35,18 @@ object SourceNetwork {
     }
 
     fun request(address: String, limit: Int, permits: (String) -> Boolean,
-                headers: Map<String, String> = emptyMap(), active: () -> Boolean = { true }): CatalogResponse =
-        requestWith(client, address, limit, permits, headers, active)
+                headers: Map<String, String> = emptyMap(), active: () -> Boolean = { true },
+                authentication: (String) -> Map<String, String> = { emptyMap() }): CatalogResponse =
+        requestWith(client, address, limit, permits, headers, active, authentication = authentication)
+
+    fun postForm(address: String, fields: Map<String, String>, headers: Map<String, String> = emptyMap()): CatalogResponse =
+        requestWith(client, address, 64 * 1024, { it == address }, headers, form = fields)
 
     internal fun requestWith(transport: OkHttpClient, address: String, limit: Int, permits: (String) -> Boolean,
                 headers: Map<String, String> = emptyMap(), active: () -> Boolean = { true },
-                clock: () -> Long = System::nanoTime): CatalogResponse {
+                clock: () -> Long = System::nanoTime,
+                authentication: (String) -> Map<String, String> = { emptyMap() },
+                form: Map<String, String>? = null): CatalogResponse {
         require(limit > 0)
         val deadline = clock() + TimeUnit.SECONDS.toNanos(60)
         var url = address
@@ -54,13 +57,21 @@ object SourceNetwork {
             UrlScope.canonical(URI(url).let { URI(it.scheme, it.authority, it.path, null, null).toString() })
             val request = Request.Builder().url(url).header("User-Agent", "FM1FlasherAndroid/${BuildConfig.VERSION_NAME} (+native-android)")
             headers.forEach { (key, value) -> request.header(key, value) }
+            // Authentication is never forwarded to a different redirect origin (including a CDN).
+            val original = URI(address)
+            val destination = URI(url)
+            if (destination.scheme.equals(original.scheme, true) && destination.host.equals(original.host, true) && (if (destination.port == -1) 443 else destination.port) == (if (original.port == -1) 443 else original.port))
+                authentication(url).forEach { (key, value) -> request.header(key, value) }
+            if (form != null) request.post(okhttp3.FormBody.Builder().apply { form.forEach { (key, value) -> add(key, value) } }.build())
             val call = transport.newCall(request.build())
             call.timeout().timeout((deadline - clock()).coerceAtLeast(1), TimeUnit.NANOSECONDS)
             call.execute().use { response ->
                 if (response.code in listOf(301, 302, 303, 307, 308)) {
-                    url = URI(url).resolve(response.header("Location") ?: failed(msg(R.string.redirect_missing))).toString()
+                    check(form == null) { failed(msg("oauth_token_error")) }
+                    val location = response.header("Location") ?: failed(msg(R.string.redirect_missing))
+                    url = try { URI(url).resolve(location).toString() } catch (_: IllegalArgumentException) { failed(msg(R.string.network_url_blocked)) }
                 } else {
-                    if (response.code != 200) return CatalogResponse(response.code, etag = response.header("ETag"),
+                    if (response.code !in listOf(200, 206)) return CatalogResponse(response.code, etag = response.header("ETag"),
                         modified = response.header("Last-Modified"), retryAfter = response.header("Retry-After"))
                     val body = checkNotNull(response.body)
                     check(body.contentLength() <= limit) { failed(msg(R.string.download_too_large)) }
@@ -75,7 +86,7 @@ object SourceNetwork {
                             output.write(buffer, 0, n)
                         }
                     }
-                    return CatalogResponse(200, output.toByteArray(), response.header("ETag"), response.header("Last-Modified"))
+                    return CatalogResponse(response.code, output.toByteArray(), response.header("ETag"), response.header("Last-Modified"))
                 }
             }
         }

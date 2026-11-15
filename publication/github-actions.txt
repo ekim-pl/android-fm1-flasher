@@ -1,4 +1,4 @@
-GitHub Actions on task/multiplatform-rework — 0.9.1 / 22
+GitHub Actions on task/multiplatform-rework — 0.9.2 / 23
 
 This is a description of the checked-in workflows, not a request to run or publish them.
 Android application ID: pl.ekim.multiplatform_fm1_flasher.

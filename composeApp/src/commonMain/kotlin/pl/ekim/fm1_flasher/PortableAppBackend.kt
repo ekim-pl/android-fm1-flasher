@@ -128,7 +128,7 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
     }
     private fun performBlocking(action: AppAction) {
         when(action.kind) {
-            AppActionKind.SOURCE_SAVE, AppActionKind.SOURCE_ENABLE, AppActionKind.SOURCE_CHECK, AppActionKind.SOURCE_REMOVE, AppActionKind.SOURCE_RESTORE, AppActionKind.BACKGROUND_SYNC -> failed(msg("not_applicable"))
+            AppActionKind.AUTH_LOGIN, AppActionKind.SOURCE_SAVE, AppActionKind.SOURCE_ENABLE, AppActionKind.SOURCE_CHECK, AppActionKind.SOURCE_REMOVE, AppActionKind.SOURCE_RESTORE, AppActionKind.BACKGROUND_SYNC -> failed(msg("not_applicable"))
             AppActionKind.CLEAR_DOWNLOADS -> { repository.clearDownloads(); state.update { it.copy(ready = null) }; report(msg("downloads_cleared")) }
             AppActionKind.PORTS_REFRESH -> refreshPorts()
             AppActionKind.REFRESH -> {

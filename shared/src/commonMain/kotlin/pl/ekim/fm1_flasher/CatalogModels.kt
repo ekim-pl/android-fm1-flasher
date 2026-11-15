@@ -47,7 +47,7 @@ data class Catalog(val entries: List<CatalogEntry>, val updated: String, val fet
         (if (sources.isEmpty()) knownEntries.none { it.key == entry.key }
          else source(entry)?.snapshot == true && knownEntries.none { it.key == entry.key })
     fun conflicting(entry: CatalogEntry) = knownEntries.any { it.sha256 == entry.sha256 &&
-        it.key !in removedKeys && (it.product != entry.product || it.chip != entry.chip) }
+        it.key !in removedKeys && (it.product != entry.product || it.chip in listOf("old", "new") && entry.chip in listOf("old", "new") && it.chip != entry.chip) }
 }
 
 object StockFirmware {

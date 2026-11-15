@@ -168,7 +168,7 @@ class FleetUiTest : InstrumentationTestCase() {
                 assertEquals(AppActionKind.LOG_CLEAR, actions.last().kind)
                 click(t("downloads_clear"))
                 assertEquals(AppActionKind.CLEAR_DOWNLOADS, actions.last().kind)
-                click(t("close"))
+                click("← ${t("back")}")
             }
         } finally {
             instrumentation.runOnMainSync { activity.finish(); ViewRootForTest.onViewCreatedCallback = previous }

@@ -34,6 +34,43 @@ class CatalogDatabaseTest : InstrumentationTestCase() {
         assertTrue("Expected a rejected operation", failed)
     }
 
+    fun testCompatibilityDeclarationsAreBoundToBytesAndDoNotAffectAnotherVersion() {
+        val source = database.configure(null, "Package", "https://publisher.example/file.fwsc", 24, emptySet(), emptySet(), CatalogProviderType.PKG_URL)
+        val raw = testPackage(); val oldHash = FirmwarePackage.sha256(raw)
+        val entry = localEntry(raw).copy(id = "package", sourceId = source.id, directUrl = source.url, chip = "unknown")
+        val library = LocalLibrary(directory, database); library.save(entry, raw)
+        database.commitSnapshot(source, listOf(entry), "v1", "", now, null, null)
+        val known = database.configure(source.id, source.name, source.url, 24, emptySet(), emptySet(), packageChips = mapOf(oldHash to "new"))
+        assertEquals("new", database.downloaded().single().entry.chip)
+        assertEquals(now, known.checkedAt)
+        val next = updatedPackage(); val newHash = FirmwarePackage.sha256(next)
+        database.commitSnapshot(known, listOf(entry.copy(sha256 = newHash, product = "FM-1_901", chip = "unknown")), "v2", "", now, null, null)
+        assertEquals("unknown", database.catalog(now).knownEntries.single { it.sourceId == source.id }.chip)
+        database.configure(source.id, source.name, source.url, 24, emptySet(), emptySet(), packageChips = mapOf(oldHash to "new", newHash to "old"))
+        assertEquals("old", database.catalog(now).knownEntries.single { it.sourceId == source.id }.chip)
+        assertEquals("new", database.downloaded().single().entry.chip)
+        assertEquals(oldHash, database.downloaded().single().entry.sha256)
+    }
+    fun testProviderConfigurationPersistsAndRepositoryImportsReleasePackages() {
+        val configured = database.configure(null, "Repository", "https://github.com/owner/repo.git", 24, emptySet(), emptySet(),
+            CatalogProviderType.REPO_URL, HttpAuthMethod.BEARER, packageChips = mapOf(FirmwarePackage.sha256(testPackage()) to "old"))
+        assertEquals("https://github.com/owner/repo", configured.url)
+        database.setEnabled(configured.id, true)
+        val raw = testPackage()
+        val payload = """[{"tag_name":"v1","published_at":"2026-11-15","assets":[{"id":1,"name":"demo.fwsc","size":${raw.size},"digest":"sha256:${FirmwarePackage.sha256(raw)}","updated_at":"today"}]}]""".toByteArray()
+        val repository = CatalogRepository(database, request = { source, url, headers, active ->
+            assertTrue(active()); assertEquals(configured.id, source.id)
+            if (url.contains("/assets/")) { assertEquals("bytes=0-959", headers["Range"]); CatalogResponse(206, raw.copyOfRange(0, 960)) }
+            else CatalogResponse(200, payload)
+        })
+        val result = repository.load(now, configured.id)
+        val entry = result.knownEntries.single { it.sourceId == configured.id }
+        assertEquals(FirmwarePackage.sha256(raw), entry.sha256); assertEquals("old", entry.chip)
+        val restored = database.source(configured.id)
+        assertEquals(CatalogProviderType.REPO_URL, restored.provider)
+        assertEquals(HttpAuthMethod.BEARER, restored.authMethod)
+        assertTrue(restored.snapshot)
+    }
     fun testClearAllDownloadsPreservesFavoritesSourcesAndRecoveryFiles() {
         val library = LocalLibrary(directory, database)
         val raw = testPackage(); val entry = localEntry(raw)

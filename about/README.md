@@ -55,3 +55,10 @@ The app always records a bounded local operation log (256 KiB, oldest entries re
 In **Settings → Clear downloaded firmware**, confirm once to delete all downloaded package files and metadata, including damaged/orphan files. The selected package and single-package Undo are cleared. Favorites, catalog sources, device names, task history and recovery backups remain. Remove queued tasks first; cleanup is blocked during work and while any queued/running job owns a package. Offline installation requires downloading packages again.
 
 **Devices → Modes and flash chip** provides MIDI selection/readout, download-mode entry and chip detection in separate cards. Successful chip detection opens a result popup. Power-cycle back to MIDI afterwards. Default disconnected device entries are temporary; custom names and queued targets are retained. Delayed USB detach events for a retired stage no longer invalidate the next stage of the same update. Unrelated device/hub loss still blocks writes.
+
+## Full-screen settings (0.9.2)
+
+**Settings** is a full screen with Interface, Firmware library, Experimental features and Application cards. Language and theme use inline radio choices. Sources, source editing, per-package compatibility and privacy open as full pages. The header and system Back return one level; the original Library/Devices/Tasks tab and non-secret source drafts survive activity recreation. Password/token inputs are intentionally not saved in activity state. Destructive confirmations and the requested chip-result popup remain dialogs.
+
+
+Android catalog sources use thefirmwarehub, awesome-fm1, GitHub releases (repo-url) or a direct FWSC file (pkg-url). Source editing supports Basic, Bearer, API-key headers and OAuth 2.0 (browser PKCE or Client Credentials). Credentials are encrypted locally. Manual package compatibility applies only to its SHA-256. These new network/authentication adapters are Android-specific; the Apple backend retains its prior Hub workflow.

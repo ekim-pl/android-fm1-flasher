@@ -13,7 +13,7 @@ import java.util.concurrent.locks.ReentrantLock
 /** Shared by foreground tasks and WorkManager. No background import during a flash. */
 object CatalogOperations { val lock = ReentrantLock() }
 
-class CatalogDatabase(private val context: Context, name: String = "firmware-library.db") : SQLiteOpenHelper(context, name, null, 2) {
+class CatalogDatabase(internal val context: Context, name: String = "firmware-library.db") : SQLiteOpenHelper(context, name, null, 2) {
     override fun onConfigure(db: SQLiteDatabase) { db.setForeignKeyConstraintsEnabled(true) }
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE sources (id TEXT PRIMARY KEY, url TEXT NOT NULL UNIQUE, json TEXT NOT NULL)")
@@ -53,27 +53,61 @@ class CatalogDatabase(private val context: Context, name: String = "firmware-lib
     }
     fun putSource(source: CatalogSource) = putSource(writableDatabase, source)
 
-    fun configure(id: String?, name: String, url: String, hours: Int, packages: Set<String>, artwork: Set<String>): CatalogSource = transaction {
-        val canonical = UrlScope.canonical(url)
+    fun configure(id: String?, name: String, url: String, hours: Int, packages: Set<String>, artwork: Set<String>,
+                  provider: CatalogProviderType? = null, authMethod: HttpAuthMethod? = null,
+                  username: String? = null, authHeader: String? = null, oauth: OAuthConfiguration? = null, packageChips: Map<String, String>? = null): CatalogSource = transaction {
+        val previous = id?.let(::source)
+        val kind = provider ?: previous?.provider ?: CatalogProviderType.JSON_URL
+        val canonical = if (kind == CatalogProviderType.REPO_URL) "https://github.com/${RepositoryUrlProvider.repository(url)}" else UrlScope.canonical(url)
+        require(previous?.builtin == true || kind !in listOf(CatalogProviderType.THE_FIRMWARE_HUB, CatalogProviderType.AWESOME_FM1)) { invalid(msg(R.string.source_builtin_locked)) }
+        require(previous?.builtin != true || kind == previous.provider) { invalid(msg(R.string.source_builtin_locked)) }
         require(name.isNotBlank() && name.length <= 100 && hours in 24..168) { invalid(msg(R.string.source_invalid_config)) }
         val packageScopes = packages.map(UrlScope::canonical).toSet()
         val artworkScopes = artwork.map(UrlScope::canonical).toSet()
-        val previous = id?.let(::source)
         require(previous?.builtin != true || previous.url == canonical && previous.name == name) { invalid(msg(R.string.source_builtin_locked)) }
         // Alternate spellings/queries cannot create another subscription with the Hub's identity.
         require(previous?.builtin == true || !URIHost(canonical).let { it == "thefirmwarehub.com" || it.endsWith(".thefirmwarehub.com") }) { invalid(msg(R.string.source_builtin_locked)) }
+        require(packageChips == null || packageChips.size <= 5000 && packageChips.all { (key, value) -> key.matches(Regex("[0-9a-f]{64}")) && value in listOf("unknown", "old", "new") } && (kind in listOf(CatalogProviderType.REPO_URL, CatalogProviderType.PKG_URL) || packageChips.isEmpty())) { invalid(msg(R.string.source_invalid_config)) }
         val sameUrl = sources().singleOrNull { it.url == canonical }
         require(sameUrl == null || sameUrl.deleted || sameUrl.id == id) { invalid(msg(R.string.source_duplicate)) }
         val base = sameUrl ?: CatalogSource(UUID.randomUUID().toString(), name.trim(), canonical)
         if (previous != null && previous.url != canonical) putSource(previous.copy(enabled = false, deleted = true, revision = previous.revision + 1))
-        val policyChanged = base.packageScopes != packageScopes || base.artworkScopes != artworkScopes
+        val policyChanged = base.packageScopes != packageScopes || base.artworkScopes != artworkScopes || base.provider != kind ||
+            authMethod?.let { it != base.authMethod } == true ||
+            username?.let { it != base.authUsername } == true || authHeader?.let { it != base.authHeader } == true || oauth?.let { it != base.oauth } == true
         base.copy(checkedAt = if (policyChanged) 0 else base.checkedAt,
             etag = if (policyChanged) null else base.etag, modified = if (policyChanged) null else base.modified,
             name = name.trim(), intervalHours = hours, packageScopes = packageScopes, artworkScopes = artworkScopes,
+            provider = kind, authMethod = authMethod ?: base.authMethod,
+            authUsername = username ?: base.authUsername, authHeader = authHeader ?: base.authHeader, oauth = oauth ?: base.oauth, packageChips = packageChips ?: base.packageChips,
             deleted = false, enabled = if (sameUrl != null && sameUrl.id == id && !sameUrl.deleted) sameUrl.enabled else false,
-            revision = base.revision + 1).also(::putSource)
+            revision = base.revision + 1).also { saved ->
+                putSource(saved)
+                if (saved.provider in listOf(CatalogProviderType.REPO_URL, CatalogProviderType.PKG_URL) &&
+                    saved.packageChips != base.packageChips) updateCompatibility(saved)
+            }
+    }
+    private fun updateCompatibility(source: CatalogSource) {
+        fun chip(hash: String) = source.packageChips[hash] ?: "unknown"
+        val entries = readableDatabase.rawQuery("SELECT entry_id,json FROM catalog_entries WHERE source_id=?", arrayOf(source.id)).use { c ->
+            buildList { while (c.moveToNext()) add(c.getString(0) to c.getString(1)) }
+        }
+        entries.forEach { (id, raw) -> writableDatabase.update("catalog_entries", ContentValues().apply {
+            put("json", JSONObject(raw).let { it.put("chip", chip(it.getString("sha256"))).toString() })
+        }, "source_id=? AND entry_id=?", arrayOf(source.id, id)) }
+        val packages = readableDatabase.rawQuery("SELECT entry_id,json FROM downloaded_packages WHERE source_id=?", arrayOf(source.id)).use { c ->
+            buildList { while (c.moveToNext()) add(c.getString(0) to c.getString(1)) }
+        }
+        packages.forEach { (id, raw) ->
+            val json = JSONObject(raw); json.getJSONObject("entry").let { it.put("chip", chip(it.getString("sha256"))) }
+            writableDatabase.update("downloaded_packages", ContentValues().apply { put("json", json.toString()) }, "source_id=? AND entry_id=?", arrayOf(source.id, id))
+        }
     }
 
+    fun authenticationChanged(id: String) {
+        val s = source(id)
+        putSource(s.copy(checkedAt = 0, attemptedAt = 0, nextAttemptAt = 0, etag = null, modified = null, error = null, revision = s.revision + 1, authRevision = s.authRevision + 1))
+    }
     fun setEnabled(id: String, enabled: Boolean) = transaction {
         val s = source(id); check(!s.deleted)
         putSource(s.copy(enabled = enabled, revision = s.revision + 1))
@@ -86,7 +120,8 @@ class CatalogDatabase(private val context: Context, name: String = "firmware-lib
         listOf(CatalogSource.hub, CatalogSource.awesome).forEach { default ->
             val s = source(default.id)
             putSource(s.copy(enabled = default.enabled, intervalHours = default.intervalHours,
-                packageScopes = default.packageScopes, artworkScopes = default.artworkScopes, revision = s.revision + 1))
+                packageScopes = default.packageScopes, artworkScopes = default.artworkScopes, authMethod = HttpAuthMethod.NONE,
+                authUsername = "", authHeader = "X-API-Key", oauth = OAuthConfiguration(), revision = s.revision + 1))
         }
     }
 
@@ -223,6 +258,8 @@ class CatalogDatabase(private val context: Context, name: String = "firmware-lib
             put("revision", s.revision); put("attempted", s.attemptedAt); put("checked", s.checkedAt); put("next", s.nextAttemptAt)
             put("snapshot", s.snapshot); put("updated", s.updated); put("etag", s.etag); put("modified", s.modified); put("error", s.error)
             put("license", s.license); put("count", s.entryCount)
+            put("provider", s.provider.name); put("authMethod", s.authMethod.name)
+            put("authUsername", s.authUsername); put("authHeader", s.authHeader); put("oauth", oauthToJson(s.oauth)); put("packageChips", JSONObject(s.packageChips)); put("authRevision", s.authRevision)
         }
         private fun sourceFromJson(j: JSONObject): CatalogSource {
             fun list(key: String) = j.getJSONArray(key).let { a -> (0 until a.length()).map { a.getString(it) }.toSet() }
@@ -230,7 +267,10 @@ class CatalogDatabase(private val context: Context, name: String = "firmware-lib
             return CatalogSource(j.getString("id"), j.getString("name"), j.getString("url"), j.getBoolean("enabled"),
                 j.getBoolean("builtin"), j.getBoolean("deleted"), j.getInt("hours"), list("packages"), list("artwork"),
                 j.getLong("revision"), j.getLong("attempted"), j.getLong("checked"), j.getLong("next"), j.getBoolean("snapshot"),
-                j.getString("updated"), optional("etag"), optional("modified"), optional("error"), j.optString("license"), j.optInt("count"))
+                j.getString("updated"), optional("etag"), optional("modified"), optional("error"), j.optString("license"), j.optInt("count"),
+                j.optString("provider").takeIf(String::isNotBlank)?.let(CatalogProviderType::valueOf) ?: CatalogProviderType.legacy(j.getString("id")),
+                HttpAuthMethod.valueOf(j.optString("authMethod", "NONE")),
+                j.optString("authUsername"), j.optString("authHeader", "X-API-Key"), oauthFromJson(j.optJSONObject("oauth")), j.optJSONObject("packageChips")?.let { o -> o.keys().asSequence().associateWith { o.getString(it) } }.orEmpty(), j.optLong("authRevision"))
         }
     }
 }
