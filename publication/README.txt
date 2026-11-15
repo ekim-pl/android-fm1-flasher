@@ -1,5 +1,5 @@
 FM-1 Flasher — publication documentation
-Stable release: 0.9.3 on main. Release tag: multiplatform-v0.9.3.
+Stable release: 0.9.3 on main. Release tag: v0.9.3.
 Public assets use version-only names; Android versionCode is 24.
 
 CURRENT APPLICATION

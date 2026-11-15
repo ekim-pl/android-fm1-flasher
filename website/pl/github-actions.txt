@@ -17,12 +17,11 @@ zwykle sprawdza stronę bez wdrożenia. Dokumentacja brancha może różnić si�
 publicznej. Komendy lokalne i strukturę opisuje poradnik Pages.
 
 GOOGLE PLAY RELEASE (.github/workflows/google-play.yml) — KONFIGURACJA ORYGINAŁU
-Uruchamiają go wysłane tagi v* lub ręczny dispatch. Ręczne pole publish domyślnie ma true.
+Uruchamia go wyłącznie ręczny dispatch. Ręczne pole publish domyślnie ma true.
 Buduje podpisany AAB i może wysłać go na internal. Fastlane --package_name nadal wskazuje
 pl.ekim.fm1_flasher, podczas gdy ten branch tworzy pl.ekim.multiplatform_fm1_flasher.
-Nie jest to skonfigurowana ścieżka publikacji forka. Nie twórz tagu v0.9.1 tylko jako
-etykiety lokalnego APK: wyzwalacz v* może rozpocząć workflow Play. Żaden workflow nie
-ustanawia automatycznego tworzenia wydania GitHub Releases.
+Nie jest to skonfigurowana ścieżka publikacji forka. Tagi nie uruchamiają workflow Play.
+Żaden workflow nie ustanawia automatycznego tworzenia wydania GitHub Releases.
 
 Gdy ustawiono FM1_RELEASE_TAG, Gradle wymaga v<versionName>. Przyszły prerelease GitHuba
 wymaga świadomego wyboru tagu/commita i osobnego przesłania zweryfikowanych plików.

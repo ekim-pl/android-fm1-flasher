@@ -1,5 +1,5 @@
 FM-1 Flasher — 发布文档
-稳定版本：main 上的 0.9.2。标签：multiplatform-v0.9.2。
+稳定版本：main 上的 0.9.2。标签：v0.9.2。
 公开附件仅使用版本号命名；内部 versionCode 保持不变。
 
 当前应用

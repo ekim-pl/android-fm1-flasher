@@ -15,10 +15,10 @@ PAGES (.github/workflows/pages.yml)
 当前分支文档可能与公共网站不同。本地命令与输出结构见 Pages 指南。
 
 GOOGLE PLAY RELEASE (.github/workflows/google-play.yml)：原应用配置
-推送 v* 标签或手动 dispatch 会触发，手动 publish 默认 true。
+仅手动 dispatch 会触发，手动 publish 默认 true。
 它构建签名 AAB 并可能上传 internal，但 fastlane --package_name 仍是 pl.ekim.fm1_flasher，
 而本分支生成 pl.ekim.multiplatform_fm1_flasher。不能用于发布此 fork。
-不要仅为本地 APK 命名就创建 v0.9.1 标签：v* 可能触发 Play 工作流。
+标签不会触发 Play 工作流。
 现有工作流没有自动创建 GitHub Releases 的步骤。
 
 设置 FM1_RELEASE_TAG 时，Gradle 要求 v<versionName>。未来 GitHub 预发布需明确选择
