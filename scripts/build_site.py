@@ -169,19 +169,20 @@ def write_page(language, page, output):
         ])
     languages = ''
     alternates = ''
+    flags = {'en': '🇬🇧', 'pl': '🇵🇱', 'zh-CN': '🇨🇳'}
     for code in ('en', 'pl', 'zh-CN'):
         target = relative(f'{code}/{page}', output)
         html_language = LANGUAGES[code]['html']
         current = ' aria-current="true"' if code == language else ''
         languages += (f'<a data-language="{code}" href="{target}" lang="{html_language}" '
-                      f'hreflang="{html_language}"{current}>{LANGUAGES[code]["name"]}</a>')
+                      f'hreflang="{html_language}" aria-label="{LANGUAGES[code]["name"]}" title="{LANGUAGES[code]["name"]}"{current}><span aria-hidden="true">{flags[code]}</span></a>')
         alternates += f'<link rel="alternate" hreflang="{html_language}" href="{target}">\n'
     nav = ''.join(f'<a href="{relative(f"{language}/{target}", output)}">{ui[label]}</a>'
                   for target, label in [('documentation.html', 'guide'), ('about.html', 'about'),
                                         ('privacy.html', 'privacy')])
     if repository_url:
         nav += f'<a href="{escape(repository_url, quote=True)}/releases">{ui["releases"]}</a>'
-        nav += f'<a href="{escape(repository_url, quote=True)}">GitHub</a>'
+
     html = f'''<!doctype html>
 <html lang="{ui['html']}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -199,7 +200,8 @@ def write_page(language, page, output):
 <body data-language="{language}" data-page="{page}"><a class="skip" href="#content">{ui['skip']}</a>
 <header><a class="brand" href="{relative(f'{language}/index.html', output)}"><img src="{relative('assets/icon.svg', output)}" alt="" width="48" height="48"><span class="brand-name">FM-1 <span>Flasher</span></span></a>
 <nav class="languages" aria-label="{ui['languages']}">{languages}</nav>
-<nav aria-label="{ui['navigation']}">{nav}</nav></header>
+<nav class="project-nav" aria-label="{ui['navigation']}">{nav}</nav>
+<a class="header-github" href="{escape(repository_url or 'https://github.com/ekim-pl/android-fm1-flasher', quote=True)}" aria-label="GitHub" title="GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-4 1-4-2-6-2m12 4v-3c0-1 .1-1.5-.5-2 3-.3 6-1.5 6-6a4.5 4.5 0 0 0-1.2-3.1A4 4 0 0 0 19.2 3S18 2.6 15 4.5a14 14 0 0 0-6 0C6 2.6 4.8 3 4.8 3a4 4 0 0 0-.1 3.9A4.5 4.5 0 0 0 3.5 10c0 4.5 3 5.7 6 6-.5.5-.6 1-.5 2v3"/></svg></a></header>
 <main id="content">{body}</main>
 <section class="awesome-promo" aria-labelledby="awesome-title"><img src="{relative('assets/icons/awesome-fm1.svg', output)}" alt="" width="160" height="160"><div><h2 id="awesome-title">Awesome FM-1</h2><p>{ui['awesome_text']}</p><a class="awesome-cta" href="https://ekim-pl.github.io/awesome-fm1/">{ui['awesome_cta']} <span aria-hidden="true">→</span></a></div></section>
 <footer><span class="footer-brand"><img src="{relative('assets/icon.svg', output)}" alt="" width="28" height="28">FM-1 Flasher</span><p>{ui['independent']}</p><a href="{relative(f'{language}/license.html', output)}">MIT · {ui['license']}</a>
