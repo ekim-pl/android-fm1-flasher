@@ -1,0 +1,1 @@
+Opcjonalne statystyki za zgodą w kompilacjach z Firebase. Wspólna analityka i ustawienia prywatności dla Androida oraz iOS. Standardowe kompilacje bez SDK analityki.

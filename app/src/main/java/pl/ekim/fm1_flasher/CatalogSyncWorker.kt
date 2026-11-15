@@ -17,7 +17,13 @@ class CatalogSyncWorker(context: Context, parameters: WorkerParameters) : Worker
             val database = CatalogDatabase.get(applicationContext)
             database.migrate(applicationContext.filesDir)
             if (isStopped || database.setting("background") != "true" || database.settings().offline) return Result.success()
-            CatalogRepository(database).load()
+            val analytics = AndroidAnalytics.get(applicationContext)
+            analytics.setOffline(database.settings().offline)
+            val measurement = analytics.begin(AnalyticsOperation.CATALOG, AnalyticsInitiator.BACKGROUND)
+            try {
+                val catalog = CatalogRepository(database).load()
+                measurement.complete(catalog.fresh, if (catalog.fresh) AnalyticsError.NONE else AnalyticsError.OTHER)
+            } catch (failure: Exception) { measurement.complete(false, analyticsError(failure)); throw failure }
             return Result.success()
         } catch (_: Exception) { return Result.retry() }
         finally { CatalogOperations.lock.unlock() }

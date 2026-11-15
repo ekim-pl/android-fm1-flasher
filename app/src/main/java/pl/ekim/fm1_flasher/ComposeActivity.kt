@@ -66,7 +66,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     private fun port(device: UsbMidi) = AppPort("${device.info.id}:${device.usb.deviceName}:${device.generation}", device.label)
     override fun attachBaseContext(base: Context) { super.attachBaseContext(AppLanguage.wrap(base)) }
     private val observer: (UiState) -> Unit = { next ->
-        state.value = state.value.copy(undoAvailable = next.undoAvailable, fleetAvailable = true, fleet = next.fleet, jobs = next.jobs,
+        state.value = state.value.copy(analyticsAvailable = AndroidAnalytics.get(this).available, analyticsConsent = AndroidAnalytics.get(this).consent, undoAvailable = next.undoAvailable, fleetAvailable = true, fleet = next.fleet, jobs = next.jobs,
             queueRunning = next.queueRunning, queueStopping = next.queueStopping, catalog = next.catalog, downloads = next.downloads, favorites = next.favorites,
             offline = next.offline, backgroundSync = next.backgroundSync, backgroundAvailable = true, busy = next.busy, flashing = next.flashing, experimental = next.experimental,
             ports = next.devices.map(::port), target = next.target?.let(::port), identity = next.identity, chip = next.chip, chipDetection = next.chipDetection,
@@ -172,7 +172,14 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         service?.recordEvent("UI_STATUS", resolve(text))
         state.value = state.value.copy(status = text)
     }
+    override fun screen(screen: AnalyticsScreen) { AndroidAnalytics.get(this).screen(screen) }
     override fun perform(action: AppAction) {
+        if (action.kind == AppActionKind.ANALYTICS_CONSENT) {
+            runCatching { AndroidAnalytics.get(this).decide(AnalyticsConsent.valueOf(action.id)) }
+                .onFailure { showFailure(msg("analytics_save_failed")) }
+            state.value = state.value.copy(analyticsConsent = AndroidAnalytics.get(this).consent)
+            return
+        }
         try { dispatch(action) } catch (failure: Exception) { service?.recordFailure(failure); showFailure(failure.appMessage(R.string.library_change_error)) }
     }
     private fun dispatch(action: AppAction) {
@@ -182,6 +189,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         when (action.kind) {
             AppActionKind.LOG_CLEAR -> active.clearOperationLog()
             AppActionKind.LOG_EXPORT -> if (next.experimental && !next.busy) startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/plain").putExtra(Intent.EXTRA_TITLE, "fm1-operations-${System.currentTimeMillis()}.jsonl"), 62)
+            AppActionKind.ANALYTICS_CONSENT -> Unit
             AppActionKind.CLEAR_DOWNLOADS -> active.clearDownloads()
             AppActionKind.UNDO_REMOVE -> active.undoRemove()
             AppActionKind.DEVICE_ALIAS -> active.configureDevice(action.id, alias = action.value)

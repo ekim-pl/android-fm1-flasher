@@ -34,6 +34,22 @@ jobs:
         run: |
           python3 tools/sync-resources.py --check
           ./gradlew --no-daemon :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+      - name: Compile and lint optional Firebase variant (no live project)
+        run: |
+          mkdir -p app/firebase/test
+          cp tools/fixtures/google-services.test.json app/firebase/test/google-services.json
+          ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=test :app:compileDebugKotlin :app:lintDebug
+          python3 - <<'PYMANIFEST'
+          import xml.etree.ElementTree as ET
+          manifest = ET.parse('app/build/intermediates/merged_manifest/debug/processDebugMainManifest/AndroidManifest.xml').getroot()
+          android = '{http://schemas.android.com/apk/res/android}'
+          permissions = {p.get(android + 'name') for p in manifest.findall('uses-permission')}
+          assert not any('AD_ID' in p or 'ADSERVICES' in p or 'INSTALL_REFERRER' in p for p in permissions)
+          assert not any('FirebaseInitProvider' in p.get(android + 'name', '') for p in manifest.iter())
+          metadata = {p.get(android + 'name'): p.get(android + 'value') for p in manifest.findall('application/meta-data')}
+          for key in ('firebase_analytics_collection_enabled', 'google_analytics_automatic_screen_reporting_enabled', 'google_analytics_adid_collection_enabled', 'google_analytics_default_allow_analytics_storage', 'google_analytics_default_allow_ad_storage', 'google_analytics_default_allow_ad_user_data', 'google_analytics_default_allow_ad_personalization_signals'):
+              assert metadata[key] == 'false', key
+          PYMANIFEST
       - name: Test release fixture gate
         run: python3 -m unittest discover -s scripts -p 'test_*.py'
       - name: Save APK and reports

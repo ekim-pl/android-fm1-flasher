@@ -1,0 +1,48 @@
+0.9.5-experimental.26 — optional analytics proposal
+Date: 2026-11-15
+Base: f52b98c (0.9.4-experimental.25)
+Branch: proposal/analytics-0.9.5
+
+LOCAL VERIFICATION (Linux / Java 17 / Android SDK 36)
+- Shared JVM tests: 70, failures/errors/skips: 0 (includes 8 analytics tests).
+- Android unit tests: 133, failures/errors: 0, skipped: 4.
+  Existing external-fixture skips: CatalogTest (1), FirmwarePackageTest (1), RecoveryTest (2).
+  The production release fixture gate therefore remains outstanding.
+- SDK-free lintDebug, assembleDebug and assembleDebugAndroidTest: passed.
+- Firebase TEST variant JVM/Android unit tests, lintDebug, assembleDebug: passed
+  with normal dependency verification (no metadata-writing override).
+- Firebase PRODUCTION configuration lintRelease and bundleRelease: passed.
+  Both environment files used the deliberately invalid test fixture for compilation only.
+  No real Firebase project was configured; release bundle is unsigned and is not publishable.
+- Firebase release merged manifest: no FirebaseInitProvider, AD_ID, AdServices
+  attribution/ad-ID or install-referrer permissions. All seven analytics/screen/ad
+  default metadata controls are false.
+- Final SDK-free APK inspected with apkanalyzer: no Firebase or Google measurement
+  class definitions, no Firebase provider or advertising-ID permission.
+- Resource bridge --check: passed.
+- Python release-fixture helper tests: 2 passed (not the real firmware fixture gate).
+- Public documentation site: 44 HTML pages checked successfully after rebuilding.
+- Workflow/XcodeGen YAML parsed; git diff --check passed.
+
+SDK-free debug APK (local ignored artifact):
+dist/0.9.5-proposal/fm1-flasher-0.9.5-sdk-free-debug.apk
+SHA-256: b8ad70433ec9efeb4d90128e4c43555104b4b8340084710d3dac4f61e112b1b7
+Build logs: dist/0.9.5-proposal/qa/ (local, ignored).
+
+NOT VERIFIED / REQUIRED BEFORE PUBLICATION
+- macOS/Xcode build, Swift bridge and iOS runtime/network behavior.
+- Instrumentation UI flows and physical FM-1 hardware behavior.
+- Real Firebase DebugView, automatic SDK data inventory and traffic captures for
+  startup, refusal, grant, restart, offline mode and consent withdrawal.
+- GA4 projects/streams, retention, console permissions and reporting setup.
+- Google Play Data safety, Apple App Privacy/SDK manifests, production signing
+  and live workflow execution. No store forms or remote account settings were changed.
+- An SDK upload already in progress may complete after collection is disabled;
+  local reset does not delete previously uploaded server data.
+
+SETUP / REVIEW
+See docs/ANALYTICS.md and publication/analytics-0.9.5.json.
+BoM 35.2.0 was rejected by the Kotlin 2.2.21 compiler (Kotlin metadata 2.4).
+The proposal pins compatible BoM 34.6.0 / Analytics 23.0.0 instead of upgrading Kotlin.
+Firebase Apple SDK 12.6.0 is pinned to retain iOS 15 support.
+No release, PR, push or deployment has been performed.

@@ -1,0 +1,35 @@
+{
+  "status": "DRAFT — verify Firebase console, SDK automatic data and both store forms before submission",
+  "versionName": "0.9.5-experimental.26",
+  "versionCode": 26,
+  "standardBuild": {
+    "analyticsSdk": false
+  },
+  "analyticsBuild": {
+    "analyticsSdk": "Google Analytics for Firebase",
+    "defaultCollection": false,
+    "consentRequired": true,
+    "advertising": false,
+    "collected": [
+      "app interactions and operation results/timings",
+      "app instance identifiers",
+      "SDK app, OS and device metadata",
+      "network metadata and derived approximate location where applicable"
+    ],
+    "excluded": [
+      "instrument identities/serials/names",
+      "private URLs and credentials",
+      "firmware/MIDI contents",
+      "operation logs"
+    ],
+    "purpose": "Analytics",
+    "userAndEventRetentionMonths": 2,
+    "priorServerDataDeletedOnOptOut": false,
+    "publicationGate": [
+      "verify SDK data inventory and store disclosures",
+      "verify no collection before consent, offline and withdrawal network behavior on both platforms",
+      "set retention in GA4 console",
+      "verify Apple privacy manifests and Android merged manifest"
+    ]
+  }
+}

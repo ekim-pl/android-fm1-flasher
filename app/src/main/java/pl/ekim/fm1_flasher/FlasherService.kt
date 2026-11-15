@@ -50,6 +50,7 @@ data class UiState(
 
 class FlasherService : Service() {
     inner class LocalBinder : Binder() { val service get() = this@FlasherService }
+    private val analytics get() = AndroidAnalytics.get(this)
     private val binder = LocalBinder()
     private val main = Handler(Looper.getMainLooper())
     private val worker = Executors.newSingleThreadExecutor()
@@ -240,7 +241,7 @@ class FlasherService : Service() {
         if (state.busy) { refreshWhenIdle = true; return }
         refreshWhenIdle = false
         libraryTask {
-            if (CatalogRefreshPolicy.shouldRefresh(library.settings().offline, hasNetwork(), database.sources(), System.currentTimeMillis())) repository.load()
+            if (CatalogRefreshPolicy.shouldRefresh(library.settings().offline, hasNetwork(), database.sources(), System.currentTimeMillis())) trackedCatalog(AnalyticsInitiator.AUTOMATIC)
             publishLibrary()
             restoreSelection()
         }
@@ -297,9 +298,14 @@ class FlasherService : Service() {
         execute { loadCatalog() }
     }
 
+    private fun trackedCatalog(initiator: AnalyticsInitiator = AnalyticsInitiator.MANUAL, sourceId: String? = null): Catalog {
+        val measurement = analytics.begin(AnalyticsOperation.CATALOG, initiator)
+        try { return repository.load(sourceId = sourceId).also { measurement.complete(it.fresh, if (it.fresh) AnalyticsError.NONE else AnalyticsError.OTHER) } }
+        catch (failure: Exception) { measurement.complete(false, analyticsError(failure)); throw failure }
+    }
     private fun loadCatalog() {
         try {
-            val catalog = repository.load()
+            val catalog = trackedCatalog()
             update { it.copy(catalog = catalog) }
             restoreSelection()
             val updates = CatalogBrowser.updates(catalog, state.downloads).size
@@ -338,6 +344,7 @@ class FlasherService : Service() {
         startService(Intent(this, FlasherService::class.java).setAction("LIBRARY"))
         update { it.copy(busy = true, target = target, identity = null, chip = FlashChip.UNKNOWN) }
         execute {
+            val measurement = analytics.begin(AnalyticsOperation.CONNECT)
             try {
                 val identity = midi.open(target).use { FlashSession({ _, _ -> failed(msg(R.string.not_applicable)) }, { _, _ -> }).identify(it) }
                 check(identity.baseModel == "FM-1") { failed(msg(R.string.wrong_device_identity, identity)) }
@@ -345,7 +352,9 @@ class FlasherService : Service() {
                 publishFleet()
                 update { it.copy(identity = identity, chip = fleet.devices.single { d -> d.endpoint == target.endpoint }.chip) }
                 status(msg(R.string.connected_only, target.usb.deviceName, identity))
+                measurement.complete()
             } catch (failure: Exception) {
+                measurement.complete(false, analyticsError(failure))
                 update { it.copy(target = null, identity = null) }
                 status(failureText(failure, R.string.connect_error))
             } finally { finishLibraryTask() }
@@ -354,6 +363,7 @@ class FlasherService : Service() {
 
     private fun publishLibrary() {
         val settings = library.settings()
+        analytics.setOffline(settings.offline)
         val downloads = library.list()
         update { it.copy(downloads = downloads, favorites = settings.favorites, offline = settings.offline,
             catalog = repository.cached(), backgroundSync = database.setting("background") == "true", browse = database.browseSettings()) }
@@ -407,7 +417,7 @@ class FlasherService : Service() {
 
     fun setSourceEnabled(id: String, enabled: Boolean) = libraryTask {
         database.setEnabled(id, enabled)
-        if (enabled && !library.settings().offline && hasNetwork()) repository.load(sourceId = id)
+        if (enabled && !library.settings().offline && hasNetwork()) trackedCatalog(sourceId = id)
         publishLibrary(); restoreSelection()
         if (enabled) sourceResult(id) else status(msg(R.string.source_disabled))
     }
@@ -415,7 +425,7 @@ class FlasherService : Service() {
     fun checkSource(id: String) = libraryTask(msg(R.string.checking_catalog)) {
         check(!library.settings().offline) { failed(msg(R.string.offline_refresh_blocked)) }
         check(hasNetwork()) { failed(msg(R.string.no_network_preserved)) }
-        repository.load(sourceId = id)
+        trackedCatalog(sourceId = id)
         publishLibrary(); restoreSelection()
         sourceResult(id)
     }
@@ -463,7 +473,7 @@ class FlasherService : Service() {
                 savedId = saved.id
                 if (id != null && id != saved.id) credentials.remove(id)
                 if (checkNow) {
-                    if (!library.settings().offline && hasNetwork()) repository.load(sourceId = saved.id)
+                    if (!library.settings().offline && hasNetwork()) trackedCatalog(sourceId = saved.id)
                     else status(msg(R.string.source_check_offline))
                 }
                 publishLibrary(); restoreSelection()
@@ -529,7 +539,7 @@ class FlasherService : Service() {
         status(msg("fleet_restored"))
     }
 
-    private fun storeDownload(entry: CatalogEntry) {
+    private fun storeDownload(entry: CatalogEntry) = analytics.measure(AnalyticsOperation.DOWNLOAD) {
         check(!FleetPolicy.pinned(fleet.jobs, entry.key)) { failed(msg("fleet_package_pinned")) }
         check(!state.offline) { failed(msg(R.string.download_offline_blocked)) }
         val raw = repository.download(entry)
@@ -548,7 +558,7 @@ class FlasherService : Service() {
 
     fun updateDownloads() = libraryTask(msg(R.string.checking_package_updates)) {
         check(!state.offline) { failed(msg(R.string.update_offline_blocked)) }
-        val catalog = repository.load()
+        val catalog = trackedCatalog()
         update { it.copy(catalog = catalog) }
         restoreSelection()
         val updates = CatalogBrowser.updates(catalog, library.list())
@@ -617,6 +627,8 @@ class FlasherService : Service() {
     }
 
     private fun runJob(job: FlashJob) {
+        val measurement = analytics.begin(AnalyticsOperation.FLASH)
+        var analyticsPhase = AnalyticsStage.PREPARING
         val wake = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "fm1:flash")
         var ownsMidi = false
         try {
@@ -634,6 +646,7 @@ class FlasherService : Service() {
             val originalSerial = fleet.devices.single { it.id == job.deviceId }.serial
             val session = FlashSession(reconnect = { _, loader ->
                 fleet.result(job.id, JobOutcome.RUNNING, if (loader) "reconnect_loader" else "reconnect_final"); publishFleet()
+                analyticsPhase = AnalyticsStage.RECONNECTING
                 val chosen = awaitReconnect(checkNotNull(activeGate), loader, deadline)
                 val serial = runCatching { chosen.usb.serialNumber }.getOrNull()
                 check(originalSerial.isNullOrBlank() || serial.isNullOrBlank() || originalSerial == serial) { failed(msg("fleet_serial_changed")) }
@@ -647,6 +660,7 @@ class FlasherService : Service() {
                 update { it.copy(target = chosen, identity = null) }
                 midi.open(chosen)
             }, report = { text, progress ->
+                analyticsStage(text)?.let { analyticsPhase = it }
                 val phase = (text as? AppText.Resource)?.key ?: "flash_preparing"
                 fleet.result(job.id, JobOutcome.RUNNING, phase, progress); publishFleet()
                 journal.record(job.hash, job.deviceId, phase)
@@ -663,7 +677,9 @@ class FlasherService : Service() {
             fleet.rebind(job.deviceId, checkNotNull(state.target).endpoint, installed)
             fleet.result(job.id, JobOutcome.CONFIRMED, "fleet_confirmed", 100); publishFleet()
             update { it.copy(identity = installed) }
+            measurement.complete()
         } catch (failure: Exception) {
+            measurement.complete(false, analyticsError(failure), analyticsPhase)
             val reason = (failureText(failure, R.string.flash_result_unknown) as? AppText.Resource)?.takeIf { it.arguments.isEmpty() }?.key ?: "fleet_unconfirmed"
             fleet.result(job.id, JobOutcome.UNCONFIRMED, reason); publishFleet()
             throw failure
@@ -736,6 +752,7 @@ class FlasherService : Service() {
         }
         update { it.copy(busy = true, flashing = true, recoveryPlan = null) }
         execute {
+            val measurement = analytics.begin(AnalyticsOperation.RECOVERY)
             val wake = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "fm1:recovery")
             var ownsMidi = false
             try {
@@ -767,7 +784,9 @@ class FlasherService : Service() {
                         }
                     }
                 }
+                measurement.complete()
             } catch (failure: Exception) {
+                measurement.complete(false, analyticsError(failure), AnalyticsStage.PREPARING)
                 status(msg(R.string.recovery_failed, failureText(failure, R.string.flash_result_unknown)))
             } finally {
                 if (ownsMidi) MidiSessionGuard.release()

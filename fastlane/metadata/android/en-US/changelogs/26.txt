@@ -1,0 +1,1 @@
+Optional consent-based usage statistics in Firebase-enabled builds. Shared analytics and privacy controls prepared for Android and iOS. Standard builds remain SDK-free.

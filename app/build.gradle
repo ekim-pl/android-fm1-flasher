@@ -4,6 +4,20 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
+def analyticsEnabled = providers.gradleProperty('fm1Analytics').getOrElse('false').toBoolean()
+def analyticsEnvironment = providers.gradleProperty('fm1AnalyticsEnvironment').getOrElse('')
+def analyticsConfig
+if (analyticsEnabled) {
+    if (!(analyticsEnvironment in ['test', 'production'])) throw new GradleException('Set -Pfm1AnalyticsEnvironment=test or production')
+    def configFile = file("firebase/${analyticsEnvironment}/google-services.json")
+    if (!configFile.isFile()) throw new GradleException("Missing Firebase config: ${configFile}")
+    analyticsConfig = new groovy.json.JsonSlurper().parse(configFile)
+    analyticsConfig = [project: analyticsConfig.project_info, client: analyticsConfig.client.find {
+        it.client_info.android_client_info.package_name == 'pl.ekim.fm1_flasher'
+    }]
+    if (!analyticsConfig.client) throw new GradleException('Firebase Android package does not match applicationId')
+}
+
 def uploadKeystore = System.getenv('ANDROID_KEYSTORE_FILE')
 def projectDocsAssets = layout.buildDirectory.dir('generated/projectDocsAssets')
 
@@ -18,8 +32,14 @@ android {
         minSdk 34
         targetSdk 36
         testInstrumentationRunner "android.test.InstrumentationTestRunner"
-        versionCode 25
-        versionName '0.9.4-experimental.25'
+        if (analyticsEnabled) {
+            resValue 'string', 'google_app_id', analyticsConfig.client.client_info.mobilesdk_app_id
+            resValue 'string', 'google_api_key', analyticsConfig.client.api_key[0].current_key
+            resValue 'string', 'project_id', analyticsConfig.project.project_id
+            resValue 'string', 'gcm_defaultSenderId', analyticsConfig.project.project_number
+        }
+        versionCode 26
+        versionName '0.9.5-experimental.26'
     }
     signingConfigs {
         if (uploadKeystore) {
@@ -46,6 +66,7 @@ android {
     kotlinOptions { jvmTarget = '17' }
     testOptions { unitTests.returnDefaultValues = true }
     sourceSets.main.assets.srcDir(projectDocsAssets)
+    sourceSets.main.java.srcDir(analyticsEnabled ? 'src/analytics/java' : 'src/noAnalytics/java')
     sourceSets.test.java.srcDir('src/testSupport/java')
     sourceSets.androidTest.java.srcDir('src/testSupport/java')
 }
@@ -63,7 +84,18 @@ if (releaseTag && releaseTag != "v${android.defaultConfig.versionName}") {
     throw new GradleException('Release tag must match v<versionName> from app/build.gradle')
 }
 
+// A production Firebase project must never receive debug-build events.
+androidComponents {
+    beforeVariants(selector().withBuildType('debug')) { variant ->
+        if (analyticsEnabled && analyticsEnvironment == 'production') variant.enable = false
+    }
+}
+
 dependencies {
+    if (analyticsEnabled) {
+        implementation platform('com.google.firebase:firebase-bom:34.6.0')
+        implementation 'com.google.firebase:firebase-analytics'
+    }
     implementation project(':shared')
     implementation project(':composeApp')
     implementation 'androidx.activity:activity-compose:1.11.0'

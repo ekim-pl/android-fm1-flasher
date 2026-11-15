@@ -22,4 +22,6 @@ Experimental features include a MIDI logger and separate recovery tools. Physica
 
 ## Privacy and licenses
 
-The app has no advertising or analytics. Library data, device names and task history are stored locally. Catalog and download servers receive connection metadata. See the [privacy policy](../PRIVACY_POLICY.md) and [MIT license](../LICENSE.md); firmware and third-party components retain their own licenses.
+The app requires no account and contains no advertising. Standard builds contain no analytics SDK. Optional analytics-enabled builds include Google Analytics for Firebase, disabled until explicit consent. Library data, device names and task history are stored locally. Catalog and download servers receive connection metadata. See the [privacy policy](../PRIVACY_POLICY.md) and [MIT license](../LICENSE.md); firmware and third-party components retain their own licenses.
+
+Optional analytics SDK terms: [Firebase notices](../third_party/firebase-analytics-NOTICE.md).

@@ -1,0 +1,28 @@
+# Generate only for a configured analytics environment; base project.yml contains no Firebase SDK.
+include:
+  - project.yml
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk.git
+    exactVersion: 12.6.0
+targets:
+  FM1Flasher:
+    sources:
+      - path: Firebase/${FM1_ANALYTICS_ENVIRONMENT}/GoogleService-Info.plist
+        buildPhase: resources
+    dependencies:
+      - package: Firebase
+        product: FirebaseAnalyticsCore
+      - package: Firebase
+        product: FirebaseCore
+    info:
+      properties:
+        FM1AnalyticsEnvironment: "${FM1_ANALYTICS_ENVIRONMENT}"
+        FIREBASE_ANALYTICS_COLLECTION_ENABLED: false
+        FirebaseAutomaticScreenReportingEnabled: false
+        GOOGLE_ANALYTICS_REGISTRATION_WITH_AD_NETWORK_ENABLED: false
+        GOOGLE_ANALYTICS_IDFV_COLLECTION_ENABLED: false
+        GOOGLE_ANALYTICS_DEFAULT_ALLOW_ANALYTICS_STORAGE: false
+        GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_STORAGE: false
+        GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_USER_DATA: false
+        GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS: false

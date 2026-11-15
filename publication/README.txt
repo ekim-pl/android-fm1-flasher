@@ -1,3 +1,7 @@
+PROPOSAL: 0.9.5-experimental.26 / Android code 26 / iOS build 26.
+Optional analytics implementation: ../docs/ANALYTICS.md. Not published.
+Historical release records below remain unchanged.
+
 FM-1 Flasher — publication documentation
 Stable release: 0.9.3 on main. Release tag: v0.9.3.
 Public assets use version-only names; Android versionCode is 24.

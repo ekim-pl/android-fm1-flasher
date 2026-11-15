@@ -15,8 +15,10 @@ interface AppHost {
 
 /** Native hosts provide I/O; catalog, library policy and application orchestration remain common. */
 class PortableAppBackend(private val midi: ProbeBackend, private val monitor: PassiveMidiBackend,
-    private val storage: AppStorage, private val http: HttpClient, private val host: AppHost) : AppBackend {
+    private val storage: AppStorage, private val http: HttpClient, private val host: AppHost, analyticsSink: AnalyticsSink = NoAnalytics) : AppBackend {
     override val state = MutableStateFlow(AppSnapshot(language = host.systemLanguage.substringBefore('-').let { if (it in listOf("pl", "zh")) it else "en" }))
+    private val analytics = AnalyticsController(analyticsSink, storage)
+    override fun screen(screen: AnalyticsScreen) = analytics.screen(screen)
     private val operationLog = OperationLog(storage, ::epochMillis)
     private val logScope = CoroutineScope(SupervisorJob() + Dispatchers.Default.limitedParallelism(1))
     private fun logEvent(event: String, message: String = "", level: String = "INFO") {
@@ -32,6 +34,8 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
     init { scope.launch {
         try {
             readConfiguration()
+            analytics.setOffline(repository.settings().offline)
+            state.update { it.copy(analyticsAvailable = analytics.available, analyticsConsent = analytics.consent) }
             host.setAppearance(state.value.appearance)
             state.update { it.copy(initialized = true) }
             publishLibrary()
@@ -42,7 +46,7 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
             val unresolved = journal != null && runCatching { Json.parseToJsonElement(journal.decodeToString()).jsonObject["outcome"]?.jsonPrimitive?.content != "confirmed" }.getOrDefault(true)
             if (unresolved) report(msg("flash_interrupted"))
             else report(msg("library_ready"))
-            if (!state.value.offline) { state.update { it.copy(catalog = repository.refresh()) }; restoreSelection() }
+            if (!state.value.offline) { state.update { it.copy(catalog = trackedRefresh()) }; restoreSelection() }
         } catch (failure: Exception) { report(failure.appMessage("library_read_error")) }
         finally { state.update { it.copy(busy = false, initialized = true) } }
     } }
@@ -63,8 +67,13 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
         if (!state.value.busy) task {
             refreshPorts()
             state.update { it.copy(catalog = repository.cached()) }
-            if (!state.value.offline && state.value.catalog?.fresh != true) state.update { it.copy(catalog = repository.refresh()) }
+            if (!state.value.offline && state.value.catalog?.fresh != true) state.update { it.copy(catalog = trackedRefresh()) }
         }
+    }
+    private fun trackedRefresh(initiator: AnalyticsInitiator = AnalyticsInitiator.AUTOMATIC): Catalog {
+        val measurement = analytics.begin(AnalyticsOperation.CATALOG, initiator)
+        try { return repository.refresh().also { measurement.complete(it.fresh, if (it.fresh) AnalyticsError.NONE else AnalyticsError.OTHER) } }
+        catch (failure: Exception) { measurement.complete(false, analyticsError(failure)); throw failure }
     }
     private fun refreshPorts() {
         val ports = midi.devices().map { port -> AppPort(port.id.toString(), port.label) }
@@ -72,6 +81,7 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
     }
     private fun publishLibrary() {
         val prefs = repository.settings()
+        analytics.setOffline(prefs.offline)
         state.update { it.copy(downloads = repository.list(), favorites = prefs.favorites.map { id -> if (id.startsWith("firmwarehub/")) id else CatalogSource.key(CatalogSource.HUB, id) }.toSet(), offline = prefs.offline) }
         if (repository.problems.isNotEmpty()) report(AppText.Joined(repository.problems.toList(), "\n"))
         if (repository.settingsRepaired && !settingsRepairReported) { settingsRepairReported = true; report(msg("settings_repaired")) }
@@ -105,6 +115,11 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
     override fun perform(action: AppAction) {
         if (action.kind !in listOf(AppActionKind.LOGGER_REFRESH, AppActionKind.LOG_CLEAR)) logEvent("ACTION_${action.kind}")
         when (action.kind) {
+            AppActionKind.ANALYTICS_CONSENT -> {
+                runCatching { analytics.decide(AnalyticsConsent.valueOf(action.id)) }
+                    .onFailure { report(msg("analytics_save_failed")) }
+                state.update { it.copy(analyticsConsent = analytics.consent) }
+            }
             AppActionKind.LOG_EXPORT -> if (state.value.experimental && !state.value.busy) logScope.launch {
                 runCatching { host.exportText("fm1-operations-${epochMillis()}.jsonl", operationLog.export()) }
                     .onFailure { report(it.appMessage("logger_save_failed")) }
@@ -133,7 +148,7 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
             AppActionKind.PORTS_REFRESH -> refreshPorts()
             AppActionKind.REFRESH -> {
                 check(!state.value.offline) { failed(msg("offline_refresh_blocked")) }
-                report(msg("checking_catalog")); state.update { it.copy(catalog = repository.refresh()) }; restoreSelection(); report(msg("library_ready"))
+                report(msg("checking_catalog")); state.update { it.copy(catalog = trackedRefresh(AnalyticsInitiator.MANUAL)) }; restoreSelection(); report(msg("library_ready"))
             }
             AppActionKind.OFFLINE -> { repository.saveSettings(repository.settings().copy(offline = action.id.toBooleanStrict())); publishLibrary(); report(msg(if (state.value.offline) "offline_enabled" else "online_enabled")) }
             AppActionKind.FAVORITE -> { val prefs = repository.settings(); val favorites = prefs.favorites.map { if (it.startsWith("firmwarehub/")) it else CatalogSource.key(CatalogSource.HUB, it) }.toSet(); repository.saveSettings(prefs.copy(favorites = if (action.id in favorites) favorites - action.id else favorites + action.id)) }
@@ -142,19 +157,19 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
                 state.update { it.copy(ready = entry) }; report(msg("package_selected", entry.name, entry.version))
             }
             AppActionKind.REMOVE -> { repository.remove(action.id); if (state.value.ready?.key == action.id) state.update { it.copy(ready = null) }; report(msg("package_removed")) }
-            AppActionKind.DOWNLOAD -> {
+            AppActionKind.DOWNLOAD -> analytics.measure(AnalyticsOperation.DOWNLOAD) {
                 check(!state.value.offline) { failed(msg("download_offline_blocked")) }
                 val entry = state.value.catalog?.entries?.singleOrNull { it.key == action.id } ?: failed(msg("download_stale"))
                 report(msg("downloading_package", entry.name, entry.version)); repository.download(entry); restoreSelection(); report(msg("package_downloaded", entry.name, entry.version))
             }
             AppActionKind.UPDATE_ALL -> {
                 check(!state.value.offline) { failed(msg("update_offline_blocked")) }
-                val catalog = repository.refresh(); check(catalog.fresh) { failed(msg("catalog_update_unavailable")) }; state.update { it.copy(catalog = catalog) }
+                val catalog = trackedRefresh(AnalyticsInitiator.MANUAL); check(catalog.fresh) { failed(msg("catalog_update_unavailable")) }; state.update { it.copy(catalog = catalog) }
                 val updates = CatalogBrowser.updates(catalog, repository.list()); val errors = mutableListOf<AppText>(); var count = 0
-                updates.forEachIndexed { i, entry -> report(msg("updating_package", i + 1, updates.size, entry.name)); try { repository.download(entry); count++ } catch (failure: Exception) { errors += failure.appMessage("local_library_error") } }
+                updates.forEachIndexed { i, entry -> report(msg("updating_package", i + 1, updates.size, entry.name)); try { analytics.measure(AnalyticsOperation.DOWNLOAD) { repository.download(entry) }; count++ } catch (failure: Exception) { errors += failure.appMessage("local_library_error") } }
                 restoreSelection(); report(AppText.Joined(listOf(msg("packages_updated", count, updates.size)) + errors, "\n"))
             }
-            AppActionKind.CONNECT -> {
+            AppActionKind.CONNECT -> analytics.measure(AnalyticsOperation.CONNECT) {
                 monitor.stopMonitor(); refreshPorts(); val port = state.value.ports.singleOrNull { it.id == action.id } ?: failed(msg("usb_port_gone"))
                 state.update { it.copy(target = null, identity = null, chip = FlashChip.UNKNOWN) }
                 val identity = midi.open(action.id.toInt()).use { FlashSession({ _, _ -> error("Identity never reconnects") }, { _, _ -> }).identify(it) }
@@ -194,6 +209,8 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
         val (saved, image) = repository.load(selected.id)
         check(saved.entry.sha256 == action.value && snapshot.chip.allows(saved.entry)) { failed(msg("local_chip_unsupported")) }
         state.update { it.copy(flashing = true) }; host.setFlashing(true)
+        val measurement = analytics.begin(AnalyticsOperation.FLASH)
+        var analyticsPhase = AnalyticsStage.PREPARING
         val deadline = monotonicTimeMillis() + FlashSession.MAX_SESSION_MS
         var before = midi.devices().map { it.id }.toSet()
         try {
@@ -201,6 +218,7 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
             val session = FlashSession({ previous, loader ->
                 requestedPort.value = null
                 state.update { it.copy(awaitingPort = true, candidates = emptyList(), identity = null) }
+                analyticsPhase = AnalyticsStage.RECONNECTING
                 report(msg("ios_reconnect"))
                 val reconnectDeadline = minOf(deadline, monotonicTimeMillis() + 180000)
                 var chosen: ProbePort? = null
@@ -217,12 +235,14 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
                 state.update { it.copy(target = AppPort(port.id.toString(), port.label), awaitingPort = false, candidates = emptyList()) }
                 midi.open(port.id)
             }, { text, progress ->
+                analyticsStage(text)?.let { analyticsPhase = it }
                 if (text == msg("flash_stage_verify") || text == msg("flash_stage_write")) journal(image.sha256, target.id, if (text == msg("flash_stage_write")) "writing" else "verification")
                 report(text, progress)
             })
             val installed = session.flash(image, midi.open(target.id.toInt()), identity)
             journal(image.sha256, target.id, "confirmed"); state.update { it.copy(identity = installed) }
-        } catch (failure: Exception) { report(msg("flash_unconfirmed", failure.appMessage("flash_result_unknown"))) }
+            measurement.complete()
+        } catch (failure: Exception) { measurement.complete(false, analyticsError(failure), analyticsPhase); report(msg("flash_unconfirmed", failure.appMessage("flash_result_unknown"))) }
         finally { host.setFlashing(false); state.update { it.copy(flashing = false, awaitingPort = false, candidates = emptyList()) }; refreshPorts() }
     }
 }

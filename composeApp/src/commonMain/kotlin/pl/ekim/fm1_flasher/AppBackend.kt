@@ -7,6 +7,7 @@ data class LogRow(val id: Long, val source: String, val channel: Int?, val type:
 data class BackupRow(val id: String, val label: String)
 data class RecoveryView(val token: String, val confirmation: AppText)
 data class AppSnapshot(
+    val analyticsAvailable: Boolean = false, val analyticsConsent: AnalyticsConsent = AnalyticsConsent.UNKNOWN,
     val undoAvailable: Boolean = false, val fleetAvailable: Boolean = false, val fleet: List<FleetDevice> = emptyList(),
     val jobs: List<FlashJob> = emptyList(), val queueRunning: Boolean = false, val queueStopping: Boolean = false,
     val backgroundSync: Boolean = false,
@@ -30,7 +31,7 @@ data class AppSnapshot(
     val language: String = "en", val appearance: String = "SYSTEM", val browse: BrowseFilters = BrowseFilters(),
 )
 enum class AppActionKind {
-    LOG_EXPORT, LOG_CLEAR, CLEAR_DOWNLOADS,
+    ANALYTICS_CONSENT, LOG_EXPORT, LOG_CLEAR, CLEAR_DOWNLOADS,
     UNDO_REMOVE, DEVICE_ALIAS, DEVICE_CHIP, DEVICE_PAIR, QUEUE_ADD, QUEUE_REMOVE, QUEUE_START, QUEUE_STOP,
     AUTH_LOGIN, SOURCE_ENABLE, SOURCE_CHECK, SOURCE_REMOVE, SOURCE_RESTORE, SOURCE_SAVE, BACKGROUND_SYNC,
     PORTS_REFRESH, REFRESH, OFFLINE, FAVORITE, DOWNLOAD, USE, REMOVE, UPDATE_ALL, CONNECT, CHIP, FLASH, RECONNECT,
@@ -43,6 +44,7 @@ data class SourceConfiguration(val name: String, val url: String, val hours: Int
 data class AppAction(val kind: AppActionKind, val id: String = "", val value: String = "", val source: SourceConfiguration? = null)
 interface AppBackend {
     val state: StateFlow<AppSnapshot>
+    fun screen(screen: AnalyticsScreen) {}
     fun perform(action: AppAction)
     fun saveBrowse(filters: BrowseFilters)
     suspend fun artwork(entry: CatalogEntry): androidx.compose.ui.graphics.ImageBitmap?

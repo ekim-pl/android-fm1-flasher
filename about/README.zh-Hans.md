@@ -42,7 +42,7 @@ Android 需要 **14+**、USB Host/OTG、MIDI、数据线和稳定供电，建议
 
 ## 隐私与许可证
 
-无需账户，无广告或分析。设备名称、已读取序列号及任务历史与固件库一起保存在本地。外部目录/下载服务器接收连接元数据，应用不会附加乐器身份。请阅读完整[隐私政策](../PRIVACY_POLICY.md)。
+应用无需账户且无广告。标准构建不包含分析 SDK。可选统计构建包含 Google Analytics for Firebase，在明确同意前保持关闭。设备名称、已读取序列号及任务历史与固件库一起保存在本地。外部目录/下载服务器接收连接元数据，应用不会附加乐器身份。请阅读完整[隐私政策](../PRIVACY_POLICY.md)。
 
 目录署名：[The Firmware Hub](https://thefirmwarehub.com)，CC BY 4.0；描述、图片和固件保留作者权利。应用：[MIT](../LICENSE.md)。Markdown：[CommonMark，BSD-2-Clause](../third_party/commonmark-LICENSE.txt)。网络/后台库：[Apache 2.0](../third_party/Apache-2.0.txt)、[声明](../third_party/android-libraries-NOTICE.txt)。
 
