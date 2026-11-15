@@ -34,7 +34,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: pl.ekim.multiplatform-fm1-flasher
         MARKETING_VERSION: '0.9.1'
-        CURRENT_PROJECT_VERSION: '21'
+        CURRENT_PROJECT_VERSION: '22'
     preBuildScripts:
       - name: Build Kotlin framework
         script: |

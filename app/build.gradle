@@ -18,7 +18,7 @@ android {
         minSdk 34
         targetSdk 36
         testInstrumentationRunner "android.test.InstrumentationTestRunner"
-        versionCode 21
+        versionCode 22
         versionName '0.9.1'
     }
     signingConfigs {

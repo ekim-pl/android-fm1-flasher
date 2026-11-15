@@ -1,4 +1,4 @@
-GitHub Actions：task/multiplatform-rework，0.9.1 / 21
+GitHub Actions：task/multiplatform-rework，0.9.1 / 22
 
 本文描述仓库中的工作流，不会执行发布。
 Android ID：pl.ekim.multiplatform_fm1_flasher。0.9.1 APK 仅为本地测试构建。

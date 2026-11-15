@@ -2,7 +2,7 @@
 
 Independent firmware manager for **M-VAVE FM-1**, built with Kotlin Multiplatform and Compose Multiplatform. The main Android workflow manages several instruments through an OTG hub and writes firmware **one instrument at a time**.
 
-This guide describes **0.9.1, Android build 21**, on `task/multiplatform-rework`. This prerelease adds persistent operation diagnostics and bulk download cleanup to the multi-instrument workflow. The [build report](publication/qa/0.9.1-test21.txt) records verification and known limits. The owner reported successful physical-device testing of build 20; this is user feedback, not a complete hardware acceptance matrix.
+This guide describes **0.9.1, Android build 22**, on `task/multiplatform-rework`. This prerelease adds persistent operation diagnostics and bulk download cleanup to the multi-instrument workflow. The [build report](publication/qa/0.9.1-test22.txt) records verification and known limits. The owner reported successful physical-device testing of build 20; this is user feedback, not a complete hardware acceptance matrix.
 
 [Polski](website/pl/documentation.md) · [简体中文](website/zh-CN/documentation.md) · [Implementation](MIGRATION.md) · [Privacy](PRIVACY_POLICY.md)
 
@@ -22,7 +22,7 @@ The Android application ID is `pl.ekim.multiplatform_fm1_flasher`. It installs s
 
 ## Getting started
 
-1. Install the test APK on Android 14 or newer. The build-21 debug certificate matches earlier multiplatform builds: install it as an update without uninstalling to retain this fork's library and preferences.
+1. Install the test APK on Android 14 or newer. The build-22 debug certificate matches earlier multiplatform builds: install it as an update without uninstalling to retain this fork's library and preferences.
 2. Open **Library**, find firmware and download it from its detail screen. Downloading verifies the package; it does not start an installation.
 3. Connect instruments with data-capable cables and an OTG hub. A separately powered hub is recommended. The app cannot measure or certify hub power quality.
 4. In **Devices**, use **Read instrument** on each card and grant Android USB access when requested. Only a recognized FM-1 can be added to the plan.
@@ -100,13 +100,13 @@ See [implementation and reproducible test commands](MIGRATION.md), [acceptance c
 
 The Swift host and shared metadata are present, but no Xcode build or physical iPhone update has been validated. The fleet store/queue and Android multi-source scheduler are not ported to iOS. The host retains the previous single-instrument workflow with manual reconnect. Keep it foregrounded; finite background time is not equivalent to Android's service.
 
-The configured Kotlin targets are `iosArm64` and `iosSimulatorArm64`, not an Intel simulator. `iosApp/project.yml` defines the XcodeGen project, bundle ID `pl.ekim.multiplatform-fm1-flasher`, version 0.9.1/21 and deployment target iOS 15. The macOS/Xcode steps are in [MIGRATION.md](MIGRATION.md); Linux metadata compilation is not an iOS app build.
+The configured Kotlin targets are `iosArm64` and `iosSimulatorArm64`, not an Intel simulator. `iosApp/project.yml` defines the XcodeGen project, bundle ID `pl.ekim.multiplatform-fm1-flasher`, version 0.9.1/22 and deployment target iOS 15. The macOS/Xcode steps are in [MIGRATION.md](MIGRATION.md); Linux metadata compilation is not an iOS app build.
 
 ## Verification and limits
 
-Current verification is recorded in the [0.9.1 / 21 report](publication/qa/0.9.1-test21.txt). Build 20 was reported working on physical instruments by the owner. ROM recovery, all chip/phone/hub combinations and an Apple binary still need separate verification.
+Current verification is recorded in the [0.9.1 / 22 report](publication/qa/0.9.1-test22.txt). Build 20 was reported working on physical instruments by the owner. ROM recovery, all chip/phone/hub combinations and an Apple binary still need separate verification.
 
-No new physical FM-1/hub test or iOS binary was independently verified for build 21. Power behavior, real mode/descriptor transitions, serial uniqueness and full hardware flash success remain acceptance gates. [The build report](publication/qa/0.9.1-test21.txt) records the scope and artifact identity.
+No new physical FM-1/hub test or iOS binary was independently verified for build 22. Power behavior, real mode/descriptor transitions, serial uniqueness and full hardware flash success remain acceptance gates. [The build report](publication/qa/0.9.1-test22.txt) records the scope and artifact identity.
 
 ## Privacy and attribution
 

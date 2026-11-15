@@ -49,4 +49,39 @@ class OperationLogServiceTest : InstrumentationTestCase() {
             context.unbindService(connection); output.delete()
         }
     }
+    fun testDocumentResultWaitsForForegroundRefreshBeforeExporting() {
+        val context = instrumentation.targetContext
+        var service: FlasherService? = null
+        val connected = CountDownLatch(1)
+        val connection = object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName, binder: IBinder) { service = (binder as FlasherService.LocalBinder).service; connected.countDown() }
+            override fun onServiceDisconnected(name: ComponentName) = Unit
+        }
+        val activity = instrumentation.startActivitySync(Intent(context, ComposeActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as ComposeActivity
+        assertTrue(context.bindService(Intent(context, FlasherService::class.java), connection, Context.BIND_AUTO_CREATE))
+        val output = File(context.cacheDir, "pending-operation-log.jsonl").apply { delete() }
+        var previous = false
+        fun waitUntil(check: () -> Boolean) {
+            repeat(100) { if (check()) return; Thread.sleep(50) }
+            assertTrue("Pending export did not finish", check())
+        }
+        try {
+            assertTrue(connected.await(10, TimeUnit.SECONDS)); waitUntil { !service!!.state.busy }
+            val active = service!!; previous = active.state.experimental
+            instrumentation.runOnMainSync {
+                active.setExperimental(true)
+                active.recordEvent("DOCUMENT_RESULT_TEST")
+                active.onAppOpened()
+                assertTrue(active.state.busy)
+                val callback = ComposeActivity::class.java.getDeclaredMethod("onActivityResult", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Intent::class.java)
+                callback.isAccessible = true
+                callback.invoke(activity, 62, android.app.Activity.RESULT_OK, Intent().setData(Uri.fromFile(output)))
+            }
+            waitUntil { output.exists() && output.readText().contains("DOCUMENT_RESULT_TEST") }
+        } finally {
+            instrumentation.runOnMainSync { service?.setExperimental(previous); activity.finish() }
+            context.unbindService(connection); output.delete()
+        }
+    }
+
 }

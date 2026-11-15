@@ -1,4 +1,4 @@
-# Multiplatform FM-1 Flasher 0.9.1 — prerelease, build 21
+# Multiplatform FM-1 Flasher 0.9.1 — prerelease, build 22
 
 ## Nowości
 - Trwały lokalny log operacji, zdarzeń USB/MIDI, etapów instalacji i błędów. Limit 256 KiB, automatycznie usuwane najstarsze wpisy, zapis atomowy na osobnym executorze.
@@ -7,12 +7,14 @@
 - Bezpośredni ekran trybów MIDI/download i kości pamięci, popup wyniku detekcji, poprawiona obsługa opóźnionych zdarzeń odłączenia USB i tymczasowych domyślnych wpisów urządzeń (z testowego buildu 20).
 - Aktualne instrukcje, README, About, polityka prywatności i GitHub Pages w EN, PL i 简体中文.
 
+Build 22 zastępuje wycofany build 21. Eksport logu oczekuje teraz na zakończenie odświeżania po powrocie z systemowego wyboru pliku; dodano test regresji tego scenariusza.
+
 ## Instalacja
 Android 14+. APK jest podpisany dotychczasowym certyfikatem debug i aktualizuje aplikację `pl.ekim.multiplatform_fm1_flasher` z zachowaniem danych. Nie aktualizuje odrębnej oryginalnej aplikacji `pl.ekim.fm1_flasher`.
 
 ## Weryfikacja
-179 testów jednostkowych zaliczonych, 4 pominięte (zewnętrzne fixture’y); 33 testy instrumentacyjne Androida zaliczone. Build debug, lint, zasoby i metadane Kotlin/iOS sprawdzone. Dołączono APK, SHA-256, raport i dokumentację offline.
+179 testów jednostkowych zaliczonych, 4 pominięte (zewnętrzne fixture’y); 34 testy instrumentacyjne Androida zaliczone. Build debug, lint, zasoby i metadane Kotlin/iOS sprawdzone. Dołączono APK, SHA-256, raport i dokumentację offline.
 
-Właściciel potwierdził udane testy buildu 20 na fizycznych FM-1. To informacja od użytkownika; nowe funkcje buildu 21 sprawdzono w emulatorze. Recovery ROM i pełna macierz urządzeń/chipów/hubów nadal wymagają osobnej weryfikacji. Nie przygotowano ani nie zweryfikowano aplikacji iOS w Xcode.
+Właściciel potwierdził udane testy buildu 20 na fizycznych FM-1. To informacja od użytkownika; nowe funkcje buildu 22 sprawdzono w emulatorze. Recovery ROM i pełna macierz urządzeń/chipów/hubów nadal wymagają osobnej weryfikacji. Nie przygotowano ani nie zweryfikowano aplikacji iOS w Xcode.
 
 [Dokumentacja PL](https://ekim-pl.github.io/android-fm1-flasher/pl/documentation.html) · [English](https://ekim-pl.github.io/android-fm1-flasher/en/documentation.html) · [简体中文](https://ekim-pl.github.io/android-fm1-flasher/zh-CN/documentation.html)

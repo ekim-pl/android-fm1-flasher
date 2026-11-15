@@ -2,7 +2,7 @@
 
 面向 **M-VAVE FM-1** 的独立固件管理器，使用 Kotlin Multiplatform 和 Compose Multiplatform。Android 可通过 OTG 集线器管理多台乐器，并且**每次只写入一台乐器**。
 
-本文描述 `task/multiplatform-rework` 分支的 **0.9.1，Android 构建 21**。此预发布版本添加持久操作日志和批量清除固件下载。[构建报告](../../publication/qa/0.9.1-test21.txt) 记录验证结果与限制。所有者报告构建 20 已在实体乐器上测试成功；这是用户反馈，不代表完整的硬件验收。
+本文描述 `task/multiplatform-rework` 分支的 **0.9.1，Android 构建 22**。此预发布版本添加持久操作日志和批量清除固件下载。[构建报告](../../publication/qa/0.9.1-test22.txt) 记录验证结果与限制。所有者报告构建 20 已在实体乐器上测试成功；这是用户反馈，不代表完整的硬件验收。
 
 [English](../../README.md) · [Polski](../pl/documentation.md) · [实现说明](../../MIGRATION.md) · [隐私](privacy.md)
 
@@ -23,7 +23,7 @@ Android 应用 ID 是 `pl.ekim.multiplatform_fm1_flasher`。它与原应用 `pl.
 <a id="getting-started"></a>
 ## 开始使用
 
-1. 在 Android 14 或更高版本安装测试 APK。构建 21 的调试签名与构建 18 一致；直接更新、不要卸载，可保留此分支应用的固件库及偏好。
+1. 在 Android 14 或更高版本安装测试 APK。构建 22 的调试签名与构建 18 一致；直接更新、不要卸载，可保留此分支应用的固件库及偏好。
 2. 在**固件库**查找固件，从详情下载。下载会校验固件包，不会开始安装。
 3. 使用支持数据传输的线缆，通过 OTG 集线器连接乐器。建议独立供电；应用不能测量或保证集线器供电质量。
 4. 在**设备**中逐台选择**读取乐器信息**，按需授予 Android USB 权限。只有识别为 FM-1 的设备才能加入计划。
@@ -93,7 +93,7 @@ python3 tools/sync-resources.py --check
 ./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
 ```
 
-APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`。`dist/` 被 Git 忽略；构建 21 的预备副本是本地文件，新克隆不保证包含它。
+APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`。`dist/` 被 Git 忽略；构建 22 的预备副本是本地文件，新克隆不保证包含它。
 
 界面翻译以 `app/src/main/res/values*` XML 为准。修改后运行 `python3 tools/sync-resources.py`。应用内关于文档是 `about/README*.md`，通过 `:app:bundleProjectDocs` 与许可证一起打包；根 README 不是应用内关于文档。
 
@@ -103,13 +103,13 @@ APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outp
 
 已有 Swift 宿主和共享元数据，但尚未验证 Xcode 构建或物理 iPhone 更新。设备记录/队列以及 Android 多来源调度器尚未移植。宿主保留之前的单乐器界面与手动重连。使用时保持前台；有限后台时间不等同于 Android 服务。
 
-Kotlin 目标为 `iosArm64`、`iosSimulatorArm64`，未配置 Intel 模拟器。`iosApp/project.yml` 定义 XcodeGen 项目、bundle ID `pl.ekim.multiplatform-fm1-flasher`、版本 0.9.1/21 和部署目标 iOS 15。macOS/Xcode 步骤见 [MIGRATION.md](../../MIGRATION.md)。Linux 元数据编译不会生成 iOS 应用。
+Kotlin 目标为 `iosArm64`、`iosSimulatorArm64`，未配置 Intel 模拟器。`iosApp/project.yml` 定义 XcodeGen 项目、bundle ID `pl.ekim.multiplatform-fm1-flasher`、版本 0.9.1/22 和部署目标 iOS 15。macOS/Xcode 步骤见 [MIGRATION.md](../../MIGRATION.md)。Linux 元数据编译不会生成 iOS 应用。
 
 ## 验证范围
 
-构建 21 通过 **179 个单元测试（56 shared + 123 Android JVM）**，另有四个外部 fixture 测试跳过；**33 个 Android 仪器化测试**通过，包括日志导出/清除、固件库清理和三种语言的确认流程。Debug、lint 和 iOS 元数据编译通过。所有者报告构建 20 已在实体 FM-1 上正常运行，新功能与所有硬件组合仍需单独验证。
+构建 22 通过 **179 个单元测试（56 shared + 123 Android JVM）**，另有四个外部 fixture 测试跳过；**34 个 Android 仪器化测试**通过，包括日志导出/清除、固件库清理和三种语言的确认流程。Debug、lint 和 iOS 元数据编译通过。所有者报告构建 20 已在实体 FM-1 上正常运行，新功能与所有硬件组合仍需单独验证。
 
-未测试物理 FM-1/集线器或 iOS 二进制。供电、真实模式/描述符变化、序列号唯一性及完整硬件写入仍是验收条件。[构建报告](../../publication/qa/0.9.1-test21.txt)提供文件身份和测试范围。
+未测试物理 FM-1/集线器或 iOS 二进制。供电、真实模式/描述符变化、序列号唯一性及完整硬件写入仍是验收条件。[构建报告](../../publication/qa/0.9.1-test22.txt)提供文件身份和测试范围。
 
 ## 隐私与署名
 

@@ -1,6 +1,6 @@
 # Several FM-1 instruments. One installation plan.
 
-**Multiplatform FM-1 Flasher 0.9.1 / 21** is an Android 14+ prerelease for several FM-1 instruments through an OTG hub. It adds persistent local diagnostics, experimental log export/clear and safe bulk firmware cleanup. The owner reported successful physical-device tests of build 20.
+**Multiplatform FM-1 Flasher 0.9.1 / 22** is an Android 14+ prerelease for several FM-1 instruments through an OTG hub. It adds persistent local diagnostics, experimental log export/clear and safe bulk firmware cleanup. The owner reported successful physical-device tests of build 20.
 
 [Read the current guide](../README.md) · [About](../about/README.md) · [Release history](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
@@ -22,7 +22,7 @@ Use data cables and stable power; a powered hub is recommended. The app cannot c
 - [Several instruments through a hub](../README.md#multiple-fm1-devices-on-a-hub)
 - [Build and tests](../README.md#building-and-testing)
 - [Architecture and platform boundaries](../MIGRATION.md)
-- [Test-build evidence](../publication/qa/0.9.1-test21.txt)
+- [Test-build evidence](../publication/qa/0.9.1-test22.txt)
 - [Publication status and workflow limitations](../publication/README.txt)
 - [Building this website](pages.md)
 

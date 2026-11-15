@@ -50,6 +50,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     private var pendingUsb: UsbRequest? = null
     private val usbRequests = java.util.ArrayDeque<UsbRequest>()
     private var automaticPermission: Endpoint? = null
+    private var exportOperationLogUri: Uri? = null
     private var exportBackupId: String? = null
     private var exportBackupUri: Uri? = null
     private var logRevision = -1L
@@ -75,6 +76,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             }
         }
         dispatchBackupExport()
+        dispatchOperationLogExport()
     }
     private val binding = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
@@ -104,6 +106,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        exportOperationLogUri = savedInstanceState?.getString("exportOperationLogUri")?.let(Uri::parse)
         exportBackupId = savedInstanceState?.getString("exportBackupId")
         exportBackupUri = savedInstanceState?.getString("exportBackupUri")?.let(Uri::parse)
         state.value = state.value.copy(initialized = true, language = resources.configuration.locales[0].language.let { if (it in listOf("pl", "zh")) it else "en" },
@@ -132,6 +135,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         super.onDestroy()
     }
     override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("exportOperationLogUri", exportOperationLogUri?.toString())
         outState.putString("exportBackupId", exportBackupId); outState.putString("exportBackupUri", exportBackupUri?.toString())
         super.onSaveInstanceState(outState)
     }
@@ -289,6 +293,15 @@ class ComposeActivity : ComponentActivity(), AppBackend {
                 .putExtra("deviceName", device.deviceName).putExtra("deviceId", device.deviceId).putExtra("token", plan?.token))
         }
     }
+    private fun dispatchOperationLogExport() {
+        val active = service ?: return
+        val uri = exportOperationLogUri ?: return
+        // Returning from DocumentsUI starts a library refresh before the result arrives.
+        if (active.state.busy) return
+        exportOperationLogUri = null
+        if (active.state.experimental) active.exportOperationLog(uri)
+        else showFailure(msg(R.string.experimental_disabled))
+    }
     private fun dispatchBackupExport() {
         val active = service ?: return; val id = exportBackupId ?: return; val uri = exportBackupUri ?: return
         if (active.state.busy) return
@@ -297,7 +310,10 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     @Deprecated("Platform document picker API")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 62 && resultCode == RESULT_OK) data?.data?.let { service?.exportOperationLog(it) }
+        if (requestCode == 62) {
+            exportOperationLogUri = if (resultCode == RESULT_OK) data?.data else null
+            dispatchOperationLogExport()
+        }
         if (requestCode == 61) { exportBackupUri = if (resultCode == RESULT_OK) data?.data else null; if (exportBackupUri == null) exportBackupId = null; dispatchBackupExport() }
         if (requestCode == 41 && resultCode == RESULT_OK && service?.state?.experimental == true) {
             val snapshot = service!!.monitor.log.snapshot(); val uri = data?.data ?: return

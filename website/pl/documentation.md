@@ -2,7 +2,7 @@
 
 Niezależny menedżer firmware dla **M-VAVE FM-1**, napisany w Kotlin Multiplatform i Compose Multiplatform. Android obsługuje wiele instrumentów przez hub OTG, zapisując firmware **kolejno, na jednym instrumencie naraz**.
 
-Dokument opisuje **0.9.1, build Android 21**, na branchu `task/multiplatform-rework`. Prerelease dodaje trwały log operacji oraz zbiorcze czyszczenie pobranych firmware. [Raport buildu](../../publication/qa/0.9.1-test21.txt) opisuje weryfikację i ograniczenia. Właściciel potwierdził udane testy buildu 20 na fizycznych instrumentach; jest to informacja od użytkownika, nie pełna macierz akceptacji sprzętowej.
+Dokument opisuje **0.9.1, build Android 22**, na branchu `task/multiplatform-rework`. Prerelease dodaje trwały log operacji oraz zbiorcze czyszczenie pobranych firmware. [Raport buildu](../../publication/qa/0.9.1-test22.txt) opisuje weryfikację i ograniczenia. Właściciel potwierdził udane testy buildu 20 na fizycznych instrumentach; jest to informacja od użytkownika, nie pełna macierz akceptacji sprzętowej.
 
 [English](../../README.md) · [简体中文](../zh-CN/documentation.md) · [Architektura](../../MIGRATION.md) · [Prywatność](privacy.md)
 
@@ -23,7 +23,7 @@ Identyfikator Androida to `pl.ekim.multiplatform_fm1_flasher`. Aplikacja instalu
 <a id="getting-started"></a>
 ## Pierwsza instalacja i plan aktualizacji
 
-1. Zainstaluj testowy APK na Androidzie 14 lub nowszym. Podpis debug buildu 21 odpowiada buildowi 18: instalacja jako aktualizacja, bez odinstalowania, zachowuje bibliotekę i preferencje tego forka.
+1. Zainstaluj testowy APK na Androidzie 14 lub nowszym. Podpis debug buildu 22 odpowiada buildowi 18: instalacja jako aktualizacja, bez odinstalowania, zachowuje bibliotekę i preferencje tego forka.
 2. W **Bibliotece** znajdź firmware i pobierz paczkę z jej szczegółów. Pobranie sprawdza integralność, ale nie rozpoczyna instalacji.
 3. Podłącz instrumenty przewodami do transmisji danych przez hub OTG. Zalecany jest hub z osobnym zasilaniem. Aplikacja nie mierzy jakości zasilania.
 4. W **Urządzeniach** wybierz **Odczytaj instrument** na każdej karcie. Udziel systemowej zgody USB, gdy będzie potrzebna. Do planu można dodać rozpoznany FM-1.
@@ -93,7 +93,7 @@ python3 tools/sync-resources.py --check
 ./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
 ```
 
-APK: `app/build/outputs/apk/debug/app-debug.apk`. Testy: `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`. Katalog `dist/` jest ignorowany przez Git: przygotowana kopia buildu 21 jest lokalna i nie musi istnieć po sklonowaniu repozytorium.
+APK: `app/build/outputs/apk/debug/app-debug.apk`. Testy: `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`. Katalog `dist/` jest ignorowany przez Git: przygotowana kopia buildu 22 jest lokalna i nie musi istnieć po sklonowaniu repozytorium.
 
 Źródłem tłumaczeń interfejsu są XML w `app/src/main/res/values*`; po ich zmianie uruchom `python3 tools/sync-resources.py`. Dokumenty O aplikacji to `about/README*.md`, pakowane z licencjami przez `:app:bundleProjectDocs`. Główny README nie jest dokumentem O aplikacji.
 
@@ -103,13 +103,13 @@ Zobacz [architekturę i komendy testów](../../MIGRATION.md), [listę odbiorową
 
 Host Swift i metadane wspólnego kodu istnieją, ale nie zweryfikowano kompilacji Xcode ani aktualizacji fizycznego iPhone’a. Rejestr/kolejka i androidowy harmonogram wielu źródeł nie zostały przeniesione. Host zachowuje wcześniejszy interfejs jednego instrumentu i ręczny reconnect. Pozostaw aplikację na wierzchu; skończony czas pracy w tle nie zastępuje usługi Androida.
 
-Skonfigurowane cele Kotlin to `iosArm64` i `iosSimulatorArm64`, bez symulatora Intel. `iosApp/project.yml` opisuje projekt XcodeGen, bundle ID `pl.ekim.multiplatform-fm1-flasher`, wersję 0.9.1/21 i deployment target iOS 15. Kroki dla macOS/Xcode zawiera [MIGRATION.md](../../MIGRATION.md). Kompilacja metadanych pod Linuksem nie tworzy aplikacji iOS.
+Skonfigurowane cele Kotlin to `iosArm64` i `iosSimulatorArm64`, bez symulatora Intel. `iosApp/project.yml` opisuje projekt XcodeGen, bundle ID `pl.ekim.multiplatform-fm1-flasher`, wersję 0.9.1/22 i deployment target iOS 15. Kroki dla macOS/Xcode zawiera [MIGRATION.md](../../MIGRATION.md). Kompilacja metadanych pod Linuksem nie tworzy aplikacji iOS.
 
 ## Zakres weryfikacji
 
-W buildzie 21 zaliczono **179 testów jednostkowych (56 shared + 123 Android JVM)**; cztery testy zewnętrznych fixture’ów pominięto. Zaliczone są **33 testy instrumentacyjne Androida**, w tym eksport/czyszczenie logu, czyszczenie biblioteki i potwierdzenia w trzech językach. Przeszły debug, lint i kompilacja metadanych iOS. Właściciel potwierdził działanie buildu 20 na fizycznych FM-1; nowych funkcji i wszystkich kombinacji sprzętu nie zweryfikowano fizycznie.
+W buildzie 22 zaliczono **179 testów jednostkowych (56 shared + 123 Android JVM)**; cztery testy zewnętrznych fixture’ów pominięto. Zaliczone są **34 testy instrumentacyjne Androida**, w tym eksport/czyszczenie logu, czyszczenie biblioteki i potwierdzenia w trzech językach. Przeszły debug, lint i kompilacja metadanych iOS. Właściciel potwierdził działanie buildu 20 na fizycznych FM-1; nowych funkcji i wszystkich kombinacji sprzętu nie zweryfikowano fizycznie.
 
-Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.9.1-test21.txt) zawiera identyfikację pliku i zakres prób.
+Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.9.1-test22.txt) zawiera identyfikację pliku i zakres prób.
 
 ## Prywatność i autorstwo
 

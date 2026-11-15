@@ -1,0 +1,48 @@
+Multiplatform FM-1 Flasher 0.9.1 prerelease — Android build 22
+Branch: task/multiplatform-rework
+Application ID: pl.ekim.multiplatform_fm1_flasher
+Android 14+ (minSdk 34), target/compile SDK 36
+APK: Multiplatform-FM1-Flasher-0.9.1-22-debug.apk
+Bytes: 30819103
+SHA-256: 193959d5d8754f29b6ffdb380872dbcd39e31c66e5bb76c7bb94145276073e95
+Debug signing certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
+Updates previous multiplatform builds without uninstalling.
+
+Changes:
+Persistent local operation log (JSON Lines, 256 KiB, oldest complete entries pruned).
+Serialized diagnostic I/O, atomic file writes, bounded messages and URL query/fragment redaction.
+Android service/app lifecycle, actions, USB permission/topology, transfer phases and caught errors.
+Experimental log export (native file picker) and clear (one confirmation), enforced by service.
+Bulk firmware deletion (one confirmation), blocked by queued/running jobs and active work.
+Deletes even invalid/orphan package files; retains favorites, sources, aliases, history and recovery backups.
+Portable host supports operation logging/export/clear and repository cleanup; no Apple binary verified.
+Build-20 mode/chip UI, detection popup and delayed-detach fixes included.
+Updated EN/PL/zh-Hans resources, guides, About and privacy.
+
+Verification:
+Shared JVM: 56 passed.
+Android JVM: 123 passed, 4 skipped external-fixture tests, no failures.
+Android API 36 dedicated emulator: 34 instrumentation tests passed:
+OperationLogServiceTest 2; FleetUiTest 3; CatalogDatabaseTest 20;
+ExperimentalFeaturesTest 1; BackgroundCatalogTest 1; FirmwareSelectionTest 1;
+UsbPermissionIntentTest 2; MainActivityLaunchTest 2; ComposeCatalogUpdatesTest 2.
+Shared log tests cover restart, bounded UTF-8 storage, query redaction, clear and failed writes.
+Repository cleanup tests preserve favorites/preferences/backups and delete malformed records.
+Debug APK, test APK, lint and Kotlin iOS metadata compiled successfully.
+Generated resources and bundled About/privacy documents verified.
+
+Hardware evidence:
+Owner reported successful physical FM-1 testing of build 20 in this conversation.
+This is user feedback; build-22 diagnostics/cleanup were verified in the emulator.
+No new independent physical flash/ROM recovery acceptance or Xcode/iOS binary verification.
+Multiple-instrument reconnect still needs explicit pairing of the unique returning port.
+Logs are operational diagnostics, not OS crash dumps or raw MIDI capture; diagnostic write
+failures are isolated from the transfer. Exported files remain at the chosen destination.
+Historical build-19/build-20 artifacts and reports are unchanged.
+
+Build 22 supersedes withdrawn build 21. It persists a pending export URI across
+activity recreation and waits for the foreground library refresh to finish before
+export. A new instrumentation regression exercises a document result while busy.
+
+Manual DocumentsUI export on Android 16 passed after foreground refresh:
+30 valid JSON Lines records, 2977 bytes saved in Downloads. The system may append .txt to the suggested .jsonl name.

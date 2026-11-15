@@ -1,5 +1,5 @@
 Multiplatform FM-1 Flasher — dokumentacja publikacji
-Stan: 0.9.1 / Android versionCode 21, task/multiplatform-rework.
+Stan: 0.9.1 / Android versionCode 22, task/multiplatform-rework.
 
 BIEŻĄCA APLIKACJA
 Android ID: pl.ekim.multiplatform_fm1_flasher, odrębny od pl.ekim.fm1_flasher.
@@ -9,8 +9,8 @@ Języki: polski, angielski, chiński uproszczony. Kontakt: ekim.pl@gmail.com.
 Android ma Urządzenia / Bibliotekę / Zadania i trwałą sekwencyjną kolejkę.
 
 STAN WYDANIA
-0.9.1 build 21 opublikowano eksperymentalnie na GitHub Releases z nową dokumentacją.
-publication/qa/0.9.1-test21.txt opisuje dokładny APK, hash, podpis i zakres sprawdzenia.
+0.9.1 build 22 opublikowano eksperymentalnie na GitHub Releases z nową dokumentacją.
+publication/qa/0.9.1-test22.txt opisuje dokładny APK, hash, podpis i zakres sprawdzenia.
 Lokalny dist/0.9.1-test jest ignorowany przez Git, więc nie będzie w świeżym klonie.
 publication/github-release.txt to projekt opisu, a nie dowód istnienia wydania.
 Zmiana dokumentów nie zmienia przekazanego APK. Nowy build wymaga własnego hasha

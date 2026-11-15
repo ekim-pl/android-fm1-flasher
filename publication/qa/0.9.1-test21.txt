@@ -39,3 +39,9 @@ Multiple-instrument reconnect still needs explicit pairing of the unique returni
 Logs are operational diagnostics, not OS crash dumps or raw MIDI capture; diagnostic write
 failures are isolated from the transfer. Exported files remain at the chosen destination.
 Historical build-19/build-20 artifacts and reports are unchanged.
+
+WITHDRAWN DURING FINAL MANUAL VERIFICATION:
+The actual Android DocumentsUI round trip could return while foreground catalog
+refresh was busy, causing export to be silently skipped (empty destination file).
+Build 21 was withdrawn as a prerelease. Superseded by build 22, which defers the
+pending URI until the service is idle and adds a lifecycle regression test.
