@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: google-play
+  group: google-play-store-publish
   cancel-in-progress: false
 
 jobs:

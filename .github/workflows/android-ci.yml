@@ -14,6 +14,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  release-tools:
+    name: Release tooling validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Test artifact validation and release recovery
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
+      - name: Validate workflow syntax and expressions
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7 -shellcheck= .github/workflows/*.yml
+
   check:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -50,8 +63,6 @@ jobs:
           for key in ('firebase_analytics_collection_enabled', 'google_analytics_automatic_screen_reporting_enabled', 'google_analytics_adid_collection_enabled', 'google_analytics_default_allow_analytics_storage', 'google_analytics_default_allow_ad_storage', 'google_analytics_default_allow_ad_user_data', 'google_analytics_default_allow_ad_personalization_signals'):
               assert metadata[key] == 'false', key
           PYMANIFEST
-      - name: Test release fixture gate
-        run: python3 -m unittest discover -s scripts -p 'test_*.py'
       - name: Save APK and reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6

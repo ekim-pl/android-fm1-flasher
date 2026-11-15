@@ -1,4 +1,4 @@
-name: F-Droid build (no Firebase)
+name: F-Droid validation (unsigned, no Firebase)
 
 on:
   workflow_dispatch:
@@ -47,6 +47,8 @@ jobs:
             echo '::error::F-Droid build must not contain Firebase or Google Play services'
             exit 1
           fi
+      - name: Verify built APK identity and tracking SDKs
+        run: python3 scripts/verify_fdroid_apk.py app/build/outputs/apk/release/app-release-unsigned.apk "$ANDROID_HOME/build-tools/35.0.0/aapt"
       - name: Save unsigned APK
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
