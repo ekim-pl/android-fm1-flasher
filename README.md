@@ -1,5 +1,7 @@
 # FM-1 Flasher
 
+![FM-1 Flasher — Your FM-1 setup. More possibilities.](https://raw.githubusercontent.com/ekim-pl/android-fm1-flasher/main/assets/readme-cover.png)
+
 [![Android CI](https://github.com/ekim-pl/android-fm1-flasher/actions/workflows/android-ci.yml/badge.svg?branch=main)](https://github.com/ekim-pl/android-fm1-flasher/actions/workflows/android-ci.yml)
 ![Android 14+](https://img.shields.io/badge/Android-14%2B-3DDC84?logo=android&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
