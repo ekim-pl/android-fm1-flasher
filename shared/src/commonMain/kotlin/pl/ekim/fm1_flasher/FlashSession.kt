@@ -1,19 +1,28 @@
 package pl.ekim.fm1_flasher
 
 
-data class Endpoint(val id: Int, val usbPath: String)
+data class Endpoint(val id: Int, val usbPath: String, val generation: Long = 0)
 
-/** Reconnection excludes old IDs and USB paths belonging to other instruments. */
-class ReconnectGate(private val previous: Endpoint, before: List<Endpoint>) {
-    private val oldIds = before.map { it.id }.toSet() + previous.id
-    private val protectedPaths = before.filter { it.id != previous.id }.map { it.usbPath }.toSet()
-    fun candidates(current: List<Endpoint>): List<Endpoint> {
-        if (current.any { it.id == previous.id }) return emptyList()
-        return current.filter { it.id !in oldIds && it.usbPath !in protectedPaths }
+/** Once a bystander disconnects, this transition can never regain trust. */
+class ReconnectGate(private val previous: Endpoint, before: List<Endpoint>, usbBefore: Set<String>? = null) {
+    private val siblings = before.filter { it != previous }.toSet()
+    private val old = before.toSet() + previous
+    private val usbPeers = usbBefore?.minus(previous.usbPath)
+    private var lost = false
+    fun observeUsb(paths: Set<String>) { if (usbPeers != null && !paths.containsAll(usbPeers)) lost = true }
+    fun removed(endpoint: Endpoint) { if (endpoint in siblings) lost = true }
+    fun removedPath(path: String) { if (path != previous.usbPath) lost = true }
+    fun observe(current: List<Endpoint>) { if (!current.containsAll(siblings)) lost = true }
+    fun valid(current: List<Endpoint>): Boolean { observe(current); return !lost }
+    fun candidates(current: List<Endpoint>, usbPaths: Set<String>? = null): List<Endpoint> {
+        if (usbPaths != null) observeUsb(usbPaths)
+        if (!valid(current) || previous in current) return emptyList()
+        val candidates = current.filter { it !in old && it.usbPath !in siblings.map { other -> other.usbPath } }
+        return candidates.takeIf { it.size == 1 && (usbPeers == null || usbPaths == null ||
+            (usbPaths - usbPeers).singleOrNull() == it.single().usbPath) }.orEmpty()
     }
-
     fun automaticCandidate(current: List<Endpoint>, usbPaths: Set<String>): Endpoint? =
-        current.singleOrNull()?.takeIf { usbPaths.singleOrNull() == it.usbPath && it in candidates(current) }
+        if (siblings.isEmpty()) candidates(current, usbPaths).singleOrNull()?.takeIf { usbPaths.singleOrNull() == it.usbPath } else null
 }
 
 interface MidiConnection : AutoCloseable {
@@ -28,6 +37,7 @@ class FlashSession(
     private val report: (AppText, Int) -> Unit,
     private val pause: (Long) -> Unit = { platformPause(it) },
     private val now: () -> Long = { monotonicMillis() },
+    private val validate: (Endpoint) -> Unit = {},
 ) {
     companion object { const val MAX_SESSION_MS = 15 * 60_000L }
     private var sessionDeadline = Long.MAX_VALUE
@@ -79,6 +89,7 @@ class FlashSession(
             check(installed.sameAs(image.identity)) {
                 failed(msg("flash_identity_mismatch", installed, image.identity))
             }
+            validate(link.endpoint)
             report(msg("flash_completed", installed), 100)
             return installed
         } finally {
@@ -88,6 +99,7 @@ class FlashSession(
 
     private fun serve(link: MidiConnection, image: FirmwarePackage, terminal: Long, idleMs: Long, started: Long) {
         checkTime()
+        validate(link.endpoint)
         link.send(Protocol.upgrade)
         pause(2000)
         var lastRequest = now()
@@ -109,6 +121,7 @@ class FlashSession(
                 request.address + request.length <= image.logical.size) { failed(msg("flash_out_of_bounds")) }
             val start = request.address.toInt()
             pause(10)
+            validate(link.endpoint)
             link.send(Protocol.response(request, image.logical.copyOfRange(start, start + request.length)))
             requests++
             if (covered != null) {

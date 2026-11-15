@@ -9,6 +9,7 @@ enum class FirmwareCategory(val key: String?, val labelKey: String) {
 
 enum class FirmwareSort(val labelKey: String) { NAME("sort_name"), NEWEST("sort_newest"), AUTHOR("sort_author"), DOWNLOADED("sort_downloaded") }
 enum class LibraryTab(val labelKey: String, val icon: String) {
+    DEVICES("fleet_devices", "▤"), TASKS("fleet_tasks", "⇅"),
     CATALOG("tab_catalog", "▦"), FAVORITES("tab_favorites", "★"), DOWNLOADS("tab_downloads", "↓"),
     LOGGER("tab_logger", "≋"), FLASHER("tab_flasher", "↗"), ABOUT("tab_about", "ⓘ")
 }

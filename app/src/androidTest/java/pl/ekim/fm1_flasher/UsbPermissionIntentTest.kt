@@ -37,4 +37,23 @@ class UsbPermissionIntentTest : InstrumentationTestCase() {
             context.unregisterReceiver(receiver)
         }
     }
+    fun testRequestNonceSurvivesImmutableCallbackAndMatchesDataFilter() {
+        val context = instrumentation.targetContext
+        val action = "${context.packageName}.USB_NONCE_TEST"
+        val nonce = java.util.UUID.randomUUID().toString()
+        val received = CountDownLatch(1)
+        var returned = ""
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) { returned = intent.getStringExtra("request").orEmpty(); received.countDown() }
+        }
+        context.registerReceiver(receiver, IntentFilter(action).apply { addDataScheme("fm1-permission") }, Context.RECEIVER_NOT_EXPORTED)
+        val callback = PendingIntent.getBroadcast(context, nonce.hashCode(), Intent(action).setPackage(context.packageName)
+            .setData(android.net.Uri.parse("fm1-permission:$nonce")).putExtra("request", nonce),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_ONE_SHOT)
+        try {
+            callback.send(context, 0, Intent().putExtra("request", "late-other-request"))
+            assertTrue(received.await(5, TimeUnit.SECONDS))
+            assertEquals(nonce, returned)
+        } finally { callback.cancel(); context.unregisterReceiver(receiver) }
+    }
 }

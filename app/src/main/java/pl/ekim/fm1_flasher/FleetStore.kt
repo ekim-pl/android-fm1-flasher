@@ -1,0 +1,99 @@
+package pl.ekim.fm1_flasher
+
+import java.io.File
+import java.util.UUID
+import org.json.JSONArray
+import org.json.JSONObject
+
+/** No attachment survives process death. Persisted labels are available for explicit pairing only. */
+class FleetStore(private val file: File) {
+    @Volatile var devices: List<FleetDevice> = emptyList(); private set
+    @Volatile var jobs: List<FlashJob> = emptyList(); private set
+    var loadFailed: Boolean = false; private set
+    private var committedDevices: List<FleetDevice> = emptyList()
+    private var committedJobs: List<FlashJob> = emptyList()
+    init {
+        try {
+        if (file.exists()) {
+            val root = JSONObject(file.readText())
+            val rows = root.getJSONArray("devices")
+            devices = (0 until rows.length()).map { i -> rows.getJSONObject(i).let {
+                FleetDevice(it.getString("id"), it.getString("alias"), it.optInt("color"),
+                    identity = it.optJSONObject("identity")?.identity(), chip = FlashChip.valueOf(it.getString("chip")),
+                    serial = it.optString("serial").takeIf(String::isNotBlank))
+            } }
+            val queue = root.getJSONArray("jobs")
+            jobs = FleetPolicy.interrupted((0 until queue.length()).map { i -> queue.getJSONObject(i).let {
+                FlashJob(it.getString("id"), it.getString("device"), it.getString("alias"),
+                    Endpoint(it.getInt("midi"), it.getString("path"), it.getLong("generation")),
+                    it.getString("package"), it.getString("hash"), it.getString("title"), it.getString("version"),
+                    it.getJSONObject("expected").identity(), FlashChip.valueOf(it.getString("chip")),
+                    JobOutcome.valueOf(it.getString("outcome")), it.getString("phase"), it.getInt("progress"), it.getLong("time"),
+                    it.optJSONArray("events")?.let { events -> (0 until events.length()).map { n -> events.getJSONObject(n).let { e -> JobEvent(e.getString("phase"), e.getLong("time")) } } } ?: emptyList())
+            } })
+            persist()
+        }
+        } catch (_: Exception) { loadFailed = true; devices = emptyList(); jobs = emptyList() }
+    }
+    @Synchronized fun attach(current: List<Endpoint>) {
+        if (loadFailed) return
+        var next = devices.map { if (it.endpoint != null && it.endpoint !in current) it.copy(endpoint = null) else it }
+        current.filter { endpoint -> next.none { it.endpoint == endpoint } }.forEach { endpoint ->
+            next = next + FleetDevice(UUID.randomUUID().toString(), "FM-1 ${next.size + 1}", next.size % 6, endpoint)
+        }
+        if (next != devices) { devices = next; persist() }
+    }
+    @Synchronized fun identify(endpoint: Endpoint, identity: FirmwareIdentity, serial: String?) {
+        devices = devices.map { if (it.endpoint == endpoint) it.copy(identity = identity, serial = serial) else it }; persist()
+    }
+    @Synchronized fun configure(id: String, alias: String? = null, chip: FlashChip? = null) {
+        check(jobs.none { it.deviceId == id && it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) }) { failed(msg("fleet_device_pinned")) }
+        devices = devices.map { if (it.id == id) it.copy(alias = alias?.trim()?.take(48)?.takeIf(String::isNotBlank) ?: it.alias, chip = chip ?: it.chip) else it }; persist()
+    }
+    @Synchronized fun pair(oldId: String, liveId: String) {
+        val old = devices.single { it.id == oldId }; val live = devices.single { it.id == liveId }
+        check(old.endpoint == null && live.endpoint != null && live.identity != null)
+        check(jobs.none { it.deviceId in listOf(oldId, liveId) && it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) })
+        // Pairing never restores chip evidence from an earlier physical connection.
+        devices = devices.filter { it.id != liveId }.map { if (it.id == oldId) live.copy(id = old.id, alias = old.alias, color = old.color, chip = FlashChip.UNKNOWN) else it }; persist()
+    }
+    @Synchronized fun rebind(id: String, endpoint: Endpoint, identity: FirmwareIdentity? = null) {
+        devices = devices.filter { it.id == id || it.endpoint != endpoint }.map {
+            if (it.id == id) it.copy(endpoint = endpoint, identity = identity ?: it.identity) else it
+        }; persist()
+    }
+    @Synchronized fun enqueue(deviceId: String, entry: CatalogEntry) {
+        val device = devices.single { it.id == deviceId }
+        check(devices.count { it.endpoint?.usbPath == device.endpoint?.usbPath } == 1) { failed(msg("fleet_ports_ambiguous")) }
+        check(device.endpoint != null && device.identity != null && device.chip.allows(entry)) { failed(msg("flash_missing_requirements")) }
+        check(jobs.none { it.deviceId == deviceId && it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) }) { failed(msg("fleet_device_pinned")) }
+        jobs = jobs + FlashJob(UUID.randomUUID().toString(), device.id, device.alias, checkNotNull(device.endpoint),
+            entry.key, entry.sha256, entry.name, entry.version, checkNotNull(device.identity), device.chip, updatedAt = System.currentTimeMillis()); persist()
+    }
+    @Synchronized fun result(id: String, outcome: JobOutcome, phase: String, progress: Int = -1) {
+        val time = System.currentTimeMillis()
+        jobs = jobs.map { if (it.id == id) it.copy(outcome = outcome, phase = phase, progress = progress, updatedAt = time,
+            events = if (it.events.lastOrNull()?.phase == phase) it.events else (it.events + JobEvent(phase, time)).takeLast(64)) else it }; persist()
+    }
+    @Synchronized fun cancel(id: String) { if (jobs.any { it.id == id && it.outcome == JobOutcome.QUEUED }) result(id, JobOutcome.CANCELLED, "fleet_cancelled") }
+    private fun JSONObject.identity() = FirmwareIdentity(getString("model"), getString("version"))
+    private fun FirmwareIdentity.json() = JSONObject().put("model", model).put("version", version)
+    private fun persist() {
+        check(!loadFailed) { failed(msg("fleet_storage_error")) }
+        val ds = JSONArray(); devices.forEach { ds.put(JSONObject().put("id", it.id).put("alias", it.alias).put("color", it.color)
+            .put("identity", it.identity?.json()).put("chip", it.chip.name).put("serial", it.serial.orEmpty())) }
+        val js = JSONArray(); jobs.forEach { js.put(JSONObject().put("id", it.id).put("device", it.deviceId).put("alias", it.alias)
+            .put("midi", it.endpoint.id).put("path", it.endpoint.usbPath).put("generation", it.endpoint.generation)
+            .put("package", it.packageKey).put("hash", it.hash).put("title", it.title).put("version", it.version)
+            .put("expected", it.expected.json()).put("chip", it.chip.name).put("outcome", it.outcome.name)
+            .put("phase", it.phase).put("progress", it.progress).put("time", it.updatedAt)
+            .put("events", JSONArray().apply { it.events.forEach { e -> put(JSONObject().put("phase", e.phase).put("time", e.time)) } })) }
+        try {
+            LocalLibrary.atomicWrite(file, JSONObject().put("devices", ds).put("jobs", js).toString().toByteArray())
+            committedDevices = devices; committedJobs = jobs
+        } catch (failure: Exception) {
+            devices = committedDevices; jobs = committedJobs
+            throw failure
+        }
+    }
+}

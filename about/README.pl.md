@@ -1,5 +1,11 @@
 # FM‑1 Flasher
 
+## Wiele instrumentów, jedno miejsce pracy
+
+W Androidzie 0.9.0 sekcja **Urządzenia** pozwala odczytać instrumenty podłączone przez hub OTG, nadać im nazwy i wybrać lokalną paczkę firmware dla każdego z nich. **Zadania** pokazują cały plan i historię. Jedno zatwierdzenie uruchamia instalację sekwencyjną; zatrzymanie kolejki pozwala dokończyć bieżącą operację. **Biblioteka** łączy katalogi, pobrane paczki i ulubione.
+
+Po restarcie przy wielu urządzeniach powiąż powracający instrument na karcie zadania. Utrata innego instrumentu blokuje dalszy zapis. Automatyczne parowanie wielu urządzeń oczekuje testów fizycznego sprzętu; adresy USB nie są numerami gniazd huba. Po utracie połączenia zapisane nazwy wymagają jawnego powiązania.
+
 Niezależna, eksperymentalna aplikacja do przeglądania firmware i aktualizowania **M‑VAVE FM‑1** przez USB MIDI.
 
 ## Możliwości

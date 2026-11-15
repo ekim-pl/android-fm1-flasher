@@ -9,18 +9,25 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
-data class UsbMidi(val info: MidiDeviceInfo, val usb: UsbDevice) {
-    val endpoint get() = Endpoint(info.id, usb.deviceName)
+data class UsbMidi(val info: MidiDeviceInfo, val usb: UsbDevice, val generation: Long = 0) {
+    val endpoint get() = Endpoint(info.id, usb.deviceName, generation)
     val label get() = "${info.properties.getString(MidiDeviceInfo.PROPERTY_NAME) ?: usb.productName ?: "USB MIDI"}\n" +
         "${usb.deviceName} · %04X:%04X · MIDI #%d".format(usb.vendorId, usb.productId, info.id)
 }
 
 class AndroidMidi(private val manager: MidiManager?, private val main: Handler) {
-    fun devices(): List<UsbMidi> {
+    private val generations = mutableMapOf<Int, Long>()
+    private val paths = mutableMapOf<Int, String>()
+    private var sequence = 0L
+    private val retired = mutableSetOf<Int>()
+    @Synchronized fun added(id: Int) { retired.remove(id) }
+    @Synchronized fun removed(id: Int) { generations.remove(id); retired.add(id) }
+    @Synchronized fun removedPath(path: String) { paths.filterValues { it == path }.keys.toList().forEach { removed(it) } }
+    @Synchronized fun devices(): List<UsbMidi> {
         val manager = manager ?: return emptyList()
         val infos = manager.getDevicesForTransport(MidiManager.TRANSPORT_MIDI_BYTE_STREAM)
-        return infos.filter { it.type == MidiDeviceInfo.TYPE_USB && it.inputPortCount > 0 && it.outputPortCount > 0 }
-            .mapNotNull { info -> info.properties.getParcelable(MidiDeviceInfo.PROPERTY_USB_DEVICE, UsbDevice::class.java)?.let { UsbMidi(info, it) } }
+        return infos.filter { it.id !in retired && it.type == MidiDeviceInfo.TYPE_USB && it.inputPortCount > 0 && it.outputPortCount > 0 }
+            .mapNotNull { info -> info.properties.getParcelable(MidiDeviceInfo.PROPERTY_USB_DEVICE, UsbDevice::class.java)?.let { UsbMidi(info, it, generations.getOrPut(info.id) { ++sequence }).also { paths[info.id] = it.usb.deviceName } } }
             .sortedBy { it.usb.deviceName }
     }
 
@@ -42,6 +49,7 @@ class AndroidMidi(private val manager: MidiManager?, private val main: Handler) 
     private fun openUnlocked(target: UsbMidi): MidiConnection {
         val manager = manager ?: failed(msg(R.string.midi_unavailable))
         check(devices().any { it.endpoint == target.endpoint }) { failed(msg(R.string.usb_port_gone)) }
+        check(devices().count { it.usb.deviceName == target.usb.deviceName } == 1) { failed(msg("fleet_ports_ambiguous")) }
         val ready = CountDownLatch(1)
         val lock = Any()
         var opened: MidiDevice? = null
@@ -57,8 +65,10 @@ class AndroidMidi(private val manager: MidiManager?, private val main: Handler) 
             synchronized(lock) { expired = true; opened?.close() }
             throw failure
         }
+        check(devices().any { it.endpoint == target.endpoint }) { synchronized(lock) { opened?.close() }; failed(msg(R.string.usb_port_gone)) }
         val device = synchronized(lock) { opened } ?: failed(msg(R.string.midi_busy))
         try {
+            check(target.info.inputPortCount == 1 && target.info.outputPortCount == 1) { failed(msg("fleet_ports_ambiguous")) }
             val inputIndex = target.info.ports.first { it.type == MidiDeviceInfo.PortInfo.TYPE_INPUT }.portNumber
             val outputIndex = target.info.ports.first { it.type == MidiDeviceInfo.PortInfo.TYPE_OUTPUT }.portNumber
             val input = device.openInputPort(inputIndex) ?: failed(msg(R.string.midi_write_busy))

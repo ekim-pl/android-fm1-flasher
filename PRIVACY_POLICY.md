@@ -2,11 +2,11 @@
 
 ## Publisher and contact
 
-ekim.pl@gmail.com. Effective date: November 14, 2026. This policy describes how FM-1 Flasher processes data.
+ekim.pl@gmail.com. Effective date: November 15, 2026. This policy describes how FM-1 Flasher processes data.
 
 ## Local information
 
-The app requires no account and includes no advertising, analytics or tracking SDKs. Favorites, browsing preferences, theme and language choices, cached catalogs, preview images, firmware packages and download metadata are stored in private app storage. App event logs and the connected instrument identity are held in memory during use. These data are not uploaded to the app publisher.
+The app requires no account and includes no advertising, analytics or tracking SDKs. Favorites, browsing preferences, theme and language choices, cached catalogs, preview images, firmware packages and download metadata are stored in private app storage. App event logs are held in memory during use. Instrument names, observed USB serials, memory-type selections, last known firmware identity and task history (targets, package hashes, stages and results) are stored locally. Serial numbers are not included in the ordinary connection log. The most recently removed valid package can be restored while the app session remains open. These data are not uploaded to the app publisher.
 
 ## Network connections
 

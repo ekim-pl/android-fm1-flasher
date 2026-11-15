@@ -1,0 +1,1 @@
+0.9.0 test: Urządzenia, Biblioteka i Zadania. Osobne nazwy i ustawienia instrumentów; trwałe sekwencyjne plany instalacji i historia. Blokada niepewnego powrotu przez hub, korelacja zgód USB, przypięte paczki i jedno zatwierdzenie planu. Zapis nie wznawia się automatycznie po przerwaniu. Powrót wielu urządzeń wymaga powiązania na karcie zadania do czasu testów fizycznego sprzętu.

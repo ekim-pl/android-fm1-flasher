@@ -2,16 +2,45 @@
 
 ## Application entry point
 
-Android now starts `ComposeActivity` directly into the shared catalog. There is
+Android starts `ComposeActivity` directly into the device workspace. There is
 no diagnostic launcher, prototype screen or button to switch to a second app UI.
 Notifications also return to Compose. The legacy Views source is retained for
 reference, but its Activity is no longer registered or reachable from the app.
 
-This build is 0.8.1, Android versionCode 18. The functionality baseline
+This test build is 0.9.0, Android versionCode 19. The functionality baseline
 is published android-fm1-flasher tag `v0.8.1`, commit `3fa9d67`. The original Android app remains on the main branch;
 this implementation is published on `task/multiplatform-rework`. The fork keeps `pl.ekim.multiplatform_fm1_flasher`, so it installs
 alongside the original Android app. Its existing private downloads and preferences
 are preserved; it does not import another application's private data.
+
+## Build 19: multi-instrument OTG workspace
+
+Android provides persistent instrument names/colors, per-attachment identity and
+memory selections, immutable target/package jobs, one plan approval, sequential
+execution, stop-after-current, package pinning, atomic per-job outcomes/stage history,
+and explicit pairing after loss of continuity. Offline saved names never become
+live targets just because an address, serial or firmware version matches.
+
+USB and MIDI observers start before mode changes. The reconnect gate remembers
+bystander loss even when a device returns at the same address. A hub reset, changed
+sibling generation, contradictory serial, multiple candidates or multiple MIDI
+port pairs blocks further writes. Permission callbacks bind a nonce and attachment
+epoch; reconnect approvals also retain the complete MIDI attachment generation.
+The logger pauses automatically while flashing. Interrupted work never resumes a
+transfer from a saved percentage. ROM recovery remains separate.
+
+Automatic reconnection for multiple instruments remains disabled pending physical
+FM-1/hub validation. A unique return with continuously connected siblings is paired
+inline by the owner. USB paths are displayed as addresses, never physical hub ports.
+USB serials are local observations, not validated cross-mode hardware identities.
+The original conservative single-USB-device reconnect remains available. The
+identity/version check on return is not a full memory readback.
+
+The Android UI now has Devices, Library and Tasks, with About, sources, privacy and
+experimental tools in Settings. Valid package removal has session-local Undo.
+English, Polish and Simplified Chinese resources and local-data privacy descriptions
+are updated. The iOS host retains its prior single-instrument controller; Linux
+metadata compilation is not an Xcode or hardware validation.
 
 ## Build 18 About presentation
 

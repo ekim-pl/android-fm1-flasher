@@ -7,6 +7,8 @@ data class LogRow(val id: Long, val source: String, val channel: Int?, val type:
 data class BackupRow(val id: String, val label: String)
 data class RecoveryView(val token: String, val confirmation: AppText)
 data class AppSnapshot(
+    val undoAvailable: Boolean = false, val fleetAvailable: Boolean = false, val fleet: List<FleetDevice> = emptyList(),
+    val jobs: List<FlashJob> = emptyList(), val queueRunning: Boolean = false, val queueStopping: Boolean = false,
     val backgroundSync: Boolean = false,
     val backgroundAvailable: Boolean = false,
     val savedSourceId: String? = null,
@@ -27,6 +29,7 @@ data class AppSnapshot(
     val language: String = "en", val appearance: String = "SYSTEM", val browse: BrowseFilters = BrowseFilters(),
 )
 enum class AppActionKind {
+    UNDO_REMOVE, DEVICE_ALIAS, DEVICE_CHIP, DEVICE_PAIR, QUEUE_ADD, QUEUE_REMOVE, QUEUE_START, QUEUE_STOP,
     SOURCE_ENABLE, SOURCE_CHECK, SOURCE_REMOVE, SOURCE_RESTORE, SOURCE_SAVE, BACKGROUND_SYNC,
     PORTS_REFRESH, REFRESH, OFFLINE, FAVORITE, DOWNLOAD, USE, REMOVE, UPDATE_ALL, CONNECT, CHIP, FLASH, RECONNECT,
     EXPERIMENTAL, LOGGER_PORT, LOGGER_TOGGLE, LOGGER_CLEAR, LOGGER_EXPORT, LOGGER_REFRESH,

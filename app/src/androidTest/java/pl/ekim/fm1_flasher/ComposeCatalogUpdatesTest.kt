@@ -51,11 +51,16 @@ class ComposeCatalogUpdatesTest : InstrumentationTestCase() {
                         catalog = Catalog(if (enabled) listOf(first, second) else listOf(first), "", hub.checkedAt, true,
                             listOf(hub, extra.copy(enabled = enabled, revision = index.toLong())), listOf(first, second)))
                 }
-                instrumentation.waitForIdleSync()
-                Thread.sleep(50)
-                instrumentation.runOnMainSync {
-                    assertTrue(nodes().any { node -> node.config.getOrNull(SemanticsProperties.Text)?.any { it.text == "Firmware sources" } == true })
+                // IdleSync does not wait for a pending Compose frame/dialog attachment.
+                var visible = false
+                val deadline = android.os.SystemClock.uptimeMillis() + 2_000
+                while (!visible && android.os.SystemClock.uptimeMillis() < deadline) {
+                    instrumentation.waitForIdleSync(); Thread.sleep(50)
+                    instrumentation.runOnMainSync {
+                        visible = nodes().any { node -> node.config.getOrNull(SemanticsProperties.Text)?.any { it.text == "Firmware sources" } == true }
+                    }
                 }
+                assertTrue("Sources dialog must remain attached after catalog update", visible)
             }
         } finally { instrumentation.runOnMainSync { activity.finish(); ViewRootForTest.onViewCreatedCallback = previousCallback } }
     }

@@ -1,0 +1,75 @@
+Multiplatform FM-1 Flasher 0.9.0 — Android test build 19
+Date: 2026-11-15
+Branch: task/multiplatform-rework
+Status: local test build; no GitHub release or tag created/published.
+
+ARTIFACT
+Multiplatform-FM1-Flasher-0.9.0-19-debug.apk
+31,422,129 bytes; Android 14+ (minSdk 34), targetSdk 36.
+Application ID: pl.ekim.multiplatform_fm1_flasher
+SHA-256: b571a7b188e52459b1c3e63e8f0797da89ce19ab3acb9be0b08f5f1ea7d6674f
+Debug certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
+Certificate matches build 18. Install as an update without uninstalling to retain data.
+
+IMPLEMENTATION
+- Android Devices / Library / Tasks navigation; compact collapsible library filters.
+- Per-instrument names, colors, observed identity/serial, attachment generations,
+  memory selection and package selection. Saved identities never automatically
+  bind to a new connection; explicit pairing resets memory-type evidence.
+- Persistent immutable jobs pin device, attachment, package key and SHA-256.
+  A single plan approval starts sequential work. The complete plan is validated
+  before the first write; each device/package is checked again before its job.
+- Pinned packages cannot be replaced or deleted. Valid ordinary package removal
+  has Undo for the current app session, with no confirmation modal.
+- Atomic per-job outcomes and bounded stage history. Process interruption marks
+  active jobs unconfirmed; no automatic transfer resumption or automatic recovery.
+- Stop-after-current finishes current write/verification and retains remaining jobs.
+- USB/MIDI callbacks and polling preserve lost-sibling evidence. Hub detach,
+  lost/replaced sibling, ambiguous return or conflicting serial stops the plan.
+  Port-pair ambiguity and multiple MIDI endpoints on one USB device block writes.
+- Permission requests are serialized, use unique immutable callback nonces and
+  attachment epochs. Reconnect approval also retains the full MIDI generation.
+- Logger pauses without an extra question; recovery remains a separate opt-in flow.
+- English, Polish and Simplified Chinese UI, About and privacy descriptions updated.
+  Observed serials and task history stay in private storage, not network requests.
+
+VERIFICATION
+- shared:jvmTest: 50 passed, 0 failed.
+- app:testDebugUnitTest: 120 passed, 0 failed, 4 external-firmware-fixture tests skipped.
+- Android instrumentation: 29 passed across 8 explicitly selected test classes.
+- Final UI rerun after compact-filter/theme changes: 3 passed (catalog regression
+  and multilingual plan approval/changed-attachment blocking).
+- app:lintDebug, assembleDebug, assembleDebugAndroidTest: passed.
+- composeApp:compileIosMainKotlinMetadata: passed, existing duplicate-KLIB warnings.
+- Resource bridge synchronization and git diff --check: passed.
+- apksigner verification and version/minSdk/package metadata: passed.
+- Dedicated emulator: local/emulator-5558, Multiplatform_FM1_API_36, Android 16.
+  Updated existing app in place, launched final build, inspected Polish device and
+  library screens, refreshed the real cached catalog, opened Tasks. No UI crash.
+- The legacy instrumentation runner was run with explicit class lists. Unbounded
+  test discovery timed out before application startup; it is not the verification
+  method used above. An old source-dialog test used a fixed 50 ms frame assumption;
+  it now waits boundedly for the dialog attachment before asserting. Final runs pass.
+
+HARDWARE GATE / KNOWN LIMITS
+No physical FM-1 or OTG hub is attached to this environment. Emulator and deterministic
+transport tests do not prove descriptor timing, power stability, cross-mode serial
+uniqueness or real flash success. Multi-device automatic pairing remains disabled.
+A single candidate with uninterrupted siblings is paired inline by the owner.
+There is no reliable physical hub-socket map in the used Android API. Firmware
+model/version is not a physical UID. The original conservative automatic reconnect
+for a single USB device remains available. Return verification checks model/version,
+not a complete flash-memory readback. Do not swap indistinguishable instruments in
+the middle of a transition. A false continuity alarm stops the job conservatively.
+
+iOS retains the previous single-instrument controller. The Android fleet store and
+queue adapter are not ported to Core MIDI. No Mac/Xcode or physical iOS validation,
+IPA, iOS parity claim, or GitHub publication is included in this test build.
+
+BEFORE PUBLISHING
+Test with at least two real FM-1 units and the intended OTG hub: individual identity
+reads; distinct package assignments; normal -> OTA -> final return; one inline pairing
+per unverified return; stop-after-current; permission denial; process interruption;
+unexpected sibling/hub disconnect in a controlled non-writing phase. Record null or
+duplicate serials and mode changes. Do not deliberately unplug a live flash write.
+Use this test APK for owner verification before approving a 0.9.0 GitHub Release.

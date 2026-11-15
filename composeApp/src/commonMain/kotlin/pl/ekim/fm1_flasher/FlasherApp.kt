@@ -8,6 +8,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,7 @@ fun FlasherApp(backend: AppBackend) {
     var sources by rememberSaveable { mutableStateOf(false) }
     var recovery by rememberSaveable { mutableStateOf(false) }
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
+    var filtersExpanded by rememberSaveable { mutableStateOf(false) }
     var sourceFilter by rememberSaveable { mutableStateOf(state.browse.sourceId.orEmpty()) }
     var query by rememberSaveable { mutableStateOf(state.browse.query) }
     var categoryName by rememberSaveable { mutableStateOf(state.browse.category.name) }
@@ -52,8 +54,10 @@ fun FlasherApp(backend: AppBackend) {
     LaunchedEffect(filters) { backend.saveBrowse(filters) }
     LaunchedEffect(state.experimental) { if (!state.experimental && tab == LibraryTab.LOGGER) tabName = LibraryTab.CATALOG.name }
     val dark = state.appearance == "DARK" || (state.appearance == "SYSTEM" && isSystemInDarkTheme())
-    val tabs = LibraryTab.entries.filter { it != LibraryTab.LOGGER || state.experimental }
-    MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
+    LaunchedEffect(state.fleetAvailable) { if (state.fleetAvailable) tabName = LibraryTab.DEVICES.name }
+    val tabs = if (state.fleetAvailable) listOf(LibraryTab.DEVICES, LibraryTab.CATALOG, LibraryTab.TASKS)
+        else LibraryTab.entries.filter { it !in listOf(LibraryTab.DEVICES, LibraryTab.TASKS) && (it != LibraryTab.LOGGER || state.experimental) }
+    MaterialTheme(colorScheme = if (dark) darkColorScheme(primary = Color(0xFF64D8CB), secondary = Color(0xFFA3CCC3), secondaryContainer = Color(0xFF284E48), onSecondaryContainer = Color(0xFFC5EDE4), background = Color(0xFF10161D), surface = Color(0xFF151D26), surfaceContainer = Color(0xFF202B36)) else lightColorScheme(primary = Color(0xFF006B61), secondary = Color(0xFF3F665D), secondaryContainer = Color(0xFFD0E8E1), onSecondaryContainer = Color(0xFF12372F), background = Color(0xFFF3F6F8), surface = Color(0xFFFAFCFE), surfaceContainer = Color(0xFFE8EFF2))) {
         Surface(Modifier.fillMaxSize()) {
             BoxWithConstraints(Modifier.safeDrawingPadding()) {
                 val wide = maxWidth >= 600.dp
@@ -65,7 +69,7 @@ fun FlasherApp(backend: AppBackend) {
                     Row(Modifier.weight(1f)) {
                         if (wide) NavigationRail {
                             tabs.forEach { item -> NavigationRailItem(selected = tab == item, onClick = { focus.clearFocus(); tabName = item.name },
-                                icon = { Text(item.icon) }, label = { Text(text(item.labelKey)) }) }
+                                icon = { Text(item.icon) }, label = { Text(text(if (state.fleetAvailable && item == LibraryTab.CATALOG) "fleet_library" else item.labelKey)) }) }
                         }
                         Column(Modifier.weight(1f)) {
                             if (state.busy || state.progress >= 0) {
@@ -73,7 +77,12 @@ fun FlasherApp(backend: AppBackend) {
                                 else LinearProgressIndicator(progress = { state.progress / 100f }, modifier = Modifier.fillMaxWidth())
                             }
                             Text(resolveCoreText(state.status, language), Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall)
+                            if (state.undoAvailable) Row(Modifier.padding(horizontal = 16.dp)) {
+                                TextButton({ send(AppActionKind.UNDO_REMOVE) }, enabled = !state.busy) { Text(text("fleet_undo_remove")) }
+                            }
                             when (tab) {
+                                LibraryTab.DEVICES -> FleetScreen(state, language, backend::perform, { tabName = LibraryTab.CATALOG.name }, { tabName = LibraryTab.TASKS.name })
+                                LibraryTab.TASKS -> TaskScreen(state, language, backend::perform, { tabName = LibraryTab.DEVICES.name })
                                 LibraryTab.CATALOG, LibraryTab.FAVORITES, LibraryTab.DOWNLOADS -> {
                                     val entries = remember(state.catalog, state.downloads, state.favorites, filters, tab) { CatalogBrowser.entries(state.catalog, state.downloads, state.favorites, filters, tab) }
                                     PullToRefreshBox(isRefreshing = state.busy && !state.flashing, onRefresh = { if (!state.busy) send(AppActionKind.REFRESH) }, modifier = Modifier.weight(1f)) {
@@ -82,19 +91,22 @@ fun FlasherApp(backend: AppBackend) {
                                                 Text(text(when(tab) { LibraryTab.FAVORITES -> "favorites_title"; LibraryTab.DOWNLOADS -> "downloads_title"; else -> "discover_title" }), style = MaterialTheme.typography.headlineLarge)
                                                 Text(text("results_count", entries.size), style = MaterialTheme.typography.bodySmall)
                                                 OutlinedTextField(query, { query = it }, label = { Text(text("search_hint")) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                                                if (filtersExpanded) {
                                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                                     Choice(text("filter_category"), text(filters.category.labelKey), FirmwareCategory.entries.map { it.name to text(it.labelKey) }, { categoryName = it }, Modifier.weight(1f))
                                                     Choice(text("filter_sort"), text(filters.sort.labelKey), FirmwareSort.entries.map { it.name to text(it.labelKey) }, { sortName = it }, Modifier.weight(1f))
                                                 }
                                                 if (state.catalog?.sources?.isNotEmpty() == true) Choice(text("source_filter"), state.catalog?.sources?.firstOrNull { it.id == sourceFilter }?.name ?: text("source_all"), listOf("" to text("source_all")) + state.catalog!!.sources.filter { !it.deleted }.map { it.id to it.name }, { sourceFilter = it })
+                                                }
                                                 Row(Modifier.horizontalScroll(rememberScrollState())) {
                                                     FilterChip(downloadedOnly, { downloadedOnly = !downloadedOnly }, label = { Text(text("downloaded_only")) })
                                                     Spacer(Modifier.width(8.dp))
                                                     FilterChip(favoritesOnly, { favoritesOnly = !favoritesOnly }, label = { Text(text("favorites_only")) })
                                                 }
                                                 Row(Modifier.horizontalScroll(rememberScrollState())) {
+                                                    TextButton({ filtersExpanded = !filtersExpanded }) { Text(text("fleet_filters", (if (categoryName != "ALL") 1 else 0) + (if (sourceFilter.isNotEmpty()) 1 else 0))) }
                                                     TextButton({ send(AppActionKind.REFRESH) }, enabled = !state.busy && !state.offline) { Text(text("refresh_button")) }
-                                                    if (tab == LibraryTab.DOWNLOADS) TextButton({ send(AppActionKind.UPDATE_ALL) }, enabled = !state.busy && !state.offline) { Text(text("updates_count", CatalogBrowser.updates(state.catalog, state.downloads).size)) }
+                                                    if (tab == LibraryTab.DOWNLOADS || downloadedOnly) TextButton({ send(AppActionKind.UPDATE_ALL) }, enabled = !state.busy && !state.offline) { Text(text("updates_count", CatalogBrowser.updates(state.catalog, state.downloads).size)) }
                                                 }
                                                 Text(state.catalog?.let { (if (state.offline) text("catalog_offline_prefix") else if (!it.fresh) text("catalog_cached_prefix") else text("catalog_prefix")) + it.updated } ?: text("catalog_offline"), style = MaterialTheme.typography.bodySmall)
                                             }
@@ -135,7 +147,7 @@ fun FlasherApp(backend: AppBackend) {
                                 LibraryTab.FLASHER -> FlasherScreen(state, language, { send(it.kind, it.id, it.value) }, { action, message -> confirmation = action to message }, { recovery = true }, { dialog = text("app_log") to AppText.Joined(state.logs, "\n\n") })
                                 LibraryTab.LOGGER -> LoggerScreen(state, language, backend)
                                 LibraryTab.ABOUT -> AboutScreen(
-                                    backend.document(text("about_document")), text("app_name"), text("about_version", "0.8.1"),
+                                    backend.document(text("about_document")), text("app_name"), text("about_version", "0.9.0"),
                                     if (!state.usbRecovery) text("ios_platform_limits") else null,
                                     text("privacy_title"), text("about_privacy_summary"), text("about_privacy_action"),
                                     { dialog = text("privacy_title") to msg("privacy_body") }, ::openDocumentOrLink)
@@ -144,7 +156,7 @@ fun FlasherApp(backend: AppBackend) {
                     }
                     if (!wide) NavigationBar {
                         tabs.forEach { item -> NavigationBarItem(selected = tab == item, onClick = { focus.clearFocus(); tabName = item.name },
-                            icon = { Text(item.icon) }, label = { Text(text(item.labelKey), fontSize = 10.sp, maxLines = 1) }) }
+                            icon = { Text(item.icon) }, label = { Text(text(if (state.fleetAvailable && item == LibraryTab.CATALOG) "fleet_library" else item.labelKey), fontSize = 10.sp, maxLines = 1) }) }
                     }
                 }
             }
@@ -163,14 +175,21 @@ fun FlasherApp(backend: AppBackend) {
                 TextButton({ send(AppActionKind.FAVORITE, entry.key) }, enabled = !state.busy) { Text(text(if (entry.key in state.favorites) "favorite_remove" else "favorite_add")) }
                 Button({ send(AppActionKind.DOWNLOAD, latest!!.key) }, enabled = !state.busy && !state.offline && latest != null && state.catalog?.canDownload(latest) == true) { Text(text(if (saved != null) "download_again_version" else "download_version", latest?.version ?: entry.version)) }
                 if (saved != null) {
-                    Button({ send(AppActionKind.USE, entry.key); detailId = null; tabName = LibraryTab.FLASHER.name }, enabled = !state.busy && !retired) { Text(text("use_to_flash")) }
-                    TextButton({ confirmation = AppAction(AppActionKind.REMOVE, entry.key) to msg("remove_confirm_message", title(entry, language)) }, enabled = !state.busy) { Text(text("remove_local")) }
+                    Button({ send(AppActionKind.USE, entry.key); detailId = null; tabName = if (state.fleetAvailable) LibraryTab.DEVICES.name else LibraryTab.FLASHER.name }, enabled = !state.busy && !retired) { Text(text("use_to_flash")) }
+                    TextButton({ send(AppActionKind.REMOVE, entry.key); detailId = null }, enabled = !state.busy && !FleetPolicy.pinned(state.jobs, entry.key)) { Text(text("remove_local")) }
                 }
                 TextButton({ send(AppActionKind.OPEN_LINK, entry.sourceUrl) }) { Text(text("author_repository")) }
                 Text(text("package_technical", entry.version, entry.product, text(when(entry.chip) { "new" -> "chip_both"; "old" -> "chip_older_only"; else -> "chip_unconfirmed" }), entry.sha256), style = MaterialTheme.typography.bodySmall)
             }
         }
         if (settings) AppDialog(text("settings"), { settings = false }, text("close")) {
+            if (state.fleetAvailable) {
+                TextButton({ settings = false; tabName = LibraryTab.ABOUT.name }) { Text(text("tab_about")) }
+                if (state.experimental) {
+                    TextButton({ settings = false; tabName = LibraryTab.LOGGER.name }) { Text(text("tab_logger")) }
+                    TextButton({ settings = false; tabName = LibraryTab.FLASHER.name }) { Text(text("recovery_title")) }
+                }
+            }
             if (state.catalog?.sources?.isNotEmpty() == true) TextButton({ settings = false; sources = true }) { Text(text("catalog_sources")) }
             Choice(text("language_title"), when(state.language) { "pl" -> "Polski"; "zh" -> "简体中文"; else -> "English" }, listOf("pl" to "Polski", "en" to "English", "zh" to "简体中文"), { send(AppActionKind.LANGUAGE, it) })
             Choice(text("appearance_title"), text(when(state.appearance) { "LIGHT" -> "theme_light"; "DARK" -> "theme_dark"; else -> "system_default" }), listOf("SYSTEM" to text("system_default"), "LIGHT" to text("theme_light"), "DARK" to text("theme_dark")), { send(AppActionKind.APPEARANCE, it) })
@@ -242,7 +261,7 @@ private fun title(entry: CatalogEntry, language: String) = if (entry.stock) reso
             Choice(text("select_downloaded_firmware"), state.ready?.let { "${title(it, language)} · ${it.version}" } ?: text("no_package_selected"), state.downloads.map { it.entry.key to "${title(it.entry, language)} · ${it.entry.version}" }, { send(AppAction(AppActionKind.USE, it)) }, enabled = !state.busy)
             Text(text(if (state.ready == null) "choose_downloaded_help" else if (state.chip.allows(state.ready)) "saved_ready" else "chip_not_supported"))
             val ready = state.ready; val target = state.target
-            Button({ if (ready != null && target != null) confirm(AppAction(AppActionKind.FLASH, target.id, ready.sha256), msg("flash_confirmation", target.label, state.identity ?: "", title(ready, language), ready.version, ready.product)) },
+            if (state.fleetAvailable) Text(text("fleet_legacy_queue")) else Button({ if (ready != null && target != null) confirm(AppAction(AppActionKind.FLASH, target.id, ready.sha256), msg("flash_confirmation", target.label, state.identity ?: "", title(ready, language), ready.version, ready.product)) },
                 enabled = !state.busy && ready != null && target != null && state.identity != null && state.ports.any { it.id == target.id } && state.chip.allows(ready) && state.downloads.any { it.entry.key == ready.key && it.entry.sha256 == ready.sha256 }) { Text(text("install_selected")) }
             Text(text("experimental_warning"), style = MaterialTheme.typography.bodySmall)
             TextButton(logs) { Text(text("connection_log")) }

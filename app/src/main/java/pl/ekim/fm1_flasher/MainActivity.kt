@@ -233,7 +233,7 @@ class MainActivity : Activity() {
         body.addView(browser, FrameLayout.LayoutParams(-1, -1))
         flasher = FlasherPanel(this,
             connectAction = { target -> withUsbPermission(target) { service?.connect(target.info.id) } },
-            resumeAction = { target -> withUsbPermission(target) { service?.resumeWith(target.info.id) } },
+            resumeAction = { target -> withUsbPermission(target) { service?.resumeWith(target.endpoint) } },
             recoveryAction = ::showRecovery, detectAction = ::detectChip, chipAction = { service?.setChip(it) }, firmwareAction = { service?.useLocal(it) },
             flashAction = ::confirmFlash, logsAction = ::showLogs)
         body.addView(flasher, FrameLayout.LayoutParams(-1, -1))

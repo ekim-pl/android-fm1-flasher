@@ -1,9 +1,10 @@
 # Multiplatform FM‑1 Flasher
 
 Kotlin Multiplatform / Compose Multiplatform fork of the Android FM‑1 Flasher,
-updated to the functionality of **0.8.1** (experimental Android build 18).
-Android opens the full shared application directly: catalog, favorites, offline
-library, flasher, settings and opt-in experimental tools.
+**0.9.0** (Android test build 19), based on the published 0.8.1 functionality.
+Android opens the instrument workspace with **Devices · Library · Tasks**:
+individual instrument cards, a shared offline library and persistent sequential
+installation plans. This build is prepared for testing before GitHub Releases publication.
 
 - `shared`: protocol and package integrity, flash sessions, catalog/repository,
   source models/policy, legacy library repository, compatibility, filters and MIDI log decoding.
@@ -14,7 +15,8 @@ library, flasher, settings and opt-in experimental tools.
 - `iosApp`: Swift host for the same UI and controller, Core MIDI, native network,
   atomic storage, log sharing and lifecycle adapters. **iOS sources have not yet
   been built with Xcode or validated on physical hardware.** Its current repository
-  remains Hub-only; the new Android SQLite/source scheduler is not ported to iOS.
+  remains Hub-only; the Android SQLite/source scheduler and device registry/queue
+  are not ported to iOS.
 
 Android downloads and preferences from earlier builds of this fork are retained.
 The application ID remains `pl.ekim.multiplatform_fm1_flasher`, separate from the

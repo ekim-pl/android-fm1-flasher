@@ -61,6 +61,11 @@ class LocalLibrary(private val directory: File, private val database: CatalogDat
         return saved.copy(entry = effective) to firmware
     }
 
+    fun removalBackup(id: String): Pair<CatalogEntry, ByteArray> {
+        val entry = load(id, null).first.entry
+        return entry to packageFile(entry).readBytes()
+    }
+
     fun remove(id: String) {
         val record = recordFile(id)
         if (database != null) database.removePackage(id)

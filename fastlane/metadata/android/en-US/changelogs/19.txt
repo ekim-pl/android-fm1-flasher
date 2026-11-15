@@ -1,0 +1,1 @@
+0.9.0 test: Devices, Library and Tasks. Separate instrument names and settings; persistent sequential installation plans and history. Fail-closed hub reconnection, correlated USB permission requests, pinned packages and one plan approval. No automatic write resumption after interruption. Multi-device returns require inline pairing pending physical hardware validation.

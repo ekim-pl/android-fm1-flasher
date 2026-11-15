@@ -25,10 +25,10 @@ class TargetSelectionTest {
         assertTrue(gate.candidates(listOf(Endpoint(99, first.usbPath), third)).isEmpty())
     }
 
-    @Test fun ambiguousNewPortsRemainSeparateForExplicitUserSelection() {
+    @Test fun ambiguousNewPortsCannotBeManuallyGuessed() {
         val otherNew = Endpoint(5, "/dev/bus/usb/001/006")
         val gate = ReconnectGate(target, listOf(first, target, third))
-        assertEquals(listOf(loader, otherNew), gate.candidates(listOf(first, third, loader, otherNew)))
+        assertTrue(gate.candidates(listOf(first, third, loader, otherNew)).isEmpty())
     }
 
     @Test fun onlyReenumeratedUsbDeviceCanReconnectAutomatically() {

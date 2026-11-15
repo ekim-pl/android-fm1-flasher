@@ -46,17 +46,20 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     private var service: FlasherService? = null
     private var bound = false
     private var visible = false
-    private var pendingUsb: Pair<Int, () -> Unit>? = null
+    private data class UsbRequest(val device: UsbDevice, val epoch: Long, val token: String, val action: () -> Unit)
+    private var pendingUsb: UsbRequest? = null
+    private val usbRequests = java.util.ArrayDeque<UsbRequest>()
     private var automaticPermission: Endpoint? = null
     private var exportBackupId: String? = null
     private var exportBackupUri: Uri? = null
     private var logRevision = -1L
     private val prefs get() = getSharedPreferences("browse", MODE_PRIVATE)
     private val permissionAction get() = "$packageName.COMPOSE_USB_PERMISSION"
-    private fun port(device: UsbMidi) = AppPort("${device.info.id}:${device.usb.deviceName}", device.label)
+    private fun port(device: UsbMidi) = AppPort("${device.info.id}:${device.usb.deviceName}:${device.generation}", device.label)
     override fun attachBaseContext(base: Context) { super.attachBaseContext(AppLanguage.wrap(base)) }
     private val observer: (UiState) -> Unit = { next ->
-        state.value = state.value.copy(catalog = next.catalog, downloads = next.downloads, favorites = next.favorites,
+        state.value = state.value.copy(undoAvailable = next.undoAvailable, fleetAvailable = true, fleet = next.fleet, jobs = next.jobs,
+            queueRunning = next.queueRunning, queueStopping = next.queueStopping, catalog = next.catalog, downloads = next.downloads, favorites = next.favorites,
             offline = next.offline, backgroundSync = next.backgroundSync, backgroundAvailable = true, busy = next.busy, flashing = next.flashing, experimental = next.experimental,
             ports = next.devices.map(::port), target = next.target?.let(::port), identity = next.identity, chip = next.chip,
             ready = next.ready, awaitingPort = next.awaitingPort, candidates = next.reconnectCandidates.map(::port),
@@ -85,10 +88,14 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action != permissionAction) return
             val pending = pendingUsb ?: return
+            if (intent.getStringExtra("request") != pending.token) return
             pendingUsb = null
             val usb = getSystemService(UsbManager::class.java)
-            val device = usb.deviceList.values.singleOrNull { it.deviceId == pending.first }
-            if (device != null && usb.hasPermission(device)) pending.second() else showFailure(msg(R.string.usb_permission_denied))
+            val device = usb.deviceList[pending.device.deviceName]
+            if (device != null && device == pending.device && service?.usbEpoch(device.deviceName) == pending.epoch && usb.hasPermission(device)) {
+                runCatching(pending.action).onFailure { showFailure(it.appMessage(R.string.usb_permission_denied)) }
+            } else showFailure(msg(R.string.usb_permission_denied))
+            dispatchUsbRequest()
         }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,7 +107,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
                 prefs.getString("query", "").orEmpty(), runCatching { FirmwareCategory.valueOf(prefs.getString("category", "ALL")!!) }.getOrDefault(FirmwareCategory.ALL),
                 runCatching { FirmwareSort.valueOf(prefs.getString("sort", "NAME")!!) }.getOrDefault(FirmwareSort.NAME), prefs.all["downloaded"].toString().toBoolean(), prefs.all["favorites"].toString().toBoolean(), prefs.getString("source", null)?.takeIf { it.isNotBlank() }))
         window.setDecorFitsSystemWindows(false)
-        registerReceiver(receiver, IntentFilter(permissionAction), RECEIVER_NOT_EXPORTED)
+        registerReceiver(receiver, IntentFilter(permissionAction).apply { addDataScheme("fm1-permission") }, RECEIVER_NOT_EXPORTED)
         setContent {
             val snapshot by state.collectAsState()
             val dark = snapshot.appearance == "DARK" || (snapshot.appearance == "SYSTEM" && (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK == android.content.res.Configuration.UI_MODE_NIGHT_YES))
@@ -138,6 +145,17 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         val active = service ?: return
         val next = active.state
         when (action.kind) {
+            AppActionKind.UNDO_REMOVE -> active.undoRemove()
+            AppActionKind.DEVICE_ALIAS -> active.configureDevice(action.id, alias = action.value)
+            AppActionKind.DEVICE_CHIP -> active.configureDevice(action.id, chip = FlashChip.valueOf(action.value))
+            AppActionKind.DEVICE_PAIR -> active.pairDevice(action.id, action.value)
+            AppActionKind.QUEUE_ADD -> active.enqueue(action.id, action.value)
+            AppActionKind.QUEUE_REMOVE -> active.cancelJob(action.id)
+            AppActionKind.QUEUE_STOP -> active.stopQueue()
+            AppActionKind.QUEUE_START -> {
+                if (next.busy || action.id != FleetPolicy.token(next.jobs)) return
+                foreground(Intent(this, FlasherService::class.java).setAction("QUEUE").putExtra("plan", action.id))
+            }
             AppActionKind.BACKGROUND_SYNC -> active.setBackgroundSync(action.id.toBooleanStrict())
             AppActionKind.SOURCE_ENABLE -> active.setSourceEnabled(action.id, action.value.toBooleanStrict())
             AppActionKind.SOURCE_CHECK -> active.checkSource(action.id)
@@ -161,7 +179,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             AppActionKind.UPDATE_ALL -> active.updateDownloads()
             AppActionKind.CONNECT -> next.devices.singleOrNull { port(it).id == action.id }?.let { target -> withPermission(target.usb) { if (active.state.devices.any { it.endpoint == target.endpoint }) active.connect(target.info.id) } }
             AppActionKind.CHIP -> active.setChip(FlashChip.valueOf(action.id))
-            AppActionKind.RECONNECT -> next.reconnectCandidates.singleOrNull { port(it).id == action.id }?.let { target -> withPermission(target.usb) { active.resumeWith(target.info.id) } }
+            AppActionKind.RECONNECT -> next.reconnectCandidates.singleOrNull { port(it).id == action.id }?.let { target -> withPermission(target.usb) { active.resumeWith(target.endpoint) } }
             AppActionKind.FLASH -> {
                 val target = next.target ?: return
                 if (port(target).id != action.id || next.ready?.sha256 != action.value || next.busy) return
@@ -215,14 +233,35 @@ class ComposeActivity : ComponentActivity(), AppBackend {
                 ?: msg(if (monitor.running) R.string.logger_running else R.string.logger_stopped))
     }
     private fun withPermission(device: UsbDevice, action: () -> Unit) {
+        val active = service ?: return
         val usb = getSystemService(UsbManager::class.java)
+        val request = UsbRequest(device, active.usbEpoch(device.deviceName), java.util.UUID.randomUUID().toString(), action)
+        if (usb.deviceList[device.deviceName] != device) { showFailure(msg(R.string.usb_port_gone)); return }
         if (usb.hasPermission(device)) { action(); return }
+        if (pendingUsb?.let { it.device == device && it.epoch == request.epoch } == true ||
+            usbRequests.any { it.device == device && it.epoch == request.epoch }) return
+        usbRequests.add(request)
+        dispatchUsbRequest()
+    }
+    private fun dispatchUsbRequest() {
         if (pendingUsb != null) return
-        pendingUsb = device.deviceId to action
-        usb.requestPermission(device, PendingIntent.getBroadcast(this, device.deviceId, Intent(permissionAction).setPackage(packageName), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+        val usb = getSystemService(UsbManager::class.java)
+        while (usbRequests.isNotEmpty()) {
+            val request = usbRequests.removeFirst()
+            if (usb.deviceList[request.device.deviceName] != request.device || service?.usbEpoch(request.device.deviceName) != request.epoch) continue
+            if (usb.hasPermission(request.device)) { request.action(); continue }
+            pendingUsb = request
+            usb.requestPermission(request.device, PendingIntent.getBroadcast(this, request.token.hashCode(),
+                Intent(permissionAction).setPackage(packageName).setData(Uri.parse("fm1-permission:${request.token}"))
+                    .putExtra("request", request.token), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_ONE_SHOT))
+            return
+        }
     }
     private fun foreground(intent: Intent) {
-        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 5)
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED && !prefs.getBoolean("notificationAsked", false)) {
+            prefs.edit().putBoolean("notificationAsked", true).apply()
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 5)
+        }
         startForegroundService(intent)
     }
     private fun startRecovery(action: AppAction) {

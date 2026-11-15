@@ -1,5 +1,11 @@
 # FM‑1 Flasher
 
+## Several instruments, one workspace
+
+On Android 0.9.0, use **Devices** to read instruments connected through an OTG hub, name them and select a local firmware package for each one. **Tasks** shows the complete plan and its history. One approval starts sequential installation; stopping the queue lets the current operation finish. **Library** keeps catalogs, downloads and favorites together.
+
+After a restart in a multi-device session, pair the returning instrument on its task card. Loss of another instrument blocks further writes. Automatic multi-device pairing awaits physical hardware validation; USB addresses are not hub socket numbers. Saved names require explicit pairing after a lost connection.
+
 An independent, experimental app for browsing firmware and updating an **M‑VAVE FM‑1** over USB MIDI.
 
 ## Features

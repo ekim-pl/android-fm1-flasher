@@ -53,6 +53,16 @@ class FlashSessionTest {
         assertEquals(100, progress.last())
     }
 
+    @Test fun failedContinuityValidationSendsZeroUpgradeCommands() {
+        val target = Link(Endpoint(2, "usb/3"), "FM-1_015", Protocol.VERIFIED)
+        var clock = 0L
+        val engine = FlashSession({ _, _ -> error("Must not reconnect") }, { _, _ -> }, { clock += it }, { clock++ },
+            validate = { error("Neighbour lost") })
+        assertFailsWith<IllegalStateException> { engine.flash(image(), target, FirmwareIdentity("FM-1", "015")) }
+        assertFalse(target.sent.any { it.contentEquals(Protocol.upgrade) })
+        assertTrue(target.closed)
+    }
+
     @Test fun wrongCurrentModelSendsNoUpgrade() {
         val target = Link(Endpoint(2, "usb/3"), "OTHER_015", Protocol.VERIFIED)
         assertFailsWith<IllegalStateException> {
