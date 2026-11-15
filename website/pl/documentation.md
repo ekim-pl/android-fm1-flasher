@@ -105,7 +105,7 @@ Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste pr
 
 ## Prywatność i autorstwo
 
-Bez konta i reklam. Standardowe kompilacje nie zawierają SDK analityki; wersje z Firebase domyślnie zbierają statystyki; wyłączysz je w Ustawienia → Statystyki użytkowania. Biblioteka, nazwy, odczytane seriale, wybory pamięci i historia zadań pozostają lokalnie. Serwery katalogów/grafik/paczek otrzymują metadane połączenia; aplikacja nie dołącza tożsamości instrumentów do tych żądań. Szczegóły: [polityka prywatności](privacy.md).
+Bez konta i reklam. Wersja F-Droid nie zawiera SDK analityki; wersja Google Play z Firebase domyślnie zbiera statystyki; wyłączysz je w Ustawienia → Statystyki użytkowania. Biblioteka, nazwy, odczytane seriale, wybory pamięci i historia zadań pozostają lokalnie. Serwery katalogów/grafik/paczek otrzymują metadane połączenia; aplikacja nie dołącza tożsamości instrumentów do tych żądań. Szczegóły: [polityka prywatności](privacy.md).
 
 Kod aplikacji: [MIT](../../LICENSE.md). Katalog [The Firmware Hub](https://thefirmwarehub.com): CC BY 4.0; firmware zachowuje licencje autorów. [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) jest opcjonalnym katalogiem. Informacje o zależnościach: [third_party](../../third_party/). Kontakt: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
 
@@ -154,3 +154,11 @@ Lista pamięci pokazuje opisy: **Starsza pamięć** obsługuje starsze firmware,
 Zwykła instalacja zachowuje ostrożne reguły. Gdy typ kości instrumentu jest nieznany, a paczka obsługuje tylko starszą pamięć, albo paczka ma `chip: unknown`, wybierz **Wymuś instalację (nieznana zgodność)**. Sprawdź instrument, wersję paczki i SHA-256, przeczytaj dodatkowe ostrzeżenie, zaznacz akceptację ryzyka i potwierdź. Na Androidzie powstanie wyraźnie oznaczone zadanie; przejrzyj plan w **Zadaniach** i uruchom instalację. Zgoda zostaje tylko przy tym zadaniu, nigdy jako ustawienie globalne. Na iOS po dodatkowym ostrzeżeniu pojawia się zwykłe potwierdzenie instalacji.
 
 Niewłaściwy firmware może uniemożliwić uruchomienie instrumentu i wymagać naprawy sprzętowej. Sprawdź zgodność u autora i zrób kopię danych. Wymuszenie nie omija jawnej niezgodności (paczka tylko dla starszej pamięci przy znanej nowszej kości), niewspieranych, wycofanych lub sprzecznych paczek, kontroli hash/produktu ani weryfikacji urządzenia i ponownego połączenia. Po usunięciu zadania kolejna wymuszona próba wymaga nowej zgody.
+
+Odnośniki do licencji w O aplikacji otwierają pełnoekranowy widok **Licencja**. Przycisk w nagłówku i systemowe Wstecz wracają do O aplikacji; teksty licencji są dostępne offline.
+
+## Zrzuty ekranu
+
+[Zrzuty ekranu — 0.10.0](gallery.md)
+
+[![Biblioteka po polsku](../../fastlane/metadata/android/pl-PL/images/phoneScreenshots/01.png)](../../fastlane/metadata/android/pl-PL/images/phoneScreenshots/01.png)

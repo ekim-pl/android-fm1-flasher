@@ -24,7 +24,7 @@ Firmware Hub 默认启用；可在[设置 → 固件来源](app://settings/sourc
 
 ## 隐私和许可
 
-应用无需账户且无广告。标准构建不包含分析 SDK。配置了 Google Analytics for Firebase 的构建从首次联网启动起默认收集使用统计。您可随时在“设置 → 使用统计”中关闭。固件库、设备名称和任务历史保存在本地。目录和下载服务器会收到连接元数据。参阅[隐私政策](../PRIVACY_POLICY.md)和 [MIT 许可证](../LICENSE.md)；固件和第三方组件遵循各自的许可。
+应用无需账户且无广告。F-Droid 版本不包含分析 SDK。包含 Google Analytics for Firebase 的 Google Play 版本从首次联网启动起默认收集使用统计。您可随时在“设置 → 使用统计”中关闭。固件库、设备名称和任务历史保存在本地。目录和下载服务器会收到连接元数据。参阅[隐私政策](../PRIVACY_POLICY.md)和 [MIT 许可证](../LICENSE.md)；固件和第三方组件遵循各自的许可。
 
 可选分析 SDK 条款：[Firebase 声明](../third_party/firebase-analytics-NOTICE.md)。
 

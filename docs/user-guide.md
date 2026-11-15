@@ -171,3 +171,15 @@ The memory selector uses descriptions: **Older memory** supports older firmware;
 Normal installation stays conservative. If the instrument memory is unknown and the package supports only older memory, or the package declares `chip: unknown`, select **Force installation (unknown compatibility)**. Review the instrument, package version and SHA-256, read the additional warning and tick the risk acknowledgement before confirming. On Android this adds a visibly marked task; review the plan in **Tasks** and explicitly start installation. The approval is saved only with that task, never as a global setting. On iOS the usual installation confirmation follows the additional warning.
 
 Wrong firmware can leave the instrument unable to boot and require hardware recovery. Check with the firmware author and back up data first. Explicit incompatibility (older-only firmware on known newer memory), unsupported packages, withdrawn/conflicting packages, hash/product validation and device/reconnection checks cannot be bypassed. Removing the task requires a new approval for another forced attempt.
+
+License links in About open a full-screen **License** page. The header and system Back return to About; the license text is bundled for offline reading.
+
+## Screenshots
+
+[Screenshots — 0.10.0](../website/gallery.md)
+
+[![Library — search, source colors and firmware cards](../fastlane/metadata/android/en-US/images/phoneScreenshots/01.png)](../fastlane/metadata/android/en-US/images/phoneScreenshots/01.png)
+
+[![Devices — no instrument connected](../fastlane/metadata/android/en-US/images/phoneScreenshots/02.png)](../fastlane/metadata/android/en-US/images/phoneScreenshots/02.png)
+
+[![Tasks — an empty installation plan](../fastlane/metadata/android/en-US/images/phoneScreenshots/03.png)](../fastlane/metadata/android/en-US/images/phoneScreenshots/03.png)

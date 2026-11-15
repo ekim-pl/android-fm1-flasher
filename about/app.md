@@ -24,7 +24,7 @@ In **Settings → Firmware sources → Source color**, choose one of eight color
 
 ## Privacy and licenses
 
-The app requires no account and contains no advertising. Standard builds contain no analytics SDK. Builds configured with Google Analytics for Firebase collect usage statistics by default from the first online launch. You can turn statistics off at any time in Settings → Usage statistics. Library data, device names and task history are stored locally. Catalog and download servers receive connection metadata. See the [privacy policy](../PRIVACY_POLICY.md) and [MIT license](../LICENSE.md); firmware and third-party components retain their own licenses.
+The app requires no account and contains no advertising. The F-Droid distribution contains no analytics SDK. Google Play builds with Google Analytics for Firebase collect usage statistics by default from the first online launch. You can turn statistics off at any time in Settings → Usage statistics. Library data, device names and task history are stored locally. Catalog and download servers receive connection metadata. See the [privacy policy](../PRIVACY_POLICY.md) and [MIT license](../LICENSE.md); firmware and third-party components retain their own licenses.
 
 Optional analytics SDK terms: [Firebase notices](../third_party/firebase-analytics-NOTICE.md).
 

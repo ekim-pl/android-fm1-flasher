@@ -105,7 +105,7 @@ APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outp
 
 ## 隐私与署名
 
-无需账户且无广告。标准构建不含分析 SDK；Firebase 构建默认收集使用统计，可在“设置 → 使用统计”中关闭。固件库、名称、序列号观察值、芯片选择和任务历史保存在本地。外部目录/图片/下载服务器收到连接元数据，应用不会附加乐器身份。详见[隐私政策](privacy.md)。
+无需账户且无广告。F-Droid 版本不含分析 SDK；Google Play 构建默认收集使用统计，可在“设置 → 使用统计”中关闭。固件库、名称、序列号观察值、芯片选择和任务历史保存在本地。外部目录/图片/下载服务器收到连接元数据，应用不会附加乐器身份。详见[隐私政策](privacy.md)。
 
 应用代码：[MIT](../../LICENSE.md)。[The Firmware Hub](https://thefirmwarehub.com) 目录使用 CC BY 4.0，固件遵循其作者的许可证。[Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) 是可选目录。依赖声明见 [third_party](../../third_party/)。联系：[ekim.pl@gmail.com](mailto:ekim.pl@gmail.com)。
 
@@ -154,3 +154,11 @@ OAuth 支持浏览器 Authorization Code **PKCE S256** 与服务 **Client Creden
 正常安装仍采用保守规则。当设备芯片未知且固件包仅支持旧版闪存，或固件包声明 `chip: unknown` 时，可选择**强制安装（兼容性未知）**。检查设备、版本和 SHA-256，阅读额外警告，勾选风险确认并确认操作。Android 会添加带有强制标记的任务；请在**任务**中审查计划并明确开始安装。授权仅保存在该任务中，不是全局设置。iOS 会在额外警告后显示通常的安装确认。
 
 错误固件可能使设备无法启动，并需要硬件恢复。请先咨询作者并备份数据。强制安装无法绕过明确不兼容（已知新版芯片使用仅支持旧版的包）、不支持、撤回或冲突的固件包、哈希和产品验证，以及设备和重连检查。删除任务后，另一次强制尝试需要重新授权。
+
+关于页面中的许可证链接会打开全屏的**许可证**页面。顶部和系统返回操作均返回关于页面，许可证文本可离线阅读。
+
+## 应用截图
+
+[应用截图 — 0.10.0](gallery.md)
+
+[![简体中文固件库](../../fastlane/metadata/android/zh-CN/images/phoneScreenshots/01.png)](../../fastlane/metadata/android/zh-CN/images/phoneScreenshots/01.png)

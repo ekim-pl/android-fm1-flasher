@@ -1,10 +1,9 @@
 {
-  "01.png": "Firmware catalog in light mode with categories, search and locally generated firmware artwork.",
-  "02.png": "Local favorites list, saved on the device without an account.",
-  "03.png": "Downloaded firmware library in offline mode, showing a package saved on the device.",
-  "04.png": "Firmware details in dark mode with local package state and actions.",
-  "05.png": "Flasher with a list of downloaded firmware, a selected local package and the installation action.",
-  "06.png": "In-app language selection: Polish, English, Simplified Chinese or follow the system language.",
-  "07.png": "Landscape catalog with search and filters beside the firmware list.",
-  "08.png": "Landscape Flasher showing the USB selector and firmware installation controls side by side."
+  "01.png": "Library — search, source colors and firmware cards",
+  "02.png": "Devices — no instrument connected",
+  "03.png": "Tasks — an empty installation plan",
+  "04.png": "Settings — language, theme and usage statistics",
+  "05.png": "About — version 0.10.0",
+  "06.png": "Privacy — Google Play and F-Droid distributions",
+  "07.png": "License — bundled MIT text"
 }

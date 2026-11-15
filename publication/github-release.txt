@@ -3,7 +3,7 @@
 Local firmware library, offline packages, configurable source colors and sequential
 installation tasks for M-VAVE FM-1 on Android 14+.
 Documentation, About, privacy and license information are available in English,
-Polish and Simplified Chinese. Fresh screenshots remain pending; see the verification report.
+Polish and Simplified Chinese. Nine current screenshots are included in the documentation and website gallery.
 
 This is milestone 1 toward Google Play. The local debug APK is for testing;
 store signing, hardware acceptance and final publication remain separate steps.

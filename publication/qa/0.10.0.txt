@@ -1,5 +1,5 @@
 FM-1 Flasher 0.10.0 / 31 — milestone 1
-Date: 2026-11-15
+Updated: 2026-11-16
 Publisher: Ekim (GitHub ekim-pl).
 Android: pl.ekim.fm1_flasher; minSdk 34, target/compile SDK 36.
 
@@ -17,7 +17,7 @@ VALIDATION
 Final documentation packaging rebuild :app:assembleDebug passed.
 Resource synchronization check and git diff --check passed.
 Python release-fixture suite: 2 tests passed.
-Website: 48 generated HTML pages passed links/anchors/translation checks.
+Website: 52 generated HTML pages passed links/anchors/translation checks.
 All 15 bundled Markdown/license documents match repository bytes exactly.
 APK signature verification passed; manifest version/application ID/SDK checked.
 
@@ -37,9 +37,9 @@ Both are Android Debug signed; same application ID, install one at a time.
 Google Play equivalent uses the test Firebase project ekim-3c534, not production.
 The earlier SDK-free FM1-Flasher-0.10.0-test31.apk is superseded by these named variants.
 FM1-Flasher-0.10.0-fdroid-test31.apk
-SHA-256: ec6c903c962cddb81d08e9823c843083d77acd7bd21fdc7b48fc0e7c747d9aaf
+SHA-256: b30926b33f985c1f8e5dff6d666fa267272722d875d84c5a92cdf67378a8ce2a
 FM1-Flasher-0.10.0-google-play-test31.apk
-SHA-256: 096c74272452542c32e82dc3535440ed12afdb9965c6e5a73e2c4949582aecae
+SHA-256: 36d9b930c469c004db9c9d0378d19ab9b09e9a28551ee6e733cbe81f41b017de
 FM1-Flasher-0.10.0-test31.apk
 SHA-256: 786c69230ae4d4ee9e8781f4f0eea810c90da7ff671b03bd18edcefc7486b9be
 
@@ -49,13 +49,20 @@ Both APKs bundle current About/privacy/license documents matching source bytes.
 No signed Play upload AAB or iOS binary is supplied in this milestone.
 
 DEVICE AND SCREENSHOTS
-Created and booted a dedicated Android_FM1_Flasher_Release_API36 (Android 16),
-installed and launched the earlier SDK-free test APK successfully. Device panel works.
-The original DEVICE_IN_USE blocker is resolved. Capture was paused at the owner's
-request while splitting F-Droid and Google Play workflows; preliminary images are
-not store assets. Final English screens and one PL/zh-Hans screen remain pending.
-CI for prior head 67ee177 passed unit/lint and API 34/36 instrumentation checks.
-No new local instrumentation or physical hardware run is claimed.
+Dedicated Android_FM1_Flasher_Release_API36 (Android 16), 1080 x 2400.
+Nine actual screenshots from the Firebase test variant: seven EN (Library, Devices,
+Tasks, Settings, About, privacy, full-screen License) plus one Library each in PL/ZH.
+Replaced historical fastlane phone screenshots and alt texts. No connected instrument
+or simulated update. Firmware descriptions remain in their authors' languages.
+Screenshots are embedded in README/user guides and the EN/PL/ZH Pages gallery.
+License screenshot refreshed after replacing the popup with a full-screen page.
+Visually inspected all nine captures. MainActivityLaunchTest and SettingsUiTest:
+4 tests passed; SettingsUiTest rerun after the license change: 2 tests passed,
+including localized license title/body, absence of a dialog and Back to About in EN/PL/ZH.
+Both final debug APKs rebuilt, bundled documents and Firebase presence/absence checked.
+Firebase debug lint passed. Resource synchronization and site/gallery validation passed.
+No physical FM-1/hub or live Firebase delivery/retention verification is claimed.
+Pages publication happens only after the PR reaches the default branch.
 
 REMAINING BEFORE PUBLICATION
 Physical FM-1/hub, power/reconnect and ROM recovery acceptance; API 34/36 platform

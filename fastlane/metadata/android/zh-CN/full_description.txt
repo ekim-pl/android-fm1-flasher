@@ -18,6 +18,6 @@
 要求与状态
 需要 Android 14+、USB Host/OTG、MIDI、FM-1、数据线和稳定供电。建议独立供电集线器；应用不能测量供电质量。固件描述保持作者原文。此版本仍需实体 FM-1/集线器验收。若固件提供备份工具，请先备份；OTA 不会自动备份数据。Android 设备队列尚未移植到未经验证的 iOS 宿主。
 
-独立 MIT 项目，并非 M-VAVE 官方应用。固件由发布者提供。Firmware Hub 目录：CC BY 4.0。应用无需账户且无广告。标准构建不包含分析 SDK。配置了 Google Analytics for Firebase 的构建从首次联网启动起默认收集使用统计。您可随时在“设置 → 使用统计”中关闭。名称、序列号观察值和任务历史保存在本地；外部目录/下载服务接收连接元数据。联系：ekim.pl@gmail.com。
+独立 MIT 项目，并非 M-VAVE 官方应用。固件由发布者提供。Firmware Hub 目录：CC BY 4.0。应用无需账户且无广告。F-Droid 版本不包含分析 SDK。包含 Google Analytics for Firebase 的 Google Play 版本从首次联网启动起默认收集使用统计。您可随时在“设置 → 使用统计”中关闭。名称、序列号观察值和任务历史保存在本地；外部目录/下载服务接收连接元数据。联系：ekim.pl@gmail.com。
 
 这是 FM-1 Flasher 0.10.0 的商店描述草稿，尚未在 Google Play 发布。

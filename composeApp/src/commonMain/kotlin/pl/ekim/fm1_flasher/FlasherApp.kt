@@ -36,6 +36,7 @@ fun FlasherApp(backend: AppBackend) {
     var dialog by remember { mutableStateOf<Pair<String, AppText>?>(null) }
     var confirmation by remember { mutableStateOf<Pair<AppAction, AppText>?>(null) }
     var sources by rememberSaveable { mutableStateOf(false) }
+    var licenseDocument by rememberSaveable { mutableStateOf<String?>(null) }
     var settingsPrivacy by rememberSaveable { mutableStateOf(false) }
     var recovery by rememberSaveable { mutableStateOf(false) }
     val screen = when {
@@ -64,7 +65,7 @@ fun FlasherApp(backend: AppBackend) {
             url == "app://tasks" -> { settings = false; sources = false; tabName = (if (state.fleetAvailable) LibraryTab.TASKS else LibraryTab.FLASHER).name }
             url == "app://settings/sources" -> { settings = true; sources = true }
             name == "PRIVACY_POLICY.md" -> dialog = text("privacy_title") to msg("privacy_body")
-            name == "LICENSE.md" || name.startsWith("third_party/") -> dialog = name to AppText.Plain(backend.document(name))
+            name == "LICENSE.md" || name.startsWith("third_party/") -> licenseDocument = name
             url.startsWith("https://") || url.startsWith("http://") || url.startsWith("mailto:") -> send(AppActionKind.OPEN_LINK, url)
         }
     }
@@ -85,6 +86,9 @@ fun FlasherApp(backend: AppBackend) {
             BoxWithConstraints(Modifier.safeDrawingPadding()) {
                 val wide = maxWidth >= 600.dp
                 when {
+                    licenseDocument != null -> SettingsPage(text("license_title"), text("back"), { licenseDocument = null }) {
+                        Text(backend.document(licenseDocument!!))
+                    }
                     sources -> SourceSettings(state, language, backend) { sources = false }
                     settingsPrivacy -> SettingsPage(text("privacy_title"), text("back"), { settingsPrivacy = false }) {
                         Text(text("privacy_body"))

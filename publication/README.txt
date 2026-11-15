@@ -25,18 +25,17 @@ DOCUMENTATION AND STORE ASSETS
 README.md and docs/user-guide.md describe current use; about/app*.md are the concise
 in-app About documents. MIT and third-party notices are bundled for offline reading.
 PRIVACY_POLICY.md, translated website policies and in-app resources describe the
-same local storage and optional analytics behavior.
+same local storage behavior and the Google Play/F-Droid analytics distinction.
 fastlane/metadata/android/{en-US,pl-PL,zh-CN}/ contains store text and screenshots.
 Version 31 changelogs describe this milestone; earlier changelogs remain historical.
-Existing screenshots are historical and must not be submitted as 0.10.0 screenshots.
-A dedicated emulator is ready; final capture is paused while distribution workflows
-are split. See qa/0.10.0.txt.
+Current 0.10.0 screenshots: seven English screens and one each in Polish and
+Simplified Chinese. Captured on Android 16 from the Firebase test variant. See
+qa/0.10.0.txt and ../website/gallery.md. The gallery is available in all three languages.
 Build the public website with scripts/build_site.py; validate with scripts/check_site.py.
 Branch changes do not update the live privacy URL until deployment.
 
 BEFORE GOOGLE PLAY
-Verify the final signed AAB, upload-key continuity, production analytics configuration
-(if enabled), Data safety answers, retention, content rating, audience and store access.
+Verify the final signed AAB, upload-key continuity, production Firebase configuration, Data safety answers, retention, content rating, audience and store access.
 Complete physical FM-1/hub acceptance and any connectedDevice service demonstration.
 Automatic multi-device pairing remains disabled; physical ROM recovery is unverified.
 No iOS binary is supplied. See test-checklist.txt and play-console.json.

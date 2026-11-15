@@ -37,7 +37,7 @@ To join Awesome FM-1, fork the repository, add a short project proposal and open
 
 ## Privacy and open source
 
-No account or advertising. Standard builds have no analytics SDK; Firebase-enabled builds collect usage statistics by default; you can turn them off in Settings → Usage statistics. The library, instrument names, observed serials and task history remain local. External catalog/download services receive connection metadata.
+No account or advertising. The F-Droid distribution has no analytics SDK; Google Play builds collect usage statistics by default; you can turn them off in Settings → Usage statistics. The library, instrument names, observed serials and task history remain local. External catalog/download services receive connection metadata.
 
 [Privacy policy](../PRIVACY_POLICY.md) · [MIT license](../LICENSE.md) · [CommonMark license](../third_party/commonmark-LICENSE.txt)
 
