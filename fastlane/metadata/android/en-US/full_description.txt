@@ -1,32 +1,23 @@
-Browse a firmware catalog and prepare USB MIDI updates for your M-VAVE FM-1 from an Android device.
+Manage M-VAVE FM-1 firmware with Devices, Library and Tasks on Android 14+.
 
-Firmware library
-• Explore categories, search by firmware name or author, and sort releases.
-• Keep favorites on your device without an account.
-• Download supported packages, manage your library and check for catalog updates.
-• Use verified, previously downloaded packages offline.
+Devices
+Read each USB MIDI instrument, give it a name and assign a downloaded compatible package. An OTG hub can connect several instruments. The app writes one instrument at a time.
 
-Choose your instrument
-• Explicitly select one USB MIDI device, including when several devices share a hub.
-• Reconnect automatically after restarts with a single USB device and one MIDI port; otherwise confirm the new port manually.
-• Check package SHA-256, UFW structure, relevant CRCs and catalog compatibility before writing.
-• Keep a progress notification during the firmware update.
+Library
+Search Firmware Hub and optional Awesome FM-1/custom catalogs, filter by source/category, keep favorites and use saved packages offline. Check package integrity and compatibility before writing. A queued/running task pins its package against deletion or replacement. Ordinary valid package removal has Undo during the current app session.
 
-Make it yours
-Choose English, Polish or Simplified Chinese, or follow the system language. Use light or dark appearance, or let Android choose.
+Tasks
+Review one plan with device names, versions and hashes. Approve it once to start sequential jobs. Stop after the current instrument without interrupting its write. Keep individual results and bounded stage history. An interrupted job is unconfirmed and never automatically resumes a partial transfer.
 
-Requirements
-Android 14 or later, USB Host/OTG and Android MIDI support, an M-VAVE FM-1, a data cable and stable power. A powered USB hub is recommended. Internet is needed to obtain the catalog and new packages. Firmware descriptions remain in the authors’ original language.
+Reconnection
+Multiple instruments require inline pairing of the unique returning unit with uninterrupted neighbors. A lost neighbor, hub reset or ambiguous ports blocks further writes. USB addresses are not physical socket numbers; serials are not validated cross-mode hardware identities. Conservative automatic reconnect is limited to a single eligible USB/MIDI device. Android may request USB permission again after re-enumeration.
 
-Experimental software
-This version has not yet been verified with a physical FM-1. Firmware updates can erase instrument data. Wrong packages, loss of power or selecting the wrong instrument after a restart can require hardware recovery. Back up instrument data with the firmware’s own tools before use. This app does not provide backups, Bluetooth updates, automatic flash-chip detection or hardware recovery.
+Settings and experimental tools
+English, Polish and Simplified Chinese; light, dark and system themes; About/privacy available offline. Background catalog checking is optional and off by default; it never downloads or installs firmware. Opt-in MIDI Logger pauses during connection/flashing. Separate chip detection and restricted stock V15 ROM recovery are experimental, not an automatic fallback or general-purpose repair tool.
 
-Independent, open source project under the MIT license. Not an official M-VAVE product. Firmware packages and the catalog are supplied by their respective authors; firmware is not bundled with the app. Catalog attribution: The Firmware Hub, CC BY 4.0. No advertising, account requirement or analytics SDKs.
+Requirements and status
+Android 14+, USB Host/OTG and MIDI, FM-1 instruments, data cables and stable power. A powered hub is recommended; the app cannot measure its power quality. Firmware descriptions remain in their authors’ language. This is experimental software without physical FM-1/hub validation for build 19. Use firmware-specific backup tools where available; OTA does not automatically back up data. The Android fleet queue is not ported to the unverified iOS host.
 
-Support and privacy contact: ekim.pl@gmail.com
+Independent MIT-licensed project, not an official M-VAVE app. Firmware remains with its publishers. The Firmware Hub catalog: CC BY 4.0. No account, advertising or analytics. Names, observed serials and task history stay locally; external download/catalog services receive connection metadata. Contact: ekim.pl@gmail.com.
 
-A compact landscape layout places catalog filters beside results and device controls beside package actions.
-
-• Pick downloaded firmware directly in the Flasher tab or use catalog selection.
-
-The About tab displays a short, dedicated app guide in the selected interface language and shows the installed app version.
+Draft listing for the 0.9.0 test implementation; not a claim of store publication.

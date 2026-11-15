@@ -1,37 +1,32 @@
-Play Console foreground service declaration — proposed text
+connectedDevice foreground service — implemented 0.9.0 use case
+Draft factual description; not a submitted store declaration or an existing video.
 
-Permission/type: FOREGROUND_SERVICE_CONNECTED_DEVICE / connectedDevice
+The owner reads FM-1 instruments, assigns locally downloaded compatible firmware,
+and approves the complete plan in Tasks. FlasherService executes those immutable
+jobs sequentially, with one mode-changing session at a time. It never redirects a
+failed job's package to another instrument. ROM recovery uses a separate explicit plan.
 
-User-visible task:
-The user explicitly selects a USB MIDI FM-1 instrument, downloads and selects a
-compatible firmware package, and confirms installation. During this update the
-app uses USB MIDI SysEx to exchange requests and transfer firmware to that one
-instrument. It does not automatically select another connected instrument.
+The foreground notification reports stage/progress and returns to ComposeActivity.
+A time-limited wake lock supports the active transfer when another app is foregrounded
+or the screen is off. Neither mechanism guarantees USB power or immunity to process
+termination. A pairing/system permission action can require returning to the app.
+The foreground operation ends on completion/failure; stop-after-current preserves
+remaining jobs. After process death a running job is unconfirmed, not automatically resumed.
+Background catalog checks use WorkManager, not the flash foreground operation.
 
-Why a foreground service is needed:
-The session must continue when the user switches to another app or turns off
-the screen. Stopping the data transfer during a firmware write can leave the
-instrument requiring hardware recovery. An ongoing notification displays the
-current stage/progress and opens the app. The service uses a time-limited wake
-lock and ends its foreground operation on completion or failure. It is not used
-for scheduled catalog refreshes or advertising. After a planned restart, the app automatically picks a new eligible MIDI port
-only when Android reports exactly one USB device and one MIDI endpoint. USB
-permission and FM-1 identity checks still apply. Multiple devices or ports
-require explicit selection.
+Single-device automatic reconnect requires one eligible MIDI return and one USB
+device with no MIDI siblings. Multiple devices need a unique return, uninterrupted
+neighbors and inline owner pairing. Hub/neighbor loss or ambiguity blocks further
+writing. Android USB permission may be required after re-enumeration.
 
-Reviewer access notes:
-Catalog, language/theme settings, favorites and downloads work without login.
-Firmware transfer requires a physical M-VAVE FM-1 and a phone with USB Host/OTG
-and MIDI support, plus a data cable and stable hub power. An emulator cannot
-demonstrate a real instrument update. Bluetooth updating is not supported.
+Physical demonstration still to record
+1. Show application ID/version, two physically identified FM-1 units and their cards.
+2. Show local package versions/hashes and one approval of the complete plan.
+3. Show sequential progress and automatic logger pause.
+4. Switch apps/show notification, return for required USB grant or inline pairing.
+5. Show final version/return verification, per-job results and notification removal.
+6. Demonstrate stop-after-current retaining pending tasks without cutting an active write.
 
-Recording script for a physical-device review demonstration:
-1. Show the app version and select the target FM-1 USB port.
-2. Show device identity and a previously downloaded compatible package.
-3. Confirm the target and start the update.
-4. Switch apps and show the ongoing progress notification while transfer runs.
-5. With one USB device, show automatic port reconnection after each restart and
-   approve Android USB permission if requested. With multiple USB devices, show
-   explicit port selection. Show final identity confirmation and notification removal.
-
-Do not claim this recording exists: no physical FM-1 was available in this task.
+Catalog/settings/library require no login. A real USB update requires instruments,
+a data-capable Android 14+ host, OTG, MIDI support and stable power. Emulator UI
+screenshots cannot replace this demonstration. No Bluetooth flashing is implemented.

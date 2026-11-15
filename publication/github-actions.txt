@@ -1,172 +1,54 @@
-FM-1 Flasher: GitHub Actions -> Google Play
+GitHub Actions on task/multiplatform-rework — 0.9.0 / 19
 
-PUBLIC ADDRESSES AND PUBLICATION STATUS
+This is a description of the checked-in workflows, not a request to run or publish them.
+Android application ID: pl.ekim.multiplatform_fm1_flasher.
+The 0.9.0 test APK has been prepared locally; no release tag/publication is implied.
 
-Repository: https://github.com/ekim-pl/android-fm1-flasher
-Documentation: https://ekim-pl.github.io/android-fm1-flasher/
-Privacy policy: https://ekim-pl.github.io/android-fm1-flasher/privacy/en/
+ANDROID CI (.github/workflows/android-ci.yml)
+Runs on branch pushes, pull requests and manual dispatch. Uses JDK 17, Android SDK 36
+and Build Tools 35.0.0. Checks generated resource bridges, shared JVM tests, Android
+JVM tests, debug lint and assembleDebug. Uploads APK/reports as android-checks for
+14 days. It does not run a physical FM-1, create a GitHub Release, build Swift or
+perform the separate Android instrumentation acceptance suite.
 
-Google Play release is disabled in Actions settings while the source repository
-and test APK are being published. After configuring Play Console, the upload key
-and secrets, enable it in Actions -> Google Play release -> Enable workflow.
-The release instructions below assume the workflow has been enabled again.
+PAGES (.github/workflows/pages.yml)
+Builds documentation and checks links on every branch/PR or manual dispatch.
+Only non-PR runs on the repository default branch deploy to GitHub Pages.
+A push to task/multiplatform-rework normally validates the site without deploying it.
+The current branch's documentation can differ from the public default-branch site.
+See website/pages.md for local commands and output layout.
 
-HOW THE PIPELINE WORKS
+GOOGLE PLAY RELEASE (.github/workflows/google-play.yml) — ORIGINAL-APP CONFIGURATION
+Triggered by pushed v* tags or manual dispatch. The manual publish input defaults
+true. The workflow builds a signed AAB and can upload it to the internal track.
+However, its fastlane --package_name is still pl.ekim.fm1_flasher, while this branch's
+AAB has pl.ekim.multiplatform_fm1_flasher. This is not a configured publishing route
+for the fork. Do not create a v0.9.0 tag merely to label this local test APK: the v*
+trigger can start the Play workflow. No automatic GitHub Release creation is defined.
 
-1. Branch push / pull request: Android CI runs JVM tests, lintDebug and
-   assembleDebug. The android-checks artifact keeps the APK and reports for
-   14 days. This workflow needs no secrets and does not publish the app.
-2. Pushing a v<versionName> tag: Google Play release runs JVM tests and
-   lintRelease, signs the AAB and uploads it to Google Play's internal track.
-   The google-play-bundle-<run_id> artifact keeps the AAB for 30 days, even if
-   the subsequent Play upload fails. Reports are kept for 14 days.
-3. After testers verify the app, run Google Play production manually with a
-   version_code already available on internal. Fastlane promotes the existing
-   package to production without rebuilding or uploading the AAB again.
+The Gradle FM1_RELEASE_TAG guard expects v<versionName> when that variable is set.
+A future GitHub prerelease needs a deliberately chosen tag/commit and manually or
+separately uploaded, verified assets. Choosing a tag is not sufficient to adapt Play.
+Keep test handoff, owner/hardware acceptance and publication as separate steps.
 
-Uploads include the AAB and changelogs from fastlane/metadata/android. Manage
-store descriptions, icons and screenshots in Play Console. Production uses
-completed status (full distribution after Google's approval), without a staged
-percentage rollout. The pipeline does not bypass Google's review, account
-requirements or closed testing.
+GOOGLE PLAY PRODUCTION (.github/workflows/promote-production.yml)
+Manual dispatch accepts a positive version_code and promotes an internal-track
+bundle to production. It also targets the original pl.ekim.fm1_flasher package.
+It does not build a new bundle and is not a promotion route for this fork.
 
-ONE-TIME SETUP: GITHUB AND THE UPLOAD KEY
+SIGNING CONFIGURATION (CODE FACTS)
+Local Gradle release signing reads ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD,
+ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD. Without the key configuration a local
+bundleRelease is unsigned. Keep all keys/passwords outside Git.
+The inherited release workflow uses the google-play environment and
+ANDROID_KEYSTORE_BASE64 plus the password/alias secrets; publication also uses
+GOOGLE_PLAY_SERVICE_ACCOUNT_JSON. The production workflow uses google-play-production
+and that service-account secret. These facts do not establish account access,
+package registration, signing continuity or readiness for a store release.
 
-1. The public repository and sources, including .github/workflows, Gemfile,
-   Gemfile.lock and fastlane/metadata/android, are at the address above.
-   Workflows are in the Actions tab. In a new clone, origin points to this
-   repository; push subsequent changes to the default main branch.
-
-2. You need your own upload key. If the app already exists in Play, use the key
-   whose certificate is registered there. For a new app, create one in Android
-   Studio (Generate Signed Bundle / APK -> Create new), or use the command
-   below. Enter passwords interactively:
-
-   umask 077
-   mkdir -p "$HOME/.android"
-   keytool -genkeypair -v -storetype JKS \
-     -keystore "$HOME/.android/fm1-upload.jks" \
-     -alias upload -keyalg RSA -keysize 2048 -validity 10000
-
-   Back up the keystore and passwords securely outside the repository.
-   Do not use the debug key. Play App Signing manages a separate key Google
-   uses for APKs distributed to users; CI needs the upload key.
-
-3. GitHub -> repository -> Settings -> Environments: create google-play and
-   add four Environment secrets:
-
-   ANDROID_KEYSTORE_BASE64    Base64-encoded contents of the keystore file.
-   ANDROID_KEYSTORE_PASSWORD  Keystore password.
-   ANDROID_KEY_ALIAS          Key alias, for example upload.
-   ANDROID_KEY_PASSWORD       Password for the key with that alias.
-
-   Encode the file on Linux (save the result outside the repository):
-
-   base64 -w 0 "$HOME/.android/fm1-upload.jks" > "$HOME/.android/fm1-upload.b64"
-
-   On macOS, use this instead of -w 0:
-
-   base64 < "$HOME/.android/fm1-upload.jks" | tr -d '\n' > "$HOME/.android/fm1-upload.b64"
-
-   Paste the .b64 contents into ANDROID_KEYSTORE_BASE64. Base64 is not encryption;
-   protect this file like the keystore. Remove any unnecessary .b64 copy.
-   CI recreates the keystore only in the runner's temporary directory and then
-   removes it.
-
-FIRST UPLOAD: PLAY CONSOLE
-
-1. Create the app in Play Console with package pl.ekim.fm1_flasher.
-   Configure Play App Signing. The AAB's package name must match the app.
-   Complete account and app information: description, graphics, public privacy
-   policy URL, content rating, Data safety and the foreground-service declaration.
-   Supporting materials are in this directory and the metadata directory.
-
-2. GitHub -> Actions -> Google Play release -> Run workflow: choose the default
-   branch and DISABLE publish. Only the four signing secrets are required,
-   without the Google API key. Download google-play-bundle-<run_id>, extract
-   app-release.aab and upload it manually to the first internal-testing release
-   in Play Console. Complete the required steps and start the release there.
-   Creating an empty app entry alone is not enough for API publishing.
-
-3. That versionCode is now used. If the first upload had code 4, the next new
-   AAB needs at least 5, including on internal. The first tested code 4 can be
-   promoted to production without building code 5, provided it is active on
-   internal and the account has production access.
-
-ONE-TIME SETUP: GOOGLE API ACCESS
-
-1. In Google Cloud, create or select a project and enable the Google Play
-   Android Developer API (androidpublisher.googleapis.com).
-2. Create a Service Account. Under Keys -> Add key -> Create new key -> JSON,
-   download its key. Do not add the file to Git.
-3. In Play Console -> Users and permissions, invite the service account's email.
-   Grant access to this specific app and these permissions:
-   - View app information (read-only),
-   - Release apps to testing tracks.
-   Production promotion also requires:
-   - Release to production, exclude devices, and use Play App Signing.
-   Payment permissions and the Cloud project's global Editor role are not needed.
-4. In GitHub's google-play environment, add GOOGLE_PLAY_SERVICE_ACCOUNT_JSON
-   containing the complete service-account JSON, without base64 encoding.
-5. Also create google-play-production and add a secret with the same name.
-   It may contain the same JSON if the account has production permissions, or
-   JSON for a separate account with those permissions. This workflow needs no
-   signing key. Run production from the trusted default branch.
-
-SUBSEQUENT RELEASES
-
-1. Set a new versionCode and versionName in app/build.gradle. The code must be
-   higher than all previously used codes across Play tracks, including manual
-   uploads. The version number is not derived from github.run_number.
-2. Add changelogs for the existing languages:
-   fastlane/metadata/android/en-US/changelogs/<versionCode>.txt
-   fastlane/metadata/android/pl-PL/changelogs/<versionCode>.txt
-   fastlane/metadata/android/zh-CN/changelogs/<versionCode>.txt
-3. Commit code, documentation and changelogs. Example for versionCode 5 and
-   versionName '0.4.1-experimental' (set these values in Gradle first):
-
-   git push origin main
-   git tag v0.4.1-experimental
-   git push origin v0.4.1-experimental
-
-   The tag must point to the complete release commit and be named exactly
-   v<versionName>. A mismatched tag is rejected before building the package.
-4. Google Play release uploads the signed AAB to internal. In Play Console,
-   configure the tester list and share the testing opt-in link.
-5. After tests, including a physical FM-1, run Actions -> Google Play production
-   -> Run workflow on main and enter version_code, for example 5. This must be
-   a code currently available on internal, not a GitHub run number or versionName.
-   Promote an older version replaced on internal manually from Play Console's
-   app bundle library.
-6. Check publication status in Play Console. Submitting an API edit does not
-   mean immediate availability; Google may require review or further actions.
-   Internal testing does not replace closed testing required for some accounts
-   before they can access production.
-
-Do not upload the AAB again for a code already successfully uploaded to Play.
-Promote the existing version for production. After an upload error, check Play
-Console first: the AAB may already have been accepted. Missing permissions
-usually cause a 403. For application/package not found, check the first manual
-upload and the service account's access to the correct app. For an app in draft,
-complete the first release in Console before using automated completed publishing.
-
-LOCAL SIGNING (OPTIONAL)
-
-Gradle reads ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS
-and ANDROID_KEY_PASSWORD from the process environment. With these set locally,
-./gradlew --no-daemon :app:bundleRelease produces a signed AAB. Do not put real
-passwords in tracked files or shell history. Without these variables, local
-bundleRelease still produces an unsigned package.
-
-SOURCES
-
-Signing and Play App Signing:
-https://developer.android.com/studio/publish/app-signing
-Service accounts and API setup:
-https://developers.google.com/android-publisher/getting_started
-Play Console permissions:
-https://support.google.com/googleplay/android-developer/answer/9844686?hl=en
-Fastlane supply, changelogs and track promotion:
-https://docs.fastlane.tools/actions/supply/
-GitHub Actions environments and secrets:
-https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments
+BEFORE ADAPTING STORE PUBLICATION
+Resolve the intended application ID, store entry, upload certificate and versionCode;
+review both workflow package_name values, the original-app F-Droid recipe, listing
+assets and current privacy/data inventory. Existing screenshots are from earlier UI.
+Complete physical hardware acceptance and the owner's test-build review first.
+This documentation regeneration does not alter workflows, secrets or store settings.

@@ -1,30 +1,38 @@
-FM-1 Flasher — prepared-build test checklist
+0.9.0 / 19 — documentation and test-build handoff checklist
 
-Installation
-- Install the supplied APK as an update to the existing app.
-- Check that downloaded packages, favorites and the last firmware selection remain saved.
+This is a checklist, not a record of completed hardware acceptance.
+Recorded build-19 results and the immutable supplied-APK hash are in qa/0.9.0-test19.txt.
 
-About
-- Open About. It should contain a short description of features, requirements
-  and privacy, without build instructions or the project's release history.
-- The installed package version is read by the app and shown only in the About
-  header; it is not hard-coded into README files.
-- Switch between Polish, English and Simplified Chinese. The short description
-  should follow the interface language.
-- Check light, dark and system themes and portrait/landscape rotation.
-- Open the license and privacy policy from About, then close each document.
-- Enable offline mode and open About and the documents again.
+Documentation consistency
+- README and EN/PL/zh-CN guides describe Devices / Library / Tasks.
+- Favorites/downloads are Library filters; ordinary Android installs start in Tasks.
+- About is available through Settings and comes from about/README*.md.
+- Source Save and Check now are separate; default Hub on / Awesome off / background off.
+- Privacy includes local serial observations, memory selection and task history.
+- The version in shared About is currently literal; check it against Gradle and XcodeGen.
+- Clearly distinguish Android functionality from the unverified, older iOS controller.
+- Historical QA/screenshots and original-app publishing recipes are labeled as such.
 
-Privacy policy
-- Open it from Settings as well. It should not reference specific app releases,
-  regardless of language.
+Local checks after documentation edits
+  python3 tools/sync-resources.py --check
+  .venv-pages/bin/python scripts/build_site.py
+  .venv-pages/bin/python scripts/check_site.py
+  ./gradlew :app:bundleProjectDocs
+  git diff --check
+Install website/requirements.txt in the local environment if needed.
+Verify that generated docs assets match source bytes and all in-app local Markdown
+links resolve to bundled documents. No new APK or external deployment is implied.
 
-Checks completed before handing over the APK
-- JVM tests and lint, plus APK and AAB builds.
-- Bundled documents match their source files.
-- All three short descriptions are present and the technical project README
-  is absent from the APK.
-- Files referenced by local document links are available.
+When preparing a NEW APK
+- Build, run appropriate application tests and inspect the final UI.
+- Confirm versionCode/versionName/application ID/minSdk with Android tools.
+- Verify signature and update compatibility; record SHA-256 of the actual delivered file.
+- Check About/privacy/licenses offline in EN/PL/zh-CN and light/dark themes.
+- Confirm only intended documents and no root technical README are bundled.
+- Update dated evidence for the new bytes; never substitute a hash in an old report.
+- Give the owner the APK and report before GitHub publication.
 
-Scope: About content, documents and packaging. Physical FM-1 flashing was not
-repeated when preparing this build.
+Hardware and platform gate
+Use ../tests/android14-acceptance.txt for actual FM-1/OTG tests.
+Do not treat an emulator, metadata build, old screenshot or signed APK as proof of
+physical flashing, hub power stability, cross-mode serial uniqueness or iOS parity.

@@ -1,7 +1,7 @@
 {
-  "applicationId": "pl.ekim.fm1_flasher",
-  "versionCode": 6,
-  "versionName": "0.5.1-experimental",
+  "applicationId": "pl.ekim.multiplatform_fm1_flasher",
+  "versionCode": 19,
+  "versionName": "0.9.0",
   "defaultListingLanguage": "en-US",
   "localizedListings": [
     "pl-PL",
@@ -16,24 +16,26 @@
   "containsAds": false,
   "accountRequired": false,
   "inAppPurchasesImplemented": false,
-  "reviewerAccess": "No login. Catalog and local library are accessible without hardware. Flashing requires a physical M-VAVE FM-1, USB Host/OTG, MIDI and stable power.",
+  "reviewerAccess": "No login. Library/settings are available without hardware. Physical multi-device flashing requires FM-1 instruments, an OTG hub, a data-capable Android 14+ host and stable power; not verified on physical hardware for build 19.",
   "dataInventory": {
     "publisherTelemetryBackend": false,
     "advertisingOrAnalyticsSdks": false,
     "localOnly": [
-      "favorites",
-      "browsing preferences",
+      "favorites and browsing preferences",
       "theme and language",
-      "cached catalog",
+      "cached catalogs and source policies",
       "preview images",
-      "firmware files",
-      "download metadata",
-      "in-memory app log and USB MIDI identity"
+      "firmware packages and download metadata",
+      "instrument UUIDs, names/colors, observed USB serials and last firmware identity",
+      "memory-type selections",
+      "job target/package hashes, outcomes and bounded stage history",
+      "session-only app log and most recently removed valid package for Undo",
+      "optional ROM recovery backups"
     ],
     "externalServers": [
-      "thefirmwarehub.com",
-      "GitHub API and download hosts",
-      "preview-image and firmware-author hosts referenced by the catalog"
+      "enabled catalog origins (Firmware Hub by default; Awesome FM-1/custom sources opt-in)",
+      "approved preview-image origins",
+      "GitHub API/download hosts and approved firmware-author URLs"
     ],
     "visibleToExternalOperators": [
       "requested resource URL",
@@ -42,12 +44,13 @@
       "generic app/version User-Agent"
     ],
     "automaticallyRequestedOnline": [
-      "catalog subject to daily source limit",
-      "preview images for displayed entries"
+      "enabled catalogs subject to persisted source intervals",
+      "permitted preview images for displayed entries",
+      "optional background checks of enabled catalogs, disabled by default"
     ],
     "userInitiatedRequests": [
-      "firmware release metadata",
-      "firmware package downloads"
+      "explicit source checks, including a disabled source, subject to its interval",
+      "firmware release metadata and package downloads"
     ],
     "encryptedInTransit": true,
     "deletion": "Clear Android app data or uninstall. Individual package removal is available inside the app. There is no app account.",
@@ -62,5 +65,7 @@
     "foreground-service declaration and requested physical-device video",
     "signing/upload key",
     "applicable account and testing requirements"
-  ]
+  ],
+  "status": "Draft inventory for local test build; not submitted or approved",
+  "publishingBlocker": "Inherited Google Play workflows still target the original pl.ekim.fm1_flasher package; adapt and validate before any store publication."
 }

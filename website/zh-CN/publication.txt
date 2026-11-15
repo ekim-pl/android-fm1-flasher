@@ -1,94 +1,55 @@
-FM-1 Flasher — 发布材料
+Multiplatform FM-1 Flasher — 发布文档
+状态：0.9.0 / Android versionCode 19，task/multiplatform-rework。
 
-应用
-应用 ID：pl.ekim.fm1_flasher
-Android：14+（API 34），目标与编译 API 36
-发布者：Ekim
-联系：ekim.pl@gmail.com
-许可证：MIT；适用范围与第三方排除项见项目根目录的 LICENSE.md。
-语言：英语、波兰语、简体中文，或跟随系统。
-主题与语言控制：顶部栏的设置。
-应用简介：根目录 about/ 中简短、独立的 Markdown 文件，提供三种语言。
-项目技术 README 不会打包进应用。
+当前应用
+Android ID：pl.ekim.multiplatform_fm1_flasher，与原应用 pl.ekim.fm1_flasher 不同。
+Android 14+ / minSdk 34；target 和 compile SDK 36。
+iOS bundle ID：pl.ekim.multiplatform-fm1-flasher；只有源码，没有已验证 IPA。
+语言：英语、波兰语、简体中文。联系：ekim.pl@gmail.com。
+Android 提供设备 / 固件库 / 任务以及持久化顺序队列。
 
-商店资料
-以下路径均相对于项目根目录：
-fastlane/metadata/android/en-US/
-fastlane/metadata/android/pl-PL/
-fastlane/metadata/android/zh-CN/
+发布状态
+0.9.0 构建 19 仅在本地准备供所有者测试，尚未发布到 GitHub Releases。
+publication/qa/0.9.0-test19.txt 记录具体 APK、哈希、签名与测试范围。
+dist/0.9.0-test 被 Git 忽略，新克隆不包含该本地目录。
+publication/github-release.txt 是说明草稿，不代表版本已发布。
+修改文档不会改变已提供 APK。重新构建需生成自己的校验和并验证打包，保留历史报告。
 
-每种语言包含 title.txt、short_description.txt（最多 80 字符）、
-full_description.txt（最多 4000 字符）、changelogs/<versionCode>.txt、
-images/icon.png（512x512 RGBA）、images/featureGraphic.png（1024x500 RGB）、
-images/phoneScreenshots/（六张竖屏 1440x2560 和两张横屏 2560x1440 RGB PNG），
-以及截图替代文字。此结构适用于 fastlane supply 和 F-Droid 元数据导入器。
-可选的替代文字 JSON 用于复制粘贴到 Play Console，不是上传工具。
+构建与交付
+在仓库根目录运行：
+  python3 tools/sync-resources.py --check
+  ./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
+APK：app/build/outputs/apk/debug/app-debug.apk。
+检查 apksigner、ID/版本/minSdk、SHA-256 及更新签名连续性。
+先把测试 APK 和报告交给所有者，再考虑发布。
+:app:bundleRelease 可生成 AAB；未配置 ANDROID_KEYSTORE_FILE、ANDROID_KEYSTORE_PASSWORD、
+ANDROID_KEY_ALIAS、ANDROID_KEY_PASSWORD 时不签名。调试 APK 不是 Play 签名发布包。
 
-截图来自运行 Android 16 的 Pixel_8_API_36，展示实际应用界面。
-所选原厂固件包已在模拟器中下载并验证，未通过 USB 执行刷写。
-材料包不包含固件二进制文件。示例固件插图由应用生成，并非厂商产品照片。
+文档与商店文本
+README.md 是指南，MIGRATION.md 是架构说明，about/README*.md 是应用内文档。
+fastlane/metadata/android/{en-US,pl-PL,zh-CN}/ 包含描述草稿和历史变更记录。
+版本 19 对应当前实现，旧记录保留其历史含义。
+play-console.json 是当前事实草稿，不是已提交或批准的声明。编辑文件不会上传商店。
 
-原始截图为 1080x2400 / 2400x1080，位于 publication/screenshots/raw/<locale>/。
-商店副本只移除 Android 状态栏和导航栏，并在 9:16 或 16:9 画布上居中，
-不拉伸图像。未伪造任何应用控件、数据或更新结果。
-01：目录/搜索，浅色；02：收藏，浅色；03：离线下载，浅色；
-04：固件包详情，深色；05：刷写页选择已下载固件及安装操作，深色；
-06：语言选择，深色。
-07：横屏目录及侧边筛选；08：横屏双列刷写页面。
+历史材料与工作流
+已有商店截图/图形展示旧界面，不能证明 0.9.0 队列流程。提交商店前需重新截图。
+图形脚本只生成或排版素材，不会重新截取运行应用。
+publication/validation.json 明确是原应用的历史报告。
+publication/fdroid/pl.ekim.fm1_flasher.yml 是原应用的归档配方，不适用于此分支。
+继承的 Google Play 工作流仍指定 pl.ekim.fm1_flasher，但此分支构建不同 ID，不应用于发布本分支。
+github-actions.txt 说明差异与触发条件，v* 标签可能触发 Play 操作。
+重新生成文档不会修改工作流、商店账户、标签或执行发布。
 
-图形使用现有应用波形图标及原创矢量形状。可编辑图标为 assets/icon.svg。
-重新生成 PNG 并为原始截图添加画布：
-python3 publication/build_graphics.py
-此工具需要 Pillow 以及 DejaVu Sans / Noto Sans CJK 字体。
+隐私与网站
+PRIVACY_POLICY.md、应用资源、网站译文及 publication/privacy/ 描述本地名称、序列号、芯片选择、
+任务历史、固件库和网络行为。
+网站地址：https://ekim-pl.github.io/android-fm1-flasher/
+线上默认分支内容可能不同于当前分支。本地构建不更新公共网站。
+scripts/build_site.py 和 scripts/check_site.py 构建并检查文档，详情见 Pages 指南。
+部署前不要假设公开隐私地址已经包含本分支变更。
 
-隐私
-publication/privacy/index.html 链接到三种语言的完整政策。
-公开政策：https://ekim-pl.github.io/android-fm1-flasher/privacy/
-用于 Play Console 的英语地址：
-https://ekim-pl.github.io/android-fm1-flasher/privacy/en/
-应用内可离线阅读同一政策。根目录 PRIVACY_POLICY.md 是仓库读者的英语文档。
-发布者联系方式已填写。
-
-构建
-./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:bundleRelease
-测试 APK：app/build/outputs/apk/debug/app-debug.apk（调试签名）。
-发行版包：app/build/outputs/bundle/release/app-release.aab
-（未配置 ANDROID_KEYSTORE_* / ANDROID_KEY_* 环境变量时不签名）。
-上传 Google Play 前，请使用自己的上传密钥，通过 Android Studio 的
-Generate Signed Bundle / APK 签名，并启用 Play App Signing。
-也可使用 Google Play 指南中介绍的 GitHub Actions 签名和发布流水线。
-它可生成首次手动上传用的已签名包、将后续版本发布到 internal，并将已测试
-版本提升到生产环境，无需再次上传同一 versionCode。
-密钥库、密码及服务账号密钥必须保存在 Git 之外。未签名包与调试 APK 用途不同；
-只有正确签名的发行版包才能上传 Play Console。
-
-GITHUB / F-DROID
-源代码：https://github.com/ekim-pl/android-fm1-flasher
-发布版本：https://github.com/ekim-pl/android-fm1-flasher/releases
-publication/github-release.txt 包含英语测试版发布说明。APK 使用调试密钥签名，
-预发布版本同时提供 SHA-256 校验和与手动测试清单。
-publication/fdroid/pl.ekim.fm1_flasher.yml 是已填入公开源代码地址和标签的构建配方草案。
-提交收录申请前，请使用 fdroidserver 验证。需要向审核者说明目录及下载的原厂固件
-许可证；是否接受由 F-Droid 决定。
-
-PLAY CONSOLE
-publication/play-console.json 包含填写商店表单所需的事实资料。
-publication/foreground-service.txt 说明 connectedDevice 前台服务用途，
-并提供审核演示脚本。如果 Play Console 要求录像，仍需在实体设备上录制。
-
-后续账号与硬件步骤
-1. 在实体手机和 FM-1 上验证完整更新流程。本版本仍为实验性版本，商店说明已明确注明。
-2. 在 Play Console 填入 play-console.json 中的公开源代码和隐私政策地址。
-   F-Droid 配方不等于已接受的应用条目或 APK 仓库。
-3. 使用上传密钥签名；完成 Play 账号验证、内容分级、目标受众、Data safety
-   和前台服务声明。
-4. 最终确定 Data safety 前，检查外部目录、图片和固件服务器的数据处理方式。
-   即使应用没有发布者遥测服务器，这些服务器仍会收到请求 URL、IP 和通用 User-Agent。
-5. 完成适用的封闭测试和商店审核。GitHub 预发布版本用于测试；尚未上传 Google Play
-   或向 F-Droid 提交收录申请。
-
-格式参考资料
-https://support.google.com/googleplay/android-developer/answer/9866151?hl=en
-https://developer.android.com/guide/topics/resources/app-languages
-https://docs.fastlane.tools/actions/supply/
-https://f-droid.org/docs/All_About_Descriptions_Graphics_and_Screenshots/
+验收
+参见 publication/test-checklist.txt、tests/android14-acceptance.txt 和 QA 报告。
+多台真实 FM-1 的模式切换、供电、序列号和 USB 授权仍需实机测试。
+多设备自动配对保持关闭。ROM 恢复独立且未经实机验证；iOS 队列和 Xcode 验证尚未完成。
+foreground-service.txt 描述硬件演示录制步骤，不声称已有该录像。

@@ -1,61 +1,49 @@
-# FM‑1 Flasher
+# FM-1 Flasher
 
-## Several instruments, one workspace
+An independent, experimental firmware manager for **M-VAVE FM-1**. Android organizes several instruments connected through an OTG hub into **Devices · Library · Tasks**, with one firmware write at a time.
 
-On Android 0.9.0, use **Devices** to read instruments connected through an OTG hub, name them and select a local firmware package for each one. **Tasks** shows the complete plan and its history. One approval starts sequential installation; stopping the queue lets the current operation finish. **Library** keeps catalogs, downloads and favorites together.
+## Your instruments
 
-After a restart in a multi-device session, pair the returning instrument on its task card. Loss of another instrument blocks further writes. Automatic multi-device pairing awaits physical hardware validation; USB addresses are not hub socket numbers. Saved names require explicit pairing after a lost connection.
+Read each instrument in **Devices**, give it a name in **Details**, choose its memory type from known hardware information and select a downloaded package. **Add to plan** keeps that device and package together. Names and colors help organize the workspace; they are not proof of physical identity.
 
-An independent, experimental app for browsing firmware and updating an **M‑VAVE FM‑1** over USB MIDI.
+## One installation plan
 
-## Features
+In **Tasks**, review device names, versions and package hashes, then choose **Install on N instruments**. This approves the plan without another ordinary confirmation popup. Each job is checked before transfer. **Stop after this instrument** finishes the active operation and keeps the remaining tasks queued.
 
-- Browse firmware from multiple catalogs, search, keep favorites and use downloaded packages offline.
-- Manage catalog sources and filter the library by source.
-- Select downloaded firmware in the catalog or directly in the Flasher tab.
-- Verify package integrity and compatibility before installation.
-- Reconnect after planned restarts automatically when one USB device and one eligible MIDI port are present.
-- Optional experimental features include a receive-only MIDI logger, flash-chip detection and narrowly scoped ROM recovery; recovery has not been validated on physical hardware.
-- Choose a light, dark or system theme and an English, Polish or Simplified Chinese interface.
+History records each job’s result and stages. After process interruption, an active task is unconfirmed; writing never resumes automatically from a saved percentage. Keep USB and power connected until verification finishes. Firmware may change instrument settings; OTA does not create a backup automatically.
 
-Enable **Settings → Experimental features** to show MIDI Logger, chip detection and recovery. This persistent setting is off by default. Disabling it stops logging and clears the recovery plan; it cannot change during an operation. Recovery still needs physical hardware validation.
+## Returning through a hub
 
-## Managing firmware sources
+With several instruments, pair the returning unit **on the task card** after its planned restart. Other connections must remain continuous and only one candidate may return. A hub reset, lost neighbor, contradictory serial or ambiguous MIDI ports blocks further writing.
 
-Open **Settings → Firmware sources** to choose the catalogs used by the app. **The Firmware Hub is enabled by default**; **Awesome FM-1 is disabled by default**.
+USB addresses are not physical hub socket numbers. Firmware model/version is not a unique instrument identifier, and USB serial uniqueness across modes has not been hardware-verified. Automatic multi-device pairing remains disabled. The conservative automatic path only applies when Android sees one eligible MIDI endpoint and one USB device, with no MIDI siblings. System USB permission can be needed again after a restart.
 
-- Enable or disable a source, view its status and last successful check, and see when another check is allowed.
-- Use **Add catalog source** for an HTTPS catalog in the same JSON format as Firmware Hub. Give it a name, set its check interval and configure approved package and artwork URLs. **Save and check** lets you inspect a new catalog before enabling it.
-- Open **Details and configuration** to edit a custom source or use **Check now**. Checks respect each source's interval, with a minimum of 24 hours between attempts, including failures. A failed source does not stop the others from updating.
-- Use **Filter by source** to browse a particular catalog, including its favorites and downloaded packages. Removing a custom subscription keeps downloaded files, favorites and known withdrawals.
-- **Restore default source settings** enables Firmware Hub and disables Awesome FM-1 while keeping your custom subscriptions and downloaded packages.
+Saved names require explicit pairing after a lost connection or app-process restart. Read and physically identify the instrument, remove affected pending tasks, then assign its saved name; select the memory type again. A successful result verifies the returned firmware identity, not a full flash-memory readback. Real FM-1/hub acceptance is still required.
 
-Disabled sources make no automatic requests, including for images. You can deliberately use **Check now** on a disabled source without enabling it. **Check catalogs in the background** is optional and off by default; it checks enabled catalogs when a network is available, respects their intervals and never downloads or installs firmware. Offline mode pauses these checks.
+## Shared firmware library
 
-The local library remembers downloaded packages, favorites, selection and each package's source. Flashing uses saved files without network access. Offline mode cannot discover withdrawals published since the last successful catalog check.
+**Library** combines search, favorites and downloads. **Filters & sort** reveals category, order and source choices. Saved firmware can be used offline. A task pins its package against deletion/replacement. Removing an ordinary valid package offers Undo during the current app session.
+
+In **Settings → Firmware sources**, Firmware Hub starts enabled and Awesome FM-1 disabled. Custom HTTPS catalogs use the supported JSON format, approved package/image URL scopes and a 24–168 hour interval. Save configuration first; **Check now** is separate. Checks respect the interval even after failure; a failed source retains its previous cache. An explicit check is possible on a disabled source, while automatic requests are not.
+
+Background catalog checks are optional and initially off. They do not download or install firmware. Offline mode stops network fetching and background checks; it cannot discover withdrawals that have not reached the local catalog. Catalog hashes do not independently authenticate publishers.
 
 ## Awesome FM-1
 
-[Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) is a companion community directory of firmware projects for the **M-VAVE FM-1**. It supplements Firmware Hub with additional catalogs linking to developers' websites, direct package downloads and project releases on GitHub. The repository stores descriptions, release information and download links; firmware files stay with their publishers.
+[Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) is a community directory of FM-1 firmware projects, descriptions and links to their publishers. Firmware files remain with their authors. Enable its preconfigured source in Settings; no URL needs to be entered. Report outdated entries or contribute projects in the repository.
 
-The source is already configured in the app. To use it, go online, open **Settings → Firmware sources** and enable **Awesome FM-1**. Its entries become available after a successful check, subject to the source's refresh interval. No catalog URL needs to be entered manually.
+## Tools and platforms
 
-You can help expand the directory: open an issue to report an outdated entry, or submit a pull request with a firmware project or package URL and a short description. See the contribution guide in the [Awesome FM-1 repository](https://github.com/ekim-pl/awesome-fm1#contributing).
+Settings provides English, Polish and Simplified Chinese, light/dark/system themes, offline mode, About and privacy. Experimental features start off. Enabling them exposes MIDI Logger and recovery tools. The receive-only logger pauses for connection/flashing.
 
-## Sources and attribution
+Chip detection concerns a separate ROM/download-mode device and is never automatically assigned to a MIDI instrument. ROM recovery is a separate approved backup/write workflow restricted to the recognized stock V15 application region; it does not write the bootloader or automatically follow a failed OTA update. Physical recovery is unverified.
 
-Catalog attribution: [The Firmware Hub](https://thefirmwarehub.com), CC BY 4.0; descriptions and images belong to their authors. Additional catalogs declare their own licenses. Firmware is downloaded from authors, not the Hub package mirror.
-
-Networking and background work: OkHttp/Okio and AndroidX WorkManager, [Apache 2.0](../third_party/Apache-2.0.txt); see [dependency notices](../third_party/android-libraries-NOTICE.txt).
-
-## Before updating
-
-Use an Android device with USB Host/OTG and MIDI support. Back up instrument data, provide stable USB power and confirm the correct instrument and package.
+Android requires **14+**, USB Host/OTG, MIDI, a data cable and stable power. A powered hub is recommended. The iOS host remains at the previous single-instrument workflow: this Android queue and multi-source scheduler are not ported, and no Xcode/physical iOS build is verified.
 
 ## Privacy and licenses
 
-No account, advertising or analytics. See the [privacy policy](../PRIVACY_POLICY.md).
+No account, advertising or analytics. Device names, observed serials and task history stay locally with the library. External catalog/download servers receive connection metadata, not instrument identities attached by the app. Read the full [privacy policy](../PRIVACY_POLICY.md).
+
+Catalog attribution: [The Firmware Hub](https://thefirmwarehub.com), CC BY 4.0; descriptions, artwork and firmware retain their authors’ rights. App: [MIT](../LICENSE.md). Markdown: [CommonMark, BSD-2-Clause](../third_party/commonmark-LICENSE.txt). Networking/background libraries: [Apache 2.0](../third_party/Apache-2.0.txt), [notices](../third_party/android-libraries-NOTICE.txt).
 
 Contact: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
-
-App: [MIT license](../LICENSE.md). Markdown parser: [CommonMark, BSD-2-Clause](../third_party/commonmark-LICENSE.txt).

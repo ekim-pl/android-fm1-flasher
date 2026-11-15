@@ -1,0 +1,41 @@
+Documentation regeneration — 0.9.0 / 19
+Date: 2026-11-15
+Branch: task/multiplatform-rework
+Implementation reviewed: 6e9947b55048aa050958a10c5b12705d7a4e1fc0
+
+Scope
+Rewrote the current user/developer guides, EN/PL/zh-CN About guides, website home
+pages and technical translations, publication/workflow instructions, acceptance
+checklists and draft listing text. Regenerated public policy translations from
+current app resources. Updated the draft app inventory. Preserved old QA data and
+original-app F-Droid recipe with explicit historical labels.
+
+Sources reviewed
+Android app/build.gradle and manifest, shared/composeApp Gradle files,
+iosApp/project.yml, Compose navigation/source/fleet screens, FleetStore,
+FlasherService, AndroidMidi, shared FleetPolicy/ReconnectGate/FlashSession,
+recovery constraints, current privacy resources and checked-in CI/Pages/Play workflows.
+
+Checks performed
+- Built site with GITHUB_REPOSITORY=ekim-pl/android-fm1-flasher and
+  GITHUB_REF_NAME=task/multiplatform-rework using scripts/build_site.py.
+- scripts/check_site.py: 44 HTML pages passed local link, anchor, translation and
+  language-switch checks (9 pages x 3 languages plus 17 compatibility pages).
+- Source-language routing for the guide's EN/PL/zh-CN links checked separately.
+- tools/sync-resources.py --check passed.
+- :app:bundleProjectDocs passed; all 10 generated document assets match source bytes.
+- In-app About local links resolve to files included in generated assets.
+- :app:testDebugUnitTest --tests pl.ekim.fm1_flasher.MarkdownDocumentTest passed
+  (3 tests). The full application test suite was not rerun for documentation edits.
+- PL/zh-CN public privacy paragraphs match current localized app policy resources.
+- Draft listing short/full descriptions satisfy 80/4000-character checks.
+- Changed JSON parses; git diff --check passed.
+
+Artifact and publication boundary
+The previously supplied APK is unchanged:
+b571a7b188e52459b1c3e63e8f0797da89ce19ab3acb9be0b08f5f1ea7d6674f
+Its historical build report remains qa/0.9.0-test19.txt. Newly edited About text
+will be included in a future build, not retroactively in that existing APK.
+No new APK, GitHub Release/tag, Pages deployment, Play submission or hardware test
+was performed. External HTTP link availability was not retested; local/site links
+were validated. No change to runtime application behavior or publishing workflows.

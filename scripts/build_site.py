@@ -77,7 +77,11 @@ PAGES = {
     'commonmark-license.html': {'en': 'third_party/commonmark-LICENSE.txt', 'pl': 'website/pl/commonmark-license.md', 'zh-CN': 'website/zh-CN/commonmark-license.md'},
 }
 SOURCE_PAGES = {source: page for page, translations in PAGES.items() for source in translations.values()}
-EXPLICIT_LANGUAGES = {source: language for language, source in PAGES['about.html'].items()}
+EXPLICIT_LANGUAGES = {
+    source: language
+    for page in ('about.html', 'documentation.html')
+    for language, source in PAGES[page].items()
+}
 ALIASES = {page: ('en', page) for page in PAGES}
 ALIASES.update({
     'about/en.html': ('en', 'about.html'),

@@ -1,4 +1,5 @@
 {
+  "recordScope": "Historical validation of the original app, not the 0.9.0 multiplatform fork. Current evidence: qa/0.9.0-test19.txt.",
   "applicationId": "pl.ekim.fm1_flasher",
   "versionName": "0.5.1-experimental",
   "versionCode": 6,

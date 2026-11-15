@@ -1,25 +1,34 @@
-Experimental Android test release with USB download-mode flash chip detection.
+DRAFT — Multiplatform FM-1 Flasher 0.9.0, Android test build 19
+Not published. This is the planned test-release description, not a release record.
 
-## Changes
-- Added Detect chip (download mode) to the Flasher screen.
-- Uses the m-flasher RAM loader and ONLINE_DEVICE command (0xFC0A) to read JEDEC ID.
-- Recognizes older FM-1 flash (0x856014) and newer flash (0xB36014); other IDs remain unknown.
-- Detection does not erase or program flash. Loader sources and MIT attribution are included.
-- Added detection instructions and English, Polish and Simplified Chinese UI strings.
+Android 14+ / pl.ekim.multiplatform_fm1_flasher / task/multiplatform-rework.
 
-## Usage
-Connect exactly one instrument in JieLi USB download mode (4C4A:8057), open Flasher and choose Detect chip. After reading the ID, power cycle into MIDI mode, connect and select the reported chip type. Results are not transferred automatically to a new USB connection.
+Changes
+- Devices / Library / Tasks workspace, compact library filters and EN/PL/zh-Hans UI.
+- Per-instrument names, memory selections and local package assignments.
+- Persistent sequential plans with one approval, pinned target/hash, stage history
+  and stop-after-current. Interrupted work is unconfirmed and never auto-resumed.
+- USB/MIDI continuity tracking, stale-grant protection and generation-bound pairing.
+  Ambiguous returns and lost siblings block further writing.
+- Local-session Undo for ordinary package removal; updated privacy and About content.
 
-## Validation
-- Debug APK and release AAB builds passed.
-- Debug and release lint passed.
-- JVM tests: 61 passed, 2 optional fixture tests skipped, no failures.
-- Emulator: Flasher button and no-device instructions checked.
-- APK signature matches the previous 0.5.1 test release.
+Validation for the previously supplied build-19 APK
+50 shared JVM passes, 120 Android JVM passes, 4 external-fixture skips;
+29 Android instrumentation passes and a final 3-test UI rerun; debug build/lint,
+resource check and iOS Kotlin metadata passed. Android 16 emulator checked.
+See qa/0.9.0-test19.txt for exact artifact hash, signature and limits.
 
-The new detection path has not been validated on a physical FM-1. This is a debug-signed test APK for Android 8.0+ with USB Host/OTG, not a Google Play release. Back up instrument data before firmware updates.
+Limits
+No real FM-1/OTG hub or Xcode/iOS binary was verified. Multi-device return pairing
+remains inline/manual; serials are not validated cross-mode hardware IDs.
+ROM recovery is separate, restricted and unverified. The iOS host retains its
+previous single-instrument controller, without the Android fleet/queue adapter.
 
-## Assets
-- FM1-Flasher-0.5.2-debug.apk — installable test build.
-- FM1-Flasher-0.5.2-debug.apk.sha256 — SHA-256 checksum.
-- FM1-Flasher-0.5.2-test-checklist.txt — manual detection test checklist.
+Assets to verify before an actual upload
+- Multiplatform-FM1-Flasher-0.9.0-19-debug.apk
+- Matching .apk.sha256 and test report
+This APK is a debug-signed test build; it updates the prior fork with the matching
+certificate. Existing original-app installations have a different application ID.
+If rebuilt after documentation changes, record the NEW bytes/hash and verify the
+bundle contents; do not silently reuse the historical checksum or validation claim.
+Publication awaits owner/hardware verification. No upload command is executed here.

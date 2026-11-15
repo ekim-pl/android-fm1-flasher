@@ -1,5 +1,7 @@
 # Strona projektu na GitHub Pages
 
+Ten branch opisuje testową implementację 0.9.0/19. Zbudowanie dokumentacji nie publikuje APK ani zmian brancha w witrynie. Publiczna strona z gałęzi domyślnej może nadal opisywać oryginalną aplikację. Przy przenoszeniu dokumentacji zachowaj jednoznaczny stan wydania i identyfikator aplikacji.
+
 Witryna, dokumentacja oraz polityka prywatności powstają ze źródeł w tym repozytorium. Każda podstrona jest dostępna po angielsku, polsku i chińsku uproszczonym, wraz z nawigacją, instrukcjami publikacji oraz tłumaczeniami licencji. Odnośniki **Polski**, **English** i **简体中文** przełączają tę samą podstronę na inny język.
 
 ## Pierwsza publikacja

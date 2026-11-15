@@ -1,35 +1,35 @@
-# Firmware at your fingertips.
+# Several FM-1 instruments. One installation plan.
 
-FM‑1 Flasher is an independent, experimental **Android 14+** app for browsing firmware and updating **M‑VAVE FM‑1 over USB MIDI**.
+**Multiplatform FM-1 Flasher 0.9.0 / 19** is an independent Android 14+ test application for managing M-VAVE FM-1 firmware through USB MIDI and an OTG hub. This branch's build is prepared locally; it has not been published as a 0.9.0 GitHub Release.
 
-[Read the guide](../README.md) · [About the app](../about/README.md) · [Download a test APK](https://github.com/ekim-pl/android-fm1-flasher/releases)
+[Read the current guide](../README.md) · [About](../about/README.md) · [Release history](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
-## From catalog to instrument
+## Devices · Library · Tasks
 
-- **Find firmware.** Browse The Firmware Hub catalog, search and save favorites.
-- **Prepare your library.** Download packages for offline use. The app checks integrity and compatibility before writing.
-- **Choose your FM‑1.** Select a specific USB MIDI port, including on a hub with several instruments.
-- **Update carefully.** Check the selected instrument and package before confirming installation.
+- **Devices:** read each instrument, name it and assign its own downloaded firmware.
+- **Library:** search multiple sources, keep favorites and use verified local packages offline.
+- **Tasks:** review one plan, install sequentially and keep individual results. Stop after the current instrument without interrupting its write.
 
-## Before you start
+## Returning after a restart
 
-You need a phone with USB Host/OTG and MIDI support, a data cable and stable instrument power. Back up your data using the firmware's own tools.
+Multiple instruments require inline pairing of the unique returning unit. A lost neighbor, ambiguous return or hub reset blocks further writing. USB addresses are not physical socket numbers, and automatic multi-device matching is disabled pending hardware tests. Interrupted writes never resume automatically.
 
-**The app is experimental.** Power loss or an unsuitable package can require hardware recovery. Automatic reconnection after restarts and use with several devices still need further hardware testing.
+Use data cables and stable power; a powered hub is recommended. The app cannot certify power quality. No physical FM-1/hub or iOS binary has been validated for this build. The iOS host retains its earlier single-instrument controller without the Android queue.
 
 ## Documentation
 
-- [Installation, firmware updates and offline use](../README.md#getting-started)
-- [Multiple instruments on a USB hub](../README.md#multiple-fm1-devices-on-a-hub)
-- [Building and testing the app](../README.md#building-and-testing)
-- [Google Play publishing setup](../publication/github-actions.txt)
-- [Publication materials](../publication/README.txt)
-- [Building and deploying this website](pages.md)
+- [Installation and daily use](../README.md#getting-started)
+- [Several instruments through a hub](../README.md#multiple-fm1-devices-on-a-hub)
+- [Build and tests](../README.md#building-and-testing)
+- [Architecture and platform boundaries](../MIGRATION.md)
+- [Test-build evidence](../publication/qa/0.9.0-test19.txt)
+- [Publication status and workflow limitations](../publication/README.txt)
+- [Building this website](pages.md)
 
 ## Privacy and open source
 
-No account, advertising or analytics. The library, favorites and settings are stored locally. Downloading the catalog and firmware connects to external services.
+No account, advertising or analytics. The library, instrument names, observed serials and task history remain local. External catalog/download services receive connection metadata.
 
-[Privacy policy](../PRIVACY_POLICY.md) · [MIT license](../LICENSE.md) · [App Markdown parser license](../third_party/commonmark-LICENSE.txt)
+[Privacy policy](../PRIVACY_POLICY.md) · [MIT license](../LICENSE.md) · [CommonMark license](../third_party/commonmark-LICENSE.txt)
 
 Contact: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).

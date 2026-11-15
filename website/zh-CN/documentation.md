@@ -1,127 +1,118 @@
-# Android 版 FM‑1 Flasher
+# Multiplatform FM-1 Flasher 使用指南
 
-应用源代码采用 MIT 许可证，详见 [LICENSE.md](../../LICENSE.md)。数据处理方式见[隐私政策](../../PRIVACY_POLICY.md)。
+面向 **M-VAVE FM-1** 的独立固件管理器，使用 Kotlin Multiplatform 和 Compose Multiplatform。Android 可通过 OTG 集线器管理多台乐器，并且**每次只写入一台乐器**。
 
-这是一个实验性的 Kotlin 应用，支持 Android 14 及以上版本。它可在 USB OTG 集线器上选择一台 M‑VAVE FM‑1，从目录下载固件，并通过 USB MIDI SysEx 安装。用户已使用较早的构建版本成功更新过实体 FM‑1；自动重新连接仍需进一步硬件测试。
+本指南对应 `task/multiplatform-rework` 分支的 **0.9.0、Android 构建 19**，实现提交为 `6e9947b`。已准备本地测试 APK，**尚未在 GitHub Releases 发布 0.9.0**。[构建报告](../../publication/qa/0.9.0-test19.txt)记录了测试文件及校验和。之后修改文档不会改变此前提供的 APK。
 
-## 语言与外观
+[English](../../README.md) · [Polski](../pl/documentation.md) · [实现说明](../../MIGRATION.md) · [隐私](privacy.md)
 
-在顶部栏打开**设置**，可选择波兰语、英语、简体中文或跟随系统。Android 的系统应用语言设置也提供相同选项。APK 和 AAB 均包含这三种语言，无需联网即可切换。警告、错误、日志和通知也已翻译；固件作者提供的说明保留原始语言。
+## 平台支持
 
-可选择浅色、深色或系统主题。设置中还提供离线隐私政策。
+| 能力 | Android | iOS 宿主源码 |
+| --- | --- | --- |
+| 运行要求 | Android 14+，USB Host/OTG 与 MIDI | 部署目标 iOS 15；尚无已验证的 Apple 应用文件 |
+| 主要流程 | 设备 · 固件库 · 任务 | 之前的单乐器控制器 |
+| 设备记录、持久队列与历史 | 已实现 | 尚未移植 |
+| 目录 | Firmware Hub、可选 Awesome FM-1、自定义来源 | Hub 仓库 |
+| 后台目录检查 | 可选 WorkManager 任务 | 无对应适配器 |
+| MIDI 固件传输 | 原生服务依次执行任务 | 共享会话、手动重连；未经实机验证 |
+| 原始 USB 芯片检测与 ROM 恢复 | 独立实验工具 | 不可用 |
 
-横屏且宽度至少为 600 dp 时，导航移至左侧栏，目录筛选条件与结果并排显示。刷写页面并排显示设备与本地固件包；固件详情使用较小的预览图和单独的操作列。旋转屏幕后会保留目录中的可见位置和已打开的固件详情。
-
-## 关于应用
-
-**关于应用**页面使用 [about](../../about) 中简短、独立的 Markdown 文件：[波兰语](../../about/README.pl.md)、[英语](../../about/README.md)和[简体中文](../../about/README.zh-Hans.md)。构建时会自动将它们打包，离线也可阅读。内容随应用语言和主题切换。本 README 是项目技术文档，不会打包进应用。
-
-应用简介提供许可证和隐私政策链接。互联网链接由相应的系统应用打开。
-
-## 项目网站与在线文档
-
-公开源代码：[GitHub](https://github.com/ekim-pl/android-fm1-flasher)。[项目网站](https://ekim-pl.github.io/android-fm1-flasher/zh-CN/)提供完整的英语、波兰语和简体中文网站与文档。语言链接会切换到当前页面的对应译本。
-
-[GitHub Pages 工作流](../../.github/workflows/pages.yml)构建网站、技术指南、应用简介、发布指南、许可证和隐私政策。拉取请求和分支会检查构建；默认分支的更改会自动部署。在新仓库中选择 **Settings → Pages → Source → GitHub Actions**。详见[设置、本地构建与编辑指南](pages.md)。
-
-仓库文档以英语维护。网站译本位于 `website/pl/` 和 `website/zh-CN/`；应用与商店材料的译本保留在原有语言目录中。
-
-## 发布材料
-
-[发布指南](publication.txt)介绍材料包及后续步骤。[fastlane/metadata/android](../../fastlane/metadata/android) 包含三种语言的说明、更新日志、图标、宣传图和截图，格式适用于 Google Play 和 F-Droid。[静态隐私政策页面](../../publication/privacy/index.html)可托管在公开的 HTTPS 网站上。原始截图和商店表单材料位于 [publication](../../publication)。
+Android 应用 ID 是 `pl.ekim.multiplatform_fm1_flasher`。它与原应用 `pl.ekim.fm1_flasher` 分开安装，不会导入原应用的私有数据。界面支持英语、波兰语和简体中文，以及浅色、深色和跟随系统主题。
 
 <a id="getting-started"></a>
-
 ## 开始使用
 
-从 [GitHub Releases](https://github.com/ekim-pl/android-fm1-flasher/releases) 下载测试 APK。它使用调试密钥签名，仅用于测试，不是商店发行版。本地工作文件为 `dist/FM1-Flasher-debug.apk` 和 `dist/FM1-Flasher-publication.zip`；`dist/` 不属于仓库内容。
+1. 在 Android 14 或更高版本安装测试 APK。构建 19 的调试签名与构建 18 一致；直接更新、不要卸载，可保留此分支应用的固件库及偏好。
+2. 在**固件库**查找固件，从详情下载。下载会校验固件包，不会开始安装。
+3. 使用支持数据传输的线缆，通过 OTG 集线器连接乐器。建议独立供电；应用不能测量或保证集线器供电质量。
+4. 在**设备**中逐台选择**读取乐器信息**，按需授予 Android USB 权限。只有识别为 FM-1 的设备才能加入计划。
+5. 在**详情**设置易于识别的名称。根据已知硬件信息选择存储芯片类型，并为每台设备选择本地固件。兼容两种支持芯片的固件包可在芯片类型未知时获准；不兼容或兼容性未确认的包仍会被阻止。
+6. 为各乐器选择**添加到计划**。每台设备只能有一个待处理或正在执行的任务；不同设备可选择不同固件包。
+7. 在**任务**检查名称、版本和哈希，点击**在 N 台乐器上安装**。这一步批准整个计划，普通安装不会再显示第二个确认对话框。
 
-1. 在支持 USB Host/OTG 和 MIDI 的手机上安装 APK。使用数据线连接带电源的集线器和设备。
-2. 在**刷写**页面选择端口，点击**连接所选端口**。获得 Android USB 权限后，应用仅读取该设备的标识。MIDI 名称不是选择依据：USB 地址和 MIDI ID 用于区分同名设备。
-3. 除非知道该设备实际的 JEDEC ID，否则将闪存芯片类型保留为未知。选择仅适用于当前连接，更换设备后会重置。
-4. 在目录中打开固件详情，选择**下载到设备**。下载后选择**用于刷写**，或直接在刷写页面的列表中选择固件包。两处使用同一个已保存的选择。下载和写入是独立操作。详情中可打开作者仓库。
-5. 使用相应固件自身的工具备份数据，在确认对话框中检查目标端口和固件包，然后开始更新。
-6. 每次重启后，如果 Android 只检测到一台 USB 设备和一个新的符合条件的 MIDI 端口，就会自动检测并连接新端口。需要时授予 Android USB 权限。若有多台设备或多个端口，请选择并确认**同一台 FM‑1 的新端口**。最后一次重启后，应用会检查已安装固件的标识。
+在验证完成前保持电源和 USB 连接。若固件提供数据导出工具，请先备份。OTA 更新不会自动备份，固件可能改变乐器设置。
+
+## 固件库和来源
+
+**固件库**集中管理搜索、收藏和下载。**仅已下载**与**收藏**是筛选条件，并非独立 Android 导航页。**筛选与排序**展开类别、排序和来源控件。启用已下载筛选时，可使用固件包更新操作。
+
+详情显示版本、作者/来源链接、兼容性和 SHA-256。选择已保存固件会返回设备页，不会立即写入。有效固件包的普通删除可在当前应用会话内撤销。被待处理或正在执行的任务引用的包不能删除或替换；先移除待处理任务。删除包不会删除收藏。
+
+打开**设置 → 固件目录来源**：
+
+- **The Firmware Hub** 默认启用，**Awesome FM-1** 默认关闭。[Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) 是指向固件项目与发布者的社区目录。
+- 自定义来源需要 HTTPS 目录、支持的 Hub 风格 JSON 格式、名称、24–168 小时检查间隔及批准的固件包/图片 URL 范围。**保存**仅保存配置；**立即检查**是独立操作。新来源默认关闭。
+- 刷新遵守检查间隔，包括失败的尝试。重复点击不会绕过至少 24 小时的请求间隔。来源页显示错误及下次允许检查的时间。
+- 关闭的来源不会自动请求，但可以明确执行立即检查。来源失败时保留其缓存快照，不阻止其他来源更新。
+- 删除自定义订阅会保留固件包、收藏、来源记录及已知撤回信息。恢复默认设置会启用 Hub、关闭 Awesome FM-1，而不移除自定义订阅。
+- 后台目录检查默认关闭。启用后在网络条件允许时检查已启用目录，不会下载固件包或安装固件。
+
+离线模式阻止目录、固件包及图片的网络请求，并暂停后台检查。已保存固件可在没有网络请求的情况下写入。离线无法发现尚未同步到本地的撤回信息。目录声明和哈希本身不能证明发布者真实性。
 
 <a id="multiple-fm1-devices-on-a-hub"></a>
+## OTG 集线器上的多台 FM-1
 
-## 集线器上的多台 FM‑1
+设备卡片包含本地记录、名称/颜色、已读取的固件标识、芯片选择与当前连接。**USB 地址不是集线器的物理端口号。**型号/版本、VID/PID 和 JEDEC 芯片类型不能唯一识别乐器。已读取的 USB 序列号仅保存在本地，其跨 FM-1 模式的唯一性尚未经硬件验证。
 
-- 默认不选择任何端口。请求和数据只发送到用户明确选择的设备。同一时间只进行一次更新。
-- 重启后，旧 MIDI ID 必须消失。重新连接列表会排除先前的 MIDI ID，以及本阶段开始前已存在的其他设备的 USB 地址。
-- 仅在旧 MIDI ID 消失、恰有一台 USB 设备和一个符合条件的 MIDI 端口时自动重新连接。多台设备（包括非 MIDI 设备）或多个端口都需要用户选择。MIDI 名称不能识别集线器上的物理插口。
-- 若多台设备同时改变地址，或用户接入了其他设备，可能出现多个候选项。请勿猜测。应用不会自动切换到另一台可用的 FM‑1。
-- USB 地址标识当前连接，并非设备的永久标识。更新前可依次单独连接设备，确认各台设备的身份。写入过程中不要断开连接。
+一次只有一个任务切换模式。计划内重启后，应用观察 USB/MIDI 事件，排除未变化的邻居，并要求只有一个合格的返回设备。其他已观察连接必须始终连续。多设备情况下，仅为正在更新的乐器使用**任务卡片内的配对操作**；不能在多个候选设备中猜测并强行继续。切换期间不要交换无法区分的设备。
 
-## 固件库、收藏与离线使用
+多设备自动配对保持关闭，等待实机测试。保留的保守自动路径仅适用于没有 MIDI 邻居、Android 报告一个合格 MIDI 端点和一个 USB 设备的情况。单靠序列号不会批准自动配对。断开并重新枚举后，系统可能再次要求 USB 权限。
 
-- **目录、收藏、下载和刷写**是独立页面。卡片显示预览、简短说明、作者、类别、版本及本地固件包状态。若作者提供图片，应用会显示并缓存以供离线使用；否则使用类别插图。完整说明和技术信息位于详情页。
-- 类别包括合成器、Groovebox、鼓机与采样器、音序追踪器、和弦、工具、M‑VAVE 原厂及其他固件。搜索可与类别、**仅已下载**和**收藏**组合使用，目录中也可直接筛选。
-- 可按名称 A–Z、最新发布、作者 A–Z 或最近下载排序。收藏和浏览偏好保存在本地，应用重启后仍保留。
-- 固件保存在持久的应用私有存储中，而非系统 Downloads 文件夹。关闭或更新应用不会删除固件包；卸载应用或清除其数据会移除固件库。
-- 下载后可打开**离线**模式，使用**下载**页面或**仅已下载**筛选。选择本地固件包并开始刷写不会发起网络请求。目录过期不会阻止使用已验证的本地固件包。写入设备前，应用会再次检查磁盘文件的 SHA‑256 和 CRC。
-- 目录会持久缓存，启动时立即显示。每次打开或返回应用时都会检查网络；未启用离线模式时，会自动刷新过期或缺失的目录。网络中断或下载失败时保留原有列表。
-- **在列表最顶部下拉**，出现提示后松手，可手动检查目录。该手势不会接管列表中部滚动或横向滚动，也可使用**检查**按钮。两种方式都遵守来源每天一次的限制：缓存仍有效时不会再次发送 HTTP 请求。
-- **更新**标签表示文件已更改。可在详情中更新单个固件包，也可在**下载**页面更新全部。即使作者未更改版本名称，也会根据 SHA‑256 检测文件变化。
-- 只有下载和验证全部完成后，新包才会替换旧包。更新失败会保留旧包。更新固件库不会开始刷写；若所选文件发生变化，需要重新选择固件包。**重新下载**可修复本地文件。删除本地包不会移除收藏，也不会改变设备固件。
-- 若最近一次已知目录移除了某项固件，应用会禁止写入该包。较早的已保存版本使用其自身文件的兼容性信息，而非新版本的信息。离线时无法得知上次下载目录之后的变化或撤回。
+邻居断开、集线器重置、连接代次变化、序列号冲突或端口不明确都会停止后续写入。一个 USB 设备提供多对 MIDI 端口或多个 MIDI 端点时禁止写入。确认结果表示已检查重连及预期型号/版本，不代表完整闪存回读比对。
 
-## 协议与兼容性
+保存的名称会保留，但进程结束或连接失去可信连续性后，不会保留活连接绑定。重新读取并实际辨认乐器，移除相关待处理任务，然后在**已保存的乐器**中关联名称。重新配对会重置旧芯片选择；建立新计划前需再次指定。
 
-- 目录数据来自 [The Firmware Hub](https://thefirmwarehub.com)，参见[目录使用条款](https://thefirmwarehub.com/kb/)。每天最多下载一次，使用带标识的 User-Agent 和本地缓存。新下载需要有效目录；已验证的本地包也可离线使用。
-- 自动下载要求明确的 GitHub 资源 ID 和发布标签；固定的 M‑VAVE 官方包除外，它来自厂商仓库。其他条目提供作者链接。应用不从 Hub 镜像下载固件包。
-- 使用前会检查目录中的 SHA‑256、`FM-1_<number>` 标识、AC791N 处理器、UFW 头及文件列表 CRC、文件范围，以及 `flash.bin` 和 `ota.bin` 的 CRC。厂商的辅助加密文件记录的是明文 CRC，因此由完整包的 SHA‑256 保护，不对密文字节验证其 CRC。
-- 对未知或新闪存芯片，仅允许目录标记为 `chip: new` 的包。`chip: old` 要求明确选择旧芯片。不明兼容性会阻止写入。固定的原厂 V15 只允许旧芯片选项，因为目录未声明支持新芯片。目录标记不能替代对固件本身的测试。
-- 两阶段更新会检查帧校验和、SysEx 分片、读取范围和超时。成功必须收到更新程序最终信号的确认，并在重启后获得匹配的标识。
-- 前台服务和唤醒锁使切换应用时仍能保持会话；系统仍可能终止进程。应用没有停止写入按钮。
+## 任务、停止与故障
 
-标识检查成功只确认设备的回应，不等于读回并校验整个闪存。不同固件可能共用标识。断电、固件包不适用或重启后选错设备，都可能需要硬件恢复。自动重新连接仅用于更新中的计划内重启，不适用于写入期间任意的连接中断。
+任务固定目标记录/连接、预期身份、芯片选择、固件包键与哈希。首次写入前检查计划内所有包；各任务传输前再次检查。更改界面当前选择的固件不会改变正在执行任务的目标。
 
-不支持：蓝牙更新、批量刷写、预设或内存备份、JEDEC 读取、底层 download/UBOOT 模式、固定映射集线器插口、导入未经验证的本地文件，以及使用其他标识（如 `FM1_OFFICIAL_OPEN`）的固件包。
+- **处理完此乐器后停止**会完成当前写入和重连验证，其余任务仍在队列中。没有突然中止活跃写入的按钮。
+- 一个任务失败即停止本次执行。再次尝试前检查乐器与任务详情；其固件不会自动分配给其他设备。
+- 任务页保留进度和结果，详情显示完整哈希和阶段时间。每个任务最多保存 64 个阶段记录。
+- 进程中断后，活跃任务标为**未确认**。不会从保存的百分比自动恢复传输。待处理任务仍可见，但必须重建旧连接绑定。
+- 若计划与当前连接或固件不符，请移除相关任务，重新读取乐器并添加新任务。USB 权限被拒绝不代表允许写入。
+
+Android 前台服务和限时 wake lock 支持熄屏或切换应用后的活跃传输，但不能保证 USB 供电或避免所有系统/进程中断。需要配对或系统授权时请返回应用。
+
+## 设置与实验功能
+
+设置提供语言/主题、离线、来源、关于与隐私。**实验功能**默认关闭；开启后显示 MIDI 日志与恢复工具。忙碌操作期间不能更改此开关。普通 Android 安装通过设备和任务页执行。
+
+只接收的 MIDI 日志具有有界缓冲区和所选输入，连接/写入时自动停止；不承诺同时记录和刷写。
+
+JEDEC 检测针对独立的 USB ROM/download 模式设备，不会自动把结果分配给 MIDI 乐器。ROM 恢复需要独立批准、备份/导出及预先生成的写入计划。仅支持哈希固定的原厂 V15 应用区域及已识别的引导/芯片条件，不写入引导加载器。它不是通用修复工具，也不是 OTA 失败后的自动回退方式。实机恢复尚未验证。
 
 <a id="building-and-testing"></a>
-
 ## 构建与测试
 
-需要 JDK 17、Android SDK Platform 36 和 Build Tools 35.0.0。设置 `ANDROID_HOME`，或在不跟踪的 `local.properties` 中设置 `sdk.dir`。
+需要 JDK 17、Android SDK platform 36、Build Tools 35.0.0。Gradle 由 wrapper 固定；AGP 为 8.13.2、Kotlin 为 2.2.21、Compose Multiplatform 为 1.9.3。通过本地环境或 Android 工具配置 SDK。
 
 ```sh
-./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+python3 tools/sync-resources.py --check
+./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
 ```
 
-APK：`app/build/outputs/apk/debug/app-debug.apk`。
-AAB：运行 `./gradlew :app:bundleRelease`，输出为 `app/build/outputs/bundle/release/app-release.aab`。未配置密钥时不会签名；GitHub Actions 使用 secrets 中的上传密钥签名。
+APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`。`dist/` 被 Git 忽略；构建 19 的预备副本是本地文件，新克隆不保证包含它。
 
-60 个 JVM 测试覆盖协议和 UFW 包、目录、类别、组合筛选、排序、固件库与偏好持久化、SHA‑256 更新、刷新手势及取消、自动刷新条件、失败时保留旧包、文件损坏、旧版本兼容性、撤回的包、排除相邻端口，以及三设备会话。两个可选测试从磁盘读取真实文件，不将固件放入仓库：
+界面翻译以 `app/src/main/res/values*` XML 为准。修改后运行 `python3 tools/sync-resources.py`。应用内关于文档是 `about/README*.md`，通过 `:app:bundleProjectDocs` 与许可证一起打包；根 README 不是应用内关于文档。
 
-```sh
-FM1_TEST_PACKAGES=/path/stock-v15.fwsc:/path/stock-v16.fwsc \
-FM1_TEST_CATALOG=/path/catalog.json \
-./gradlew :app:testDebugUnitTest
-```
+另见[架构与测试命令](../../MIGRATION.md)、[验收清单](../../tests/android14-acceptance.txt)及[网站构建](pages.md)。[继承的 Google Play 工作流仍指向不同应用 ID](github-actions.txt)，发布是独立步骤。
 
-自动检查结果：58 个测试通过，两个依赖外部样本的可选测试跳过。`lintDebug`、`assembleDebug` 和 `bundleRelease` 均通过；仍有工具版本、原生视图等警告。较早的一次运行使用 2026‑11‑13 下载的目录及真实 M‑VAVE 和 Hortator 包，通过了全部 51 个测试且未跳过。Android 16 模拟器用于检查界面和网络，不验证实体 USB 传输。
+## iOS 开发状态
 
-模拟器检查涵盖启动应用、读取 202 个目录条目、下载并持久保存 Hortator 1.0.1（含 SHA‑256/CRC 验证）、收藏、将**仅已下载**及**收藏**与类别组合、排序、离线固件库，以及实际的下拉刷新手势。没有 USB 目标设备时，安装按钮保持禁用。
+已有 Swift 宿主和共享元数据，但尚未验证 Xcode 构建或物理 iPhone 更新。设备记录/队列以及 Android 多来源调度器尚未移植。宿主保留之前的单乐器界面与手动重连。使用时保持前台；有限后台时间不等同于 Android 服务。
 
-用户确认曾成功更新实体 FM‑1。自动重启及集线器上的多设备仍需验证：先检测多台设备并选择其中一台，再进行受控更新，确认两次重启，并检查其他设备的固件未被改变。
+Kotlin 目标为 `iosArm64`、`iosSimulatorArm64`，未配置 Intel 模拟器。`iosApp/project.yml` 定义 XcodeGen 项目、bundle ID `pl.ekim.multiplatform-fm1-flasher`、版本 0.9.0/19 和部署目标 iOS 15。macOS/Xcode 步骤见 [MIGRATION.md](../../MIGRATION.md)。Linux 元数据编译不会生成 iOS 应用。
 
-## GitHub Actions 与 Google Play
+## 验证范围
 
-[设置指南](github-actions.txt)介绍首次上传、签名密钥、Google 服务账号和 GitHub secrets。
+实现构建 19 已通过 **50 个 shared JVM 测试和 120 个 Android JVM 测试**，另有四个依赖外部 fixture 的测试被跳过。**29 个 Android 仪器化测试**通过；紧凑筛选/主题调整后又通过三个 UI 测试。Debug 构建、lint、资源同步及 Kotlin/iOS 元数据编译通过。在专用 Android 16 模拟器上更新应用并检查真实缓存目录/界面。这些是记录的测试结果，不表示每次后续文档修改都重跑全部应用测试。
 
-仓库设置中的 Google Play 自动发布已禁用，直到商店和密钥配置完成。以下发布工作流行为仅适用于重新启用之后。
+未测试物理 FM-1/集线器或 iOS 二进制。供电、真实模式/描述符变化、序列号唯一性及完整硬件写入仍是验收条件。[构建报告](../../publication/qa/0.9.0-test19.txt)提供文件身份和测试范围。
 
-- **Android CI**：分支推送和拉取请求会运行 JVM 测试、lint 和调试 APK 构建。APK 及报告作为构建产物提供。
-- **Google Play release**：推送 `v<versionName>` 标签会运行测试、发行版 lint、已签名 AAB 构建，并连同更新日志上传到 `internal`。手动运行时关闭 `publish`，只构建用于首次 Play Console 上传的 AAB。
-- **Google Play production**：手动指定 `version_code`，将已测试的包从 `internal` 提升到 `production`，无需重新构建或上传 AAB。
+## 隐私与署名
 
-每次新发布前，提高 `versionCode`，在 `app/build.gradle` 设置 `versionName`，并添加 `fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt`。标签必须匹配 `versionName`。GitHub 不能替代首次商店设置、必要测试和 Google Play 验证。
+无需账户，无广告或分析。固件库、名称、序列号观察值、芯片选择和任务历史保存在本地。外部目录/图片/下载服务器收到连接元数据，应用不会附加乐器身份。详见[隐私政策](privacy.md)。
 
-## 技术来源与许可证
-
-协议：[AL‑255/FM‑1‑RE](https://github.com/AL-255/FM-1-RE/blob/main/docs/io/11-ota-protocol.md) 及其 `tools/fm1_ota.py` 客户端（WTFPL）、[固件包格式](https://sbegueria.github.io/fm1-dev-wiki/Firmware-Package-Format.html)、[Android MIDI API](https://developer.android.com/reference/android/media/midi/MidiManager)。Android 实现位于 `app/src/main/java/pl/ekim/fm1_flasher`。
-
-目录汇编：The Firmware Hub，[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)。应用仅保留支持的标识、选取需要的字段，并添加固定的原厂条目。说明归各作者所有；每项都会显示作者和仓库链接。固件许可证由各项目保留，APK 和应用源代码均不附带固件。Gradle Wrapper：[Apache 2.0](https://github.com/gradle/gradle/blob/v8.13.0/LICENSE)。
-
-Markdown 渲染：[CommonMark Java](https://github.com/commonmark/commonmark-java)，采用 [BSD-2-Clause 许可证](../../third_party/commonmark-LICENSE.txt)，许可证也随应用提供。
+应用代码：[MIT](../../LICENSE.md)。[The Firmware Hub](https://thefirmwarehub.com) 目录使用 CC BY 4.0，固件遵循其作者的许可证。[Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) 是可选目录。依赖声明见 [third_party](../../third_party/)。联系：[ekim.pl@gmail.com](mailto:ekim.pl@gmail.com)。

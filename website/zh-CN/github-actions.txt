@@ -1,154 +1,42 @@
-FM-1 Flasher：GitHub Actions -> Google Play
+GitHub Actions：task/multiplatform-rework，0.9.0 / 19
 
-公开地址与发布状态
+本文描述仓库中的工作流，不会执行发布。
+Android ID：pl.ekim.multiplatform_fm1_flasher。0.9.0 APK 仅为本地测试构建。
 
-仓库：https://github.com/ekim-pl/android-fm1-flasher
-文档：https://ekim-pl.github.io/android-fm1-flasher/zh-CN/
-隐私政策：https://ekim-pl.github.io/android-fm1-flasher/privacy/en/
+ANDROID CI (.github/workflows/android-ci.yml)
+分支推送、PR 或手动触发。使用 JDK 17、SDK 36、Build Tools 35.0.0。
+检查生成资源、shared JVM 与 Android JVM 测试、debug lint 和 assembleDebug。
+android-checks 保存 APK/报告 14 天。不测试真实 FM-1，不创建 GitHub Release，
+不构建 Swift，也不执行独立的 Android 仪器化验收测试。
 
-发布源代码和测试 APK 时，Actions 设置中的 Google Play release 保持禁用。
-配置好 Play Console、上传密钥和 secrets 后，在 Actions -> Google Play release
--> Enable workflow 重新启用。以下发布步骤假定已重新启用工作流。
+PAGES (.github/workflows/pages.yml)
+在所有分支/PR 或手动运行时构建文档并检查链接。
+仅在非 PR 的仓库默认分支运行中部署。task/multiplatform-rework 的推送通常只验证，不部署。
+当前分支文档可能与公共网站不同。本地命令与输出结构见 Pages 指南。
 
-流水线如何运行
+GOOGLE PLAY RELEASE (.github/workflows/google-play.yml)：原应用配置
+推送 v* 标签或手动 dispatch 会触发，手动 publish 默认 true。
+它构建签名 AAB 并可能上传 internal，但 fastlane --package_name 仍是 pl.ekim.fm1_flasher，
+而本分支生成 pl.ekim.multiplatform_fm1_flasher。不能用于发布此 fork。
+不要仅为本地 APK 命名就创建 v0.9.0 标签：v* 可能触发 Play 工作流。
+现有工作流没有自动创建 GitHub Releases 的步骤。
 
-1. 分支推送或拉取请求：Android CI 运行 JVM 测试、lintDebug 和 assembleDebug。
-   android-checks 构建产物保存 APK 与报告 14 天。此工作流无需 secrets，
-   不会发布应用。
-2. 推送 v<versionName> 标签：Google Play release 运行 JVM 测试与 lintRelease，
-   签名 AAB，并上传到 Google Play 的 internal 测试轨道。
-   google-play-bundle-<run_id> 构建产物保存 AAB 30 天，即使后续上传失败也会保留。
-   报告保存 14 天。
-3. 测试人员验证应用后，手动运行 Google Play production，输入 internal 中已有的
-   version_code。Fastlane 将现有包提升到 production，不重新构建或上传 AAB。
+设置 FM1_RELEASE_TAG 时，Gradle 要求 v<versionName>。未来 GitHub 预发布需明确选择
+标签/提交，再单独上传已验证资产。标签本身不会修正 Play 配置。
+测试文件交付、所有者/硬件验收与发布应分别执行。
 
-上传内容包括 AAB 及 fastlane/metadata/android 中的更新日志。商店说明、图标与截图
-仍在 Play Console 管理。生产发布使用 completed 状态（Google 批准后完整发布），
-不进行按百分比分阶段推出。流水线不会绕过 Google 审核、账号要求或封闭测试。
+GOOGLE PLAY PRODUCTION (.github/workflows/promote-production.yml)
+手动输入正整数 version_code，将 internal 现有 bundle 提升到 production。
+它同样指向原应用 pl.ekim.fm1_flasher，不构建新包，也不适用于此 fork。
 
-一次性设置：GITHUB 与上传密钥
+签名配置事实
+本地 Gradle 读取 ANDROID_KEYSTORE_FILE、ANDROID_KEYSTORE_PASSWORD、ANDROID_KEY_ALIAS、
+ANDROID_KEY_PASSWORD。无密钥配置时 bundleRelease 不签名。密钥和密码不要加入 Git。
+继承的 release 工作流使用 google-play 环境、ANDROID_KEYSTORE_BASE64 和密码/alias secrets；
+发布还使用 GOOGLE_PLAY_SERVICE_ACCOUNT_JSON。Production 使用 google-play-production 和服务账户密钥。
+这些配置不证明账户权限、包注册、签名连续性或商店发布准备完成。
 
-1. 上述地址提供公开仓库与源代码，包括 .github/workflows、Gemfile、Gemfile.lock
-   和 fastlane/metadata/android。工作流位于 Actions 标签页。新克隆的 origin
-   指向此仓库；后续更改推送到默认 main 分支。
-
-2. 需要自己的上传密钥。如果应用已在 Play 中存在，请使用其已登记证书对应的密钥。
-   新应用可在 Android Studio（Generate Signed Bundle / APK -> Create new）中创建，
-   或使用以下命令，交互式输入密码：
-
-   umask 077
-   mkdir -p "$HOME/.android"
-   keytool -genkeypair -v -storetype JKS \
-     -keystore "$HOME/.android/fm1-upload.jks" \
-     -alias upload -keyalg RSA -keysize 2048 -validity 10000
-
-   请将密钥库和密码安全备份到仓库之外。不要使用调试密钥。Play App Signing
-   管理 Google 向用户分发 APK 时使用的另一把密钥；CI 需要的是上传密钥。
-
-3. 在 GitHub -> 仓库 -> Settings -> Environments 创建 google-play，
-   并添加四个 Environment secrets：
-
-   ANDROID_KEYSTORE_BASE64    密钥库文件内容的 base64 编码。
-   ANDROID_KEYSTORE_PASSWORD  密钥库密码。
-   ANDROID_KEY_ALIAS          密钥别名，例如 upload。
-   ANDROID_KEY_PASSWORD       该别名密钥的密码。
-
-   在 Linux 编码文件（结果保存在仓库之外）：
-
-   base64 -w 0 "$HOME/.android/fm1-upload.jks" > "$HOME/.android/fm1-upload.b64"
-
-   macOS 不使用 -w 0，改为：
-
-   base64 < "$HOME/.android/fm1-upload.jks" | tr -d '\n' > "$HOME/.android/fm1-upload.b64"
-
-   将 .b64 内容粘贴到 ANDROID_KEYSTORE_BASE64。Base64 不是加密，须像保护
-   密钥库一样保护此文件。删除不再需要的 .b64 副本。CI 仅在运行器临时目录中
-   重建密钥库，随后将其删除。
-
-首次上传：PLAY CONSOLE
-
-1. 在 Play Console 创建应用，包名为 pl.ekim.fm1_flasher，配置 Play App Signing。
-   AAB 中的包名必须与应用一致。完成账号和应用资料：说明、图形、公开隐私政策
-   URL、内容分级、Data safety 和前台服务声明。本目录及 metadata 目录中有辅助材料。
-
-2. 在 GitHub -> Actions -> Google Play release -> Run workflow 选择默认分支，
-   并关闭 publish。只需四个签名 secrets，无需 Google API 密钥。
-   下载 google-play-bundle-<run_id>，解压 app-release.aab，在 Play Console
-   首次内部测试版本中手动上传。完成必要步骤并在 Console 中启动该版本。
-   仅创建空的应用条目不足以通过 API 发布。
-
-3. 该 versionCode 此后已被使用。若首次上传代码为 4，下一个新 AAB 必须至少为 5，
-   包括 internal 轨道。已测试的代码 4 无需构建代码 5 即可提升到生产环境，
-   前提是它仍在 internal 生效，且账号已获得生产发布权限。
-
-一次性设置：GOOGLE API 访问
-
-1. 在 Google Cloud 创建或选择项目，启用 Google Play Android Developer API
-   （androidpublisher.googleapis.com）。
-2. 创建 Service Account。在 Keys -> Add key -> Create new key -> JSON
-   下载密钥。不要将此文件加入 Git。
-3. 在 Play Console -> Users and permissions 邀请服务账号的邮箱地址。
-   授予此特定应用的访问权，以及以下权限：
-   - View app information (read-only)，
-   - Release apps to testing tracks。
-   提升到生产环境还需要：
-   - Release to production, exclude devices, and use Play App Signing。
-   无需付款权限，也无需整个 Cloud 项目的 Editor 角色。
-4. 在 GitHub 的 google-play 环境中添加 GOOGLE_PLAY_SERVICE_ACCOUNT_JSON，
-   内容为完整服务账号 JSON，不使用 base64 编码。
-5. 另建 google-play-production 环境，添加同名 secret。若账号有生产权限，
-   可使用同一份 JSON；也可使用另一拥有该权限的账号 JSON。
-   此工作流不需要签名密钥。生产发布应从可信的默认分支运行。
-
-后续发布
-
-1. 在 app/build.gradle 设置新的 versionCode 和 versionName。代码必须高于所有
-   Play 轨道已使用的代码，包括手动上传。版本号不是由 github.run_number 生成的。
-2. 为现有语言添加更新日志：
-   fastlane/metadata/android/en-US/changelogs/<versionCode>.txt
-   fastlane/metadata/android/pl-PL/changelogs/<versionCode>.txt
-   fastlane/metadata/android/zh-CN/changelogs/<versionCode>.txt
-3. 提交代码、文档和更新日志。以下为 versionCode 5 和
-   versionName '0.4.1-experimental' 的示例（先在 Gradle 设置这些值）：
-
-   git push origin main
-   git tag v0.4.1-experimental
-   git push origin v0.4.1-experimental
-
-   标签必须指向完整发布提交，且名称必须恰为 v<versionName>。
-   不匹配的标签会在构建前被拒绝。
-4. Google Play release 将已签名 AAB 发布到 internal。在 Play Console
-   配置测试人员名单，并分享加入测试的链接。
-5. 完成测试（包括实体 FM-1）后，在 main 上运行 Actions -> Google Play production
-   -> Run workflow，输入 version_code，例如 5。它必须是 internal 当前可用的代码，
-   而不是 GitHub 运行编号或 versionName。若旧版本已在 internal 被替换，
-   应从 Play Console 的应用包库中手动提升该旧版本。
-6. 在 Play Console 检查发布状态。通过 API 提交编辑不代表立即可用；Google 可能
-   要求审核或其他操作。内部测试不能替代某些账号获得生产权限前所需的封闭测试。
-
-对于已成功上传到 Play 的代码，不要再次上传 AAB；生产发布应提升现有版本。
-上传报错后先检查 Play Console：AAB 可能已被接受。权限不足通常返回 403。
-遇到 application/package not found，请检查首次手动上传以及服务账号是否有权
-访问正确的应用。对于 draft 状态应用，请先在 Console 完成首次发布，再使用
-自动 completed 发布。
-
-本地签名（可选）
-
-Gradle 从进程环境读取 ANDROID_KEYSTORE_FILE、ANDROID_KEYSTORE_PASSWORD、
-ANDROID_KEY_ALIAS 和 ANDROID_KEY_PASSWORD。在本地设置后，运行
-./gradlew --no-daemon :app:bundleRelease 会生成已签名 AAB。
-不要将真实密码写入被跟踪的文件或命令历史。没有这些变量时，本地 bundleRelease
-仍会生成未签名包。
-
-参考资料
-
-签名与 Play App Signing：
-https://developer.android.com/studio/publish/app-signing
-服务账号及 API 设置：
-https://developers.google.com/android-publisher/getting_started
-Play Console 权限：
-https://support.google.com/googleplay/android-developer/answer/9844686?hl=en
-Fastlane supply、更新日志和轨道提升：
-https://docs.fastlane.tools/actions/supply/
-GitHub Actions 环境与 secrets：
-https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments
+适配商店发布前
+确定应用 ID、商店条目、上传证书和 versionCode。复核两处 package_name、原应用 F-Droid
+归档配方、描述/截图及当前隐私数据清单。已有截图展示旧界面。
+先完成硬件验收与所有者测试 APK 确认。本次文档更新不修改工作流、secrets 或商店设置。

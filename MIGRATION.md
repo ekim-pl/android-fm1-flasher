@@ -1,190 +1,82 @@
-# Multiplatform implementation and validation
+# Implementation and verification — 0.9.0 / 19
 
-## Application entry point
+Current architecture of `task/multiplatform-rework`, based on implementation commit `6e9947b`. This document describes the existing code, not a roadmap or a guarantee of hardware support. For operation instructions see [README](README.md); for recorded build results see [build-19 QA](publication/qa/0.9.0-test19.txt).
 
-Android starts `ComposeActivity` directly into the device workspace. There is
-no diagnostic launcher, prototype screen or button to switch to a second app UI.
-Notifications also return to Compose. The legacy Views source is retained for
-reference, but its Activity is no longer registered or reachable from the app.
+## Modules and entry points
 
-This test build is 0.9.0, Android versionCode 19. The functionality baseline
-is published android-fm1-flasher tag `v0.8.1`, commit `3fa9d67`. The original Android app remains on the main branch;
-this implementation is published on `task/multiplatform-rework`. The fork keeps `pl.ekim.multiplatform_fm1_flasher`, so it installs
-alongside the original Android app. Its existing private downloads and preferences
-are preserved; it does not import another application's private data.
+| Module | Responsibilities |
+| --- | --- |
+| `shared` | Protocol, firmware integrity/parser, compatibility, catalog/source models, shared repository, flash session, reconnect gate, fleet/job models and policy, bounded MIDI log |
+| `composeApp` | Shared Compose UI, three-language resource dictionary, Devices/Library/Tasks screens, source settings, About/privacy, portable iOS controller |
+| `app` | Android `ComposeActivity`, `FlasherService`, MIDI/USB attachment tracking, persistent fleet store, SQLite library/sources, WorkManager, foreground execution and raw USB recovery |
+| `iosApp` | Swift/Core MIDI/network/storage/lifecycle adapters for `PortableAppBackend`; no Android fleet/queue adapter |
 
-## Build 19: multi-instrument OTG workspace
+Android starts `ComposeActivity`; notifications return there. `MainActivity` is legacy reference source and is not registered in the manifest. `fleetAvailable` selects the Android workspace; the portable host keeps the earlier single-instrument navigation. Normal Android writes enter the service through `QUEUE`, not the old `FLASH` action. Recovery uses separate `RECOVERY_*` actions.
 
-Android provides persistent instrument names/colors, per-attachment identity and
-memory selections, immutable target/package jobs, one plan approval, sequential
-execution, stop-after-current, package pinning, atomic per-job outcomes/stage history,
-and explicit pairing after loss of continuity. Offline saved names never become
-live targets just because an address, serial or firmware version matches.
+The Android ID is `pl.ekim.multiplatform_fm1_flasher`; the Kotlin/Android namespace remains `pl.ekim.fm1_flasher`. The Swift bundle ID is `pl.ekim.multiplatform-fm1-flasher`. Changing the package namespace is not necessary to update the installed fork. The original app's private storage is not imported.
 
-USB and MIDI observers start before mode changes. The reconnect gate remembers
-bystander loss even when a device returns at the same address. A hub reset, changed
-sibling generation, contradictory serial, multiple candidates or multiple MIDI
-port pairs blocks further writes. Permission callbacks bind a nonce and attachment
-epoch; reconnect approvals also retain the complete MIDI attachment generation.
-The logger pauses automatically while flashing. Interrupted work never resumes a
-transfer from a saved percentage. ROM recovery remains separate.
+## Identity and reconnection
 
-Automatic reconnection for multiple instruments remains disabled pending physical
-FM-1/hub validation. A unique return with continuously connected siblings is paired
-inline by the owner. USB paths are displayed as addresses, never physical hub ports.
-USB serials are local observations, not validated cross-mode hardware identities.
-The original conservative single-USB-device reconnect remains available. The
-identity/version check on return is not a full memory readback.
+`Endpoint` contains MIDI ID, USB address and an attachment generation. `AndroidMidi` retires removed IDs, supplies new generations, checks availability before/after opening and closes late open callbacks. Multiple port pairs or multiple MIDI endpoints on the same USB address are rejected before a write.
 
-The Android UI now has Devices, Library and Tasks, with About, sources, privacy and
-experimental tools in Settings. Valid package removal has session-local Undo.
-English, Polish and Simplified Chinese resources and local-data privacy descriptions
-are updated. The iOS host retains its prior single-instrument controller; Linux
-metadata compilation is not an Xcode or hardware validation.
+`ReconnectGate` snapshots siblings and, on Android, other USB paths. USB detach/MIDI callbacks and polling preserve lost-neighbor evidence. Once continuity is lost, the gate cannot become valid again just because the same address returns. A candidate requires the previous endpoint to be absent, unchanged siblings and one eligible new endpoint; Android also checks the physical USB candidate set. `FlasherService` installs the gate before the session can change modes and validates continuity before upgrade/data sends and final confirmation.
 
-## Build 18 About presentation
+The automatic path requires no MIDI siblings and exactly one USB device/eligible return. Multiple instruments require inline owner pairing; no validated cross-mode serial profile is enabled. Observed serials can reject a contradictory return but do not authorize automatic pairing. Firmware identity, USB address, VID/PID and JEDEC are not physical unit identifiers. Public API topology is not presented as a hub socket map. Human substitution of indistinguishable units cannot be ruled out without stronger physical identity evidence.
 
-The shared About screen groups the bundled guide into themed section cards, with
-proper paragraph/list spacing, bold emphasis and inline links. A dedicated privacy
-card summarizes local storage and network metadata and opens the complete bundled
-policy offline. English, Polish and Simplified Chinese have matching content.
-Awesome FM-1 is described as a repository without singling out a firmware entry.
+`ComposeActivity` serializes USB grants. Immutable PendingIntents retain a unique nonce and URI, matched by the receiver's data-scheme filter. The callback checks nonce, current device, USB attachment epoch and actual `UsbManager.hasPermission`; it does not trust immutable fill-in grant extras. Reconnect approval retains the complete MIDI endpoint generation. Activity recreation discards its pending callback closures; retry is explicit. Real OEM permission/rotation behavior still needs hardware tests.
 
-## Build 17 refresh crash fix
+## Fleet and job storage
 
-A real refresh of the cached catalog crashed in Material3 ChildSemanticsNode with
-`visitAncestors called on an unattached node`. The favorite button's semantics
-lambda read the delegated whole-app State value. Busy/status changes invalidated
-that observer even after a lazy-list node detached. Compute the favorite label
-during composition and capture only the resulting string in semantics.
+`FleetStore` stores an atomically replaced `fleet.json` in private app storage. Device records contain local UUID, alias/color, observed serial, last identity and selected chip. Attachments are session-local and deliberately absent from restored records. A same serial/address/version does not merge new records. Explicit pairing of an offline name with a newly read instrument resets chip selection.
 
-The new regression test keeps busy state visible across frames, activates the
-actual refresh button and refreshes while scrolling a 40-entry list. It reproduced
-the crash on build 16 and passed after the fix. Earlier source-dialog tests did not
-cover this frame sequence. This change does not modify database or firmware bytes.
+`FlashJob` freezes device ID, alias, endpoint/generation, expected identity, chip, package key/hash/title/version and outcome. A device may have only one queued/running job. Pinning prevents device configuration changes and package replacement/removal while referenced. Each job stores phase, progress, update time and up to 64 stage events.
 
-## Refresh from published 0.8.1
+`FleetPolicy.runPlan` prepares every queued package before executing the first job. The service then rechecks each target and reloads/revalidates its bytes. Jobs run on the serialized worker with `MidiSessionGuard`, foreground notification and a per-job wake lock. `FlashSession` bounds the session to 15 minutes; Android bounds each reconnect wait to three minutes within that deadline. Stop-after-current prevents the next job from starting, without interrupting the current write/verification.
 
-The Android host incorporates 0.8.0/0.8.1 multi-source SQLite catalogs, native
-WorkManager scheduling, scoped source identities, conditional requests, per-source
-request budgets and locally approved download/artwork policies. Shared Compose adds
-source filtering, source labels, source configuration/status/removal/defaults and
-the optional background-check setting. Firmware Hub is enabled by default; Awesome
-FM-1 and background checks are disabled on a new installation. Updated About guides
-in three languages and privacy/license resources are bundled.
+A failure stops the run and records an unconfirmed result. A previously RUNNING job becomes UNCONFIRMED on load; queued jobs retain their old attachment references and cannot become ready until rebuilt. `FlashJournal` remains additional interrupted-session evidence. Neither file is a command to resume a partially completed write. Failed atomic writes roll back the store's in-memory mutation; unreadable fleet storage blocks fleet use and preserves the original file for diagnosis.
 
-Updating the dedicated emulator from build 14 migrated its 214 Hub entries, Hortator
-package, favorite, selection and Hub timestamps to SQLite. The actual .fwsc bytes
-retained SHA-256 ac81af292e035ee0c4b8b7ab3a78b942e4f03deee31ae213a2613c743cd9110f.
-The migration also accepts the previous Compose boolean browsing preferences,
-where the original Android Views stored strings.
-Awesome FM-1 was explicitly enabled for a UI test and a package was
-downloaded from its approved publisher endpoint. SHA-256/CRC validation succeeded;
-its `unknown` chip compatibility remains non-flashable. A regression test exercises
-same-ID offers from different sources while source settings are open. List keys,
-details and download actions use the scoped source/firmware identity.
+A CONFIRMED job records the expected firmware identity after return. It does not prove every flash byte was read back. Persistent history is local and does not include any cloud sync.
 
-The native SQLite/source scheduler is Android-specific. The existing iOS host
-retains the shared Hub repository and manual MIDI-session controller; its
-multi-source persistence/conditional-network adapter and background scheduler have
-not been ported. No iOS 0.8.1 feature parity or Apple build is claimed.
+## Catalog, packages and documents
 
-## Implemented
+Android uses `CatalogDatabase`/`CatalogRepository`, immutable local blobs and migration from older library records. Sources use scoped identities, approved URL ranges, conditional requests and persisted 24–168 hour attempt intervals. The built-in Hub source starts enabled; Awesome FM-1 and background checking start disabled. Source configuration is saved separately from Check now. A failed source retains its previous snapshot. The worker checks catalogs only; installation always requires a user-approved plan.
 
-`shared` contains protocol framing/assembly, UFW/SHA-256/CRC validation, flash-session
-logic, chip compatibility, catalog models/parser, category/filter/sort rules,
-repository rate limiting, verified immutable package storage, settings repair,
-withdrawal checks and MIDI stream decoding/log buffers. Android now uses the upstream transactional SQLite repository with migration from
-the prior shared JSON library. The common legacy repository remains in the iOS path.
+Package pinning is enforced in the service for removal and replacement. Undo retains the most recently removed valid package in the current service session; it is not a durable recycle bin. Known withdrawals/conflicts and compatibility are rechecked when loading packages. Offline state prevents network work but cannot reveal later withdrawals.
 
-`composeApp` provides the shared application screens:
+Android XML resources are authoritative for EN/PL/zh-Hans UI text. `tools/sync-resources.py` generates `ResourceKeys.kt` and `CoreStrings.kt`. `:app:bundleProjectDocs` copies `about/*.md`, `LICENSE.md`, `PRIVACY_POLICY.md` and third-party notices into generated assets. About version text is currently a literal in shared Compose; it must be kept aligned with `app/build.gradle` and `iosApp/project.yml` when changing versions.
 
-- Catalog search, categories, sorting, combined downloaded/favorites filters,
-  pull-to-refresh and a refresh button honoring the daily request budget.
-- Firmware details, author links, artwork caching, package metadata, downloads,
-  verification, favorites, removal, package updates and offline use.
-- Flasher with explicit target selection, identity checks, local-package selection,
-  chip compatibility, confirmation, progress, logs and restart-port confirmation.
-- Experimental MIDI Logger with selected outputs, source/channel/type filters,
-  timing-message filtering, paused autoscroll, bounded logs and export.
-- Persistent language (Polish/English/Simplified Chinese), theme, offline and
-  experimental-feature settings; bundled About/license/privacy content.
-- Android ROM chip detection, verified backup/export and protected V15 recovery,
-  including the prepared-plan confirmation. Experimental tools default to off.
+The refresh crash regression keeps busy state visible while recycling catalog nodes. Favorite accessibility text is computed during composition, rather than observing the whole app state from a detached semantics node. Instrumentation also covers multilingual queue approval and invalidated targets.
 
-The Android host preserves its native foreground service, wake lock, USB grants,
-conservative automatic reconnection, session journal, document pickers and protected
-ROM transport. Manual confirmation binds the action to the displayed package hash
-and endpoint before service admission; the worker rechecks identity and bytes.
+## Experimental transports
 
-The Swift host uses the same Compose screens and `PortableAppBackend`, with native
-Core MIDI, bounded HTTPS requests, atomic private storage, document sharing and
-lifecycle handling. It includes catalog/download/library operations, identity and
-full two-stage flash orchestration, a passive multi-output MIDI logger, persisted
-settings, a flash journal and both explicit reconnections. The common controller
-is integration-tested with simulated native endpoints; this is not a claim of
-physical iPhone flashing success.
+The logger is bounded and stops before connection/flash work. ROM chip detection does not bind a JEDEC result to a selected MIDI unit. Recovery remains separate, opt-in and hash-restricted to stock V15. It checks known boot/chip conditions, creates/verifies a backup and uses a tokenized prepared plan; only the allowed application sectors may be changed. There is no automatic OTA-to-ROM fallback. No physical recovery success is claimed.
 
-## Platform differences
+## Android build and test commands
 
-On iOS, reconnection always requires confirmation of the same instrument's new
-port. Earlier endpoint IDs are excluded, and names never authorize automatic
-selection. An unchanged or ambiguously reused endpoint ID can therefore require
-restarting the operation rather than guessing the instrument.
-
-USB ROM recovery and JEDEC detection remain Android-only. The iOS UI does not show
-these controls: Core MIDI does not provide the raw USB ROM transport. This was an
-explicit constraint of the original migration plan.
-
-During iOS flashing the host disables automatic screen sleep and requests finite
-background time. Keep the application open; iOS can suspend it after background
-time expires. The journal does not mark an interrupted operation as confirmed.
-There is no cancel-writing button.
-
-## Verification
-
-On Linux / Android 16:
-
-- 108 Android JVM tests passed; four optional external firmware/catalog fixture
-  tests were skipped. This includes a full offline common-controller session with
-  both explicit reconnections, no HTTP requests and a confirmed journal.
-- 41 shared JVM tests passed. Nine new repository tests cover rate-limit persistence,
-  cache corruption, package revalidation, metadata compatibility, failed replacement,
-  settings repair, missing blobs, withdrawals and asset resolution.
-- Debug APK, instrumentation APK and Android lint passed. Common and Kotlin/iOS
-  source-set metadata compilation also passed; this does not compile Swift or link
-  the Apple application.
-- 26 instrumentation tests passed, including opt-in/service guards, SQLite imports/migrations, source
-  policy and background-work guards, Compose launch and accessibility regression,
-  scoped package selection and USB PendingIntent delivery. See the build validation
-  logs in dist for this run.
-- Emulator checks exercised the real catalog (214 entries), Hortator 1.0.1 download
-  with integrity validation, favorites and selection of the saved package. Writing
-  remained disabled without a MIDI device.
-
-No physical FM-1, USB recovery or iOS binary was tested. This machine has no
-macOS/Xcode host; Swift/native framework compilation and iPhone hardware validation
-remain required before distributing an iOS release. No production-readiness or
-cross-platform hardware parity is inferred from passing Android tests.
-
-## Build Android
-
-JDK 17, Android SDK 36 and Build Tools 35.0.0:
+JDK 17, Android SDK platform 36, Build Tools 35.0.0. Application minSdk is 34 even though the reusable library modules have lower minimums. Use the checked-in Gradle wrapper.
 
 ```sh
 python3 tools/sync-resources.py --check
 ./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
 ```
 
-APK: `app/build/outputs/apk/debug/app-debug.apk`. A copy and checksum are in `dist/`.
-The project pins Kotlin 2.2.21, Compose Multiplatform 1.9.3, AGP 8.13.2 and JSON
-serialization 1.9.0. Android XML remains the translation source; regenerate the
-shared dictionaries after adding or changing a resource.
+For one known, selected test device, replace `DEVICE_SERIAL` with its actual adb serial:
 
-## Build iOS on macOS
+```sh
+adb -s DEVICE_SERIAL install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s DEVICE_SERIAL install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s DEVICE_SERIAL shell am instrument -w -e class pl.ekim.fm1_flasher.FleetUiTest pl.ekim.multiplatform_fm1_flasher.test/android.test.InstrumentationTestRunner
+```
 
-Install JDK 17, Xcode, the Android SDK (the root Gradle project includes Android)
-and XcodeGen. Then:
+Run the explicit classes separately: `ExperimentalFeaturesTest`, `CatalogDatabaseTest`, `BackgroundCatalogTest`, `FirmwareSelectionTest`, `UsbPermissionIntentTest`, `MainActivityLaunchTest`, `ComposeCatalogUpdatesTest`, `FleetUiTest` (all in `pl.ekim.fm1_flasher`). This avoids the legacy runner's unbounded discovery startup timeout and isolates service/preferences fixtures. The test runner's exit alone is insufficient: inspect the reported OK/failure result.
+
+Build 19 recorded 50 shared JVM passes, 120 Android JVM passes, four skipped external-fixture tests and 29 instrumentation passes on the dedicated Android 16 emulator. A final three-test catalog/fleet UI rerun passed after filter/theme edits. Lint/debug builds and iOS metadata passed. Test results and known runner issues are preserved in the QA report; documentation-only changes do not imply that hardware or all application tests were rerun.
+
+## iOS build boundary
+
+The portable controller supports the prior Hub repository, single selected MIDI instrument, shared transfer engine, explicit reconnect, local journal, preferences and logger. It does not implement Android's fleet queue, multi-source SQLite scheduler or raw USB ROM transport. It requests finite background time and disables automatic screen sleep during a session; keep the app foregrounded.
+
+On a suitable macOS/Xcode development host with JDK 17, Android SDK and XcodeGen installed:
 
 ```sh
 cd iosApp
@@ -192,16 +84,20 @@ xcodegen generate
 open FM1Flasher.xcodeproj
 ```
 
-Select the FM1Flasher scheme and an Apple Silicon simulator or physical iPhone;
-select your signing team for hardware. The build phase embeds `FM1Compose` using
-`:composeApp:embedAndSignAppleFrameworkForXcode`. Supported targets are iosArm64
-and iosSimulatorArm64; deployment target is iOS 15.0. Bundled About/license files
-are included by the XcodeGen resource entries.
+Choose scheme `FM1Flasher`; configure a signing team for a physical device. The build phase invokes `:composeApp:embedAndSignAppleFrameworkForXcode` for `FM1Compose`. Configured targets are `iosArm64` and `iosSimulatorArm64`; no Intel simulator target is configured. Deployment target is iOS 15.0. These are project configuration facts, not verification that an older Mac or Xcode installation can build the project.
 
 ```sh
+./gradlew :composeApp:compileIosMainKotlinMetadata
+# On a compatible macOS host, separately validate native tests/builds:
 ./gradlew :shared:iosSimulatorArm64Test
 ```
 
-Before accepting iOS hardware support, test identity, stock/community firmware,
-both restarts, ambiguous hubs, disconnects, screen locking and background expiry.
-On Android, qualify both flash-chip types and ROM recovery with verified backups.
+Linux metadata compilation does not compile Swift, link/sign an iOS application or produce an IPA. No Xcode/native iOS result is available for build 19.
+
+## Release boundaries
+
+0.9.0/19 is a local test artifact. Debug signature continuity with build 18 was checked. A future rebuild after document changes has different APK bytes and needs a new checksum and packaging verification. Do not replace the historical report's checksum with one from a different build.
+
+Android CI tests/builds every branch. Pages builds every branch but deploys only the repository default branch. The inherited Google Play release and production workflows still target the original package; the F-Droid recipe and older store material also concern the original application. See [publication notes](publication/README.txt). None of these artifacts establishes a store release of this fork.
+
+Physical acceptance requires multiple FM-1 units, the intended powered/passive hubs and real phones; test mode descriptors, serial behavior, grant denial, missed/out-of-order events, safe reconnect faults, interruption and recovery separately. Emulator assertions establish software behavior, not electrical stability or hardware flash success.

@@ -2,15 +2,15 @@
 
 ## Wydawca i kontakt
 
-ekim.pl@gmail.com. Data obowiązywania: 13 listopada 2026 r. Dokument opisuje sposób przetwarzania danych przez FM-1 Flasher.
+ekim.pl@gmail.com. Data obowiązywania: 15 listopada 2026 r. Dokument opisuje sposób przetwarzania danych przez FM-1 Flasher.
 
 ## Dane lokalne
 
-Aplikacja nie wymaga konta i nie zawiera reklam, analityki ani śledzących SDK. Ulubione, ustawienia przeglądania, motyw i język, kopie katalogu, grafiki podglądu, pliki firmware i metadane pobrań są zapisywane w prywatnej pamięci aplikacji. Dziennik zdarzeń i tożsamość połączonego instrumentu pozostają w pamięci operacyjnej podczas używania aplikacji. Dane te nie są wysyłane wydawcy aplikacji.
+Aplikacja nie wymaga konta i nie zawiera reklam, analityki ani śledzących SDK. Ulubione, ustawienia przeglądania, motyw i język, kopie katalogu, grafiki podglądu, pliki firmware i metadane pobrań są zapisywane w prywatnej pamięci aplikacji. Dziennik zdarzeń pozostaje w pamięci operacyjnej. Nazwy instrumentów, odczytane numery seryjne USB, wskazany typ pamięci, ostatnia tożsamość firmware i historia zadań (cele, sumy paczek, etapy i wyniki) są zapisywane lokalnie. Numery seryjne nie trafiają do zwykłego dziennika połączeń. Ostatnią usuniętą poprawną paczkę można przywrócić w czasie otwartej sesji aplikacji. Dane te nie są wysyłane wydawcy aplikacji.
 
 ## Połączenia sieciowe
 
-Po wyłączeniu trybu offline aplikacja może automatycznie pobierać katalog z thefirmwarehub.com i grafiki z serwerów wskazanych w katalogu. Metadane firmware i paczki są pobierane z GitHuba oraz serwerów autorów po działaniu użytkownika. Żądania odświeżenia katalogu są ograniczone do jednego na dobę. Wszystkie żądania aplikacji korzystają z HTTPS.
+W trybie online aplikacja sprawdza włączone źródła katalogów i może pobierać ich dozwolone grafiki. Firmware Hub jest domyślnie włączony; awesome-fm1 na raw.githubusercontent.com i własne źródła wymagają włączenia przez użytkownika. Wyłączone źródła nie wykonują automatycznych żądań; Sprawdź teraz oznacza jawne jednorazowe żądanie także dla źródła wyłączonego. Pobieranie paczek łączy się z usługami wydań GitHuba lub zatwierdzonymi adresami autorów po działaniu użytkownika. Każdy katalog jest odpytywany najwyżej raz na 24 godziny, także po błędzie. Opcjonalne sprawdzanie katalogów w tle używa WorkManager i jest domyślnie wyłączone; tryb offline je wstrzymuje. Wszystkie żądania korzystają z HTTPS. Firmware nigdy nie jest instalowane automatycznie.
 
 ## Dane widoczne dla serwisów zewnętrznych
 
@@ -22,7 +22,7 @@ Aplikacja odczytuje tożsamość FM-1 wskazanego przez użytkownika i przesyła 
 
 ## Przechowywanie, usuwanie i offline
 
-Dane lokalne pozostają na urządzeniu do ich usunięcia w aplikacji, wyczyszczenia danych w ustawieniach Androida lub odinstalowania aplikacji. Usunięcie paczki zachowuje ulubione. Wyczyszczenie danych lub odinstalowanie usuwa bibliotekę i preferencje. Kopia zapasowa danych aplikacji w Androidzie jest wyłączona. Nie ma konta serwerowego ani profilu użytkownika u wydawcy do usunięcia. Tryb offline wyłącza odświeżanie katalogu i pobieranie paczek oraz grafik; zapisane wcześniej treści pozostają dostępne.
+Dane lokalne pozostają na urządzeniu do ich usunięcia w aplikacji, wyczyszczenia danych w ustawieniach Androida lub odinstalowania aplikacji. Usunięcie paczki zachowuje ulubione. Katalogi, zasady źródeł i metadane lokalnych paczek są przechowywane w SQLite. Usunięcie subskrypcji zachowuje pochodzenie, poznane wycofania, paczki i ulubione. Wyczyszczenie danych lub odinstalowanie usuwa bibliotekę i preferencje. Kopia zapasowa danych aplikacji w Androidzie jest wyłączona. Nie ma konta serwerowego ani profilu użytkownika u wydawcy do usunięcia. Tryb offline wyłącza odświeżanie katalogu i pobieranie paczek oraz grafik; zapisane wcześniej treści pozostają dostępne.
 
 ## Zmiany i pytania
 

@@ -1,32 +1,23 @@
-Przeglądaj katalog firmware i przygotuj aktualizacje M-VAVE FM-1 przez USB MIDI z urządzenia z Androidem.
+Zarządzaj firmware M-VAVE FM-1 przez Urządzenia, Bibliotekę i Zadania na Androidzie 14+.
 
-Biblioteka firmware
-• Przeglądaj kategorie, wyszukuj firmware i autorów oraz sortuj wydania.
-• Zapisuj ulubione lokalnie, bez zakładania konta.
-• Pobieraj obsługiwane paczki, zarządzaj biblioteką i sprawdzaj zmiany w katalogu.
-• Korzystaj ze sprawdzonych, wcześniej pobranych paczek bez internetu.
+Urządzenia
+Odczytaj każdy instrument USB MIDI, nadaj mu nazwę i przypisz pobraną zgodną paczkę. Hub OTG może połączyć wiele instrumentów. Aplikacja zapisuje jeden instrument naraz.
 
-Wybierz instrument
-• Jawnie wskaż jedno urządzenie USB MIDI, także gdy kilka instrumentów korzysta z huba.
-• Automatyczne łączenie po restartach przy jednym urządzeniu USB i jednym porcie MIDI; przy kilku urządzeniach potwierdź port ręcznie.
-• Przed zapisem sprawdź SHA-256 paczki, strukturę UFW, odpowiednie CRC oraz zgodność w katalogu.
-• Obserwuj postęp aktualizacji w powiadomieniu.
+Biblioteka
+Przeszukuj Firmware Hub i opcjonalne Awesome FM-1/własne katalogi, filtruj źródła/kategorie, zachowuj ulubione i korzystaj z paczek offline. Integralność i zgodność są sprawdzane przed zapisem. Oczekujące/aktywne zadanie chroni paczkę przed usunięciem lub zastąpieniem. Zwykłe usunięcie poprawnej paczki można cofnąć w bieżącej sesji.
 
-Dopasuj interfejs
-Wybierz polski, angielski lub chiński uproszczony albo język systemowy. Korzystaj z jasnego i ciemnego motywu lub automatycznego wyboru Androida.
+Zadania
+Sprawdź jeden plan zawierający nazwy, wersje i sumy paczek. Jedno zatwierdzenie rozpoczyna zadania sekwencyjne. Zatrzymaj po bieżącym instrumencie bez przerywania zapisu. Osobne wyniki i ograniczona historia etapów są zapisywane. Przerwane zadanie jest niepotwierdzone; częściowy transfer nie wznawia się automatycznie.
 
-Wymagania
-Android 14 lub nowszy, USB Host/OTG i system MIDI, M-VAVE FM-1, przewód do transmisji danych i stabilne zasilanie. Zalecany jest zasilany hub USB. Pobranie katalogu i nowych paczek wymaga internetu. Opisy firmware pozostają w oryginalnym języku autorów.
+Powrót po restarcie
+Wiele instrumentów wymaga powiązania jedynego kandydata na karcie zadania i ciągłości połączeń sąsiadów. Utrata sąsiada, reset huba lub niejednoznaczne porty blokują dalszy zapis. Adres USB nie jest numerem fizycznego gniazda; serial nie jest zweryfikowanym identyfikatorem pomiędzy trybami. Ostrożny reconnect automatyczny ograniczono do jednego dopuszczalnego USB/MIDI. Android może ponownie poprosić o zgodę USB.
 
-Wersja eksperymentalna
-Ta wersja nie została jeszcze sprawdzona z fizycznym FM-1. Aktualizacja może usunąć dane instrumentu. Błędna paczka, utrata zasilania lub wybranie niewłaściwego instrumentu po restarcie może wymagać sprzętowego odzyskania urządzenia. Przed użyciem zrób kopię danych narzędziami danego firmware. Aplikacja nie wykonuje kopii zapasowych, aktualizacji Bluetooth, automatycznego rozpoznawania kości flash ani odzyskiwania sprzętowego.
+Ustawienia i eksperymenty
+Polski, angielski i chiński uproszczony; motyw jasny/ciemny/systemowy; O aplikacji i prywatność offline. Sprawdzanie katalogów w tle jest opcjonalne i domyślnie wyłączone; nie pobiera ani nie instaluje firmware. Włączany osobno Logger MIDI zatrzymuje się na czas łączenia/zapisu. Osobne wykrywanie kości i ograniczone recovery stock V15 są eksperymentalne; nie stanowią automatycznej ani uniwersalnej naprawy.
 
-Niezależny projekt open source na licencji MIT. Nie jest oficjalnym produktem M-VAVE. Firmware i katalog pochodzą od ich autorów; firmware nie jest dołączony do aplikacji. Źródło katalogu: The Firmware Hub, CC BY 4.0. Bez reklam, wymaganego konta i analitycznych SDK.
+Wymagania i stan
+Android 14+, USB Host/OTG i MIDI, instrumenty FM-1, przewody danych i stabilne zasilanie. Zalecany jest zasilany hub; aplikacja nie mierzy jakości zasilania. Opisy firmware pozostają w językach autorów. Build 19 jest eksperymentalny, bez fizycznej weryfikacji FM-1/huba. Używaj narzędzi kopii danych danego firmware, jeśli są dostępne; OTA nie robi automatycznego backupu. Kolejki Androida nie przeniesiono do niezweryfikowanego hosta iOS.
 
-Pomoc i kontakt w sprawie prywatności: ekim.pl@gmail.com
+Niezależny projekt MIT, nieoficjalny wobec M-VAVE. Firmware pozostaje u wydawców. Katalog Firmware Hub: CC BY 4.0. Bez konta, reklam i analityki. Nazwy, seriale i historia zadań są lokalne; serwisy pobrań/katalogów otrzymują metadane połączenia. Kontakt: ekim.pl@gmail.com.
 
-W trybie poziomym kompaktowy układ pokazuje filtry obok listy oraz wybór urządzenia obok działań paczki.
-
-• Wybieraj pobrany firmware w zakładce Flasher lub przez katalog.
-
-Zakładka O aplikacji wyświetla krótki, dedykowany opis zgodny z językiem interfejsu oraz numer zainstalowanej aplikacji.
+Projekt opisu implementacji testowej 0.9.0; nie oznacza publikacji w sklepie.

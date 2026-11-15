@@ -1,35 +1,35 @@
-# 固件，触手可及。
+# 多台 FM-1，一个安装计划。
 
-FM‑1 Flasher 是独立的实验性 **Android 14+** 应用，用于浏览固件并**通过 USB MIDI 更新 M‑VAVE FM‑1**。
+**Multiplatform FM-1 Flasher 0.9.0 / 19** 是面向 Android 14+ 的独立测试应用，通过 USB MIDI 和 OTG 集线器管理 M-VAVE FM-1 固件。本分支构建仅在本地准备，尚未作为 0.9.0 发布到 GitHub Releases。
 
-[阅读使用指南](documentation.md) · [关于应用](../../about/README.zh-Hans.md) · [下载测试 APK](https://github.com/ekim-pl/android-fm1-flasher/releases)
+[当前指南](documentation.md) · [关于应用](../../about/README.zh-Hans.md) · [版本历史](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
-## 从目录到设备
+## 设备 · 固件库 · 任务
 
-- **寻找固件。** 浏览 The Firmware Hub 目录，搜索并收藏固件。
-- **准备固件库。** 下载固件包以供离线使用。写入前，应用会检查完整性与兼容性。
-- **选择你的 FM‑1。** 指定具体的 USB MIDI 端口，也支持连接多台设备的集线器。
-- **谨慎更新。** 确认安装前，检查所选设备和固件包。
+- **设备：**逐台读取乐器，命名并分别指定已下载固件。
+- **固件库：**搜索多个来源，保存收藏，离线使用已验证的本地包。
+- **任务：**批准一个计划，顺序安装并保留独立结果。在当前乐器完成后停止，不中断其写入。
 
-## 开始前
+## 重启后的返回
 
-需要支持 USB Host/OTG 和 MIDI 的手机、数据线，以及稳定的设备电源。请使用相应固件自身的工具备份数据。
+多设备需要在任务卡片中确认唯一合格的返回设备。邻居丢失、返回不明确或集线器重置会阻止后续写入。USB 地址不是物理端口；完成实机测试前，多设备自动匹配保持关闭。中断的写入不会自动恢复。
 
-**本应用为实验性软件。** 断电或使用不适用的固件包可能需要硬件恢复。重启后的自动重新连接和多设备使用仍需进一步硬件测试。
+请使用数据线和稳定供电，建议独立供电的集线器。应用不能认证电源质量。本构建未验证真实 FM-1/集线器或 iOS 二进制。iOS 宿主保留先前的单乐器控制器，没有 Android 队列。
 
 ## 文档
 
-- [安装、固件更新与离线使用](documentation.md#getting-started)
-- [USB 集线器上的多台设备](documentation.md#multiple-fm1-devices-on-a-hub)
-- [构建与测试应用](documentation.md#building-and-testing)
-- [Google Play 发布设置](github-actions.txt)
-- [发布材料](publication.txt)
-- [构建与部署本网站](pages.md)
+- [安装与日常使用](documentation.md#getting-started)
+- [集线器上的多台乐器](documentation.md#multiple-fm1-devices-on-a-hub)
+- [构建与测试](documentation.md#building-and-testing)
+- [架构与平台边界](../../MIGRATION.md)
+- [测试构建报告](../../publication/qa/0.9.0-test19.txt)
+- [发布状态与工作流限制](publication.txt)
+- [构建网站](pages.md)
 
 ## 隐私与开源
 
-无需账户，无广告和分析服务。固件库、收藏和设置保存在本地。下载目录及固件时会连接外部服务。
+无需账户，无广告或分析。固件库、乐器名称、已读取序列号和任务历史保存在本地。外部目录/下载服务会收到连接元数据。
 
-[隐私政策](privacy.md) · [MIT 许可证](license.md) · [应用 Markdown 解析器许可证](commonmark-license.md)
+[隐私政策](privacy.md) · [MIT 许可证](license.md) · [CommonMark 许可证](commonmark-license.md)
 
 联系：[ekim.pl@gmail.com](mailto:ekim.pl@gmail.com)。

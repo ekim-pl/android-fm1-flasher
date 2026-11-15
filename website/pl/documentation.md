@@ -1,128 +1,118 @@
-# FM‑1 Flasher dla Androida
+# Multiplatform FM-1 Flasher — instrukcja
 
-Kod źródłowy aplikacji jest udostępniany na licencji MIT — zobacz [LICENSE.md](../../LICENSE.md).
-Zasady przetwarzania danych opisuje [polityka prywatności](../../PRIVACY_POLICY.md).
+Niezależny menedżer firmware dla **M-VAVE FM-1**, napisany w Kotlin Multiplatform i Compose Multiplatform. Android obsługuje wiele instrumentów przez hub OTG, zapisując firmware **kolejno, na jednym instrumencie naraz**.
 
-Eksperymentalna aplikacja Kotlin/Android 14+ do wybierania jednego M‑VAVE FM‑1 na hubie USB OTG, pobierania firmware z katalogu i instalowania go przez USB MIDI SysEx. Wcześniejsze testy użytkownika potwierdziły udane flashowanie fizycznego FM‑1. Automatyczne ponowne łączenie wymaga dalszych testów na sprzęcie.
+Dokument opisuje **0.9.0, build Android 19**, branch `task/multiplatform-rework` i implementację `6e9947b`. Przygotowano lokalny testowy APK; **0.9.0 nie opublikowano na GitHub Releases**. [Raport buildu](../../publication/qa/0.9.0-test19.txt) identyfikuje sprawdzony plik i sumę kontrolną. Późniejsze zmiany dokumentacji nie zmieniają wcześniej przekazanego APK.
 
-## Język i wygląd
+[English](../../README.md) · [简体中文](../zh-CN/documentation.md) · [Architektura](../../MIGRATION.md) · [Prywatność](privacy.md)
 
-W **Ustawieniach** w górnym pasku wybierz język: polski, angielski, chiński uproszczony albo systemowy. Ten sam wybór jest dostępny również w systemowych ustawieniach języka aplikacji. Wszystkie trzy języki są dołączane do APK i AAB, także do zmiany bez internetu. Przetłumaczone są również ostrzeżenia, błędy, dziennik i powiadomienia; teksty pobierane od autorów firmware zachowują oryginalny język.
+## Obsługiwane platformy
 
-Motyw może być jasny, ciemny lub zgodny z systemem. Ustawienia zawierają także dostępną offline politykę prywatności.
+| Funkcja | Android | Źródła hosta iOS |
+| --- | --- | --- |
+| Wymagania | Android 14+, USB Host/OTG i MIDI | Deployment target iOS 15; brak zweryfikowanego pliku aplikacji |
+| Główny interfejs | Urządzenia · Biblioteka · Zadania | Poprzedni kontroler jednego instrumentu |
+| Rejestr, trwała kolejka i historia | Wdrożone | Nieprzeniesione |
+| Katalogi | Firmware Hub, opcjonalny Awesome FM-1, własne źródła | Repozytorium Hub |
+| Sprawdzanie katalogów w tle | Opcjonalny WorkManager | Brak odpowiednika |
+| Zapis przez MIDI | Sekwencyjne zadania w usłudze natywnej | Wspólna sesja z ręcznym powiązaniem po restarcie; bez testu sprzętowego |
+| Wykrywanie kości i recovery ROM | Osobne narzędzia eksperymentalne | Niedostępne |
 
-W poziomie, przy szerokości co najmniej 600 dp, nawigacja przechodzi na lewy pasek, a filtry katalogu stoją obok listy. Flasher pokazuje urządzenie i lokalną paczkę obok siebie; szczegóły firmware mają mniejszy podgląd i osobną kolumnę działań. Obrót zachowuje widoczną pozycję katalogu i otwarte szczegóły paczki.
-
-## O aplikacji
-
-Zakładka **O aplikacji** korzysta z krótkich, niezależnych plików Markdown w katalogu [about](../../about): [polskiego](../../about/README.pl.md), [angielskiego](../../about/README.md) i [chińskiego uproszczonego](../../about/README.zh-Hans.md). Są dołączane automatycznie podczas budowania i dostępne offline. Treść dopasowuje się do języka oraz motywu aplikacji. Ten plik pozostaje dokumentacją techniczną projektu i nie jest dołączany do aplikacji.
-
-Z opisu aplikacji można otworzyć licencję i politykę prywatności. Odnośniki internetowe otwierają odpowiednią aplikację systemową.
-
-## Strona projektu i dokumentacja online
-
-Publiczne źródła: [GitHub](https://github.com/ekim-pl/android-fm1-flasher). [Strona projektu](https://ekim-pl.github.io/android-fm1-flasher/pl/) udostępnia pełną witrynę i dokumentację po angielsku, polsku i chińsku uproszczonym. Przełączniki języka prowadzą do tej samej podstrony.
-
-Workflow [GitHub Pages](../../.github/workflows/pages.yml) buduje witrynę, instrukcję techniczną, opisy aplikacji, poradniki publikacji, licencje i polityki prywatności w trzech językach. Pull requesty i gałęzie sprawdzają budowanie; zmiany w domyślnej gałęzi automatycznie publikują stronę. W repozytorium GitHub ustaw **Settings → Pages → Source → GitHub Actions**. [Konfiguracja, lokalne budowanie i edycja strony](../../website/pages.md).
-
-Dokumentacja repozytorium jest utrzymywana po angielsku. Tłumaczenia witryny znajdują się w `website/pl/` i `website/zh-CN/`; tłumaczenia aplikacji i materiałów sklepowych pozostają w dotychczasowych katalogach językowych.
-
-## Materiały publikacyjne
-
-[Instrukcja publikacji](../../publication/README.txt) opisuje zawartość paczki i pozostałe kroki. Katalog [fastlane/metadata/android](../../fastlane/metadata/android) zawiera opisy, informacje o zmianach, ikony, grafiki wyróżniające i zrzuty w trzech językach, w formacie przydatnym dla Google Play i F-Droid. [Strony polityki prywatności](../../publication/privacy/index.html) można umieścić na publicznym hostingu HTTPS. Zrzuty źródłowe i materiały do formularzy sklepowych są w [publication](../../publication).
+Identyfikator Androida to `pl.ekim.multiplatform_fm1_flasher`. Aplikacja instaluje się obok oryginalnej `pl.ekim.fm1_flasher` i nie importuje jej prywatnych danych. Interfejs obsługuje polski, angielski i chiński uproszczony oraz motyw jasny, ciemny i systemowy.
 
 <a id="getting-started"></a>
+## Pierwsza instalacja i plan aktualizacji
 
-## Uruchomienie
+1. Zainstaluj testowy APK na Androidzie 14 lub nowszym. Podpis debug buildu 19 odpowiada buildowi 18: instalacja jako aktualizacja, bez odinstalowania, zachowuje bibliotekę i preferencje tego forka.
+2. W **Bibliotece** znajdź firmware i pobierz paczkę z jej szczegółów. Pobranie sprawdza integralność, ale nie rozpoczyna instalacji.
+3. Podłącz instrumenty przewodami do transmisji danych przez hub OTG. Zalecany jest hub z osobnym zasilaniem. Aplikacja nie mierzy jakości zasilania.
+4. W **Urządzeniach** wybierz **Odczytaj instrument** na każdej karcie. Udziel systemowej zgody USB, gdy będzie potrzebna. Do planu można dodać rozpoznany FM-1.
+5. W **Szczegółach** nadaj czytelną nazwę. Wskaż typ pamięci na podstawie znanego sprzętu i wybierz lokalną paczkę. Paczka zgodna z obydwoma wspieranymi typami pamięci może być dopuszczona także przy nieznanym typie kości; paczki niezgodne lub o niepotwierdzonej zgodności pozostają zablokowane.
+6. Wybierz **Dodaj do planu** dla kolejnych instrumentów. Urządzenie może mieć jedno oczekujące lub wykonywane zadanie. Każdy instrument może otrzymać inną paczkę.
+7. W **Zadaniach** sprawdź nazwy, wersje i sumy paczek, a następnie wybierz **Zainstaluj na N instrumentach**. Ten przycisk zatwierdza plan; zwykła instalacja nie wyświetla drugiego okna potwierdzenia.
 
-Gotowe APK testowe pobierzesz z [wydań na GitHubie](https://github.com/ekim-pl/android-fm1-flasher/releases). To APK podpisane kluczem debug, przeznaczone do testów, nie wydanie do sklepu. Lokalne materiały robocze: `dist/FM1-Flasher-debug.apk` i `dist/FM1-Flasher-publication.zip`; katalog `dist/` nie jest częścią repozytorium.
+Zachowaj połączenie USB i zasilanie do zakończenia weryfikacji. Jeżeli firmware udostępnia własny eksport danych, wykonaj kopię. Aktualizacja OTA nie robi automatycznej kopii; firmware może zmienić ustawienia instrumentu.
 
-1. Zainstaluj APK na telefonie obsługującym USB Host/OTG oraz MIDI. Podłącz zasilany hub i instrumenty przewodem do transmisji danych.
-2. W zakładce **Flasher** wybierz port z listy i naciśnij **Połącz z wybranym portem**. Po zgodzie Androida na USB aplikacja odczyta tożsamość tylko tego urządzenia. Nazwa MIDI nie jest kryterium wyboru: adres USB i numer MIDI rozróżniają identycznie nazwane egzemplarze.
-3. Typ kości flash pozostaw jako nieznany, chyba że znasz rzeczywisty JEDEC ID tego egzemplarza. Wybór dotyczy bieżącego połączenia i resetuje się po zmianie instrumentu.
-4. W katalogu otwórz podgląd firmware i wybierz **Pobierz na telefon**. Po zakończeniu pobierania wybierz **Użyj do flashowania** albo wskaż pobraną paczkę z listy w zakładce **Flasher**. Oba miejsca korzystają z tego samego, zapamiętanego wyboru. Pobieranie jest oddzielone od zapisu. Repozytorium autora jest dostępne w szczegółach.
-5. Po wykonaniu kopii danych narzędziem danego firmware sprawdź docelowy port i pakiet w oknie potwierdzenia, a następnie rozpocznij aktualizację.
-6. Po każdym restarcie nowy port zostanie wykryty automatycznie, jeśli Android widzi dokładnie jedno urządzenie USB i jeden nowy, dozwolony port MIDI. W razie potrzeby udziel systemowej zgody na USB. Przy kilku urządzeniach lub portach wskaż **nowy port tego samego FM‑1** i potwierdź; po końcowym restarcie aplikacja sprawdzi tożsamość zainstalowanego firmware.
+## Biblioteka i źródła
+
+**Biblioteka** łączy wyszukiwanie, ulubione i pobrane paczki. **Tylko pobrane** i **Ulubione** są filtrami, a nie osobnymi zakładkami Androida. **Filtry i sortowanie** rozwija kategorię, kolejność i źródło. Przy aktywnym filtrze pobranych dostępna jest akcja aktualizacji paczek.
+
+Szczegóły paczki pokazują wersję, autora/źródło, zgodność i SHA-256. Wybranie lokalnej paczki przenosi do Urządzeń; nie uruchamia zapisu. Zwykłe usunięcie poprawnej paczki można cofnąć w bieżącej sesji aplikacji. Paczki przypisanej do oczekującego lub aktywnego zadania nie można usunąć ani zastąpić: najpierw usuń oczekujące zadanie. Usunięcie paczki zachowuje ulubione.
+
+Otwórz **Ustawienia → Źródła katalogu firmware**:
+
+- **The Firmware Hub** jest domyślnie włączony, a **Awesome FM-1** wyłączony. [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) jest społecznościowym katalogiem projektów i odnośników do ich wydawców.
+- Własne źródło wymaga katalogu HTTPS w obsługiwanym formacie JSON Hub, nazwy, interwału 24–168 godzin i zatwierdzonych zakresów adresów paczek/grafik. **Zapisz** zapisuje konfigurację, a **Sprawdź teraz** jest osobnym działaniem. Nowe źródło jest początkowo wyłączone.
+- Odświeżanie uwzględnia interwał także po nieudanej próbie. Wielokrotne kliknięcie nie omija minimalnych 24 godzin między próbami. Ekran źródeł pokazuje błędy i termin kolejnego sprawdzenia.
+- Wyłączone źródło nie wysyła automatycznych żądań. Można świadomie użyć Sprawdź teraz również dla wyłączonego źródła. Błąd zachowuje jego poprzednią kopię katalogu i nie blokuje pozostałych źródeł.
+- Usunięcie własnej subskrypcji zachowuje paczki, ulubione, pochodzenie i poznane wycofania. Przywrócenie ustawień domyślnych włącza Hub i wyłącza Awesome FM-1 bez usuwania własnych subskrypcji.
+- Sprawdzanie katalogów w tle jest opcjonalne i początkowo wyłączone. Sprawdza włączone katalogi przy odpowiednich warunkach sieciowych; nie pobiera ani nie instaluje firmware.
+
+Tryb offline wyłącza sieciowe pobieranie katalogów, paczek i grafik oraz wstrzymuje sprawdzanie w tle. Zapisane firmware można instalować bez żądania sieciowego. Offline nie wykryje wycofania, którego lokalny katalog jeszcze nie zna. Deklaracje katalogu i sumy kontrolne same w sobie nie potwierdzają autentyczności wydawcy.
 
 <a id="multiple-fm1-devices-on-a-hub"></a>
+## Wiele FM-1 na hubie OTG
 
-## Kilka FM‑1 na hubie
+Karta ma lokalny rekord, nazwę/kolor, odczytaną tożsamość firmware, wybrany typ pamięci i bieżące połączenie. **Adres USB nie jest numerem fizycznego gniazda huba.** Model/wersja, VID/PID i typ kości JEDEC nie identyfikują jednoznacznie egzemplarza. Odczytane numery seryjne USB są lokalne; nie potwierdzono ich unikalności pomiędzy trybami FM-1.
 
-- Nigdy nie ma domyślnie wybranego portu. Zapytania i dane trafiają wyłącznie do jawnie wskazanego urządzenia. Jednocześnie trwa jedna aktualizacja.
-- Po restarcie poprzedni numer MIDI musi zniknąć. Lista ponownego połączenia wyklucza wcześniejsze numery MIDI i adresy USB pozostałych urządzeń obecnych przed danym etapem.
-- Automatyczne ponowne połączenie działa tylko po zniknięciu poprzedniego numeru MIDI, gdy jest dokładnie jedno urządzenie USB i jeden dozwolony port MIDI. Przy kilku urządzeniach, także innych niż MIDI, lub kilku portach wymagany jest wybór użytkownika. Nazwa MIDI nie rozpoznaje fizycznego gniazda huba.
-- Jeśli kilka instrumentów równocześnie zmieni adres albo użytkownik podłączy kolejne urządzenie, może być kilka kandydatów. Nie wybieraj na chybił trafił. Nie ma automatycznego przełączenia na inny dostępny FM‑1.
-- Adres USB to identyfikator bieżącego połączenia, nie trwała nazwa instrumentu. Pierwszą identyfikację egzemplarzy można zrobić, podłączając je kolejno przed rozpoczęciem aktualizacji. Nie odłączaj urządzenia podczas zapisu.
+Tylko jedno zadanie zmienia tryb naraz. Po restarcie aplikacja obserwuje USB/MIDI, wyklucza niezmienionych sąsiadów i wymaga jednego dopuszczalnego powrotu. Pozostałe obserwowane połączenia muszą zachować ciągłość. Przy wielu instrumentach użyj **powiązania na karcie zadania** wyłącznie dla aktualizowanego egzemplarza. Nie można obejść blokady, zgadując między kilkoma kandydatami. Nie zamieniaj nierozróżnialnych instrumentów podczas przejścia.
 
-## Biblioteka, ulubione i offline
+Automatyczne parowanie wielu urządzeń pozostaje wyłączone do testów sprzętowych. Zachowano ostrożny wariant automatyczny tylko przy braku sąsiadów MIDI oraz dokładnie jednym dopuszczalnym punkcie MIDI i jednym urządzeniu USB zgłaszanym przez Androida. Sam serial nie zezwala na automatyczne dopasowanie. Po odłączeniu i ponownym wykryciu system może ponownie wymagać zgody USB.
 
-- **Katalog, Ulubione, Pobrane, Flasher** to osobne zakładki. Karty mają podgląd, krótki opis, autora, kategorię, wersję i stan lokalnej paczki. Jeśli autor udostępnia grafikę, aplikacja ją pokazuje i zachowuje do offline; w pozostałych przypadkach pokazuje ilustrację kategorii. Pełny opis i informacje techniczne są w szczegółach.
-- Kategorie: syntezatory, grooveboxy, perkusja i samplery, trackery, akordy, narzędzia, oryginalny M‑VAVE i pozostałe. Wyszukiwanie można łączyć z kategorią, **Tylko pobrane** oraz **Ulubione**, także bezpośrednio w katalogu.
-- Sortowanie: nazwa A–Z, najnowsze wydania, autor A–Z, ostatnio pobrane. Ulubione i preferencje przeglądania są lokalne i pozostają po ponownym uruchomieniu aplikacji.
-- Firmware zapisujemy w trwałej, prywatnej pamięci aplikacji, a nie w folderze Downloads. Paczki pozostają po zamknięciu i aktualizacji aplikacji; odinstalowanie aplikacji lub wyczyszczenie jej danych usuwa bibliotekę.
-- Po pobraniu możesz włączyć przełącznik **Offline** i korzystać z **Pobranych** lub filtra **Tylko pobrane**. Do wyboru lokalnej paczki i rozpoczęcia flashowania nie jest wykonywane żadne połączenie sieciowe. Przeterminowany katalog nie blokuje już sprawdzonej lokalnej paczki. Plik na dysku przechodzi ponowną kontrolę SHA‑256 i CRC przed zapisem do urządzenia.
-- Katalog jest trwale przechowywany w cache i wyświetlany od razu po otwarciu aplikacji. Przy każdym otwarciu i powrocie do aplikacji sprawdzamy dostęp do internetu; poza trybem offline przeterminowany lub brakujący katalog jest odświeżany automatycznie. Brak sieci i błąd pobrania pozostawiają poprzednią listę.
-- **Przeciągnij listę w dół na samej górze** i puść po komunikacie, aby sprawdzić katalog ręcznie. Gest nie przejmuje przewijania w środku listy ani przewijania poziomego; przycisk **Sprawdź** pozostaje dostępny jako alternatywa. Oba sposoby zachowują limit źródła raz na dobę: świeży cache nie powoduje kolejnego żądania HTTP.
-- Dostępną zmianę pliku pokazuje etykieta **Aktualizacja**. Można zaktualizować jedną paczkę w szczegółach lub wszystkie w zakładce **Pobrane**. Rozpoznajemy zmianę po SHA‑256, również gdy autor zachował nazwę wersji.
-- Nowa paczka zastępuje starą dopiero po kompletnym pobraniu i poprawnej walidacji. Błąd aktualizacji pozostawia poprzednią wersję. Aktualizacja biblioteki nie rozpoczyna flashowania; po zmianie wybranego pliku trzeba wskazać paczkę ponownie. **Pobierz ponownie** pozwala naprawić lokalny plik. Usunięcie lokalnej paczki nie usuwa ulubionego ani nie zmienia firmware instrumentu.
-- Jeśli ostatni znany katalog usunął dany firmware, zapis tej paczki jest blokowany. Dla starszej zapisanej wersji używamy informacji o zgodności należących do jej pliku, a nie do nowszej wersji. Offline nie da się poznać zmian ani wycofań, które pojawiły się po ostatnim pobraniu katalogu.
+Utrata sąsiada, reset huba, zmiana generacji połączenia, sprzeczny serial lub niejednoznaczne porty zatrzymują dalszy zapis. Wiele par portów MIDI lub wiele punktów MIDI jednego urządzenia USB blokuje zapis. Potwierdzenie wyniku oznacza sprawdzenie powrotu i oczekiwanego modelu/wersji, a nie pełny odczyt porównawczy pamięci flash.
 
-## Protokół i zgodność
+Nazwy przetrwają restart, ale powiązania z połączeniami nie przetrwają utraty procesu ani niewiarygodnego rozłączenia. Odczytaj i fizycznie rozpoznaj instrument, usuń dotknięte oczekujące zadania, a potem użyj **Zapisane instrumenty → Przypisz tę zapisaną nazwę**. Powiązanie resetuje dawny wybór pamięci; wskaż go ponownie przed ułożeniem planu.
 
-- Dane katalogu: [The Firmware Hub](https://thefirmwarehub.com), [warunki wykorzystania katalogu](https://thefirmwarehub.com/kb/). Pobranie najwyżej raz na dobę, z identyfikującym User-Agent i lokalnym cache. Nowe pobrania wymagają aktualnego katalogu; lokalne, wcześniej sprawdzone paczki działają także offline.
-- Automatycznie pobierane są pakiety z jednoznacznym numerem zasobu GitHub i tagiem wydania oraz przypięty oficjalny pakiet z repozytorium M‑VAVE. Pozostałe pozycje udostępniają link do autora. Aplikacja nie pobiera pakietów z mirrora Hubu.
-- Przed użyciem: zgodność SHA‑256 z katalogiem, tożsamość `FM-1_<numer>`, procesor AC791N, CRC nagłówka i listy UFW, zakresy plików oraz CRC `flash.bin` i `ota.bin`. Pomocnicze zaszyfrowane pliki producenta mają CRC tekstu jawnego; chroni je suma SHA‑256 całego pakietu, nie sprawdzamy ich CRC na zaszyfrowanych bajtach.
-- Nieznana/nowa kość: dopuszczane tylko pakiety oznaczone przez katalog `chip: new`. `chip: old` wymaga jawnego wyboru starszej kości. Nieznana zgodność blokuje zapis. Dla przypiętego oryginalnego V15 dostępny jest tylko wybór starszej kości, bo katalog nie deklaruje obsługi nowej. Oznaczenie w katalogu nie zastępuje testu danego firmware.
-- Dwustopniowa aktualizacja, kontrola sum ramek, fragmentów SysEx, zakresów odczytów i timeoutów. Sukces wymaga odpowiedzi na końcowy sygnał programu aktualizującego oraz zgodnej tożsamości po restarcie.
-- Usługa pierwszego planu i blokada usypiania utrzymują sesję przy przejściu do innej aplikacji. System nadal może przerwać proces. Nie ma przycisku przerwania zapisu.
+## Zadania, zatrzymywanie i błędy
 
-Pozytywna kontrola tożsamości potwierdza odpowiedź urządzenia, nie odczyt kontrolny całej pamięci. Różne firmware mogą współdzielić tożsamość. Przerwanie zasilania, niewłaściwy pakiet lub błędne ponowne wskazanie instrumentu może wymagać sprzętowego odzyskania urządzenia. Automatyczne łączenie dotyczy zaplanowanych restartów w toku aktualizacji, nie dowolnej utraty połączenia podczas zapisu.
+Zadanie utrwala cel i połączenie, oczekiwaną tożsamość, typ pamięci, klucz i hash paczki. Wszystkie paczki są sprawdzane przed pierwszym zapisem; każde zadanie jest sprawdzane ponownie przed własnym transferem. Zmiana wybranej paczki w interfejsie nie przekierowuje aktywnego zadania.
 
-Poza zakresem: aktualizacja Bluetooth, masowe flashowanie, kopie presetów/pamięci, odczyt JEDEC, niskopoziomowy tryb download/UBOOT, trwałe mapowanie gniazd huba, import niezweryfikowanych lokalnych plików i pakiety o innych identyfikatorach, np. `FM1_OFFICIAL_OPEN`.
+- **Zatrzymaj po tym instrumencie** dokończy bieżący zapis i weryfikację powrotu. Pozostałe zadania pozostaną w kolejce. Nie ma przycisku gwałtownego przerwania zapisu.
+- Błąd zadania zatrzymuje przebieg. Przed nową próbą sprawdź instrument i szczegóły zadania. Paczka nie zostanie automatycznie przypisana innemu urządzeniu.
+- Postęp i wyniki są w Zadaniach. Szczegóły pokazują pełny hash i czasy etapów. Trwała historia etapów obejmuje maksymalnie 64 wpisy na zadanie.
+- Po utracie procesu aktywne zadanie staje się **niepotwierdzone**. Transfer nie wznawia się automatycznie od zapisanego procentu. Zadania oczekujące pozostają widoczne, lecz ich powiązania trzeba odbudować.
+- Jeżeli plan nie odpowiada połączeniom lub paczkom, usuń dotknięte zadania, odczytaj instrumenty i dodaj nowe. Odmowa zgody USB nie upoważnia do zapisu.
+
+Usługa pierwszoplanowa i ograniczony czasowo wake lock wspierają transfer przy zgaszonym ekranie lub innej aplikacji na wierzchu. Nie gwarantują zasilania USB ani ochrony przed każdą utratą procesu. Wróć do aplikacji, gdy potrzebne będzie powiązanie lub systemowa zgoda.
+
+## Ustawienia i funkcje eksperymentalne
+
+Ustawienia obejmują język/motyw, offline, źródła, O aplikacji i prywatność. **Funkcje eksperymentalne** są domyślnie wyłączone. Włączają Logger MIDI i narzędzia recovery; nie można zmieniać tego przełącznika w trakcie operacji. Zwykłe instalacje Androida wykonuje się przez Urządzenia i Zadania.
+
+Pasywny logger MIDI ma ograniczone bufory i wybrane wejścia. Zatrzymuje się automatycznie przy łączeniu/zapisie; jednoczesne logowanie i flashowanie nie jest gwarantowane.
+
+Wykrywanie JEDEC dotyczy osobnego urządzenia USB w trybie ROM/download. Wynik nie przypisuje się automatycznie do instrumentu MIDI. Recovery ROM wymaga osobnej świadomej akcji, kopii/eksportu i przygotowanego planu zapisu. Ogranicza się do przypiętego hashem obszaru aplikacji stock V15 oraz rozpoznanych warunków boot/kości; nie zapisuje bootloadera. Nie jest uniwersalnym narzędziem naprawczym ani automatycznym zastępstwem nieudanego OTA. Brakuje fizycznej weryfikacji recovery.
 
 <a id="building-and-testing"></a>
-
 ## Budowanie i testy
 
-Wymagane JDK 17, Android SDK Platform 36 oraz Build Tools 35.0.0. Ustaw `ANDROID_HOME` albo `sdk.dir` w nieśledzonym `local.properties`.
+Wymagane są JDK 17, Android SDK platform 36 i Build Tools 35.0.0. Wrapper ustala Gradle; projekt ustala AGP 8.13.2, Kotlin 2.2.21 i Compose Multiplatform 1.9.3. Skonfiguruj SDK lokalnie przez środowisko lub narzędzia Androida.
 
 ```sh
-./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+python3 tools/sync-resources.py --check
+./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
 ```
 
-APK: `app/build/outputs/apk/debug/app-debug.apk`.
-AAB: `./gradlew :app:bundleRelease`, wynik `app/build/outputs/bundle/release/app-release.aab`. Bez konfiguracji klucza jest niepodpisany; GitHub Actions podpisuje go kluczem uploadu z sekretów.
+APK: `app/build/outputs/apk/debug/app-debug.apk`. Testy: `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`. Katalog `dist/` jest ignorowany przez Git: przygotowana kopia buildu 19 jest lokalna i nie musi istnieć po sklonowaniu repozytorium.
 
-60 testów JVM obejmuje protokół i pakiety UFW, katalog, kategorie, łączenie filtrów, sortowanie, trwałość biblioteki i ustawień, aktualizacje po SHA‑256, gest odświeżania i jego anulowanie, warunki automatycznego odświeżania, zachowanie starej paczki po błędzie, korupcję pliku, zgodność starszych wersji, wycofane paczki, wykluczanie sąsiednich portów i sesję z trzema urządzeniami. Dwa testy opcjonalnie czytają rzeczywiste pliki z dysku, bez dołączania firmware do repozytorium:
+Źródłem tłumaczeń interfejsu są XML w `app/src/main/res/values*`; po ich zmianie uruchom `python3 tools/sync-resources.py`. Dokumenty O aplikacji to `about/README*.md`, pakowane z licencjami przez `:app:bundleProjectDocs`. Główny README nie jest dokumentem O aplikacji.
 
-```sh
-FM1_TEST_PACKAGES=/path/stock-v15.fwsc:/path/stock-v16.fwsc \
-FM1_TEST_CATALOG=/path/catalog.json \
-./gradlew :app:testDebugUnitTest
-```
+Zobacz [architekturę i komendy testów](../../MIGRATION.md), [listę odbiorową](../../tests/android14-acceptance.txt) i [budowanie witryny](pages.md). [Odziedziczone workflow Google Play wskazują inny identyfikator aplikacji](github-actions.txt); publikacja jest osobnym działaniem.
 
-Kontrola automatyczna: 58 testów zaliczonych, dwa opcjonalne testy z zewnętrznymi plikami pominięte. `lintDebug`, `assembleDebug` i `bundleRelease` przechodzą; pozostają ostrzeżenia dotyczące m.in. wersji narzędzi i natywnych widoków. Wcześniejszy przebieg zweryfikował wszystkie 51 testów bez pominięć z katalogiem pobranym 2026‑11‑13 oraz rzeczywistymi pakietami M‑VAVE i Hortator. Emulator Android 16 służy do sprawdzenia UI i sieci, nie transportu fizycznego USB.
+## Stan iOS
 
-W emulatorze sprawdzono uruchomienie aplikacji, odczyt 202 pozycji katalogu, pobranie i trwały zapis Hortator 1.0.1 z kontrolą SHA‑256/CRC, zapis ulubionego, łączenie filtrów „Tylko pobrane” i „Ulubione” z kategorią, sortowanie, lokalną bibliotekę w trybie offline oraz rzeczywisty gest odświeżania. Bez urządzenia USB przycisk instalacji pozostaje zablokowany.
+Host Swift i metadane wspólnego kodu istnieją, ale nie zweryfikowano kompilacji Xcode ani aktualizacji fizycznego iPhone’a. Rejestr/kolejka i androidowy harmonogram wielu źródeł nie zostały przeniesione. Host zachowuje wcześniejszy interfejs jednego instrumentu i ręczny reconnect. Pozostaw aplikację na wierzchu; skończony czas pracy w tle nie zastępuje usługi Androida.
 
-Użytkownik potwierdził udaną aktualizację fizycznego FM‑1. Do dalszej weryfikacji pozostają automatyczne restarty oraz kilka urządzeń na hubie: najpierw samo wykrywanie kilku instrumentów i wybór jednego, następnie kontrolowana aktualizacja z potwierdzeniem obu restartów oraz sprawdzeniem, że pozostałe instrumenty nie zmieniły firmware.
+Skonfigurowane cele Kotlin to `iosArm64` i `iosSimulatorArm64`, bez symulatora Intel. `iosApp/project.yml` opisuje projekt XcodeGen, bundle ID `pl.ekim.multiplatform-fm1-flasher`, wersję 0.9.0/19 i deployment target iOS 15. Kroki dla macOS/Xcode zawiera [MIGRATION.md](../../MIGRATION.md). Kompilacja metadanych pod Linuksem nie tworzy aplikacji iOS.
 
-## GitHub Actions i Google Play
+## Zakres weryfikacji
 
-[Instrukcja konfiguracji](../../publication/github-actions.txt) prowadzi przez pierwsze wydanie, klucz podpisujący, konto usługi Google i sekrety GitHuba.
+Dla implementacji buildu 19 zaliczono **50 testów shared JVM i 120 testów Android JVM**; pominięto cztery testy wymagające zewnętrznych fixture’ów. Zaliczone są **29 testów instrumentacyjnych Androida** i końcowa powtórka trzech testów UI po zmianie filtrów/motywu. Przeszły buildy debug, lint, synchronizacja zasobów i metadane Kotlin/iOS. W dedykowanym emulatorze Android 16 zaktualizowano aplikację i sprawdzono prawdziwy lokalny katalog/interfejs. To wyniki zapisanej próby, nie deklaracja ponowienia całego zestawu przy każdej późniejszej edycji dokumentacji.
 
-Automatyczna publikacja Google Play jest wyłączona w ustawieniach repozytorium do czasu konfiguracji sklepu i kluczy. Poniższe zachowanie workflow wydania dotyczy jego ponownego włączenia.
+Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.9.0-test19.txt) zawiera identyfikację pliku i zakres prób.
 
-- **Android CI**: push na gałąź lub PR uruchamia testy JVM, lint i budowanie debug APK. APK i raporty są dostępne jako artefakty.
-- **Google Play release**: push tagu `v<versionName>` uruchamia testy, lint wydania, budowanie podpisanego AAB i wysyłkę na tor `internal` wraz z informacjami o zmianach. Ręczne uruchomienie z wyłączonym `publish` buduje tylko AAB do pierwszego przesłania w Play Console.
-- **Google Play production**: ręczne uruchomienie z wybranym `version_code` przenosi przetestowany pakiet z `internal` na `production`, bez ponownego budowania i wysyłania AAB.
+## Prywatność i autorstwo
 
-Przed każdym nowym wydaniem zwiększ `versionCode`, ustaw `versionName` w `app/build.gradle` i dodaj `fastlane/metadata/android/<język>/changelogs/<versionCode>.txt`. Tag musi odpowiadać `versionName`. GitHub nie zastępuje pierwszej konfiguracji sklepu ani wymaganych testów i weryfikacji Google Play.
+Bez konta, reklam i analityki. Biblioteka, nazwy, odczytane seriale, wybory pamięci i historia zadań pozostają lokalnie. Serwery katalogów/grafik/paczek otrzymują metadane połączenia; aplikacja nie dołącza tożsamości instrumentów do tych żądań. Szczegóły: [polityka prywatności](privacy.md).
 
-## Źródła techniczne i licencje
-
-Protokół: [AL‑255/FM‑1‑RE](https://github.com/AL-255/FM-1-RE/blob/main/docs/io/11-ota-protocol.md) i jego klient `tools/fm1_ota.py` (WTFPL), [format pakietu](https://sbegueria.github.io/fm1-dev-wiki/Firmware-Package-Format.html), [Android MIDI API](https://developer.android.com/reference/android/media/midi/MidiManager). Implementacja Androida znajduje się w `app/src/main/java/pl/ekim/fm1_flasher`.
-
-Kompilacja katalogu: The Firmware Hub, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Aplikacja filtruje listę do obsługiwanych tożsamości, wybiera potrzebne pola i dodaje przypięty wpis stock. Opisy należą do autorów; każda pozycja pokazuje autora i link do jego repozytorium. Licencje firmware pozostają przy projektach; żaden firmware nie jest dołączony do APK ani źródeł aplikacji. Gradle Wrapper: [Apache 2.0](https://github.com/gradle/gradle/blob/v8.13.0/LICENSE).
-
-Renderowanie Markdown: [CommonMark Java](https://github.com/commonmark/commonmark-java), [licencja BSD-2-Clause](../../third_party/commonmark-LICENSE.txt), dołączona także do aplikacji.
+Kod aplikacji: [MIT](../../LICENSE.md). Katalog [The Firmware Hub](https://thefirmwarehub.com): CC BY 4.0; firmware zachowuje licencje autorów. [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) jest opcjonalnym katalogiem. Informacje o zależnościach: [third_party](../../third_party/). Kontakt: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).

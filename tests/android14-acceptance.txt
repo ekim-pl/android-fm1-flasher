@@ -1,31 +1,64 @@
-Android 14+ acceptance checklist
+Multiplatform FM-1 Flasher 0.9.0 / 19 — Android acceptance
+Application ID: pl.ekim.multiplatform_fm1_flasher. minSdk 34, target/compileSdk 36.
+This is a pending acceptance checklist; actual recorded results are in
+publication/qa/0.9.0-test19.txt. Keep physical tests separate from emulator tests.
 
-Baseline: minSdk 34, compileSdk/targetSdk 36, version 0.6.0-experimental (8).
+SOFTWARE CHECKS
+python3 tools/sync-resources.py --check
+./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
+Run named instrumentation classes on the intended device; MIGRATION.md lists the
+classes and adb command. Inspect results, not only the runner's process exit code.
 
-Automated:
-  ANDROID_HOME=/path/to/sdk ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:bundleRelease
-  ANDROID_HOME=/path/to/sdk ./gradlew :app:connectedDebugAndroidTest
-The instrumentation test verifies that immutable PendingIntent callbacks arrive
-without fill-in extras. Actual USB authorization is queried from UsbManager.
+INSTALLATION AND UI
+- Update the previous fork without uninstalling; retain downloads/favorites/settings.
+- Verify EN/PL/zh-CN, light/dark/system themes, rotation, large text and system bars.
+- Read About/privacy/licenses offline. Verify version 0.9.0 and the fork application ID.
+- Refresh/search/filter the catalog while scrolling; no detached-semantics crash.
+- Save a custom source, explicitly check it, verify intervals and disabled-source behavior.
+- Check offline and opt-in background policies without automatic package installation.
+- Delete a valid unpinned package and Undo in the same session. Check pinned-package blocks.
 
-Pending manual acceptance on API 34, 35 and 36:
-- Install and upgrade; preserve downloads, favorites, language and theme.
-- Browse, download, restart offline and validate a saved package.
-- Check keyboard, display cutout, system bars, back gesture, rotation and tablets.
-- Deny notification permission on API 33+; flash initiation must remain usable.
-- Grant/deny USB permission; unplug during permission dialog; retry connection.
-- Rotate while permission dialog is open; retry safely, never start an unintended flash.
-- Start flashing, background the activity, turn the screen off, return via notification.
-- Test process termination: never automatically resume a partial firmware write.
+MULTI-DEVICE SOFTWARE MODEL
+- Separate jobs keep separate target UUID/attachment/hash/chip/expected identity.
+- One review approves the frozen plan; target/configuration/package changes invalidate it.
+- All packages are validated before first writing; each job revalidates its own target.
+- Stop-after-current finishes the current job and preserves queued jobs.
+- A failed job stops subsequent writes and leaves an unconfirmed result/history.
+- Process death during a job restores it as unconfirmed, without automatic write resume.
+- A reused USB address/MIDI ID, duplicate or null serial does not merge physical records.
+- Lost sibling evidence stays invalid even if that sibling returns at the old address.
+- Multiple return candidates/port pairs cannot be selected by an override.
+- Stale nonce/USB epoch/MIDI-generation approvals cannot authorize a new attachment.
 
-Physical FM-1 required:
-- Verify both planned restarts and USB permission after each re-enumeration.
-- Verify single-device reconnect and explicit selection with multiple devices on a hub.
-- Confirm neighboring instruments remain untouched.
-- Verify JEDEC detection in download mode.
+PHYSICAL ACCEPTANCE — REAL PHONES AND AT LEAST TWO FM-1 UNITS
+Use Android 14 and 16 devices and the intended powered/passive hubs. Identify the
+units physically before assigning names. Keep instrument backups where possible.
+- Record normal/OTA/final USB descriptors, port counts, serial null/duplicates,
+  enumeration order, grant behavior and elapsed reconnect times. Keep raw serials local.
+- Assign different compatible packages to two units; review the target/hash mapping.
+- Verify one active mode-changing job and that no neighbor receives upgrade/data commands.
+- Verify both planned returns, expected loader identity and final model/version.
+- With multiple units, verify the inline pairing path, no extra ordinary modal approval,
+  and remaining system USB grants. Single-device automatic matching has stricter rules.
+- Confirm hub/socket changes are not presented as persistent hardware identity.
+- Deny a grant, detach during the grant dialog and rotate while it is pending;
+  retry explicitly and ensure no unintended transfer starts.
+- Background the activity or turn off the screen during a controlled normal transfer;
+  return through the ongoing notification. Verify inline pairing when required.
+- Verify stop-after-current, per-job history and readable failure reasons.
+- Exercise unexpected sibling/hub detach in controlled NON-WRITING phases; ensure
+  continuity loss blocks further writes. Do not intentionally unplug an active flash write.
+- After an interrupted/unconfirmed attempt, inspect hardware before any new write.
+  Re-read/re-pair devices and rebuild affected jobs; never resume from a saved percentage.
+- Do not infer stable power merely from successful enumeration or a progress indicator.
 
-Remaining implementation review:
-- Activity recreation currently discards pending USB callbacks; verify the retry flow.
-- Audit library-task/service lifecycle separately from the foreground flash lifecycle.
-- Process death does not persist an interrupted-flash marker; assess and implement
-  an explicit unconfirmed-result message before claiming full lifecycle coverage.
+SEPARATE EXPERIMENTAL ACCEPTANCE
+- Logger buffers are bounded; connection/flashing stops monitoring automatically.
+- JEDEC detection reports a separate ROM unit and never assigns its result to a MIDI card.
+- Recovery is opt-in, requires the recognized/hash-pinned V15 plan and verified backup,
+  excludes bootloader writes and has no automatic fallback from OTA.
+- Test ROM recovery with appropriate physical equipment separately from OTA acceptance.
+
+OUT OF SCOPE FOR ANDROID RESULTS
+No physical hub success is implied by the deterministic tests. No Xcode/native iOS
+binary or iOS fleet parity is established; perform that platform's acceptance separately.

@@ -1,35 +1,35 @@
-# Firmware pod ręką.
+# Wiele FM-1. Jeden plan instalacji.
 
-FM‑1 Flasher to niezależna, eksperymentalna aplikacja na **Androida 14+** do przeglądania firmware i aktualizowania **M‑VAVE FM‑1 przez USB MIDI**.
+**Multiplatform FM-1 Flasher 0.9.0 / 19** to niezależna aplikacja testowa na Androida 14+ do zarządzania firmware M-VAVE FM-1 przez USB MIDI i hub OTG. Build tego brancha przygotowano lokalnie; nie opublikowano go jako 0.9.0 na GitHub Releases.
 
-[Przeczytaj instrukcję](documentation.md) · [O aplikacji](../../about/README.pl.md) · [Pobierz testowe APK](https://github.com/ekim-pl/android-fm1-flasher/releases)
+[Aktualna instrukcja](documentation.md) · [O aplikacji](../../about/README.pl.md) · [Historia wydań](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
-## Od katalogu do instrumentu
+## Urządzenia · Biblioteka · Zadania
 
-- **Znajdź firmware.** Przeglądaj katalog The Firmware Hub, wyszukuj i zapisuj ulubione.
-- **Przygotuj bibliotekę.** Pobierz paczki i korzystaj z nich offline. Aplikacja sprawdza integralność i zgodność przed zapisem.
-- **Wybierz swój FM‑1.** Wskaż konkretny port USB MIDI, również gdy korzystasz z huba z kilkoma instrumentami.
-- **Aktualizuj świadomie.** Sprawdź wybrany instrument i paczkę przed potwierdzeniem instalacji.
+- **Urządzenia:** odczytaj każdy instrument, nadaj mu nazwę i przypisz własną pobraną paczkę.
+- **Biblioteka:** przeszukuj wiele źródeł, zachowuj ulubione i używaj zweryfikowanych paczek offline.
+- **Zadania:** zatwierdź jeden plan, instaluj kolejno i zachowaj osobne wyniki. Zatrzymaj kolejkę po bieżącym instrumencie bez przerywania jego zapisu.
 
-## Zanim rozpoczniesz
+## Powrót po restarcie
 
-Potrzebujesz telefonu z obsługą USB Host/OTG i MIDI, przewodu do transmisji danych oraz stabilnego zasilania instrumentu. Wykonaj kopię swoich danych narzędziem danego firmware.
+Przy wielu instrumentach trzeba powiązać jedynego dopuszczalnego kandydata na karcie zadania. Utrata sąsiada, niejednoznaczny powrót lub reset huba blokuje dalszy zapis. Adresy USB nie oznaczają fizycznych gniazd; automatyczne parowanie wielu urządzeń jest wyłączone do testów sprzętowych. Przerwany zapis nie wznawia się automatycznie.
 
-**Aplikacja jest eksperymentalna.** Przerwanie zasilania lub użycie niewłaściwej paczki może wymagać sprzętowego odzyskania urządzenia. Automatyczne ponowne łączenie po restartach i obsługa kilku urządzeń wymagają dalszych testów na sprzęcie.
+Używaj przewodów danych i stabilnego zasilania; zalecany jest zasilany hub. Aplikacja nie certyfikuje jakości zasilania. Nie zweryfikowano fizycznego FM-1/huba ani pliku aplikacji iOS dla tego buildu. Host iOS zachowuje wcześniejszy kontroler jednego instrumentu, bez kolejki Androida.
 
 ## Dokumentacja
 
-- [Instalacja, aktualizacja firmware i praca offline](documentation.md#getting-started)
-- [Kilka instrumentów na hubie USB](documentation.md#multiple-fm1-devices-on-a-hub)
-- [Budowanie aplikacji i testy](documentation.md#building-and-testing)
-- [Konfiguracja publikacji w Google Play](github-actions.txt)
-- [Materiały do publikacji](publication.txt)
-- [Budowanie i publikacja tej strony](pages.md)
+- [Instalacja i codzienne użycie](documentation.md#getting-started)
+- [Wiele instrumentów przez hub](documentation.md#multiple-fm1-devices-on-a-hub)
+- [Budowanie i testy](documentation.md#building-and-testing)
+- [Architektura i granice platform](../../MIGRATION.md)
+- [Raport testowego buildu](../../publication/qa/0.9.0-test19.txt)
+- [Stan publikacji i ograniczenia workflow](publication.txt)
+- [Budowanie witryny](pages.md)
 
-## Prywatność i otwarte źródła
+## Prywatność i otwarty kod
 
-Bez konta, reklam i analityki. Biblioteka, ulubione i ustawienia są przechowywane lokalnie. Pobieranie katalogu oraz firmware wymaga połączeń z serwisami zewnętrznymi.
+Bez konta, reklam i analityki. Biblioteka, nazwy instrumentów, odczytane seriale i historia zadań pozostają lokalnie. Zewnętrzne serwisy katalogów/pobrań otrzymują metadane połączenia.
 
-[Polityka prywatności](privacy.md) · [Licencja MIT](license.md) · [Licencja parsera Markdown w aplikacji](commonmark-license.md)
+[Polityka prywatności](privacy.md) · [Licencja MIT](license.md) · [Licencja CommonMark](commonmark-license.md)
 
 Kontakt: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
