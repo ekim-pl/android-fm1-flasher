@@ -43,7 +43,7 @@ GitHub może zwrócić HTTP 404 dla niedostępnego prywatnego repozytorium. Spra
 
 Formularz obsługuje HTTP Basic, Bearer, klucz API w nagłówku oraz OAuth 2.0. Dla indywidualnych kont użyj OAuth Authorization Code z PKCE S256 i klienta publicznego, jeśli dostawca to umożliwia. Skonfiguruj client ID, zakres, adres autoryzacji i tokenu oraz zarejestruj dokładnie ten adres powrotu:
 
-Poniższy adres dotyczy kolejnego buildu Androida. Wersja 0.9.4-experimental.26 i wcześniejsze używają adresu pokazanego w ustawieniach źródła. Zarejestruj nowy adres przed aktualizacją lub ponowną autoryzacją użytkowników.
+Poniższy adres dotyczy Androida 0.9.4-experimental.27 i nowszych. Wersja 0.9.4-experimental.26 i wcześniejsze używają adresu pokazanego w ustawieniach źródła. Zarejestruj nowy adres przed aktualizacją lub ponowną autoryzacją użytkowników.
 
 ```text
 pl.ekim.fm1-flasher://oauth/callback

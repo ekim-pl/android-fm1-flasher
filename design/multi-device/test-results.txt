@@ -1,0 +1,3 @@
+pl.ekim.fm1_flasher.MultiDeviceAuditTest: tests=3, failures=0, errors=0, skipped=0
+pl.ekim.fm1_flasher.TargetSelectionTest: tests=9, failures=0, errors=0, skipped=0
+pl.ekim.fm1_flasher.FlashSessionTest: tests=6, failures=0, errors=0, skipped=0

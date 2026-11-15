@@ -1,0 +1,160 @@
+WIELE FM-1 PRZEZ HUB OTG — ANALIZA I PROJEKT
+Branch: task/multiplatform-rework; baza: b253f88. Data analizy: 2026-11-15.
+Zakres: przegląd kodu, publicznego API Androida i testy deterministyczne.
+Nie jest to wdrożenie ani potwierdzenie działania na fizycznym hubie.
+
+1. USTALENIA W KODZIE
+- AndroidMidi.kt: Endpoint zawiera MIDI id i usb.deviceName. Lista sortowana po ścieżce.
+  Kod nie odczytuje serialu. Otwiera pierwszy port wejściowy i pierwszy wyjściowy;
+  urządzenie z wieloma portami wymaga jawnej identyfikacji pary portów.
+- Protocol.kt: FirmwareIdentity = model + wersja. To zgodność firmware, nie numer egzemplarza.
+  ota-FM-1 oznacza fazę bootloadera OTA. ROM/download/recovery to inna ścieżka.
+- FlashSession.kt: ReconnectGate odrzuca stare MIDI id i ścieżki innych instrumentów.
+  Nie prowadzi historii zdarzeń ani nie wymaga, by pozostałe urządzenia pozostały podłączone.
+  automaticCandidate wymaga aktualnie jednego portu MIDI i jednego urządzenia USB.
+- FlasherService.kt: pojedynczy target, identity, chip, ready, progress i status.
+  Brak trwałego rejestru egzemplarzy, kolejki i niezależnych wyników urządzeń.
+- MidiSessionGuard.kt: globalna blokada. Chroni zapis, ale nie jest modelem sesji dla wielu FM-1.
+  Logger jest zatrzymywany przy połączeniu/flashowaniu; zachować tę ostrożność do testów obciążenia.
+- FlashJournal.kt: jeden plik z hashem, ścieżką, fazą i wynikiem. Nie służy do wznowienia zapisu.
+  Nie przechowuje kompletnego planu wielu urządzeń ani dowodów ich identyfikacji.
+- ComposeActivity.kt: jeden pendingUsb, korelacja wyniku po deviceId. Potrzebna korelacja
+  po żądaniu i generacji przyłączenia, odrzucanie spóźnionych callbacków.
+- Wykrywanie chipu słusznie nie przypisuje ROM/download do wskazanego instrumentu MIDI.
+  JEDEC identyfikuje typ układu. chipKey używany przez loader nie jest udokumentowanym
+  trwałym numerem egzemplarza i nie może być traktowany jako taki.
+
+2. CHARAKTERYZACJA REGUŁY RECONNECT
+Uruchomiono istniejące TargetSelectionTest i FlashSessionTest oraz 3 dodatkowe próby.
+Wyniki są w test-results.txt; dodatkowe próby w MultiDeviceAuditTest.kt poza source setem.
+Testy charakterystyki celowo potwierdzają obecne zachowanie, nie poprawność docelowej polityki.
+- Reset huba: wszystkie od nowa wyliczone endpointy trafiają do candidates.
+- Cel A i sąsiad B znikają. Wraca wyłącznie B z nowym id/ścieżką:
+  automaticCandidate może zwrócić B, choć operacja dotyczyła A.
+- Dwa FM-1 z tym samym firmware mają równoważny FirmwareIdentity.
+Dalszy zapis nadal zależy od uprawnień, odpowiedzi protokołu i oczekiwanego trybu.
+Test nie dowodzi, że firmware został zapisany na niewłaściwym fizycznym urządzeniu.
+Nie należy rozszerzać automatyki samym warunkiem candidates.singleOrNull().
+
+3. CZYM MOŻNA ROZPOZNAWAĆ EGZEMPLARZ
+Trwały identyfikator: serial/UID, tylko gdy rzeczywiście dostępny, niepusty, niepowielony
+oraz potwierdzony pomiędzy używanymi trybami i restartami. Sama obecność serialu nie
+potwierdza unikalności w serii urządzeń ani ciągłości pomiędzy normal/OTA/ROM.
+Android MidiDeviceInfo.PROPERTY_SERIAL_NUMBER odpowiada USB serialowi: nie drugi dowód.
+VID/PID, nazwa, wersja firmware i suma paczki identyfikują klasę lub stan, nie egzemplarz.
+UsbDevice.getDeviceId nie jest trwały po odłączeniu; deviceName to zwykle ścieżka usbfs.
+Nie wolno przedstawiać /dev/bus/usb/... jako fizycznego numeru gniazda huba.
+Publiczne używane API nie daje gwarantowanej przenośnej mapy portów fizycznych.
+Sysfs/root/sterowanie zasilaniem portów nie może być wymaganiem bazowej aplikacji.
+
+Brak serialu nie musi oznaczać pytania przy każdym planowanym restarcie:
+można badać ciągłość sesji, lecz jest to korelacja zdarzeń, nie dowód tożsamości.
+Warunki kandydata do automatyki w kontrolowanej sesji:
+- tylko jedna aktywna operacja zmieniająca tryb;
+- obserwacja USB i MIDI uruchomiona przed wysłaniem komendy;
+- zapis pełnego zestawu urządzeń i generacji przyłączeń;
+- odnotowane zniknięcie wybranego celu;
+- pozostali członkowie zestawu pozostają nieprzerwanie w tych samych generacjach;
+- tylko jeden nowy fizyczny kandydat i właściwa para portów;
+- oczekiwany tryb, model, dozwolona zmiana deskryptorów i brak sprzecznego serialu;
+- końcowe ponowne sprawdzenie bieżącej generacji bezpośrednio przed zapisem.
+Oczekiwanie na gotowość MIDI z limitem czasu, bez zakładania stałych opóźnień.
+Dwóch różnych urządzeń o identycznych deskryptorach nie da się matematycznie odróżnić
+po podmianie w tej samej luce bez trwałego UID lub dodatkowej obserwacji fizycznej.
+Automatykę bez serialu dopuścić dopiero po testach urządzeń/hubów i określeniu tego ograniczenia.
+Zmiana wielu urządzeń, utrata procesu/obserwacji lub sprzeczne dane unieważnia korelację.
+Nie przenosić aliasu ani typu pamięci na podstawie nazwy portu.
+
+4. MODEL DOCELOWY
+DeviceRecord: lokalny UUID, alias/kolor, zweryfikowane dane trwałej tożsamości,
+  typ pamięci z pochodzeniem informacji, ostatnio potwierdzona wersja.
+Attachment: bieżący obiekt USB, generacja, endpointy/porty, uprawnienia, deskryptory.
+Transition: generacja obserwacji, cel, zestaw pozostałych przyłączeń, faza, termin,
+  dowody dopasowania i jawna przyczyna odrzucenia automatyki.
+Job: niezmienny cel i hash paczki, wersja planu, etap, postęp, wynik, historia.
+Nie używać globalnie wybranego UI targetu jako źródła celu wykonywanego zadania.
+Job w kolejce nie może wskazywać dwóch wpisów reprezentujących ten sam egzemplarz.
+Alias 'Bas' jest etykietą użytkownika; jego trwałe odtworzenie wymaga tożsamości.
+Dla nierozróżnialnych egzemplarzy parowanie przed rozpoczęciem pracy, np. pojedyncze
+podłączanie i etykiety fizyczne. Po utracie ciągłości potrzebna ponowna identyfikacja.
+Nie wywoływać restartu, nut ani zapisu pamięci tylko po to, żeby 'podświetlić' urządzenie,
+bez zweryfikowanej, niedestrukcyjnej funkcji identyfikacji.
+
+5. KOLEJKA I ODPORNOŚĆ
+Wiele niezależnie widocznych instrumentów, zapis kolejny, jedna zmiana trybu naraz.
+Przed startem: paczki lokalnie, integralność, zgodność per egzemplarz, plan cel→hash.
+Jedno świadome zatwierdzenie planu; każda zmiana celu lub hasha unieważnia jego zgodę.
+Przed każdym zadaniem odczyt aktualnej tożsamości i sprawdzenie połączenia.
+Pobieranie nie może zmienić paczki aktywnego zadania. Usuwanie paczki używanej przez
+zadanie jest zablokowane albo odroczone. Pobrany plik nie oznacza zgodności sprzętowej.
+Błąd jednego urządzenia nie może spowodować przypisania jego paczki do następnego.
+Przy niepewności po restarcie wstrzymać następne zmiany trybu, zachować resztę kolejki.
+Po resetach całego huba wstrzymać cały plan i odbudować mapę urządzeń.
+Dziennik per zadanie zapisuje atomowo fazę, hash, powiązanie i dowody potwierdzenia.
+Po śmierci procesu: wynik niepotwierdzony, odczyt diagnostyczny; nigdy automatyczne
+wznowienie transferu od zapamiętanego procentu. Wznowienie wymaga wsparcia protokołu.
+'100%' dopiero po weryfikacji powrotu właściwego egzemplarza i wersji.
+Same model+wersja po restarcie nie dowodzą odczytu wszystkich bajtów zapisanej pamięci.
+'Zatrzymaj kolejkę' zatrzymuje start następnych zadań. Nie odłącza USB w trakcie zapisu.
+Foreground service + wake lock utrzymują operację, lecz nie gwarantują zasilania huba.
+Brak uniwersalnego pomiaru jakości zasilania: nie pokazywać fikcyjnego 'zasilanie OK'.
+Obserwowane masowe rozłączenie pokazywać jako fakt, nie diagnozować automatycznie napięcia.
+Pasywny logger ma ograniczone bufory; izolacja odbiorców/portów i odrzucanie danych starej
+sesji. Początkowo automatyczne wstrzymanie loggera przy flashowaniu, bez pytania.
+Zachowanie aktywnego grania na innych FM-1 podczas zapisu wymaga oddzielnych testów.
+Recovery ROM pozostaje odrębną, świadomą operacją, nigdy automatycznym fallbackiem OTA.
+
+6. POLITYKA MINIMUM PYTAŃ
+Cel UX: zero własnych modalnych popupów w zwykłej, jednoznacznej sesji.
+Jedno zatwierdzenie jako ekran przeglądu kolejki z przyciskiem 'Zainstaluj na N urządzeniach'.
+Widać aliasy, paczki/wersje, zgodność i krótką informację o zasilaniu/USB oraz danych
+użytkownika, jeśli dana operacja może je zmienić. Bez kolejnego 'Czy na pewno?'.
+Przyłączenie, pobranie, odświeżenie, restart, weryfikacja i sukces: status na karcie.
+Brak zgodności: blokada przycisku z powodem i konkretnym działaniem. Bez 'kontynuuj mimo to'.
+Niejednoznaczny powrót: 'Nie można rozpoznać Bas' w zadaniu; parowanie z fizycznym
+instrumentem w bezpiecznej fazie, nie zgadywanie w identycznych listach portów.
+Nie proponować odłączania urządzenia, które może nadal zapisywać pamięć.
+Niepewność po zapisaniu: 'Zapis zakończony, powrót niepotwierdzony', bez ponownego zapisu.
+Odmowa USB: jedno oczekujące działanie, bez zapętlonych ponowień.
+Systemowych zgód nie obiecywać usuwać: requestPermission działa do odłączenia.
+Kolejkować żądania, hasPermission przed żądaniem, korelować odpowiedź z request/generation.
+Sprawdzić, gdzie faktycznie potrzebny jest UsbManager (serial/raw ROM), a gdzie wystarcza
+MidiManager. Usunięcie własnego nadmiarowego warunku wymaga testów API/OEM; nie jest
+obchodzeniem systemowej zgody. Domyślna aplikacja USB może ograniczyć dialogi na części
+telefonów, ale filtr musi dotyczyć zweryfikowanych trybów; nie przejmować wszystkich MIDI.
+Recovery: osobny przegląd planu/backup i jedno zatwierdzenie zapisu; wcześniejsze przejście
+do trybu ROM jest jawną akcją. Bez łańcucha identycznych ostrzeżeń.
+Usunięcie zwykłej pobranej paczki można cofnąć zamiast pytać; nie dotyczy ostatniej kopii
+odzyskiwania ani plików przypiętych do aktywnych zadań.
+Informacje o prywatności/źródłach w Więcej; seriale lokalnie, bez publikowania w logach domyślnie.
+
+7. TESTY WARUNKUJĄCE WDROŻENIE
+Sprzęt: >=2 identyczne FM-1, najlepiej różne kości/wersje, hub zasilany i pasywny,
+Android 14 i 16 na rzeczywistych telefonach. Odczyt deskryptorów normal/OTA/final;
+ROM wyłącznie w osobnej kontrolowanej próbie. Rejestrować serial (również null/duplikaty),
+VID/PID, interfejsy, porty, kolejność USB/MIDI, czas enumeracji i uprawnienia.
+Powtórzyć restart tego samego egzemplarza i zamianę gniazd; nie zakładać trwałego portu.
+Testy symulowane: różne kolejności zdarzeń, powrót sąsiada przed celem, reset huba,
+ponowne użycie adresu, wiele endpointów jednego USB, duplicate/null serial, brak zdarzenia,
+spóźniona zgoda, odłączenie między kontrolą a open, śmierć procesu w każdej fazie,
+zmiana UI targetu lub paczki po zatwierdzeniu, brak miejsca, przeciążenie loggera.
+Wymóg nadrzędny: obcy/niepewny cel otrzymuje zero komend upgrade i zero danych zapisu.
+Zwykłe powodzenie: jedno zatwierdzenie planu, bez dodatkowych własnych popupów.
+Pomiar systemowych zgód osobno dla każdego telefonu/trybu — nie deklarować stałej liczby.
+
+8. KOLEJNOŚĆ PRAC
+A. Diagnostyka deskryptorów i zdarzeń + odtworzenie luk reconnect w testach.
+B. Rejestr przyłączeń, generacje i nowa reguła dopasowania; odrzucenie resetu sąsiadów.
+C. Model urządzeń i trwała kolejka, per-device typ pamięci i wyniki.
+D. UI: Urządzenia / Biblioteka / Zadania, jeden ekran zatwierdzenia, statusy na kartach.
+E. Testy na fizycznym hubie, dopiero potem rozszerzenie automatyki bez serialu.
+iOS wymaga osobnego adaptera i weryfikacji Core MIDI; referencje endpointów nie są
+same w sobie dowodem ciągłości fizycznego egzemplarza. Obecny host nie jest zweryfikowany.
+
+ŹRÓDŁA (sprawdzone w tej analizie)
+https://developer.android.com/reference/android/hardware/usb/UsbDevice
+https://developer.android.com/reference/android/media/midi/MidiDeviceInfo
+https://developer.android.com/reference/android/hardware/usb/UsbManager
+https://developer.android.com/develop/connectivity/usb/host
+https://developer.android.com/reference/android/media/midi/MidiManager
+Wnioski dotyczące rzeczywistych seriali FM-1 pozostają niepotwierdzone sprzętowo.
