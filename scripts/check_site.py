@@ -78,7 +78,7 @@ def check():
             errors.append(f'{prefix}: duplicate anchors: {document.duplicate_ids}')
         if not ''.join(document.main_text).strip():
             errors.append(f'{prefix}: empty translated content')
-        if document.language_labels != ['English', 'Polski', '简体中文']:
+        if [link.get('aria-label') for link in document.language_links] != [LANGUAGES[code]['name'] for code in LANGUAGES]:
             errors.append(f'{prefix}: incorrect language menu labels')
         selected = [link['data-language'] for link in document.language_links
                     if link.get('aria-current') == 'true']
