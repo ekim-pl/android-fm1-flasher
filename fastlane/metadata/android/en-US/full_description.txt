@@ -18,6 +18,6 @@ English, Polish and Simplified Chinese; light, dark and system themes; About/pri
 Requirements and status
 Android 14+, USB Host/OTG and MIDI, FM-1 instruments, data cables and stable power. A powered hub is recommended; the app cannot measure its power quality. Firmware descriptions remain in their authors’ language. This is experimental software without physical FM-1/hub validation for build 19. Use firmware-specific backup tools where available; OTA does not automatically back up data. The Android fleet queue is not ported to the unverified iOS host.
 
-Independent MIT-licensed project, not an official M-VAVE app. Firmware remains with its publishers. The Firmware Hub catalog: CC BY 4.0. No account, advertising or analytics. Names, observed serials and task history stay locally; external download/catalog services receive connection metadata. Contact: ekim.pl@gmail.com.
+Independent MIT-licensed project, not an official M-VAVE app. Firmware remains with its publishers. The Firmware Hub catalog: CC BY 4.0. The app requires no account and contains no advertising. Standard builds contain no analytics SDK. Builds configured with Google Analytics for Firebase collect usage statistics by default from the first online launch. You can turn statistics off at any time in Settings → Usage statistics. Names, observed serials and task history stay locally; external download/catalog services receive connection metadata. Contact: ekim.pl@gmail.com.
 
 Draft listing for the 0.9.0 test implementation; not a claim of store publication.

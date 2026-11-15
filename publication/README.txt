@@ -1,6 +1,10 @@
 FM-1 Flasher — publication documentation
-Stable release: 0.9.3 on main. Release tag: v0.9.3.
-Public assets use version-only names; Android versionCode is 24.
+Experimental release: 0.9.5-experimental.29 / Android versionCode 29.
+Stable release: 0.9.3, tag v0.9.3, versionCode 24 (unchanged).
+Experimental tag: v0.9.5-experimental.29.
+The experimental APK includes production Firebase analytics with a persistent Settings opt-out.
+Setup: ../docs/ANALYTICS.md. Release verification: qa/0.9.5-experimental.29.txt.
+Source/feature verification before integration: qa/0.9.5-default-on.txt.
 
 CURRENT APPLICATION
 Android ID: pl.ekim.fm1_flasher.
@@ -10,7 +14,7 @@ Languages: English, Polish, Simplified Chinese. Publisher/contact: ekim.pl@gmail
 The Android workspace is Devices / Library / Tasks with a persistent sequential queue.
 
 RELEASE STATUS
-0.9.2 is the stable GitHub Release with updated documentation.
+0.9.3 remains the stable GitHub Release. 0.9.5-experimental.29 is a prerelease.
 qa/0.9.2.txt identifies that exact APK, checksum, signature and test scope.
 The local dist/0.9.2-test23 directory is ignored by Git and is not part of a fresh clone.
 github-release.txt is a draft description, not evidence that a release exists.

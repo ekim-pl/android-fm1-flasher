@@ -1,0 +1,1 @@
+Statystyki domyślnie włączone w wersjach z Firebase; można je wyłączyć w Ustawienia → Statystyki użytkowania. Wybór pozostaje po restarcie i aktualizacji. Wspólna obsługa Androida/iOS. Dostępne także kompilacje bez SDK analityki.

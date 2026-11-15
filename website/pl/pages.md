@@ -1,6 +1,6 @@
 # Strona projektu na GitHub Pages
 
-Witryna opisuje kompletne wydanie **0.9.2** na Androida. Zmiany wysłane na gałąź domyślną są budowane, sprawdzane i wdrażane przez GitHub Actions.
+Witryna opisuje kompletne wydanie **0.9.3** na Androida. Zmiany wysłane na gałąź domyślną są budowane, sprawdzane i wdrażane przez GitHub Actions.
 
 Witryna, dokumentacja oraz polityka prywatności powstają ze źródeł w tym repozytorium. Każda podstrona jest dostępna po angielsku, polsku i chińsku uproszczonym, wraz z nawigacją, instrukcjami publikacji oraz tłumaczeniami licencji. Odnośniki **Polski**, **English** i **简体中文** przełączają tę samą podstronę na inny język.
 

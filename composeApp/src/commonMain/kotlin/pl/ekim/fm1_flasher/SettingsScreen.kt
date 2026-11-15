@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
                 send(AppAction(AppActionKind.APPEARANCE, it))
             }
         }
+        if (state.analyticsAvailable) AnalyticsSettingsCard(state, language, send, privacy)
         SettingsCard(t("settings_library")) {
             SettingSwitch(t("offline_mode"), state.offline, !state.busy) { send(AppAction(AppActionKind.OFFLINE, it.toString())) }
             if (state.catalog?.sources?.isNotEmpty() == true) OutlinedButton(sources, Modifier.fillMaxWidth()) { Text(t("catalog_sources")) }
@@ -78,7 +79,7 @@ import androidx.compose.ui.unit.dp
         SettingsCard(t("settings_app")) {
             if (state.fleetAvailable) OutlinedButton({ navigate(LibraryTab.ABOUT) }, Modifier.fillMaxWidth()) { Text(t("tab_about")) }
             OutlinedButton(privacy, Modifier.fillMaxWidth()) { Text(t("privacy_title")) }
-            Text(t("about_version", "0.9.3"), style = MaterialTheme.typography.bodySmall)
+            Text(t("about_version", "0.9.5-experimental.29"), style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -106,5 +107,17 @@ import androidx.compose.ui.unit.dp
     Row(Modifier.fillMaxWidth().toggleable(selected, enabled = enabled, role = Role.Switch, onValueChange = change), verticalAlignment = Alignment.CenterVertically) {
         Text(title, Modifier.weight(1f).padding(end = 12.dp))
         Switch(selected, onCheckedChange = null, enabled = enabled)
+    }
+}
+
+@Composable internal fun AnalyticsSettingsCard(state: AppSnapshot, language: String, send: (AppAction) -> Unit, privacy: () -> Unit) {
+    fun t(key: String) = resolveCoreText(msg(key), language)
+    SettingsCard(t("analytics_title")) {
+        Text(t("analytics_notice"), style = MaterialTheme.typography.bodySmall)
+        SettingSwitch(t("analytics_enabled"), state.analyticsPreference != AnalyticsPreference.DISABLED, true) {
+            send(AppAction(AppActionKind.ANALYTICS_PREFERENCE, if (it) "ENABLED" else "DISABLED"))
+        }
+        if (state.offline) Text(t("analytics_offline"), style = MaterialTheme.typography.bodySmall)
+        TextButton(privacy) { Text(t("privacy_title")) }
     }
 }

@@ -7,7 +7,7 @@ struct FM1App: App {
     private let backend: PortableAppBackend
     init() {
         let midi = CoreMidiBackend()
-        backend = PortableAppBackend(midi: midi, monitor: midi, storage: NativeStorage(), http: NativeHttp(), host: NativeAppHost())
+        backend = PortableAppBackend(midi: midi, monitor: midi, storage: NativeStorage(), http: NativeHttp(), host: NativeAppHost(), analyticsSink: NativeAnalytics())
     }
     var body: some Scene {
         WindowGroup {

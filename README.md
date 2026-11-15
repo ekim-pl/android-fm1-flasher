@@ -1,5 +1,7 @@
 # FM-1 Flasher
 
+**Experimental build: [0.9.5-experimental.29](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.29).** Includes firmware developer integration, the current OAuth callback and explicitly confirmed unknown-compatibility installs. This build uses Firebase usage statistics, enabled by default; disable them in **Settings → Usage statistics**. Earlier opt-outs remain disabled. Stable release: **0.9.3**.
+
 ![FM-1 Flasher — Your FM-1 setup. More possibilities.](https://raw.githubusercontent.com/ekim-pl/android-fm1-flasher/main/assets/readme-cover.png)
 
 [![Android CI](https://github.com/ekim-pl/android-fm1-flasher/actions/workflows/android-ci.yml/badge.svg?branch=main)](https://github.com/ekim-pl/android-fm1-flasher/actions/workflows/android-ci.yml)
@@ -140,7 +142,7 @@ A port to iOS is planned for the future. There is no iOS release or announced re
 
 ## Privacy and attribution
 
-No application account, advertising or analytics; optional source authentication uses the account or service credentials you configure. The library, names, observed serials, memory selections and task history are local. External catalog/artwork/download servers receive connection metadata; instrument identities are not attached to those requests. See the [privacy policy](PRIVACY_POLICY.md).
+No application account or advertising; optional Firebase builds provide default-on statistics with a Settings opt-out (see [analytics setup](docs/ANALYTICS.md)); optional source authentication uses the account or service credentials you configure. The library, names, observed serials, memory selections and task history are local. External catalog/artwork/download servers receive connection metadata; instrument identities are not attached to those requests. See the [privacy policy](PRIVACY_POLICY.md).
 
 App code: [MIT](LICENSE.md). Catalog attribution: [The Firmware Hub](https://thefirmwarehub.com), CC BY 4.0; firmware remains under its authors' licenses. [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) is an optional directory. Third-party notices are in [third_party](third_party/). Contact: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
 

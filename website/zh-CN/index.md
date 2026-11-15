@@ -1,6 +1,8 @@
 # 多台 FM-1，一个安装计划。
 
-**FM-1 Flasher 0.9.2** 是稳定版本，提供全屏设置、共享提供程序接口和 Android 来源的 HTTP/OAuth 认证。多台 FM-1 的 OTG 更新仍依次执行。
+**实验构建：[0.9.5-experimental.29](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.29)。** 包含固件开发者集成、当前 OAuth 回调及明确确认后安装兼容性未知固件的功能。此构建默认启用 Firebase 使用统计，可在**设置 → 使用统计**中关闭，之前的关闭选择仍保留。稳定版：**0.9.3**。
+
+**FM-1 Flasher 0.9.3** 是稳定版本，提供全屏设置、共享提供程序接口和 Android 来源的 HTTP/OAuth 认证。多台 FM-1 的 OTG 更新仍依次执行。
 
 [当前指南](documentation.md) · [关于应用](../../about/README.zh-Hans.md) · [版本历史](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
@@ -36,7 +38,7 @@
 
 ## 隐私与开源
 
-无需账户，无广告或分析。固件库、乐器名称、已读取序列号和任务历史保存在本地。外部目录/下载服务会收到连接元数据。
+无需账户且无广告。标准构建不含分析 SDK；Firebase 构建默认收集使用统计，可在“设置 → 使用统计”中关闭。固件库、乐器名称、已读取序列号和任务历史保存在本地。外部目录/下载服务会收到连接元数据。
 
 [隐私政策](privacy.md) · [MIT 许可证](license.md) · [CommonMark 许可证](commonmark-license.md)
 

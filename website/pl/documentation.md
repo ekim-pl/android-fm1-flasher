@@ -1,5 +1,7 @@
 # FM-1 Flasher — instrukcja
 
+**Wydanie eksperymentalne: [0.9.5-experimental.29](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.29).** Łączy integrację dla twórców firmware, aktualny adres powrotu OAuth i wymuszanie instalacji przy nieznanej zgodności po wyraźnym potwierdzeniu. Ten build zawiera statystyki Firebase, domyślnie włączone; wyłączysz je w **Ustawienia → Statystyki użytkowania**. Wcześniejsze wyłączenie zostaje zachowane. Wydanie stabilne: **0.9.3**.
+
 Niezależny menedżer firmware dla **M-VAVE FM-1** na Androida. Android obsługuje wiele instrumentów przez hub OTG, zapisując firmware **kolejno, na jednym instrumencie naraz**.
 
 Dokument opisuje stabilną wersję **0.9.2** na branchu `main`. Wersja dodaje pełnoekranowe ustawienia, adaptery providerów i uwierzytelnianie HTTP przypisane do źródła. [Raport buildu](../../publication/qa/0.9.2.txt) opisuje weryfikację i ograniczenia. Właściciel potwierdził fizyczne testy FM-1 dla buildu 20; zakres testów źródeł i uwierzytelniania opisano w raporcie.
@@ -103,7 +105,7 @@ Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste pr
 
 ## Prywatność i autorstwo
 
-Bez konta, reklam i analityki. Biblioteka, nazwy, odczytane seriale, wybory pamięci i historia zadań pozostają lokalnie. Serwery katalogów/grafik/paczek otrzymują metadane połączenia; aplikacja nie dołącza tożsamości instrumentów do tych żądań. Szczegóły: [polityka prywatności](privacy.md).
+Bez konta i reklam. Standardowe kompilacje nie zawierają SDK analityki; wersje z Firebase domyślnie zbierają statystyki; wyłączysz je w Ustawienia → Statystyki użytkowania. Biblioteka, nazwy, odczytane seriale, wybory pamięci i historia zadań pozostają lokalnie. Serwery katalogów/grafik/paczek otrzymują metadane połączenia; aplikacja nie dołącza tożsamości instrumentów do tych żądań. Szczegóły: [polityka prywatności](privacy.md).
 
 Kod aplikacji: [MIT](../../LICENSE.md). Katalog [The Firmware Hub](https://thefirmwarehub.com): CC BY 4.0; firmware zachowuje licencje autorów. [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) jest opcjonalnym katalogiem. Informacje o zależnościach: [third_party](../../third_party/). Kontakt: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
 

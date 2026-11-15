@@ -33,8 +33,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: pl.ekim.fm1-flasher
-        MARKETING_VERSION: '0.9.3'
-        CURRENT_PROJECT_VERSION: '24'
+        MARKETING_VERSION: '0.9.5'
+        CURRENT_PROJECT_VERSION: '29'
     preBuildScripts:
       - name: Build Kotlin framework
         script: |

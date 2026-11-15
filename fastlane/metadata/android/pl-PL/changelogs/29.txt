@@ -1,0 +1,1 @@
+Scalone wydanie eksperymentalne: integracja twórców firmware, aktualny OAuth, jawne wymuszanie nieznanej zgodności oraz domyślnie włączone statystyki Firebase z trwałym wyłączeniem w ustawieniach. Aktualizacja polityki prywatności.

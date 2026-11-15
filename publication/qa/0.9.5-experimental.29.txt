@@ -1,0 +1,58 @@
+FM-1 Flasher 0.9.5-experimental.29 — integrated experimental release
+Date: 2026-11-15
+Android: pl.ekim.fm1_flasher, versionCode 29, minSdk 34, target/compile SDK 36.
+iOS: pl.ekim.fm1-flasher, marketing 0.9.5/build 29; no iOS binary.
+
+INTEGRATION
+main at bd98d5f already contains proposal/firmware-developers (87083ef).
+Merged proposal/analytics-0.9.5 (466b5b9) with the current main branch.
+Preserved the current OAuth redirect, explicit unknown-compatibility confirmation,
+firmware developer documentation, provider diagnostics and flash-memory descriptions.
+Resolved resource additions together and regenerated Android/KMP bridges.
+
+ARTIFACT
+FM1-Flasher-0.9.5-experimental.29.apk
+SHA-256: 691dbed26f802522313fbd2453eadfa71a3158c9215616fc49b46de43501abd0
+Certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
+Signed with the existing Android debug key, matching experimental build 28.
+This is a GitHub prerelease APK, not a Google Play production release.
+APK version, package, minSdk and certificate checked using aapt/apksigner.
+
+FIREBASE AND PRIVACY
+Published APK uses the production Firebase project fm-1-flasher.
+TEST project ekim-3c534 remains separate. Config files are local/ignored, not committed.
+Analytics is on by default after settings load on the first online launch. Persistent
+Settings opt-out is retained across restarts/updates, including legacy DENIED preferences.
+Advertising permissions/auto-init provider are absent; startup SDK controls remain disabled
+until the controller applies the saved preference. Disabling does not erase previously
+uploaded data or guarantee cancellation of an upload already in progress.
+The site artifact was checked not to include Google configuration files.
+
+LOCAL VALIDATION
+- Shared JVM tests: 73, zero failures/errors/skips.
+- Android JVM tests: 139, zero failures/errors, 4 external firmware-fixture skips.
+- SDK-free lintDebug, assembleDebug and assembleDebugAndroidTest passed.
+- Firebase TEST compileDebugKotlin and lintDebug passed with strict dependency verification.
+- Production Firebase lintRelease and signed assembleRelease passed.
+- Resource bridge --check and git diff --check passed.
+- Documentation site rebuilt and all 48 HTML pages passed language/link checks.
+- OperationLogServiceTest isolated its deferred-export regression from external catalog
+  latency by saving offline mode for that test and restoring it afterwards. The assertion
+  still requires an actual busy foreground refresh followed by a completed export.
+
+DEVICE/CI SCOPE
+The local device tool refused the main-worktree operation with DEVICE_IN_USE for the
+analytics worktree session. Its suggested claim-inspection command was unavailable;
+local device work was stopped. Partial local runner output is not accepted as proof of
+merged-build device verification. Android API 34/36 instrumentation is delegated to the
+existing GitHub Actions matrix; the final run/result is recorded in the release notes.
+Previous opt-out UI/SDK checks are documented in 0.9.5-default-on.txt.
+
+LIMITATIONS
+No physical FM-1 firmware installation, USB hub/power or ROM recovery test was performed.
+Four unit tests require external firmware/catalog fixtures; the full fixture gate remains
+outstanding. Xcode/iOS compilation and runtime testing remain outstanding. Actual Firebase
+traffic/DebugView, GA4 retention and store declarations have not been verified.
+GitHub Pages deployment and GitHub Release publication are confirmed separately by the
+Actions run and release URL; this source report describes artifact/local validation.
+Stable release 0.9.3 remains unchanged. Google Play publication is separate and is not run.

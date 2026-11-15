@@ -1,6 +1,8 @@
 # Wiele FM-1. Jeden plan instalacji.
 
-**FM-1 Flasher 0.9.2** to stabilne wydanie z pełnoekranowymi ustawieniami, wspólnym interfejsem providerów i uwierzytelnianiem HTTP/OAuth dla źródeł Androida. Praca z wieloma FM-1 przez OTG nadal jest sekwencyjna.
+**Wydanie eksperymentalne: [0.9.5-experimental.29](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.29).** Łączy integrację dla twórców firmware, aktualny adres powrotu OAuth i wymuszanie instalacji przy nieznanej zgodności po wyraźnym potwierdzeniu. Ten build zawiera statystyki Firebase, domyślnie włączone; wyłączysz je w **Ustawienia → Statystyki użytkowania**. Wcześniejsze wyłączenie zostaje zachowane. Wydanie stabilne: **0.9.3**.
+
+**FM-1 Flasher 0.9.3** to stabilne wydanie z pełnoekranowymi ustawieniami, wspólnym interfejsem providerów i uwierzytelnianiem HTTP/OAuth dla źródeł Androida. Praca z wieloma FM-1 przez OTG nadal jest sekwencyjna.
 
 [Aktualna instrukcja](documentation.md) · [O aplikacji](../../about/README.pl.md) · [Historia wydań](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
@@ -36,7 +38,7 @@ Aby dołączyć do Awesome FM-1, utwórz fork repozytorium, dodaj krótkie zgło
 
 ## Prywatność i otwarty kod
 
-Bez konta, reklam i analityki. Biblioteka, nazwy instrumentów, odczytane seriale i historia zadań pozostają lokalnie. Zewnętrzne serwisy katalogów/pobrań otrzymują metadane połączenia.
+Bez konta i reklam. Standardowe kompilacje nie zawierają SDK analityki; wersje z Firebase domyślnie zbierają statystyki; wyłączysz je w Ustawienia → Statystyki użytkowania. Biblioteka, nazwy instrumentów, odczytane seriale i historia zadań pozostają lokalnie. Zewnętrzne serwisy katalogów/pobrań otrzymują metadane połączenia.
 
 [Polityka prywatności](privacy.md) · [Licencja MIT](license.md) · [Licencja CommonMark](commonmark-license.md)
 

@@ -35,8 +35,17 @@ fun FlasherApp(backend: AppBackend) {
     var confirmation by remember { mutableStateOf<Pair<AppAction, AppText>?>(null) }
     var sources by rememberSaveable { mutableStateOf(false) }
     var settingsPrivacy by rememberSaveable { mutableStateOf(false) }
-    val settingsScroll = rememberScrollState()
     var recovery by rememberSaveable { mutableStateOf(false) }
+    val screen = when {
+        settingsPrivacy -> AnalyticsScreen.PRIVACY
+        sources -> AnalyticsScreen.SOURCES
+        settings -> AnalyticsScreen.SETTINGS
+        recovery -> AnalyticsScreen.RECOVERY
+        detailId != null -> AnalyticsScreen.DETAIL
+        else -> AnalyticsScreen.valueOf(tab.name)
+    }
+    LaunchedEffect(screen, state.analyticsPreference, state.offline) { backend.screen(screen) }
+    val settingsScroll = rememberScrollState()
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
     var filtersExpanded by rememberSaveable { mutableStateOf(false) }
     var sourceFilter by rememberSaveable { mutableStateOf(state.browse.sourceId.orEmpty()) }
@@ -168,7 +177,7 @@ fun FlasherApp(backend: AppBackend) {
                                 LibraryTab.FLASHER -> FlasherScreen(state, language, { send(it.kind, it.id, it.value) }, { action, message -> confirmation = action to message }, { recovery = true }, { dialog = text("app_log") to AppText.Joined(state.logs, "\n\n") })
                                 LibraryTab.LOGGER -> LoggerScreen(state, language, backend)
                                 LibraryTab.ABOUT -> AboutScreen(
-                                    backend.document(text("about_document")), text("app_name"), text("about_version", "0.9.3"),
+                                    backend.document(text("about_document")), text("app_name"), text("about_version", "0.9.5-experimental.29"),
                                     if (!state.usbRecovery) text("ios_platform_limits") else null,
                                     text("privacy_title"), text("about_privacy_summary"), text("about_privacy_action"),
                                     { dialog = text("privacy_title") to msg("privacy_body") }, ::openDocumentOrLink)

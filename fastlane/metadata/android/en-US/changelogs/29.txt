@@ -1,0 +1,1 @@
+Merged experimental build: firmware developer integration, current OAuth callback, explicit unknown-compatibility override and default-on Firebase statistics with a persistent Settings opt-out. Includes updated privacy information.

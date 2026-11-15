@@ -9,6 +9,12 @@ on:
         default: true
         required: true
 
+      analytics:
+        description: Include optional default-on Firebase analytics with a Settings opt-out (requires production config and store privacy review)
+        type: boolean
+        default: false
+        required: true
+
 permissions:
   contents: read
 
@@ -44,9 +50,24 @@ jobs:
           FM1_FIXTURE_ARCHIVE_SHA256: ${{ vars.FM1_FIXTURE_ARCHIVE_SHA256 }}
         run: python3 scripts/release_fixtures.py prepare
       - name: Test and lint release
-        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintRelease
+        run: ./gradlew --no-daemon :shared:jvmTest :app:testDebugUnitTest :app:lintRelease
       - name: Require all release fixture tests
         run: python3 scripts/release_fixtures.py verify
+      - name: Prepare and lint optional production Firebase variant
+        if: inputs.analytics
+        env:
+          FIREBASE_PRODUCTION_ANDROID_JSON: ${{ secrets.FIREBASE_PRODUCTION_ANDROID_JSON }}
+        run: |
+          python3 - <<'PYCONFIG'
+          import json, os
+          from pathlib import Path
+          value = json.loads(os.environ['FIREBASE_PRODUCTION_ANDROID_JSON'])
+          target = Path('app/firebase/production/google-services.json')
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_text(json.dumps(value))
+          PYCONFIG
+          ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production :app:lintRelease
+          echo 'FM1_ANALYTICS_GRADLE_ARGS=-Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production' >> "$GITHUB_ENV"
       - name: Build signed bundle
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -61,7 +82,7 @@ jobs:
           : "${ANDROID_KEY_PASSWORD:?Missing ANDROID_KEY_PASSWORD}"
           umask 077
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_FILE"
-          ./gradlew --no-daemon :app:bundleRelease
+          ./gradlew --no-daemon ${FM1_ANALYTICS_GRADLE_ARGS:-} :app:bundleRelease
       - name: Save signed bundle
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:

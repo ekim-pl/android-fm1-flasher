@@ -1,0 +1,1 @@
+Default-on usage statistics with a Settings opt-out in Firebase-enabled builds. Shared analytics and privacy controls prepared for Android and iOS. Standard builds remain SDK-free.

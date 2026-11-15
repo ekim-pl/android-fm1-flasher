@@ -15,6 +15,9 @@ vendor/bundle/
 fastlane/report.xml
 fastlane/README.md
 __pycache__/
+app/firebase/
+iosApp/Firebase/
+
 
 # Generated Xcode project (iosApp/project.yml is authoritative)
 iosApp/*.xcodeproj/

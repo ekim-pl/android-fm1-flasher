@@ -1,6 +1,6 @@
 # Project website on GitHub Pages
 
-This website documents the complete Android release **0.9.2**. Changes pushed to the default branch are built, checked and deployed by GitHub Actions.
+This website documents the complete Android release **0.9.3**. Changes pushed to the default branch are built, checked and deployed by GitHub Actions.
 
 The website, documentation and privacy policy are built from this repository. Every page is available in English, Polish and Simplified Chinese, including navigation, publishing instructions and license translations. The **Polski**, **English** and **简体中文** links switch to the same page in another language.
 

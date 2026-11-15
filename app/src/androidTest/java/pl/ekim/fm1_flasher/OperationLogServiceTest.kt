@@ -51,6 +51,10 @@ class OperationLogServiceTest : InstrumentationTestCase() {
     }
     fun testDocumentResultWaitsForForegroundRefreshBeforeExporting() {
         val context = instrumentation.targetContext
+        val database = CatalogDatabase.get(context)
+        val previousOffline = database.setting("offline")
+        // Exercise deferred export without depending on remote catalog response time.
+        database.setting("offline", "true")
         var service: FlasherService? = null
         val connected = CountDownLatch(1)
         val connection = object : ServiceConnection {
@@ -81,6 +85,7 @@ class OperationLogServiceTest : InstrumentationTestCase() {
         } finally {
             instrumentation.runOnMainSync { service?.setExperimental(previous); activity.finish() }
             context.unbindService(connection); output.delete()
+            database.setting("offline", previousOffline)
         }
     }
 

@@ -17,3 +17,7 @@ These libraries are distributed under the Apache License, Version 2.0.
 See Apache-2.0.txt. Dependency versions and SHA-256 verification records are
 maintained in app/gradle.lockfile and gradle/verification-metadata.xml.
 No firmware is included in these libraries or bundled by this feature.
+
+Optional Firebase-enabled builds also contain Google measurement components,
+which are not covered by the Apache-only statement above. See
+firebase-analytics-NOTICE.md for their separate terms and source notices.

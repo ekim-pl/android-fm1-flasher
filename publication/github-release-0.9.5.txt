@@ -1,0 +1,14 @@
+# FM-1 Flasher 0.9.5 experimental — build 29
+
+- Combines firmware developer integration and the latest main-branch fixes with shared Android/iOS analytics infrastructure.
+- This APK includes Google Analytics for Firebase using the production project. Usage statistics are **enabled by default from the first online launch**. Disable them in **Settings → Usage statistics → Share usage statistics**. An existing opt-out is preserved across updates and restarts. No instrument serials, MIDI contents, private source URLs, credentials or operation logs are attached to analytics events.
+- Disabling statistics stops new collection and resets local analytics data; it does not erase previously uploaded data. An upload already in progress may finish.
+- Includes the firmware-developer onboarding, authenticated/private source diagnostics and multilingual documentation.
+- Retains the current OAuth callback `pl.ekim.fm1-flasher://oauth/callback` and explicit per-device/package confirmation for installing firmware with unknown compatibility. A force confirmation does not bypass validation or make incompatible firmware safe.
+- iOS keeps bundle ID `pl.ekim.fm1-flasher`; its native analytics adapter is prepared, but no iOS binary is included and Xcode/runtime verification remains outstanding.
+
+Android 14 or newer. Install as an update to preserve local data. The APK is signed with the same Android debug certificate as earlier experimental builds; it is not a Google Play production release. The application ID remains `pl.ekim.fm1_flasher`.
+
+The stable release remains 0.9.3. No physical FM-1 firmware installation was performed for this build. See the repository QA report and privacy policy for the verification scope and remaining limitations.
+
+SHA-256: `691dbed26f802522313fbd2453eadfa71a3158c9215616fc49b46de43501abd0`. The matching checksum file is attached to the release.
