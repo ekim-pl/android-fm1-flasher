@@ -43,8 +43,10 @@ GitHub may return HTTP 404 for an inaccessible private repository. Check the rep
 
 The source form supports HTTP Basic, Bearer, an API key header, and OAuth 2.0. For individual accounts, use OAuth Authorization Code with PKCE S256 and a public client where the issuer supports it. Configure the client ID, scope, authorization URL and token URL; register this redirect URI exactly:
 
+The redirect below applies to the next Android build. Version 0.9.4-experimental.26 and earlier use the address shown in their source settings. Register the new address before users upgrade or authorize again.
+
 ```text
-pl.ekim.multiplatform-fm1-flasher://oauth/callback
+pl.ekim.fm1-flasher://oauth/callback
 ```
 
 Save the source and choose **Authorize OAuth 2.0**. The app refreshes expired tokens when the issuer supplies a refresh token. Client Credentials is also supported for service credentials and requires a client secret; do not embed a shared secret in a distributed app. No universal OAuth client is bundled. Secrets entered in the app are encrypted using Android Keystore.

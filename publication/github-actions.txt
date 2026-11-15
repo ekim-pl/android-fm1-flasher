@@ -13,8 +13,8 @@ It does not run a physical FM-1, create a GitHub Release or build Swift.
 
 PAGES (.github/workflows/pages.yml)
 Builds documentation and checks links on every branch/PR or manual dispatch.
-Non-PR default-branch runs deploy to Pages. Manual dispatch on task/multiplatform-rework may also deploy.
-A push to task/multiplatform-rework normally validates the site without deploying it.
+Only non-PR runs on the default branch deploy to Pages, including manual runs.
+Other branches build and validate the site without deploying it.
 The current branch's documentation can differ from the public default-branch site.
 See website/pages.md for local commands and output layout.
 

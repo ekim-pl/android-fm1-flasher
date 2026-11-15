@@ -43,8 +43,10 @@ Android 应用支持三种方式：
 
 来源表单支持 HTTP Basic、Bearer、API 密钥请求头和 OAuth 2.0。对于个人账户，如服务支持，使用带 PKCE S256 的 OAuth Authorization Code 和公共客户端。配置客户端 ID、scope、授权地址和令牌地址，并准确注册以下回调地址：
 
+以下回调地址适用于下一个 Android 构建。0.9.4-experimental.26 及更早版本使用来源设置中显示的地址。请在用户升级或重新授权前注册新地址。
+
 ```text
-pl.ekim.multiplatform-fm1-flasher://oauth/callback
+pl.ekim.fm1-flasher://oauth/callback
 ```
 
 保存来源并选择 **Authorize OAuth 2.0**。如果服务提供刷新令牌，应用会刷新过期令牌。也支持需要客户端密钥的 Client Credentials；不要在分发的应用中嵌入共享密钥。应用不内置通用 OAuth 客户端。输入的密钥通过 Android Keystore 加密。

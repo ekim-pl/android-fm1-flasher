@@ -136,7 +136,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         bound = bindService(Intent(this, FlasherService::class.java), binding, BIND_AUTO_CREATE)
     }
     private fun captureOAuthCallback(incoming: Intent?) {
-        incoming?.data?.takeIf { it.scheme == "pl.ekim.multiplatform-fm1-flasher" }?.let {
+        incoming?.data?.takeIf { it.scheme in setOf("pl.ekim.fm1-flasher", "pl.ekim.multiplatform-fm1-flasher") }?.let {
             pendingOAuthCallback = it
             incoming.data = null
         }

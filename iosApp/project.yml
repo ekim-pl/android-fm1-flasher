@@ -32,7 +32,7 @@ targets:
         CADisableMinimumFrameDurationOnPhone: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: pl.ekim.multiplatform-fm1-flasher
+        PRODUCT_BUNDLE_IDENTIFIER: pl.ekim.fm1-flasher
         MARKETING_VERSION: '0.9.3'
         CURRENT_PROJECT_VERSION: '24'
     preBuildScripts:

@@ -114,7 +114,7 @@
     <string name="oauth_client_auth">Uwierzytelnianie klienta w endpoincie tokenów</string>
     <string name="oauth_client_basic">HTTP Basic (client_secret_basic)</string>
     <string name="oauth_client_post">Pola formularza (client_secret_post)</string>
-    <string name="oauth_redirect_help">Dla logowania w przeglądarce zarejestruj w serwerze OAuth adres powrotu pl.ekim.multiplatform-fm1-flasher://oauth/callback. Zapisz źródło, a następnie wybierz Autoryzuj OAuth 2.0. Client Credentials wymaga client secret; publiczny klient PKCE go nie wymaga.</string>
+    <string name="oauth_redirect_help">Dla logowania w przeglądarce zarejestruj w serwerze OAuth adres powrotu pl.ekim.fm1-flasher://oauth/callback. Zapisz źródło, a następnie wybierz Autoryzuj OAuth 2.0. Client Credentials wymaga client secret; publiczny klient PKCE go nie wymaga.</string>
     <string name="oauth_connect">Autoryzuj OAuth 2.0</string>
     <string name="oauth_authorized">Autoryzowano OAuth 2.0. Możesz teraz sprawdzić źródło.</string>
     <string name="oauth_waiting">Dokończ logowanie OAuth 2.0 w przeglądarce.</string>

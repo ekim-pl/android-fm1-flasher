@@ -1,4 +1,4 @@
-GitHub Actions：task/multiplatform-rework，0.9.2
+GitHub Actions：FM-1 Flasher
 
 本文描述仓库中的工作流，不会执行发布。
 Android ID：pl.ekim.fm1_flasher。0.9.1 APK 仅为本地测试构建。
@@ -11,7 +11,7 @@ android-checks 保存 APK/报告 14 天。不测试真实 FM-1，不创建 GitHu
 
 PAGES (.github/workflows/pages.yml)
 在所有分支/PR 或手动运行时构建文档并检查链接。
-默认分支的非 PR 运行可部署；也允许手动运行 task/multiplatform-rework 来部署。task/multiplatform-rework 的推送通常只验证，不部署。
+只有默认分支上的非 PR 运行（包括手动运行）会部署。其他分支只构建并验证网站。
 当前分支文档可能与公共网站不同。本地命令与输出结构见 Pages 指南。
 
 GOOGLE PLAY RELEASE (.github/workflows/google-play.yml)：原应用配置

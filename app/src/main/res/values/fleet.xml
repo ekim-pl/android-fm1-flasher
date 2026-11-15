@@ -114,7 +114,7 @@
     <string name="oauth_client_auth">Token endpoint client authentication</string>
     <string name="oauth_client_basic">HTTP Basic (client_secret_basic)</string>
     <string name="oauth_client_post">Form fields (client_secret_post)</string>
-    <string name="oauth_redirect_help">For browser sign-in, register redirect URI pl.ekim.multiplatform-fm1-flasher://oauth/callback with your OAuth server. Save the source, then choose Authorize OAuth 2.0. Client Credentials needs a client secret; public PKCE does not.</string>
+    <string name="oauth_redirect_help">For browser sign-in, register redirect URI pl.ekim.fm1-flasher://oauth/callback with your OAuth server. Save the source, then choose Authorize OAuth 2.0. Client Credentials needs a client secret; public PKCE does not.</string>
     <string name="oauth_connect">Authorize OAuth 2.0</string>
     <string name="oauth_authorized">OAuth 2.0 authorized. You can check this source now.</string>
     <string name="oauth_waiting">Complete OAuth 2.0 sign-in in your browser.</string>

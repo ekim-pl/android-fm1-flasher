@@ -53,6 +53,7 @@ class SourceAuthenticationTest : InstrumentationTestCase() {
         }, { time })
         val authorization = Uri.parse(manager.begin(source))
         assertEquals("S256", authorization.getQueryParameter("code_challenge_method"))
+        assertEquals(OAuthManager.REDIRECT, authorization.getQueryParameter("redirect_uri"))
         fun callback(state: String) = Uri.parse(OAuthManager.REDIRECT).buildUpon().appendQueryParameter("state", state).appendQueryParameter("code", "one-time-code").build()
         var rejected = false
         try { manager.finish(callback("wrong-state")) { source } } catch (_: OperationFailed) { rejected = true }
@@ -60,6 +61,7 @@ class SourceAuthenticationTest : InstrumentationTestCase() {
         val result = callback(authorization.getQueryParameter("state")!!)
         assertEquals(source.id, manager.finish(result) { source })
         assertEquals(authorization.getQueryParameter("code_challenge"), OAuthManager.challenge(calls.single().getValue("code_verifier")))
+        assertEquals(OAuthManager.REDIRECT, calls.single()["redirect_uri"])
         assertEquals("token-1", manager.credentials(source)!!.secret)
         rejected = false
         try { manager.finish(result) { source } } catch (_: OperationFailed) { rejected = true }
@@ -69,6 +71,28 @@ class SourceAuthenticationTest : InstrumentationTestCase() {
         assertEquals("refresh_token", calls.last()["grant_type"])
         assertEquals("refresh-secret", calls.last()["refresh_token"])
     }
+    fun testLegacyPendingAuthorizationSurvivesUpgrade() = fixture { store, _ ->
+        val config = OAuthConfiguration(OAuthGrant.PKCE, "client", "https://auth.example/authorize", "https://auth.example/token")
+        val source = CatalogSource("source", "Private", "https://publisher.example/catalog.json", authMethod = HttpAuthMethod.OAUTH2, oauth = config)
+        store.write(source.id, HttpCredentials(HttpAuthMethod.OAUTH2, oauth = config))
+        val manager = OAuthManager(store, { _, fields, _ ->
+            assertEquals(OAuthManager.LEGACY_REDIRECT, fields["redirect_uri"])
+            CatalogResponse(200, """{"access_token":"token","token_type":"Bearer"}""".toByteArray())
+        }, { 100_000L })
+        val authorization = Uri.parse(manager.begin(source))
+        val state = authorization.getQueryParameter("state")!!
+        fun callback(redirect: String) = Uri.parse(redirect).buildUpon().appendQueryParameter("state", state).appendQueryParameter("code", "code").build()
+        var rejected = false
+        try { manager.finish(callback(OAuthManager.LEGACY_REDIRECT)) { source } } catch (_: OperationFailed) { rejected = true }
+        assertTrue("A new request cannot be completed through the old redirect", rejected)
+        val pending = JSONObject(store.readOpaque("_oauth_pending")!!).apply { remove("redirect") }
+        store.writeOpaque("_oauth_pending", pending.toString())
+        rejected = false
+        try { manager.finish(callback(OAuthManager.REDIRECT)) { source } } catch (_: OperationFailed) { rejected = true }
+        assertTrue("An old request cannot be completed through the new redirect", rejected)
+        assertEquals(source.id, manager.finish(callback(OAuthManager.LEGACY_REDIRECT)) { source })
+    }
+
     fun testClientCredentialsBasicAndPostAndExpiredTokens() = fixture { store, _ ->
         var time = 100_000L
         for (clientAuth in OAuthClientAuth.entries) {

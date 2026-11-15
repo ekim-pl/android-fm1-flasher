@@ -31,7 +31,7 @@ class OperationLogTest {
     }
     @Test fun redactsNativeOAuthCallbacksAndAuthenticationFields() {
         val storage = Storage(); val log = OperationLog(storage) { 1 }
-        log.append("ERROR", "AUTH", "pl.ekim.multiplatform-fm1-flasher://oauth/callback?code=private-code&state=private-state")
+        log.append("ERROR", "AUTH", "pl.ekim.fm1-flasher://oauth/callback?code=private-code&state=private-state")
         log.append("ERROR", "AUTH", "Authorization: Bearer private-token")
         log.append("ERROR", "AUTH", "{\"client_secret\":\"private-secret\",\"access_token\":\"private-access\"}")
         val text = log.export()

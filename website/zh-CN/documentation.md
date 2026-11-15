@@ -138,7 +138,9 @@ Android 适配器实现共享的 `CatalogProvider` 接口：
 
 来源表单支持无认证、HTTP Basic、Bearer、指定安全请求头的 API 密钥和 OAuth 2.0。Basic 使用用户名/密码；Bearer 输入令牌本身，不含 `Bearer` 前缀。API 密钥按原样发送请求头值，使用 `Authorization` 时可包含自己的前缀。密码、令牌和客户端密钥由 Android Keystore 密钥加密，与 SQLite 元数据分开，不写入日志。来源、提供程序和认证身份不变时留空可保留已保存的秘密；其他 URL 不会继承。删除来源或恢复内置默认值会移除对应凭据。
 
-OAuth 支持浏览器 Authorization Code **PKCE S256** 与服务 **Client Credentials**。配置发行者、客户端 ID、权限范围、令牌端点，以及浏览器模式的授权端点。向服务器注册 `pl.ekim.multiplatform-fm1-flasher://oauth/callback`。Client Credentials 需要客户端密钥，公共 PKCE 客户端不需要。依据服务器选择 `client_secret_basic` 或 `client_secret_post`。保存后在来源卡片选择 **OAuth 2.0 授权**。有刷新令牌时自动刷新过期令牌，Client Credentials 可重新获取令牌。浏览器状态一次性使用，绑定来源和修订，十分钟后过期。应用没有内置通用客户端 ID 或密钥。
+**OAuth 迁移：**下方新回调地址适用于下一个 Android 构建。0.9.4-experimental.26 及更早版本使用应用来源设置中显示的地址。升级或重新授权前，请在服务商处注册新地址。
+
+OAuth 支持浏览器 Authorization Code **PKCE S256** 与服务 **Client Credentials**。配置发行者、客户端 ID、权限范围、令牌端点，以及浏览器模式的授权端点。向服务器注册 `pl.ekim.fm1-flasher://oauth/callback`。Client Credentials 需要客户端密钥，公共 PKCE 客户端不需要。依据服务器选择 `client_secret_basic` 或 `client_secret_post`。保存后在来源卡片选择 **OAuth 2.0 授权**。有刷新令牌时自动刷新过期令牌，Client Credentials 可重新获取令牌。浏览器状态一次性使用，绑定来源和修订，十分钟后过期。应用没有内置通用客户端 ID 或密钥。
 
 认证只发送给配置的来源原点（`repo-url` 使用 GitHub API 原点）。跨原点跳转（包括 CDN）不携带认证；令牌 POST 跳转会被拒绝。仍要求 HTTPS、公共地址和批准的 URL 范围。常规检查间隔为 24–168 小时；明确替换凭据或完成授权后可重新检查，避免因旧认证失败等待一天。
 
