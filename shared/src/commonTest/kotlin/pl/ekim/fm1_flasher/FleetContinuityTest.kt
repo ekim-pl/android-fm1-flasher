@@ -24,9 +24,17 @@ class FleetContinuityTest {
         assertTrue(gate.candidates(listOf(b, returned)).isEmpty())
     }
     @Test fun hubDetachPoisonsTransitionEvenBeforeChildrenDisappear() {
-        val gate = ReconnectGate(a, listOf(a, b))
+        val gate = ReconnectGate(a, listOf(a, b), setOf(a.usbPath, b.usbPath, "usb/HUB"))
         gate.removedPath("usb/HUB")
         assertFalse(gate.valid(listOf(a, b)))
+    }
+    @Test fun lateDetachFromPreviousStageDoesNotPoisonCurrentStage() {
+        val gate = ReconnectGate(returned, listOf(returned), setOf(a.usbPath, returned.usbPath), setOf(a.usbPath))
+        gate.removedPath(a.usbPath)
+        assertTrue(gate.valid(listOf(returned)))
+        gate.removedPath(returned.usbPath)
+        val final = Endpoint(4, "usb/D", 4)
+        assertEquals(final, gate.automaticCandidate(listOf(final), setOf(final.usbPath)))
     }
     @Test fun unchangedNeighboursAllowOnlyExplicitPairing() {
         val gate = ReconnectGate(a, listOf(a, b))

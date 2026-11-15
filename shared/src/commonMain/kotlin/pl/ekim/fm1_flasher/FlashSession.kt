@@ -4,14 +4,17 @@ package pl.ekim.fm1_flasher
 data class Endpoint(val id: Int, val usbPath: String, val generation: Long = 0)
 
 /** Once a bystander disconnects, this transition can never regain trust. */
-class ReconnectGate(private val previous: Endpoint, before: List<Endpoint>, usbBefore: Set<String>? = null) {
+class ReconnectGate(private val previous: Endpoint, before: List<Endpoint>, usbBefore: Set<String>? = null, private val retiredUsbPaths: Set<String> = emptySet()) {
     private val siblings = before.filter { it != previous }.toSet()
     private val old = before.toSet() + previous
-    private val usbPeers = usbBefore?.minus(previous.usbPath)
+    private val usbPeers = usbBefore?.minus(previous.usbPath)?.minus(retiredUsbPaths)
     private var lost = false
     fun observeUsb(paths: Set<String>) { if (usbPeers != null && !paths.containsAll(usbPeers)) lost = true }
     fun removed(endpoint: Endpoint) { if (endpoint in siblings) lost = true }
-    fun removedPath(path: String) { if (path != previous.usbPath) lost = true }
+    fun removedPath(path: String) {
+        // Android may deliver the previous stage's detach after the new MIDI port is bound.
+        if (path != previous.usbPath && path !in retiredUsbPaths) lost = true
+    }
     fun observe(current: List<Endpoint>) { if (!current.containsAll(siblings)) lost = true }
     fun valid(current: List<Endpoint>): Boolean { observe(current); return !lost }
     fun candidates(current: List<Endpoint>, usbPaths: Set<String>? = null): List<Endpoint> {

@@ -38,8 +38,13 @@ class FleetStore(private val file: File) {
     @Synchronized fun attach(current: List<Endpoint>) {
         if (loadFailed) return
         var next = devices.map { if (it.endpoint != null && it.endpoint !in current) it.copy(endpoint = null) else it }
+        // Default names are temporary attachments; history keeps its own name and target.
+        next = next.filter { device -> device.endpoint != null ||
+            !device.alias.matches(Regex("FM-1 [0-9]+")) ||
+            jobs.any { it.deviceId == device.id && it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) } }
         current.filter { endpoint -> next.none { it.endpoint == endpoint } }.forEach { endpoint ->
-            next = next + FleetDevice(UUID.randomUUID().toString(), "FM-1 ${next.size + 1}", next.size % 6, endpoint)
+            val number = generateSequence(1) { it + 1 }.first { n -> next.none { it.alias == "FM-1 $n" } }
+            next = next + FleetDevice(UUID.randomUUID().toString(), "FM-1 $number", (number - 1) % 6, endpoint)
         }
         if (next != devices) { devices = next; persist() }
     }

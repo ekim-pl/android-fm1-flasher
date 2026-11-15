@@ -18,6 +18,7 @@ data class AppSnapshot(
     val favorites: Set<String> = emptySet(), val offline: Boolean = false,
     val busy: Boolean = true, val flashing: Boolean = false, val experimental: Boolean = false,
     val ports: List<AppPort> = emptyList(), val target: AppPort? = null, val identity: FirmwareIdentity? = null,
+    val chipDetection: AppText? = null,
     val chip: FlashChip = FlashChip.UNKNOWN, val ready: CatalogEntry? = null,
     val awaitingPort: Boolean = false, val candidates: List<AppPort> = emptyList(),
     val progress: Int = -1, val status: AppText = msg("loading_catalog"), val logs: List<AppText> = emptyList(),

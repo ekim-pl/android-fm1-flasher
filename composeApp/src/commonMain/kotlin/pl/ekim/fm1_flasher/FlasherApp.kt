@@ -50,6 +50,9 @@ fun FlasherApp(backend: AppBackend) {
             url.startsWith("https://") || url.startsWith("http://") || url.startsWith("mailto:") -> send(AppActionKind.OPEN_LINK, url)
         }
     }
+    LaunchedEffect(state.chipDetection) {
+        state.chipDetection?.let { dialog = text("chip_result_title") to it }
+    }
     val filters = BrowseFilters(query, FirmwareCategory.valueOf(categoryName), FirmwareSort.valueOf(sortName), downloadedOnly, favoritesOnly, sourceFilter.ifEmpty { null })
     LaunchedEffect(filters) { backend.saveBrowse(filters) }
     LaunchedEffect(state.experimental) { if (!state.experimental && tab == LibraryTab.LOGGER) tabName = LibraryTab.CATALOG.name }
@@ -81,7 +84,7 @@ fun FlasherApp(backend: AppBackend) {
                                 TextButton({ send(AppActionKind.UNDO_REMOVE) }, enabled = !state.busy) { Text(text("fleet_undo_remove")) }
                             }
                             when (tab) {
-                                LibraryTab.DEVICES -> FleetScreen(state, language, backend::perform, { tabName = LibraryTab.CATALOG.name }, { tabName = LibraryTab.TASKS.name })
+                                LibraryTab.DEVICES -> FleetScreen(state, language, backend::perform, { tabName = LibraryTab.CATALOG.name }, { tabName = LibraryTab.TASKS.name }, { tabName = LibraryTab.FLASHER.name })
                                 LibraryTab.TASKS -> TaskScreen(state, language, backend::perform, { tabName = LibraryTab.DEVICES.name })
                                 LibraryTab.CATALOG, LibraryTab.FAVORITES, LibraryTab.DOWNLOADS -> {
                                     val entries = remember(state.catalog, state.downloads, state.favorites, filters, tab) { CatalogBrowser.entries(state.catalog, state.downloads, state.favorites, filters, tab) }
@@ -187,7 +190,7 @@ fun FlasherApp(backend: AppBackend) {
                 TextButton({ settings = false; tabName = LibraryTab.ABOUT.name }) { Text(text("tab_about")) }
                 if (state.experimental) {
                     TextButton({ settings = false; tabName = LibraryTab.LOGGER.name }) { Text(text("tab_logger")) }
-                    TextButton({ settings = false; tabName = LibraryTab.FLASHER.name }) { Text(text("recovery_title")) }
+                    TextButton({ settings = false; tabName = LibraryTab.FLASHER.name }) { Text(text("device_tools")) }
                 }
             }
             if (state.catalog?.sources?.isNotEmpty() == true) TextButton({ settings = false; sources = true }) { Text(text("catalog_sources")) }
@@ -234,6 +237,10 @@ private fun title(entry: CatalogEntry, language: String) = if (entry.stock) reso
 }
 @Composable private fun FlasherScreen(state: AppSnapshot, language: String, send: (AppAction) -> Unit, confirm: (AppAction, AppText) -> Unit, recovery: () -> Unit, logs: () -> Unit) {
     fun text(key: String, vararg args: Any) = resolveCoreText(msg(key, *args), language)
+    if (state.fleetAvailable) {
+        DeviceToolsScreen(state, language, send, confirm, recovery, logs)
+        return
+    }
     var port by rememberSaveable { mutableStateOf("") }
     var reconnect by rememberSaveable { mutableStateOf("") }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

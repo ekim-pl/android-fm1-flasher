@@ -108,6 +108,27 @@ class FleetStoreTest {
         assertEquals(listOf(first.id, "finished"), ran)
         assertEquals(JobOutcome.QUEUED, second.outcome)
     }
+    @Test fun repeatedUnnamedConnectionsDoNotAccumulateSavedDevices() = fixture { store, _ ->
+        repeat(7) { n ->
+            val endpoint = Endpoint(n, "usb/$n", n.toLong())
+            store.attach(listOf(endpoint))
+            store.identify(endpoint, FirmwareIdentity("FM-1", "015"), null)
+            assertEquals(1, store.devices.size)
+            assertEquals("FM-1 1", store.devices.single().alias)
+            store.attach(emptyList())
+        }
+        assertTrue(store.devices.isEmpty())
+    }
+    @Test fun unnamedQueuedDeviceIsRetainedAndNeverAutomaticallyPaired() = fixture { store, _ ->
+        val endpoint = Endpoint(1, "usb/1", 1)
+        store.attach(listOf(endpoint)); store.identify(endpoint, FirmwareIdentity("FM-1", "015"), null)
+        val old = store.devices.single()
+        store.enqueue(old.id, localEntry())
+        store.attach(listOf(Endpoint(2, "usb/2", 2)))
+        assertEquals(2, store.devices.size)
+        assertNull(store.devices.single { it.id == old.id }.endpoint)
+        assertFalse(FleetPolicy.ready(store.jobs.single(), store.devices.single { it.id == old.id }))
+    }
     @Test fun duplicateSerialNeverMergesTwoPhysicalAttachments() = fixture { store, _ ->
         val first = Endpoint(1, "usb/1", 1); val second = Endpoint(2, "usb/2", 2)
         store.attach(listOf(first, second))
@@ -115,7 +136,7 @@ class FleetStoreTest {
         assertEquals(2, store.devices.map { it.id }.toSet().size)
         store.attach(emptyList()); store.attach(listOf(Endpoint(3, "usb/3", 3)))
         store.identify(Endpoint(3, "usb/3", 3), FirmwareIdentity("FM-1", "015"), "DUPLICATE")
-        assertEquals(3, store.devices.size)
+        assertEquals(1, store.devices.size)
     }
     @Test fun twoMidiEndpointsOnSameUsbDeviceCannotBecomeTwoJobs() = fixture { store, _ ->
         val first = Endpoint(1, "usb/shared", 1); val second = Endpoint(2, "usb/shared", 2)

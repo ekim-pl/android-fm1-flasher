@@ -61,7 +61,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         state.value = state.value.copy(undoAvailable = next.undoAvailable, fleetAvailable = true, fleet = next.fleet, jobs = next.jobs,
             queueRunning = next.queueRunning, queueStopping = next.queueStopping, catalog = next.catalog, downloads = next.downloads, favorites = next.favorites,
             offline = next.offline, backgroundSync = next.backgroundSync, backgroundAvailable = true, busy = next.busy, flashing = next.flashing, experimental = next.experimental,
-            ports = next.devices.map(::port), target = next.target?.let(::port), identity = next.identity, chip = next.chip,
+            ports = next.devices.map(::port), target = next.target?.let(::port), identity = next.identity, chip = next.chip, chipDetection = next.chipDetection,
             ready = next.ready, awaitingPort = next.awaitingPort, candidates = next.reconnectCandidates.map(::port),
             progress = next.progress, status = next.status, logs = next.logs, usbRecovery = true,
             backups = next.recoveryBackups.map { BackupRow(it.id, "${it.id} · 0x%06X".format(it.flashId)) },

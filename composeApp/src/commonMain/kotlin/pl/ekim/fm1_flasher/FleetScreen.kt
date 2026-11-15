@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 
 private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2, 0xFF8FCB87, 0xFF70BCE1)
 
-@Composable internal fun FleetScreen(state: AppSnapshot, language: String, send: (AppAction) -> Unit, library: () -> Unit, tasks: () -> Unit) {
+@Composable internal fun FleetScreen(state: AppSnapshot, language: String, send: (AppAction) -> Unit, library: () -> Unit, tasks: () -> Unit, tools: () -> Unit) {
     fun t(key: String, vararg args: Any) = resolveCoreText(msg(key, *args), language)
     val online = state.fleet.filter { it.endpoint != null }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -26,6 +26,9 @@ private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2
                 TextButton({ send(AppAction(AppActionKind.PORTS_REFRESH)) }, enabled = !state.busy) { Text(t("refresh_ports")) }
                 TextButton(tasks) { Text(t("fleet_plan_count", state.jobs.count { it.outcome == JobOutcome.QUEUED })) }
             }
+        }
+        if (state.usbRecovery && state.experimental) item {
+            FilledTonalButton(tools, modifier = Modifier.fillMaxWidth()) { Text(t("device_tools")) }
         }
         if (online.isEmpty()) item {
             OutlinedCard(Modifier.fillMaxWidth()) { Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -57,6 +60,9 @@ private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2
                     Text(t("fleet_attachment", endpoint.usbPath), style = MaterialTheme.typography.bodySmall)
                     Text(t(if (device.serial.isNullOrBlank()) "fleet_no_serial" else "fleet_serial_observed"), style = MaterialTheme.typography.bodySmall)
                 }
+                if (state.usbRecovery && state.experimental) OutlinedButton({
+                    send(AppAction(AppActionKind.CONNECT, portId)); tools()
+                }, enabled = !state.busy) { Text(t("tools_open")) }
                 if (device.identity == null) {
                     Button({ send(AppAction(AppActionKind.CONNECT, portId)) }, enabled = !state.busy) { Text(t("fleet_identify")) }
                 } else {

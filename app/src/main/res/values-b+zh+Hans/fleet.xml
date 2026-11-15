@@ -59,4 +59,12 @@
     <string name="fleet_continuity_lost">另一台乐器已断开。集线器会话连续性丢失，不会开始后续写入。请检查设备并重新创建计划。</string>
     <string name="fleet_serial_changed">重连设备的 USB 序列号与所选乐器不符。操作已停止。</string>
     <string name="fleet_ports_ambiguous">此 USB 设备提供多对 MIDI 端口。在识别正确端口对之前禁止写入。</string>
+    <string name="device_tools">模式与闪存芯片</string>
+    <string name="device_tools_help">选择并读取 MIDI 乐器，然后切换至下载模式或检测闪存芯片。</string>
+    <string name="mode_midi">1 · MIDI 连接</string>
+    <string name="mode_download">2 · 下载模式与芯片</string>
+    <string name="mode_download_help">下载模式会断开 MIDI。检测后，关闭并重新开启乐器以返回 MIDI 模式。</string>
+    <string name="chip_result_title">已检测到闪存芯片</string>
+    <string name="tools_open">模式 / 芯片</string>
+    <string name="mode_current">当前 MIDI 设备：%1$s</string>
 </resources>

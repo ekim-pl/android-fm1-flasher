@@ -30,6 +30,7 @@ data class UiState(
     val devices: List<UsbMidi> = emptyList(),
     val target: UsbMidi? = null,
     val identity: FirmwareIdentity? = null,
+    val chipDetection: AppText? = null,
     val chip: FlashChip = FlashChip.UNKNOWN,
     val catalog: Catalog? = null,
     val downloads: List<LocalPackage> = emptyList(),
@@ -272,13 +273,16 @@ class FlasherService : Service() {
     fun detectChip(device: android.hardware.usb.UsbDevice) {
         if (!state.experimental || state.busy) return
         monitor.stop()
+        update { it.copy(chipDetection = null) }
         detectChipStopped(device)
     }
 
     private fun detectChipStopped(device: android.hardware.usb.UsbDevice) = libraryTask {
         val id = ChipDetector.detect(getSystemService(UsbManager::class.java), device, assets)
         // ROM enumeration is not evidence that this is the selected MIDI instrument.
-        status(msg(R.string.chip_detected_separate, device.deviceName, "0x%06X".format(id)))
+        val result = msg(R.string.chip_detected_separate, device.deviceName, "0x%06X".format(id))
+        update { it.copy(chipDetection = result) }
+        status(result)
     }
 
     fun setChip(chip: FlashChip) {
@@ -540,6 +544,7 @@ class FlasherService : Service() {
             journal.record(job.hash, job.deviceId, "preparing")
             val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(FlashSession.MAX_SESSION_MS)
             synchronized(continuityLock) { activeGate = ReconnectGate(target.endpoint, midi.devices().map { it.endpoint }, getSystemService(UsbManager::class.java).deviceList.keys) }
+            val sessionPaths = mutableSetOf(target.endpoint.usbPath)
             val originalSerial = fleet.devices.single { it.id == job.deviceId }.serial
             val session = FlashSession(reconnect = { _, loader ->
                 fleet.result(job.id, JobOutcome.RUNNING, if (loader) "reconnect_loader" else "reconnect_final"); publishFleet()
@@ -549,7 +554,8 @@ class FlasherService : Service() {
                 synchronized(continuityLock) {
                     activeGate!!.observeUsb(getSystemService(UsbManager::class.java).deviceList.keys)
                     check(activeGate!!.valid(midi.devices().map { it.endpoint })) { failed(msg("fleet_continuity_lost")) }
-                    activeGate = ReconnectGate(chosen.endpoint, midi.devices().map { it.endpoint }, getSystemService(UsbManager::class.java).deviceList.keys)
+                    sessionPaths += chosen.endpoint.usbPath
+                    activeGate = ReconnectGate(chosen.endpoint, midi.devices().map { it.endpoint }, getSystemService(UsbManager::class.java).deviceList.keys, sessionPaths.toSet())
                 }
                 fleet.rebind(job.deviceId, chosen.endpoint); publishFleet()
                 update { it.copy(target = chosen, identity = null) }

@@ -1,0 +1,28 @@
+Multiplatform FM-1 Flasher 0.9.0 — test build 20
+
+Changes based on physical-device feedback:
+- Direct access to Modes and flash chip from Devices and each online instrument.
+- Dedicated MIDI and ROM download cards, separated from the installation queue.
+- Detection result opens a dialog and remains visible in the tools screen.
+- English, Polish and Simplified Chinese labels.
+- Old USB paths from an earlier stage of the same flash session no longer count
+  as unrelated device removals when Android delivers a delayed detach callback.
+- Real peer/hub loss, ambiguous candidates and changed queued targets still block writes.
+- Default offline attachment records are removed unless a queued/running job needs them.
+  Custom aliases and job history are retained. Saved names are never automatically
+  associated with an arbitrary returning instrument.
+
+Verification:
+- shared JVM: 51 passed.
+- Android JVM: 122 passed, 4 previously skipped, no failures.
+- Android emulator API 36: FleetUiTest 2 passed (including mode navigation and
+  result popup in EN/PL/zh), MainActivityLaunchTest 2 passed,
+  UsbPermissionIntentTest 2 passed.
+- Debug APK and Android test APK compiled; Android lint passed.
+- Resource synchronization and git diff whitespace checks passed.
+
+Limitations:
+Physical FM-1/OTG hardware is unavailable in this environment. The reported reboot
+failure needs confirmation using this build on the affected instrument. More than
+one MIDI instrument still requires explicit pairing of the unique returning port.
+No iOS binary or Xcode verification was performed.
