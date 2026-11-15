@@ -20,7 +20,7 @@ LANGUAGES = {
         'html': 'en', 'name': 'English', 'skip': 'Skip to content',
         'languages': 'Choose language', 'navigation': 'Project navigation',
         'guide': 'Guide', 'about': 'About', 'privacy': 'Privacy',
-        'releases': 'Releases', 'license': 'License', 'independent': 'Independent project',
+        'releases': 'Releases', 'license': 'License', 'independent': 'An Android app for browsing firmware and updating the M-VAVE FM-1 over USB MIDI.',
         'description': 'FM-1 Flasher for Android: M-VAVE FM-1 firmware updates over USB MIDI. Guides, documentation and privacy.',
         'titles': {
             'index.html': 'FM-1 Flasher — firmware over USB MIDI',
@@ -36,7 +36,7 @@ LANGUAGES = {
         'html': 'pl', 'name': 'Polski', 'skip': 'Przejdź do treści',
         'languages': 'Wybierz język', 'navigation': 'Nawigacja projektu',
         'guide': 'Instrukcja', 'about': 'O aplikacji', 'privacy': 'Prywatność',
-        'releases': 'Wydania', 'license': 'Licencja', 'independent': 'Niezależny projekt',
+        'releases': 'Wydania', 'license': 'Licencja', 'independent': 'Aplikacja na Androida do przeglądania firmware i aktualizowania M-VAVE FM-1 przez USB MIDI.',
         'description': 'FM-1 Flasher dla Androida: aktualizacja M-VAVE FM-1 przez USB MIDI. Instrukcje, dokumentacja i prywatność.',
         'titles': {
             'index.html': 'FM-1 Flasher — firmware przez USB MIDI',
@@ -52,7 +52,7 @@ LANGUAGES = {
         'html': 'zh-Hans', 'name': '简体中文', 'skip': '跳转到正文',
         'languages': '选择语言', 'navigation': '项目导航',
         'guide': '使用指南', 'about': '关于应用', 'privacy': '隐私',
-        'releases': '发布版本', 'license': '许可证', 'independent': '独立项目',
+        'releases': '发布版本', 'license': '许可证', 'independent': '一款用于浏览固件并通过 USB MIDI 更新 M-VAVE FM-1 的 Android 应用。',
         'description': 'Android 版 FM-1 Flasher：通过 USB MIDI 更新 M-VAVE FM-1 固件。使用指南、技术文档与隐私政策。',
         'titles': {
             'index.html': 'FM-1 Flasher — USB MIDI 固件更新',
@@ -94,6 +94,7 @@ ALIASES.update({
 ASSETS = {
     'assets/icon.svg': 'assets/icon.svg',
     'website/style.css': 'assets/style.css',
+    **{f'website/icons/{name}': f'assets/icons/{name}' for name in ('ekim.webp', 'github.svg', 'youtube.svg', 'instagram.svg', 'discord.svg')},
     'third_party/commonmark-LICENSE.txt': 'licenses/commonmark.txt',
 }
 repository = os.environ.get('GITHUB_REPOSITORY', '')
@@ -191,8 +192,8 @@ def write_page(language, page, output):
 <nav class="languages" aria-label="{ui['languages']}">{languages}</nav>
 <nav aria-label="{ui['navigation']}">{nav}</nav></header>
 <main id="content">{body}</main>
-<footer>{ui['independent']} · MIT · <a href="{relative(f'{language}/license.html', output)}">{ui['license']}</a>
-<div><a href="https://ekim-pl.github.io/">Ekim</a> · <a href="https://github.com/ekim-pl">GitHub</a> · <a href="https://www.youtube.com/@ekim-pl">YouTube</a> · <a href="https://www.instagram.com/ekimpl/">Instagram</a> · <a href="https://discord.com/users/1422549758785880215">Discord</a></div></footer></body></html>
+<footer><div class="footer-description"><img src="{relative('assets/icon.svg', output)}" alt="" width="32" height="32"><span>{ui['independent']}</span></div> MIT · <a href="{relative(f'{language}/license.html', output)}">{ui['license']}</a>
+<div class="footer-links"><a href="https://ekim-pl.github.io/" aria-label="Ekim"><img class="ekim-logo" src="{relative('assets/icons/ekim.webp', output)}" alt=""></a> <a href="https://github.com/ekim-pl" aria-label="GitHub"><img src="{relative('assets/icons/github.svg', output)}" alt=""></a> <a href="https://www.youtube.com/@ekim-pl" aria-label="YouTube"><img src="{relative('assets/icons/youtube.svg', output)}" alt=""></a> <a href="https://www.instagram.com/ekimpl/" aria-label="Instagram"><img src="{relative('assets/icons/instagram.svg', output)}" alt=""></a> <a href="https://discord.com/users/1422549758785880215" aria-label="Discord"><img src="{relative('assets/icons/discord.svg', output)}" alt=""></a></div></footer></body></html>
 '''
     destination = OUT / output
     destination.parent.mkdir(parents=True, exist_ok=True)

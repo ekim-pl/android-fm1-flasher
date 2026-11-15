@@ -32,3 +32,11 @@ footer { border-top: 1px solid var(--line); color: var(--muted); font-size: .85r
   :root { --bg: #f7f8f2; --panel: #e9eee2; --text: #172219; --muted: #455649; --accent: #32640b; --line: #c9d5c6; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+.footer-links { display: flex; align-items: center; gap: 1rem; margin-top: 1rem; }
+.footer-links a { display: inline-flex; align-items: center; }
+.footer-links img { width: 22px; height: 22px; }
+.footer-links .ekim-logo { width: 55px; height: auto; transform: translateY(-2px); }
+
+.footer-description { display: flex; align-items: center; gap: .75rem; margin-bottom: .5rem; }
+.footer-description img { flex: none; }
