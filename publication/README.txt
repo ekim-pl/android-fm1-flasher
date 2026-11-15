@@ -11,10 +11,13 @@ Earlier QA reports, release notes and changelogs are historical evidence only.
 
 BUILD
   python3 tools/sync-resources.py --check
-  ./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
-The default debug APK contains no Firebase SDK. See ../docs/ANALYTICS.md for the
-optional Firebase variant and analytics-0.10.0.json for its separate data inventory.
-The test APK is signed with the local debug certificate, not a Play upload key.
+  ./gradlew :shared:jvmTest
+  ./gradlew -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
+Two test variants are prepared: fdroid (no Firebase) and google-play (test Firebase).
+In the Google Play variant statistics are on
+by default with a persistent Settings opt-out. See ../docs/ANALYTICS.md and
+analytics-0.10.0.json. Building without these properties produces an SDK-free APK.
+Both test APKs are signed with the local debug certificate, not a Play upload key.
 A release AAB requires the configured upload key and the manual Google Play workflow.
 See github-actions.txt. Do not infer Play readiness from a passing debug build.
 
@@ -26,7 +29,8 @@ same local storage and optional analytics behavior.
 fastlane/metadata/android/{en-US,pl-PL,zh-CN}/ contains store text and screenshots.
 Version 31 changelogs describe this milestone; earlier changelogs remain historical.
 Existing screenshots are historical and must not be submitted as 0.10.0 screenshots.
-New capture is blocked by occupied device sessions; see qa/0.10.0.txt.
+A dedicated emulator is ready; final capture is paused while distribution workflows
+are split. See qa/0.10.0.txt.
 Build the public website with scripts/build_site.py; validate with scripts/check_site.py.
 Branch changes do not update the live privacy URL until deployment.
 

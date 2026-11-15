@@ -21,22 +21,41 @@ Website: 48 generated HTML pages passed links/anchors/translation checks.
 All 15 bundled Markdown/license documents match repository bytes exactly.
 APK signature verification passed; manifest version/application ID/SDK checked.
 
-ARTIFACT
-Local: dist/0.10.0-test31/FM1-Flasher-0.10.0-test31.apk (ignored by Git).
-SHA-256: 786c69230ae4d4ee9e8781f4f0eea810c90da7ff671b03bd18edcefc7486b9be
-Certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
-Android Debug certificate. SDK-free debug variant; no Firebase configuration used.
-This is a test APK, not a signed Play upload AAB. No iOS binary.
+DISTRIBUTION WORKFLOWS
+fdroid.yml: manual unsigned release APK, fm1Analytics=false; rejects Firebase/GMS dependencies.
+google-play.yml: manual signed AAB, Firebase production required; publish defaults false.
+Both retain pinned release fixture requirements. actionlint 1.7.7 passed for both files.
+Local Firebase-test unit tests/lint/debug assembly passed; F-Droid release lint and
+unsigned release/debug APK assembly passed. Firebase presence/absence checked in DEX.
+Production Firebase :app:lintRelease and :app:bundleRelease passed locally
+(unsigned AAB, no upload key configured). Runtime dependencies contain Firebase Analytics.
+Repository release configuration still needs fixture URL/hash variables and the
+google-play environment with Firebase/signing secrets. No workflow dispatch or upload.
 
-SCREENSHOTS AND DEVICE TESTS — BLOCKED
-Requested: English Library, Devices, Tasks, Settings, About, privacy and licenses;
-one Library screen each in Polish and Simplified Chinese.
-Both Android 16 emulators are held by other agent-device sessions. Opening
-FM1_Flasher_API_36 failed with DEVICE_IN_USE; session inspection and one bounded
-retry confirmed the blocker. No other session was taken over or closed.
-No fresh screenshots, APK installation or instrumentation run are claimed.
-Existing fastlane screenshots remain historical, unsuitable for this release.
-Resume UI verification and capture after the device owner frees the emulator.
+TEST ARTIFACTS
+Both are Android Debug signed; same application ID, install one at a time.
+Google Play equivalent uses the test Firebase project ekim-3c534, not production.
+The earlier SDK-free FM1-Flasher-0.10.0-test31.apk is superseded by these named variants.
+FM1-Flasher-0.10.0-fdroid-test31.apk
+SHA-256: ec6c903c962cddb81d08e9823c843083d77acd7bd21fdc7b48fc0e7c747d9aaf
+FM1-Flasher-0.10.0-google-play-test31.apk
+SHA-256: 096c74272452542c32e82dc3535440ed12afdb9965c6e5a73e2c4949582aecae
+FM1-Flasher-0.10.0-test31.apk
+SHA-256: 786c69230ae4d4ee9e8781f4f0eea810c90da7ff671b03bd18edcefc7486b9be
+
+Directory: dist/0.10.0-test31 (ignored by Git).
+Certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
+Both APKs bundle current About/privacy/license documents matching source bytes.
+No signed Play upload AAB or iOS binary is supplied in this milestone.
+
+DEVICE AND SCREENSHOTS
+Created and booted a dedicated Android_FM1_Flasher_Release_API36 (Android 16),
+installed and launched the earlier SDK-free test APK successfully. Device panel works.
+The original DEVICE_IN_USE blocker is resolved. Capture was paused at the owner's
+request while splitting F-Droid and Google Play workflows; preliminary images are
+not store assets. Final English screens and one PL/zh-Hans screen remain pending.
+CI for prior head 67ee177 passed unit/lint and API 34/36 instrumentation checks.
+No new local instrumentation or physical hardware run is claimed.
 
 REMAINING BEFORE PUBLICATION
 Physical FM-1/hub, power/reconnect and ROM recovery acceptance; API 34/36 platform

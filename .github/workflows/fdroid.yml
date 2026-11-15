@@ -1,0 +1,65 @@
+name: F-Droid build (no Firebase)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fdroid-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      FM1_RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          packages: 'platforms;android-36 build-tools;35.0.0'
+          log-accepted-android-sdk-licenses: false
+      - name: Prepare pinned release fixtures
+        env:
+          FM1_FIXTURE_ARCHIVE_URL: ${{ vars.FM1_FIXTURE_ARCHIVE_URL }}
+          FM1_FIXTURE_ARCHIVE_SHA256: ${{ vars.FM1_FIXTURE_ARCHIVE_SHA256 }}
+        run: python3 scripts/release_fixtures.py prepare
+      - name: Check, test and build without Firebase
+        run: |
+          python3 tools/sync-resources.py --check
+          ./gradlew --no-daemon -Pfm1Analytics=false :shared:jvmTest :app:testDebugUnitTest :app:lintRelease :app:assembleRelease
+      - name: Require all release fixture tests
+        run: python3 scripts/release_fixtures.py verify
+      - name: Verify no Firebase or Google Play services dependencies
+        run: |
+          ./gradlew --no-daemon -Pfm1Analytics=false :app:dependencies --configuration releaseRuntimeClasspath > fdroid-dependencies.txt
+          if grep -Eq 'com\.google\.(firebase|android\.gms):' fdroid-dependencies.txt; then
+            echo '::error::F-Droid build must not contain Firebase or Google Play services'
+            exit 1
+          fi
+      - name: Save unsigned APK
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: fdroid-no-firebase-apk-${{ github.run_id }}
+          path: |
+            app/build/outputs/apk/release/app-release-unsigned.apk
+            fdroid-dependencies.txt
+          if-no-files-found: error
+          retention-days: 30
+      - name: Save reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: fdroid-reports-${{ github.run_id }}
+          path: app/build/reports/
+          retention-days: 14

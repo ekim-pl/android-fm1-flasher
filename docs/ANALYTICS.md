@@ -168,3 +168,10 @@ Common tests verify default-on startup, persistent disable/re-enable, legacy opt
 notice-version changes, offline restart, no replay, deduplication, closed payloads, damaged preferences,
 and isolation of storage/SDK failures. Instrumentation/network and iOS build results must be
 recorded separately; a Linux JVM/Android build does not establish iOS runtime correctness.
+
+## Distribution builds
+
+- **Google Play:** `.github/workflows/google-play.yml` always includes Firebase with the production project and builds a signed AAB. Manual dispatch; uploading to internal testing is off by default.
+- **F-Droid:** `.github/workflows/fdroid.yml` explicitly disables Firebase and builds an unsigned release APK without Firebase or Google Play services dependencies. Manual dispatch; no store upload.
+
+Local Google Play test APKs use the test Firebase project. F-Droid test APKs use `-Pfm1Analytics=false`. Both use the same application ID; moving between store distributions requires compatible signing certificates. The F-Droid workflow is build preparation, not confirmation of F-Droid acceptance.

@@ -54,3 +54,10 @@ No app account or advertising. The library, device names and task history stay o
 [Detailed user guide](docs/user-guide.md) · [Project website](https://ekim-pl.github.io/android-fm1-flasher/) · [Polski](website/pl/documentation.md) · [简体中文](website/zh-CN/documentation.md) · [Development and tests](MIGRATION.md) · [Dependency licenses](third_party/README.md)
 
 Questions, feedback or beta testing: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
+
+## Distribution builds
+
+- **Google Play:** `.github/workflows/google-play.yml` always includes Firebase with the production project and builds a signed AAB. Manual dispatch; uploading to internal testing is off by default.
+- **F-Droid:** `.github/workflows/fdroid.yml` explicitly disables Firebase and builds an unsigned release APK without Firebase or Google Play services dependencies. Manual dispatch; no store upload.
+
+Local Google Play test APKs use the test Firebase project. F-Droid test APKs use `-Pfm1Analytics=false`. Both use the same application ID; moving between store distributions requires compatible signing certificates. The F-Droid workflow is build preparation, not confirmation of F-Droid acceptance.

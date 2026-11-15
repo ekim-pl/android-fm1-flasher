@@ -1,7 +1,7 @@
 FM-1 Flasher 0.10.0 / 31 — pierwszy etap przygotowań do Google Play.
 
 Zaktualizowano dokumentację, O aplikacji, prywatność i licencje.
-Testowy APK nie zawiera SDK analityki i używa lokalnego podpisu debug.
+Dwa testowe APK używają lokalnego podpisu debug: Google Play z testowym Firebase oraz F-Droid bez Firebase.
 Nie jest to publikacja w sklepie. Weryfikacja: ../../publication/qa/0.10.0.txt.
 Przed publikacją potrzebne są podpisany AAB, konfiguracja sklepu, ostateczne
 deklaracje danych i odbiór na fizycznym FM-1/hubie.

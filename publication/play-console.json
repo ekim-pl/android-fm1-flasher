@@ -19,7 +19,7 @@
   "reviewerAccess": "No login. Library/settings are available without hardware. Physical multi-device flashing requires FM-1 instruments, an OTG hub, a data-capable Android 14+ host and stable power; not verified on physical hardware for this milestone.",
   "dataInventory": {
     "publisherTelemetryBackend": false,
-    "advertisingOrAnalyticsSdks": false,
+    "advertisingOrAnalyticsSdks": true,
     "localOnly": [
       "favorites and browsing preferences",
       "theme and language",
@@ -55,7 +55,7 @@
     "encryptedInTransit": true,
     "deletion": "Clear Android app data or uninstall. Individual package removal is available inside the app. There is no app account.",
     "dataSafetyForm": "Review third-party operators' actual collection and retention before final answers. Do not equate absence of publisher telemetry with absence of data received by external servers.",
-    "buildScope": "SDK-free test APK; for Firebase-enabled distribution also review analytics-0.10.0.json"
+    "buildScope": "Firebase-enabled test APK; see analytics-0.10.0.json. Production uses its separate Firebase project and requires final store disclosures."
   },
   "foregroundServiceType": "connectedDevice",
   "requiredManualChoices": [

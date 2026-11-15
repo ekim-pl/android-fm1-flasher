@@ -1,6 +1,6 @@
 FM-1 Flasher 0.10.0 / 31 — Google Play 发布准备的第一阶段。
 
-已更新文档、关于、隐私和许可证。测试 APK 不含分析 SDK，使用本地调试签名。
+已更新文档、关于、隐私和许可证。两个测试 APK 均使用本地调试签名：Google Play 包含测试 Firebase，F-Droid 不含 Firebase。
 尚未提交商店。验证记录：../../publication/qa/0.10.0.txt。
 发布前需要签名 AAB、商店配置、最终数据声明和实体 FM-1/集线器验收。
 构建说明：../../publication/README.txt。

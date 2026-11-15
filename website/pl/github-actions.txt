@@ -1,50 +1,7 @@
-GitHub Actions — FM-1 Flasher
+Dwa workflow budowania 0.10.0
 
-Opis dotyczy plików workflow w repozytorium, nie uruchamia publikacji.
-Android ID: pl.ekim.fm1_flasher. APK 0.9.1 jest lokalnym buildem testowym.
-
-ANDROID CI (.github/workflows/android-ci.yml)
-Push na branch, pull request lub ręczne uruchomienie. JDK 17, SDK 36 i Build Tools 35.0.0.
-Sprawdza wygenerowane zasoby, testy shared JVM i Android JVM, lint debug i assembleDebug.
-Przechowuje android-checks z APK/raportami przez 14 dni. Nie testuje fizycznego FM-1,
-nie publikuje GitHub Release, nie buduje Swift i nie wykonuje osobnego zestawu
-instrumentacyjnego Androida.
-
-PAGES (.github/workflows/pages.yml)
-Buduje dokumentację i sprawdza linki na wszystkich branchach/PR oraz ręcznie.
-Wdraża tylko uruchomienia spoza PR z gałęzi domyślnej, także ręczne. Pozostałe
-gałęzie są sprawdzane bez wdrażania. Dokumentacja brancha może różnić się od strony
-publicznej. Komendy lokalne i strukturę opisuje poradnik Pages.
-
-GOOGLE PLAY RELEASE (.github/workflows/google-play.yml) — KONFIGURACJA ORYGINAŁU
-Uruchamia go wyłącznie ręczny dispatch. Ręczne pole publish domyślnie ma true.
-Buduje podpisany AAB i może wysłać go na internal. Pakiet to pl.ekim.fm1_flasher. Przed publikacją sprawdź podpis i konfigurację sklepu. Tagi nie uruchamiają workflow Play.
-Żaden workflow nie ustanawia automatycznego tworzenia wydania GitHub Releases.
-
-Gdy ustawiono FM1_RELEASE_TAG, Gradle wymaga v<versionName>. Przyszły prerelease GitHuba
-wymaga świadomego wyboru tagu/commita i osobnego przesłania zweryfikowanych plików.
-Sam tag nie dostosowuje konfiguracji Play. Oddziel przekazanie APK, odbiór właściciela
-na sprzęcie i publikację.
-
-GOOGLE PLAY PRODUCTION (.github/workflows/promote-production.yml)
-Ręcznie przyjmuje dodatni version_code i promuje istniejący bundle z internal na
-production. Wskazuje pl.ekim.fm1_flasher i nie buduje nowego pakietu.
-
-PODPISYWANIE — STAN KODU
-Lokalny Gradle czyta ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD,
-ANDROID_KEY_ALIAS i ANDROID_KEY_PASSWORD. Bez konfiguracji klucza bundleRelease
-pozostaje niepodpisany. Klucze i hasła trzymaj poza Git.
-Workflow release używa środowiska google-play, ANDROID_KEYSTORE_BASE64 oraz sekretów
-hasła/aliasu; publikacja wymaga również GOOGLE_PLAY_SERVICE_ACCOUNT_JSON.
-Production używa google-play-production i sekretu konta serwisowego. Samo istnienie
-konfiguracji nie potwierdza dostępu do konta, rejestracji pakietu, ciągłości podpisu
-ani gotowości sklepowej.
-
-PRZED DOSTOSOWANIEM PUBLIKACJI
-Ustal docelowy ID, wpis sklepu, certyfikat i versionCode. Sprawdź oba package_name,
-archiwalną receptę F-Droid, opisy/grafiki i aktualną politykę prywatności.
-Dotychczasowe screenshoty pokazują wcześniejszy UI. Najpierw przeprowadź odbiór
-sprzętowy i weryfikację testowego APK przez właściciela. Regeneracja dokumentów
-nie zmienia workflow, sekretów ani ustawień sklepu.
-
-Aktualizacja 0.9.2: CI na main zachowuje testy JVM i kontrolę zasobów; dodatkowa macierz emulatorów API 34/36 uruchamia jawne klasy testów instrumentacyjnych. Nie potwierdza to testów fizycznego FM-1.
+fdroid.yml: APK release bez Firebase i Google Play Services, bez podpisu.
+google-play.yml: podpisany AAB z produkcyjnym Firebase. Wysyłka jest domyślnie wyłączona.
+Oba uruchamia się ręcznie; nie publikują automatycznie do sklepów.
+Wymagane zmienne i sekrety: ../../publication/github-actions.txt.
+Promocja do produkcji pozostaje osobnym workflow.

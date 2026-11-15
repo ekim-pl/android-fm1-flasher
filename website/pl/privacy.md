@@ -1,6 +1,6 @@
 # Polityka prywatności — FM-1 Flasher
 
-FM-1 Flasher 0.10.0: kolory źródeł i ustawienia interfejsu pozostają na tym urządzeniu. Lokalny APK testowy nie zawiera SDK analityki; dystrybucje z Firebase podlegają zasadom statystyk opisanym poniżej.
+FM-1 Flasher 0.10.0: kolory źródeł i ustawienia interfejsu pozostają na tym urządzeniu. Wersja Google Play zawiera Google Analytics for Firebase; statystyki są domyślnie włączone i można je wyłączyć w Ustawieniach. Wersja F-Droid nie zawiera Firebase ani SDK analityki.
 
 ## Wydawca i kontakt
 
