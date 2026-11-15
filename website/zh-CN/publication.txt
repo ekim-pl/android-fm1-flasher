@@ -1,5 +1,5 @@
 Multiplatform FM-1 Flasher — 发布文档
-状态：0.9.0 / Android versionCode 19，task/multiplatform-rework。
+状态：0.9.1 / Android versionCode 21，task/multiplatform-rework。
 
 当前应用
 Android ID：pl.ekim.multiplatform_fm1_flasher，与原应用 pl.ekim.fm1_flasher 不同。
@@ -9,9 +9,9 @@ iOS bundle ID：pl.ekim.multiplatform-fm1-flasher；只有源码，没有已验�
 Android 提供设备 / 固件库 / 任务以及持久化顺序队列。
 
 发布状态
-0.9.0 构建 19 已作为实验版发布到 GitHub Releases，包含更新文档。
-publication/qa/0.9.0-publication19.txt 记录具体 APK、哈希、签名与测试范围。
-dist/0.9.0-test 被 Git 忽略，新克隆不包含该本地目录。
+0.9.1 构建 21 已作为实验版发布到 GitHub Releases，包含更新文档。
+publication/qa/0.9.1-test21.txt 记录具体 APK、哈希、签名与测试范围。
+dist/0.9.1-test 被 Git 忽略，新克隆不包含该本地目录。
 publication/github-release.txt 是说明草稿，不代表版本已发布。
 修改文档不会改变已提供 APK。重新构建需生成自己的校验和并验证打包，保留历史报告。
 
@@ -32,7 +32,7 @@ fastlane/metadata/android/{en-US,pl-PL,zh-CN}/ 包含描述草稿和历史变更
 play-console.json 是当前事实草稿，不是已提交或批准的声明。编辑文件不会上传商店。
 
 历史材料与工作流
-已有商店截图/图形展示旧界面，不能证明 0.9.0 队列流程。提交商店前需重新截图。
+已有商店截图/图形展示旧界面，不能证明 0.9.1 队列流程。提交商店前需重新截图。
 图形脚本只生成或排版素材，不会重新截取运行应用。
 publication/validation.json 明确是原应用的历史报告。
 publication/fdroid/pl.ekim.fm1_flasher.yml 是原应用的归档配方，不适用于此分支。

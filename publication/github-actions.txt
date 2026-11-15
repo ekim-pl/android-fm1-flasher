@@ -1,8 +1,8 @@
-GitHub Actions on task/multiplatform-rework — 0.9.0 / 19
+GitHub Actions on task/multiplatform-rework — 0.9.1 / 21
 
 This is a description of the checked-in workflows, not a request to run or publish them.
 Android application ID: pl.ekim.multiplatform_fm1_flasher.
-The 0.9.0 test APK has been prepared locally; no release tag/publication is implied.
+The 0.9.1 test APK has been prepared locally; no release tag/publication is implied.
 
 ANDROID CI (.github/workflows/android-ci.yml)
 Runs on branch pushes, pull requests and manual dispatch. Uses JDK 17, Android SDK 36
@@ -23,7 +23,7 @@ Triggered by pushed v* tags or manual dispatch. The manual publish input default
 true. The workflow builds a signed AAB and can upload it to the internal track.
 However, its fastlane --package_name is still pl.ekim.fm1_flasher, while this branch's
 AAB has pl.ekim.multiplatform_fm1_flasher. This is not a configured publishing route
-for the fork. Do not create a v0.9.0 tag merely to label this local test APK: the v*
+for the fork. Do not create a v0.9.1 tag merely to label this local test APK: the v*
 trigger can start the Play workflow. No automatic GitHub Release creation is defined.
 
 The Gradle FM1_RELEASE_TAG guard expects v<versionName> when that variable is set.

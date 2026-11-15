@@ -80,7 +80,7 @@ private final class BoundedDownload: NSObject, URLSessionDataDelegate, URLSessio
         let session = URLSession(configuration: configuration, delegate: self, delegateQueue: queue)
         defer { session.invalidateAndCancel() }
         var request = URLRequest(url: url)
-        request.setValue("FM1FlasherMultiplatform/0.9.0 (+iOS)", forHTTPHeaderField: "User-Agent")
+        request.setValue("FM1FlasherMultiplatform/0.9.1 (+iOS)", forHTTPHeaderField: "User-Agent")
         let task = session.dataTask(with: request); task.resume()
         guard done.wait(timeout: .now() + 60) == .success else { task.cancel(); throw nativeError("Download timed out") }
         if let failure { throw failure }

@@ -53,6 +53,34 @@ class FlasherService : Service() {
     private val binder = LocalBinder()
     private val main = Handler(Looper.getMainLooper())
     private val worker = Executors.newSingleThreadExecutor()
+    private val logWorker = Executors.newSingleThreadExecutor()
+    private lateinit var operations: OperationLog
+    fun recordEvent(event: String, message: String = "", level: String = "INFO") {
+        if (!::operations.isInitialized || logWorker.isShutdown) return
+        logWorker.execute { runCatching { operations.append(level, event, message) }.onFailure {
+            android.util.Log.e("FM1Diagnostics", "Could not persist operation log", it)
+        } }
+    }
+    fun recordAction(action: AppAction) {
+        if (action.kind !in listOf(AppActionKind.LOG_CLEAR, AppActionKind.LOGGER_REFRESH)) recordEvent("ACTION_${action.kind}")
+    }
+    fun recordFailure(failure: Throwable) { recordEvent("ERROR", "${failure.javaClass.simpleName}: ${resolve(failure.appMessage(R.string.library_change_error))}", "ERROR") }
+    fun clearOperationLog() {
+        if (!state.experimental || state.busy) return
+        logWorker.execute {
+            runCatching { operations.clear() }.onSuccess {
+                update { it.copy(logs = emptyList(), status = msg("operation_log_cleared")) }
+            }.onFailure { status(failureText(it, R.string.library_change_error)) }
+        }
+    }
+    fun exportOperationLog(uri: android.net.Uri) {
+        if (!state.experimental || state.busy) return
+        logWorker.execute {
+            runCatching { checkNotNull(contentResolver.openOutputStream(uri, "wt")).bufferedWriter().use { it.write(operations.export()) } }
+                .onSuccess { status(msg("operation_log_saved")) }
+                .onFailure { status(failureText(it, R.string.logger_save_failed)) }
+        }
+    }
     private val listeners = CopyOnWriteArraySet<(UiState) -> Unit>()
     private val resumePort = LinkedBlockingQueue<Endpoint>(1)
     lateinit var monitor: MidiMonitor
@@ -79,6 +107,7 @@ class FlasherService : Service() {
                 synchronized(continuityLock) { activeGate?.removedPath(device.deviceName) }
                 midi.removedPath(device.deviceName)
             }
+            recordEvent(intent.action.orEmpty(), device.deviceName)
             refreshDevices()
         }
     }
@@ -105,6 +134,8 @@ class FlasherService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        operations = OperationLog(AndroidStorage(filesDir), System::currentTimeMillis)
+        recordEvent("SERVICE_STARTED", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
         state = state.copy(experimental = getSharedPreferences("features", MODE_PRIVATE).getBoolean("experimental", false))
         manager = getSystemService(MidiManager::class.java)
         midi = AndroidMidi(manager, main)
@@ -137,7 +168,7 @@ class FlasherService : Service() {
                 restoreSelection()
                 if (journal.unresolved() || fleet.jobs.any { it.outcome == JobOutcome.UNCONFIRMED }) status(msg(R.string.flash_interrupted))
                 if (fleet.loadFailed) status(msg("fleet_storage_error"))
-            } catch (failure: Exception) { status(failure.appMessage(R.string.library_read_error)) }
+            } catch (failure: Exception) { status(failureText(failure, R.string.library_read_error)) }
             finally { finishLibraryTask() }
         }
     }
@@ -159,17 +190,23 @@ class FlasherService : Service() {
 
     private fun status(text: AppText, progress: Int = -1) {
         if (state.status == text && state.progress == progress) return
+        recordEvent((text as? AppText.Resource)?.key ?: "STATUS", "${resolve(text)}; progress=$progress")
         update { it.copy(status = text, progress = progress, logs = (it.logs + text).takeLast(100)) }
         if (state.flashing) getSystemService(NotificationManager::class.java).notify(1, notification(text))
     }
 
+    private fun failureText(failure: Throwable, fallback: Int): AppText {
+        recordFailure(failure)
+        return failure.appMessage(fallback)
+    }
     private fun execute(action: () -> Unit) = worker.execute { CatalogOperations.lock.withLock(action) }
 
     fun refreshDevices() {
         val devices = midi.devices()
+        if (state.devices.map { it.endpoint } != devices.map { it.endpoint }) recordEvent("MIDI_PORTS_CHANGED", devices.joinToString { it.endpoint.toString() })
         synchronized(continuityLock) { activeGate?.observe(devices.map { it.endpoint }); activeGate?.observeUsb(getSystemService(UsbManager::class.java).deviceList.keys) }
         // Keep transition candidates out of the registry until explicitly bound by the session.
-        if (!state.flashing) runCatching { fleet.attach(devices.map { it.endpoint }) }.onFailure { status(it.appMessage(R.string.library_read_error)) }
+        if (!state.flashing) runCatching { fleet.attach(devices.map { it.endpoint }) }.onFailure { status(failureText(it, R.string.library_read_error)) }
         update { it.copy(devices = devices, fleet = fleet.devices, jobs = fleet.jobs) }
     }
     private fun publishFleet() { update { it.copy(fleet = fleet.devices, jobs = fleet.jobs) } }
@@ -198,6 +235,7 @@ class FlasherService : Service() {
     }
 
     fun onAppOpened() {
+        recordEvent("APP_FOREGROUND")
         uiVisible = true
         if (state.busy) { refreshWhenIdle = true; return }
         refreshWhenIdle = false
@@ -228,6 +266,7 @@ class FlasherService : Service() {
     }
 
     fun onAppClosed() {
+        recordEvent("APP_BACKGROUND")
         uiVisible = false; refreshWhenIdle = false; monitor.stop()
         if (!state.busy) stopSelf()
     }
@@ -266,7 +305,7 @@ class FlasherService : Service() {
             val updates = CatalogBrowser.updates(catalog, state.downloads).size
             status(if (catalog.fresh) msg(R.string.catalog_checked, updates)
                 else msg(R.string.catalog_stale_local_ready))
-        } catch (failure: Exception) { status(failure.appMessage(R.string.catalog_read_error)) }
+        } catch (failure: Exception) { status(failureText(failure, R.string.catalog_read_error)) }
         finally { finishLibraryTask() }
     }
 
@@ -308,7 +347,7 @@ class FlasherService : Service() {
                 status(msg(R.string.connected_only, target.usb.deviceName, identity))
             } catch (failure: Exception) {
                 update { it.copy(target = null, identity = null) }
-                status(failure.appMessage(R.string.connect_error))
+                status(failureText(failure, R.string.connect_error))
             } finally { finishLibraryTask() }
         }
     }
@@ -330,7 +369,7 @@ class FlasherService : Service() {
                 val ready = library.load(selected, state.catalog).first.entry
                 update { it.copy(ready = ready) }
             }
-            catch (failure: Exception) { status(msg(R.string.choose_package_again, failure.appMessage(R.string.local_library_error))) }
+            catch (failure: Exception) { status(msg(R.string.choose_package_again, failureText(failure, R.string.local_library_error))) }
         }
     }
 
@@ -342,16 +381,16 @@ class FlasherService : Service() {
         if (message != null) status(message)
         execute {
             try { action() }
-            catch (failure: Exception) { status(failure.appMessage(R.string.library_change_error)) }
+            catch (failure: Exception) { status(failureText(failure, R.string.library_change_error)) }
             finally {
-                runCatching { publishLibrary() }.onFailure { status(it.appMessage(R.string.local_library_error)) }
+                runCatching { publishLibrary() }.onFailure { status(failureText(it, R.string.local_library_error)) }
                 finishLibraryTask(completion)
             }
         }
     }
 
     fun saveBrowse(values: Map<String, String>) = execute {
-        try { database.saveBrowse(values) } catch (e: Exception) { status(e.appMessage(R.string.library_change_error)) }
+        try { database.saveBrowse(values) } catch (e: Exception) { status(failureText(e, R.string.library_change_error)) }
     }
 
     fun setOffline(offline: Boolean) = libraryTask {
@@ -408,7 +447,7 @@ class FlasherService : Service() {
                     else status(msg(R.string.source_check_offline))
                 }
                 publishLibrary(); restoreSelection()
-            } catch (e: Exception) { failure = e.appMessage(R.string.source_invalid_config); throw e }
+            } catch (e: Exception) { failure = failureText(e, R.string.source_invalid_config); throw e }
         }
     }
 
@@ -433,6 +472,14 @@ class FlasherService : Service() {
         update { it.copy(undoAvailable = removed != null) }
         if (state.ready?.key == id) update { it.copy(ready = null) }
         status(msg(R.string.package_removed))
+    }
+
+    fun clearDownloads() = libraryTask {
+        check(fleet.jobs.none { it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) }) { failed(msg("fleet_package_pinned")) }
+        removedPackage = null
+        update { it.copy(ready = null, undoAvailable = false) }
+        library.clearDownloads()
+        status(msg("downloads_cleared"))
     }
 
     fun undoRemove() = libraryTask {
@@ -474,7 +521,7 @@ class FlasherService : Service() {
         updates.forEachIndexed { index, entry ->
             status(msg(R.string.updating_package, index + 1, updates.size, entryTitleText(entry)))
             try { storeDownload(entry); completed++ }
-            catch (failure: Exception) { errors += AppText.Joined(listOf(entryTitleText(entry), failure.appMessage(R.string.local_library_error)), ": ") }
+            catch (failure: Exception) { errors += AppText.Joined(listOf(entryTitleText(entry), failureText(failure, R.string.local_library_error)), ": ") }
         }
         val report = mutableListOf<AppText>()
         report += if (updates.isEmpty() && unavailable.isEmpty()) msg(R.string.packages_current)
@@ -512,7 +559,7 @@ class FlasherService : Service() {
                         runJob(job)
                     })
                 } catch (failure: Exception) {
-                    status(msg(R.string.flash_unconfirmed, failure.appMessage(R.string.flash_result_unknown)))
+                    status(msg(R.string.flash_unconfirmed, failureText(failure, R.string.flash_result_unknown)))
                 } finally {
                     activeJob = null
                     synchronized(continuityLock) { activeGate = null }
@@ -525,7 +572,7 @@ class FlasherService : Service() {
                 }
             }
         } catch (failure: Exception) {
-            status(failure.appMessage(R.string.flash_result_unknown)); stopForeground(STOP_FOREGROUND_REMOVE); stopSelf()
+            status(failureText(failure, R.string.flash_result_unknown)); stopForeground(STOP_FOREGROUND_REMOVE); stopSelf()
         }
         return START_NOT_STICKY
     }
@@ -578,7 +625,7 @@ class FlasherService : Service() {
             fleet.result(job.id, JobOutcome.CONFIRMED, "fleet_confirmed", 100); publishFleet()
             update { it.copy(identity = installed) }
         } catch (failure: Exception) {
-            val reason = (failure.appMessage(R.string.flash_result_unknown) as? AppText.Resource)?.takeIf { it.arguments.isEmpty() }?.key ?: "fleet_unconfirmed"
+            val reason = (failureText(failure, R.string.flash_result_unknown) as? AppText.Resource)?.takeIf { it.arguments.isEmpty() }?.key ?: "fleet_unconfirmed"
             fleet.result(job.id, JobOutcome.UNCONFIRMED, reason); publishFleet()
             throw failure
         } finally {
@@ -627,7 +674,7 @@ class FlasherService : Service() {
             return START_NOT_STICKY
         }
         try { monitor.stop() } catch (failure: Exception) {
-            status(failure.appMessage(R.string.flash_result_unknown))
+            status(failureText(failure, R.string.flash_result_unknown))
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf()
             return START_NOT_STICKY
         }
@@ -646,7 +693,7 @@ class FlasherService : Service() {
         }
         try { startForeground(1, notification(msg(R.string.recovery_starting))) }
         catch (failure: RuntimeException) {
-            status(failure.appMessage(R.string.flash_result_unknown)); stopSelf(); return START_NOT_STICKY
+            status(failureText(failure, R.string.flash_result_unknown)); stopSelf(); return START_NOT_STICKY
         }
         update { it.copy(busy = true, flashing = true, recoveryPlan = null) }
         execute {
@@ -682,7 +729,7 @@ class FlasherService : Service() {
                     }
                 }
             } catch (failure: Exception) {
-                status(msg(R.string.recovery_failed, failure.appMessage(R.string.flash_result_unknown)))
+                status(msg(R.string.recovery_failed, failureText(failure, R.string.flash_result_unknown)))
             } finally {
                 if (ownsMidi) MidiSessionGuard.release()
                 if (wake.isHeld) wake.release()
@@ -745,6 +792,8 @@ class FlasherService : Service() {
         monitor.stop()
         unregisterReceiver(usbEvents)
         manager?.unregisterDeviceCallback(callback)
+        recordEvent("SERVICE_STOPPED")
+        logWorker.shutdown()
         worker.shutdownNow()
         listeners.clear()
         super.onDestroy()

@@ -67,4 +67,14 @@
     <string name="chip_result_title">已检测到闪存芯片</string>
     <string name="tools_open">模式 / 芯片</string>
     <string name="mode_current">当前 MIDI 设备：%1$s</string>
+    <string name="operation_log_title">操作日志</string>
+    <string name="operation_log_help">应用在本地记录操作和错误（最多 256 KiB）。报告问题时可导出日志。不会自动上传日志。</string>
+    <string name="operation_log_export">导出操作日志</string>
+    <string name="operation_log_clear">清除操作日志</string>
+    <string name="operation_log_clear_confirm">删除本地操作日志？已导出的文件不受影响。</string>
+    <string name="operation_log_cleared">操作日志已清除。</string>
+    <string name="operation_log_saved">操作日志已导出。</string>
+    <string name="downloads_clear">清除已下载固件</string>
+    <string name="downloads_clear_confirm">删除全部 %1$d 个已下载固件包？离线安装前需要重新下载。收藏、乐器名称、历史记录和恢复备份将保留。</string>
+    <string name="downloads_cleared">已清除下载的固件。</string>
 </resources>

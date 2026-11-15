@@ -67,4 +67,14 @@
     <string name="chip_result_title">Wykryto kość pamięci</string>
     <string name="tools_open">Tryby / kość</string>
     <string name="mode_current">Bieżące urządzenie MIDI: %1$s</string>
+    <string name="operation_log_title">Log operacji</string>
+    <string name="operation_log_help">Aplikacja zapisuje lokalnie operacje i błędy (do 256 KiB). Wyeksportuj log przy zgłaszaniu problemu. Log nie jest automatycznie wysyłany.</string>
+    <string name="operation_log_export">Eksportuj log operacji</string>
+    <string name="operation_log_clear">Wyczyść log operacji</string>
+    <string name="operation_log_clear_confirm">Usunąć lokalny log operacji? Wcześniej wyeksportowane pliki pozostaną bez zmian.</string>
+    <string name="operation_log_cleared">Wyczyszczono log operacji.</string>
+    <string name="operation_log_saved">Wyeksportowano log operacji.</string>
+    <string name="downloads_clear">Wyczyść pobrane firmware</string>
+    <string name="downloads_clear_confirm">Usunąć wszystkie pobrane paczki firmware (%1$d)? Instalacja offline będzie wymagała ponownego pobrania. Ulubione, nazwy instrumentów, historia i kopie odzyskiwania pozostaną zachowane.</string>
+    <string name="downloads_cleared">Wyczyszczono pobrane firmware.</string>
 </resources>

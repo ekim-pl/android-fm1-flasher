@@ -1,6 +1,6 @@
 # Wiele FM-1. Jeden plan instalacji.
 
-**Multiplatform FM-1 Flasher 0.9.0 / 19** to niezależna aplikacja testowa na Androida 14+ do zarządzania firmware M-VAVE FM-1 przez USB MIDI i hub OTG. Build tego brancha przygotowano lokalnie; opublikowano go jako eksperymentalne 0.9.0 na GitHub Releases.
+**Multiplatform FM-1 Flasher 0.9.1 / 21** to prerelease na Androida 14+ do obsługi wielu FM-1 przez hub OTG. Dodaje trwały log operacji, eksport i czyszczenie logu w trybie eksperymentalnym oraz bezpieczne czyszczenie pobranych firmware. Właściciel potwierdził udane testy buildu 20 na fizycznych instrumentach.
 
 [Aktualna instrukcja](documentation.md) · [O aplikacji](../../about/README.pl.md) · [Historia wydań](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
@@ -22,7 +22,7 @@ Używaj przewodów danych i stabilnego zasilania; zalecany jest zasilany hub. Ap
 - [Wiele instrumentów przez hub](documentation.md#multiple-fm1-devices-on-a-hub)
 - [Budowanie i testy](documentation.md#building-and-testing)
 - [Architektura i granice platform](../../MIGRATION.md)
-- [Raport testowego buildu](../../publication/qa/0.9.0-publication19.txt)
+- [Raport testowego buildu](../../publication/qa/0.9.1-test21.txt)
 - [Stan publikacji i ograniczenia workflow](publication.txt)
 - [Budowanie witryny](pages.md)
 

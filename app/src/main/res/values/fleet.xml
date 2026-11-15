@@ -67,4 +67,14 @@
     <string name="chip_result_title">Flash chip detected</string>
     <string name="tools_open">Modes / chip</string>
     <string name="mode_current">Current MIDI device: %1$s</string>
+    <string name="operation_log_title">Operation log</string>
+    <string name="operation_log_help">The app keeps a local operation and error log (up to 256 KiB). Export it when reporting a problem. No log is uploaded automatically.</string>
+    <string name="operation_log_export">Export operation log</string>
+    <string name="operation_log_clear">Clear operation log</string>
+    <string name="operation_log_clear_confirm">Delete the local operation log? Previously exported files remain unchanged.</string>
+    <string name="operation_log_cleared">Operation log cleared.</string>
+    <string name="operation_log_saved">Operation log exported.</string>
+    <string name="downloads_clear">Clear downloaded firmware</string>
+    <string name="downloads_clear_confirm">Delete all %1$d downloaded firmware packages? You will need to download them again for offline installation. Favorites, device names, history and recovery backups are kept.</string>
+    <string name="downloads_cleared">Downloaded firmware cleared.</string>
 </resources>

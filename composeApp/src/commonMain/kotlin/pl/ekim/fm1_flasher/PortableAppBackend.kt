@@ -17,6 +17,11 @@ interface AppHost {
 class PortableAppBackend(private val midi: ProbeBackend, private val monitor: PassiveMidiBackend,
     private val storage: AppStorage, private val http: HttpClient, private val host: AppHost) : AppBackend {
     override val state = MutableStateFlow(AppSnapshot(language = host.systemLanguage.substringBefore('-').let { if (it in listOf("pl", "zh")) it else "en" }))
+    private val operationLog = OperationLog(storage, ::epochMillis)
+    private val logScope = CoroutineScope(SupervisorJob() + Dispatchers.Default.limitedParallelism(1))
+    private fun logEvent(event: String, message: String = "", level: String = "INFO") {
+        logScope.launch { runCatching { operationLog.append(level, event, message) } }
+    }
     private val covers = ArtworkCache(storage, http) { state.value.offline }
     override suspend fun artwork(entry: CatalogEntry) = covers.load(entry)
     private val repository = FirmwareRepository(storage, http, ::epochMillis)
@@ -41,12 +46,14 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
         } catch (failure: Exception) { report(failure.appMessage("library_read_error")) }
         finally { state.update { it.copy(busy = false, initialized = true) } }
     } }
-    private fun report(text: AppText, progress: Int = -1) { state.update { it.copy(status = text, progress = progress, logs = (it.logs + text).takeLast(100)) } }
+    private fun report(text: AppText, progress: Int = -1) {
+        logEvent((text as? AppText.Resource)?.key ?: "STATUS", "${resolveCoreText(text, state.value.language)}; progress=$progress")
+        state.update { it.copy(status = text, progress = progress, logs = (it.logs + text).takeLast(100)) } }
     private fun task(action: () -> Unit) {
         if (state.value.busy) return
         state.update { it.copy(busy = true) }
         scope.launch {
-            try { action() } catch (failure: Exception) { report(failure.appMessage("library_change_error")) }
+            try { action() } catch (failure: Exception) { logEvent("ERROR", failure.toString(), "ERROR"); report(failure.appMessage("library_change_error")) }
             finally { runCatching { publishLibrary() }.onFailure { report(it.appMessage("local_library_error")) }; state.update { it.copy(busy = false) } }
         }
     }
@@ -96,7 +103,17 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
     }
     override fun document(name: String) = host.document(name)
     override fun perform(action: AppAction) {
+        if (action.kind !in listOf(AppActionKind.LOGGER_REFRESH, AppActionKind.LOG_CLEAR)) logEvent("ACTION_${action.kind}")
         when (action.kind) {
+            AppActionKind.LOG_EXPORT -> if (state.value.experimental && !state.value.busy) logScope.launch {
+                runCatching { host.exportText("fm1-operations-${epochMillis()}.jsonl", operationLog.export()) }
+                    .onFailure { report(it.appMessage("logger_save_failed")) }
+            }
+            AppActionKind.LOG_CLEAR -> if (state.value.experimental && !state.value.busy) logScope.launch {
+                runCatching { operationLog.clear() }.onSuccess {
+                    state.update { it.copy(logs = emptyList(), status = msg("operation_log_cleared")) }
+                }.onFailure { report(it.appMessage("library_change_error")) }
+            }
             AppActionKind.UNDO_REMOVE, AppActionKind.DEVICE_ALIAS, AppActionKind.DEVICE_CHIP, AppActionKind.DEVICE_PAIR, AppActionKind.QUEUE_ADD, AppActionKind.QUEUE_REMOVE, AppActionKind.QUEUE_START, AppActionKind.QUEUE_STOP -> report(msg("ios_platform_limits"))
             AppActionKind.RECONNECT -> { if (state.value.awaitingPort && state.value.candidates.any { it.id == action.id }) requestedPort.value = action.id }
             AppActionKind.OPEN_LINK -> if (action.id.startsWith("https://") || action.id.startsWith("mailto:")) host.openLink(action.id)
@@ -112,6 +129,7 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
     private fun performBlocking(action: AppAction) {
         when(action.kind) {
             AppActionKind.SOURCE_SAVE, AppActionKind.SOURCE_ENABLE, AppActionKind.SOURCE_CHECK, AppActionKind.SOURCE_REMOVE, AppActionKind.SOURCE_RESTORE, AppActionKind.BACKGROUND_SYNC -> failed(msg("not_applicable"))
+            AppActionKind.CLEAR_DOWNLOADS -> { repository.clearDownloads(); state.update { it.copy(ready = null) }; report(msg("downloads_cleared")) }
             AppActionKind.PORTS_REFRESH -> refreshPorts()
             AppActionKind.REFRESH -> {
                 check(!state.value.offline) { failed(msg("offline_refresh_blocked")) }

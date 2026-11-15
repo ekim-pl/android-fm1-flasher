@@ -180,6 +180,11 @@ class FirmwareRepository(private val storage: AppStorage, private val http: Http
         if (prefs.selectedId == id) saveSettings(prefs.copy(selectedId = null))
         prune()
     }
+    fun clearDownloads() {
+        for (directory in listOf("library/records", "library/packages"))
+            storage.list(directory).forEach { storage.remove("$directory/$it") }
+        saveSettings(settings().copy(selectedId = null))
+    }
     private fun prune() {
         val records = storage.list("library/records").filter { it.endsWith(".json") }
         val used = runCatching { records.map { record("library/records/$it").entry.sha256 }.toSet() }.getOrNull() ?: return

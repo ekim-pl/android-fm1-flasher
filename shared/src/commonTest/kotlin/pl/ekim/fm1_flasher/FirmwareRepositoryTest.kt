@@ -19,6 +19,18 @@ class FirmwareRepositoryTest {
     private fun repo(storage: Storage, fetch: (String) -> ByteArray = { error("Network unexpected: $it") }, clock: () -> Long = { FirmwareRepository.DAY * 3 }) = FirmwareRepository(storage, object : HttpClient {
         override fun get(url: String, limit: Int, artworkOnly: Boolean) = fetch(url).also { require(it.size <= limit) }
     }, clock)
+    @Test fun bulkClearKeepsFavoritesAndRecoveryButDeletesEvenUnreadableRecords() {
+        val storage = Storage(); val repo = repo(storage)
+        repo.save(entry(), raw); repo.saveSettings(LibrarySettings(setOf("demo"), true, "demo"))
+        storage.files["library/records/broken.json"] = "broken".encodeToByteArray()
+        storage.files["library/packages/orphan.fwsc"] = "broken".encodeToByteArray()
+        storage.files["recovery/backup"] = "keep".encodeToByteArray()
+        repo.clearDownloads()
+        assertTrue(repo.list().isEmpty())
+        assertTrue(storage.list("library/packages").isEmpty())
+        assertEquals(LibrarySettings(setOf("demo"), true, null), repo.settings())
+        assertEquals("keep", storage.files.getValue("recovery/backup").decodeToString())
+    }
     @Test fun dailyBudgetSurvivesFailedFetchAndProcessRestart() {
         val storage = Storage(); var calls = 0; var now = FirmwareRepository.DAY * 3
         val first = repo(storage, { calls++; error("Offline") }, { now })

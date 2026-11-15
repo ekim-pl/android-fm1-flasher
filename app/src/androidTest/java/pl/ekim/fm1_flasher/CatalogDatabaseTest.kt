@@ -34,6 +34,22 @@ class CatalogDatabaseTest : InstrumentationTestCase() {
         assertTrue("Expected a rejected operation", failed)
     }
 
+    fun testClearAllDownloadsPreservesFavoritesSourcesAndRecoveryFiles() {
+        val library = LocalLibrary(directory, database)
+        val raw = testPackage(); val entry = localEntry(raw)
+        library.save(entry, raw)
+        database.saveSettings(LibrarySettings(setOf(entry.key), true, entry.key))
+        val sourceCount = database.sources().size
+        val backup = File(directory, "recovery/keep.bin").apply { parentFile.mkdirs(); writeText("keep") }
+        library.clearDownloads()
+        assertTrue(database.downloaded().isEmpty())
+        assertTrue(library.list().isEmpty())
+        assertEquals(setOf(entry.key), database.settings().favorites)
+        assertTrue(database.settings().offline)
+        assertNull(database.settings().selectedId)
+        assertEquals(sourceCount, database.sources().size)
+        assertEquals("keep", backup.readText())
+    }
     fun testComposeBooleanBrowsePreferencesMigrateWithoutClassCast() {
         val prefs = instrumentation.targetContext.getSharedPreferences("browse", android.content.Context.MODE_PRIVATE)
         val old = prefs.all.filterKeys { it in setOf("downloaded", "favorites") }

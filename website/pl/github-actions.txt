@@ -1,7 +1,7 @@
-GitHub Actions na task/multiplatform-rework — 0.9.0 / 19
+GitHub Actions na task/multiplatform-rework — 0.9.1 / 21
 
 Opis dotyczy plików workflow w repozytorium, nie uruchamia publikacji.
-Android ID: pl.ekim.multiplatform_fm1_flasher. APK 0.9.0 jest lokalnym buildem testowym.
+Android ID: pl.ekim.multiplatform_fm1_flasher. APK 0.9.1 jest lokalnym buildem testowym.
 
 ANDROID CI (.github/workflows/android-ci.yml)
 Push na branch, pull request lub ręczne uruchomienie. JDK 17, SDK 36 i Build Tools 35.0.0.
@@ -20,7 +20,7 @@ GOOGLE PLAY RELEASE (.github/workflows/google-play.yml) — KONFIGURACJA ORYGINA
 Uruchamiają go wysłane tagi v* lub ręczny dispatch. Ręczne pole publish domyślnie ma true.
 Buduje podpisany AAB i może wysłać go na internal. Fastlane --package_name nadal wskazuje
 pl.ekim.fm1_flasher, podczas gdy ten branch tworzy pl.ekim.multiplatform_fm1_flasher.
-Nie jest to skonfigurowana ścieżka publikacji forka. Nie twórz tagu v0.9.0 tylko jako
+Nie jest to skonfigurowana ścieżka publikacji forka. Nie twórz tagu v0.9.1 tylko jako
 etykiety lokalnego APK: wyzwalacz v* może rozpocząć workflow Play. Żaden workflow nie
 ustanawia automatycznego tworzenia wydania GitHub Releases.
 

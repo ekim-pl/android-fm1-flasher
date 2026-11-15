@@ -1,6 +1,6 @@
 # Project website on GitHub Pages
 
-This branch documents the 0.9.0/19 test implementation. Building it does not publish the APK or deploy branch-only documentation. The default-branch public site may still describe the original application. Keep the release status and application ID explicit when promoting documentation.
+This branch documents the 0.9.1/21 test implementation. Building it does not publish the APK or deploy branch-only documentation. The default-branch public site may still describe the original application. Keep the release status and application ID explicit when promoting documentation.
 
 The website, documentation and privacy policy are built from this repository. Every page is available in English, Polish and Simplified Chinese, including navigation, publishing instructions and license translations. The **Polski**, **English** and **简体中文** links switch to the same page in another language.
 

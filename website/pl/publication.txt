@@ -1,5 +1,5 @@
 Multiplatform FM-1 Flasher — dokumentacja publikacji
-Stan: 0.9.0 / Android versionCode 19, task/multiplatform-rework.
+Stan: 0.9.1 / Android versionCode 21, task/multiplatform-rework.
 
 BIEŻĄCA APLIKACJA
 Android ID: pl.ekim.multiplatform_fm1_flasher, odrębny od pl.ekim.fm1_flasher.
@@ -9,9 +9,9 @@ Języki: polski, angielski, chiński uproszczony. Kontakt: ekim.pl@gmail.com.
 Android ma Urządzenia / Bibliotekę / Zadania i trwałą sekwencyjną kolejkę.
 
 STAN WYDANIA
-0.9.0 build 19 opublikowano eksperymentalnie na GitHub Releases z nową dokumentacją.
-publication/qa/0.9.0-publication19.txt opisuje dokładny APK, hash, podpis i zakres sprawdzenia.
-Lokalny dist/0.9.0-test jest ignorowany przez Git, więc nie będzie w świeżym klonie.
+0.9.1 build 21 opublikowano eksperymentalnie na GitHub Releases z nową dokumentacją.
+publication/qa/0.9.1-test21.txt opisuje dokładny APK, hash, podpis i zakres sprawdzenia.
+Lokalny dist/0.9.1-test jest ignorowany przez Git, więc nie będzie w świeżym klonie.
 publication/github-release.txt to projekt opisu, a nie dowód istnienia wydania.
 Zmiana dokumentów nie zmienia przekazanego APK. Nowy build wymaga własnego hasha
 i weryfikacji pakowania; zachowaj historyczne raporty.
@@ -36,7 +36,7 @@ Edycja tych plików nie publikuje treści w sklepie.
 
 STARSZE MATERIAŁY I WORKFLOW
 Dotychczasowe screenshoty/grafiki pokazują wcześniejszy UI, nie potwierdzają funkcji
-kolejki 0.9.0. Przed publikacją sklepową wykonaj nowe zdjęcia ekranu. Skrypt grafiki
+kolejki 0.9.1. Przed publikacją sklepową wykonaj nowe zdjęcia ekranu. Skrypt grafiki
 ramuje/generuje materiały, ale nie wykonuje nowych zrzutów aplikacji.
 publication/validation.json to jawnie historyczny raport oryginalnej aplikacji.
 publication/fdroid/pl.ekim.fm1_flasher.yml to archiwalna recepta oryginału, nie tego forka.

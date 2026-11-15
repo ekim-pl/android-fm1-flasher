@@ -2,7 +2,7 @@
 
 Niezależny menedżer firmware dla **M-VAVE FM-1**, napisany w Kotlin Multiplatform i Compose Multiplatform. Android obsługuje wiele instrumentów przez hub OTG, zapisując firmware **kolejno, na jednym instrumencie naraz**.
 
-Dokument opisuje **0.9.0, build Android 19**, branch `task/multiplatform-rework` i implementację `6e9947b`. Przygotowano lokalny testowy APK; **0.9.0 opublikowano jako eksperymentalne wydanie GitHub Releases**. [Raport buildu](../../publication/qa/0.9.0-publication19.txt) identyfikuje sprawdzony plik i sumę kontrolną. Późniejsze zmiany dokumentacji nie zmieniają wcześniej przekazanego APK.
+Dokument opisuje **0.9.1, build Android 21**, na branchu `task/multiplatform-rework`. Prerelease dodaje trwały log operacji oraz zbiorcze czyszczenie pobranych firmware. [Raport buildu](../../publication/qa/0.9.1-test21.txt) opisuje weryfikację i ograniczenia. Właściciel potwierdził udane testy buildu 20 na fizycznych instrumentach; jest to informacja od użytkownika, nie pełna macierz akceptacji sprzętowej.
 
 [English](../../README.md) · [简体中文](../zh-CN/documentation.md) · [Architektura](../../MIGRATION.md) · [Prywatność](privacy.md)
 
@@ -23,7 +23,7 @@ Identyfikator Androida to `pl.ekim.multiplatform_fm1_flasher`. Aplikacja instalu
 <a id="getting-started"></a>
 ## Pierwsza instalacja i plan aktualizacji
 
-1. Zainstaluj testowy APK na Androidzie 14 lub nowszym. Podpis debug buildu 19 odpowiada buildowi 18: instalacja jako aktualizacja, bez odinstalowania, zachowuje bibliotekę i preferencje tego forka.
+1. Zainstaluj testowy APK na Androidzie 14 lub nowszym. Podpis debug buildu 21 odpowiada buildowi 18: instalacja jako aktualizacja, bez odinstalowania, zachowuje bibliotekę i preferencje tego forka.
 2. W **Bibliotece** znajdź firmware i pobierz paczkę z jej szczegółów. Pobranie sprawdza integralność, ale nie rozpoczyna instalacji.
 3. Podłącz instrumenty przewodami do transmisji danych przez hub OTG. Zalecany jest hub z osobnym zasilaniem. Aplikacja nie mierzy jakości zasilania.
 4. W **Urządzeniach** wybierz **Odczytaj instrument** na każdej karcie. Udziel systemowej zgody USB, gdy będzie potrzebna. Do planu można dodać rozpoznany FM-1.
@@ -93,7 +93,7 @@ python3 tools/sync-resources.py --check
 ./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
 ```
 
-APK: `app/build/outputs/apk/debug/app-debug.apk`. Testy: `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`. Katalog `dist/` jest ignorowany przez Git: przygotowana kopia buildu 19 jest lokalna i nie musi istnieć po sklonowaniu repozytorium.
+APK: `app/build/outputs/apk/debug/app-debug.apk`. Testy: `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`. Katalog `dist/` jest ignorowany przez Git: przygotowana kopia buildu 21 jest lokalna i nie musi istnieć po sklonowaniu repozytorium.
 
 Źródłem tłumaczeń interfejsu są XML w `app/src/main/res/values*`; po ich zmianie uruchom `python3 tools/sync-resources.py`. Dokumenty O aplikacji to `about/README*.md`, pakowane z licencjami przez `:app:bundleProjectDocs`. Główny README nie jest dokumentem O aplikacji.
 
@@ -103,16 +103,24 @@ Zobacz [architekturę i komendy testów](../../MIGRATION.md), [listę odbiorową
 
 Host Swift i metadane wspólnego kodu istnieją, ale nie zweryfikowano kompilacji Xcode ani aktualizacji fizycznego iPhone’a. Rejestr/kolejka i androidowy harmonogram wielu źródeł nie zostały przeniesione. Host zachowuje wcześniejszy interfejs jednego instrumentu i ręczny reconnect. Pozostaw aplikację na wierzchu; skończony czas pracy w tle nie zastępuje usługi Androida.
 
-Skonfigurowane cele Kotlin to `iosArm64` i `iosSimulatorArm64`, bez symulatora Intel. `iosApp/project.yml` opisuje projekt XcodeGen, bundle ID `pl.ekim.multiplatform-fm1-flasher`, wersję 0.9.0/19 i deployment target iOS 15. Kroki dla macOS/Xcode zawiera [MIGRATION.md](../../MIGRATION.md). Kompilacja metadanych pod Linuksem nie tworzy aplikacji iOS.
+Skonfigurowane cele Kotlin to `iosArm64` i `iosSimulatorArm64`, bez symulatora Intel. `iosApp/project.yml` opisuje projekt XcodeGen, bundle ID `pl.ekim.multiplatform-fm1-flasher`, wersję 0.9.1/21 i deployment target iOS 15. Kroki dla macOS/Xcode zawiera [MIGRATION.md](../../MIGRATION.md). Kompilacja metadanych pod Linuksem nie tworzy aplikacji iOS.
 
 ## Zakres weryfikacji
 
-Dla implementacji buildu 19 zaliczono **50 testów shared JVM i 120 testów Android JVM**; pominięto cztery testy wymagające zewnętrznych fixture’ów. Zaliczone są **29 testów instrumentacyjnych Androida** i końcowa powtórka trzech testów UI po zmianie filtrów/motywu. Przeszły buildy debug, lint, synchronizacja zasobów i metadane Kotlin/iOS. W dedykowanym emulatorze Android 16 zaktualizowano aplikację i sprawdzono prawdziwy lokalny katalog/interfejs. To wyniki zapisanej próby, nie deklaracja ponowienia całego zestawu przy każdej późniejszej edycji dokumentacji.
+W buildzie 21 zaliczono **179 testów jednostkowych (56 shared + 123 Android JVM)**; cztery testy zewnętrznych fixture’ów pominięto. Zaliczone są **33 testy instrumentacyjne Androida**, w tym eksport/czyszczenie logu, czyszczenie biblioteki i potwierdzenia w trzech językach. Przeszły debug, lint i kompilacja metadanych iOS. Właściciel potwierdził działanie buildu 20 na fizycznych FM-1; nowych funkcji i wszystkich kombinacji sprzętu nie zweryfikowano fizycznie.
 
-Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.9.0-publication19.txt) zawiera identyfikację pliku i zakres prób.
+Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.9.1-test21.txt) zawiera identyfikację pliku i zakres prób.
 
 ## Prywatność i autorstwo
 
 Bez konta, reklam i analityki. Biblioteka, nazwy, odczytane seriale, wybory pamięci i historia zadań pozostają lokalnie. Serwery katalogów/grafik/paczek otrzymują metadane połączenia; aplikacja nie dołącza tożsamości instrumentów do tych żądań. Szczegóły: [polityka prywatności](privacy.md).
 
 Kod aplikacji: [MIT](../../LICENSE.md). Katalog [The Firmware Hub](https://thefirmwarehub.com): CC BY 4.0; firmware zachowuje licencje autorów. [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) jest opcjonalnym katalogiem. Informacje o zależnościach: [third_party](../../third_party/). Kontakt: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
+
+## Diagnostyka i czyszczenie pamięci
+
+Aplikacja stale zapisuje lokalny log operacji (do 256 KiB; najstarsze wpisy są usuwane). Log przetrwa restart aplikacji i zawiera czas, działania, zmiany portów USB/MIDI, etapy instalacji oraz przechwycone błędy. Nie zapisuje surowego ruchu MIDI ani plików firmware. Włącz **Ustawienia → Funkcje eksperymentalne**, aby użyć **Eksportuj log operacji** (JSON Lines, `.jsonl`) i **Wyczyść log operacji**. Eksport otwiera systemowy wybór pliku; log nie jest automatycznie wysyłany. Czyszczenie wymaga jednego potwierdzenia i nie usuwa wcześniej wyeksportowanych kopii. Kolejne zdarzenia są nadal zapisywane. Osobny Logger MIDI służy do podglądu surowego ruchu MIDI.
+
+**Ustawienia → Wyczyść pobrane firmware** usuwa po jednym potwierdzeniu wszystkie pobrane paczki i metadane, w tym uszkodzone i osierocone pliki. Czyści wybór paczki i możliwość cofnięcia pojedynczego usunięcia. Zachowuje ulubione, źródła katalogu, nazwy instrumentów, historię zadań i kopie odzyskiwania. Najpierw usuń oczekujące zadania; czyszczenie jest blokowane podczas pracy oraz przy paczkach przypisanych do oczekujących/trwających zadań. Instalacja offline wymaga ponownego pobrania paczek.
+
+**Urządzenia → Tryby i kość pamięci** rozdziela odczyt MIDI, przejście w tryb download i wykrywanie kości na czytelne karty. Wynik detekcji otwiera popup. Potem wyłącz i włącz instrument, aby wrócić do MIDI. Domyślne odłączone wpisy są tymczasowe; własne nazwy i cele kolejki pozostają. Opóźnione odłączenie poprzedniego portu USB nie przerywa kolejnego etapu tej samej aktualizacji. Utrata innego instrumentu lub huba nadal blokuje zapis.

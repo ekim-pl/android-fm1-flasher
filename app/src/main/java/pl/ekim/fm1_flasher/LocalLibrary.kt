@@ -75,6 +75,14 @@ class LocalLibrary(private val directory: File, private val database: CatalogDat
         pruneUnusedBytes()
     }
 
+    fun clearDownloads() {
+        database?.clearPackages()
+        for (directory in listOf(records, packages)) directory.listFiles().orEmpty().forEach {
+            check(it.isFile && it.delete()) { failed(msg(R.string.local_remove_error)) }
+        }
+        saveSettings(settings().copy(selectedId = null))
+    }
+
     fun settings(): LibrarySettings {
         database?.let { return it.settings() }
         if (!settingsFile.exists()) return LibrarySettings()

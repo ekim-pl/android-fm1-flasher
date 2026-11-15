@@ -47,3 +47,11 @@ Android 需要 **14+**、USB Host/OTG、MIDI、数据线和稳定供电，建议
 目录署名：[The Firmware Hub](https://thefirmwarehub.com)，CC BY 4.0；描述、图片和固件保留作者权利。应用：[MIT](../LICENSE.md)。Markdown：[CommonMark，BSD-2-Clause](../third_party/commonmark-LICENSE.txt)。网络/后台库：[Apache 2.0](../third_party/Apache-2.0.txt)、[声明](../third_party/android-libraries-NOTICE.txt)。
 
 联系：[ekim.pl@gmail.com](mailto:ekim.pl@gmail.com)。
+
+## 诊断与存储清理
+
+应用始终在本地保存操作日志（最多 256 KiB，自动移除最旧记录），重启后保留。日志包括时间、操作、USB/MIDI 端口变化、安装阶段和捕获的错误，不记录原始 MIDI 流量或固件字节。在**设置 → 实验功能**中使用**导出操作日志**（JSON Lines，`.jsonl`）或**清除操作日志**。导出打开系统文件选择器，不会自动上传。清除需一次确认，不会删除已导出的文件，后续事件仍会继续记录。独立的 MIDI 日志工具用于实时原始 MIDI 诊断。
+
+**设置 → 清除已下载固件**在一次确认后删除全部下载包与元数据，包括损坏及孤立文件，并清除当前选择和单包撤销记录。收藏、目录来源、乐器名称、任务历史和恢复备份保留。请先删除排队任务；操作进行中或存在排队/运行任务时禁止清理。离线安装前必须重新下载固件。
+
+**设备 → 模式与闪存芯片**提供分开的 MIDI 读取、下载模式和芯片检测卡片。检测成功会弹窗显示结果，之后关闭并重新开启乐器以返回 MIDI 模式。默认离线条目是临时的，自定义名称和排队目标会保留。来自同次更新旧端口的延迟 USB 断开事件不会中止下一阶段；其他乐器或集线器断开仍会阻止写入。

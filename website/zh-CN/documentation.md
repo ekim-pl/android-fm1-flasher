@@ -2,7 +2,7 @@
 
 面向 **M-VAVE FM-1** 的独立固件管理器，使用 Kotlin Multiplatform 和 Compose Multiplatform。Android 可通过 OTG 集线器管理多台乐器，并且**每次只写入一台乐器**。
 
-本指南对应 `task/multiplatform-rework` 分支的 **0.9.0、Android 构建 19**，实现提交为 `6e9947b`。已准备本地测试 APK，**0.9.0 已作为实验版发布到 GitHub Releases**。[构建报告](../../publication/qa/0.9.0-publication19.txt)记录了测试文件及校验和。之后修改文档不会改变此前提供的 APK。
+本文描述 `task/multiplatform-rework` 分支的 **0.9.1，Android 构建 21**。此预发布版本添加持久操作日志和批量清除固件下载。[构建报告](../../publication/qa/0.9.1-test21.txt) 记录验证结果与限制。所有者报告构建 20 已在实体乐器上测试成功；这是用户反馈，不代表完整的硬件验收。
 
 [English](../../README.md) · [Polski](../pl/documentation.md) · [实现说明](../../MIGRATION.md) · [隐私](privacy.md)
 
@@ -23,7 +23,7 @@ Android 应用 ID 是 `pl.ekim.multiplatform_fm1_flasher`。它与原应用 `pl.
 <a id="getting-started"></a>
 ## 开始使用
 
-1. 在 Android 14 或更高版本安装测试 APK。构建 19 的调试签名与构建 18 一致；直接更新、不要卸载，可保留此分支应用的固件库及偏好。
+1. 在 Android 14 或更高版本安装测试 APK。构建 21 的调试签名与构建 18 一致；直接更新、不要卸载，可保留此分支应用的固件库及偏好。
 2. 在**固件库**查找固件，从详情下载。下载会校验固件包，不会开始安装。
 3. 使用支持数据传输的线缆，通过 OTG 集线器连接乐器。建议独立供电；应用不能测量或保证集线器供电质量。
 4. 在**设备**中逐台选择**读取乐器信息**，按需授予 Android USB 权限。只有识别为 FM-1 的设备才能加入计划。
@@ -93,7 +93,7 @@ python3 tools/sync-resources.py --check
 ./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
 ```
 
-APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`。`dist/` 被 Git 忽略；构建 19 的预备副本是本地文件，新克隆不保证包含它。
+APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`。`dist/` 被 Git 忽略；构建 21 的预备副本是本地文件，新克隆不保证包含它。
 
 界面翻译以 `app/src/main/res/values*` XML 为准。修改后运行 `python3 tools/sync-resources.py`。应用内关于文档是 `about/README*.md`，通过 `:app:bundleProjectDocs` 与许可证一起打包；根 README 不是应用内关于文档。
 
@@ -103,16 +103,24 @@ APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outp
 
 已有 Swift 宿主和共享元数据，但尚未验证 Xcode 构建或物理 iPhone 更新。设备记录/队列以及 Android 多来源调度器尚未移植。宿主保留之前的单乐器界面与手动重连。使用时保持前台；有限后台时间不等同于 Android 服务。
 
-Kotlin 目标为 `iosArm64`、`iosSimulatorArm64`，未配置 Intel 模拟器。`iosApp/project.yml` 定义 XcodeGen 项目、bundle ID `pl.ekim.multiplatform-fm1-flasher`、版本 0.9.0/19 和部署目标 iOS 15。macOS/Xcode 步骤见 [MIGRATION.md](../../MIGRATION.md)。Linux 元数据编译不会生成 iOS 应用。
+Kotlin 目标为 `iosArm64`、`iosSimulatorArm64`，未配置 Intel 模拟器。`iosApp/project.yml` 定义 XcodeGen 项目、bundle ID `pl.ekim.multiplatform-fm1-flasher`、版本 0.9.1/21 和部署目标 iOS 15。macOS/Xcode 步骤见 [MIGRATION.md](../../MIGRATION.md)。Linux 元数据编译不会生成 iOS 应用。
 
 ## 验证范围
 
-实现构建 19 已通过 **50 个 shared JVM 测试和 120 个 Android JVM 测试**，另有四个依赖外部 fixture 的测试被跳过。**29 个 Android 仪器化测试**通过；紧凑筛选/主题调整后又通过三个 UI 测试。Debug 构建、lint、资源同步及 Kotlin/iOS 元数据编译通过。在专用 Android 16 模拟器上更新应用并检查真实缓存目录/界面。这些是记录的测试结果，不表示每次后续文档修改都重跑全部应用测试。
+构建 21 通过 **179 个单元测试（56 shared + 123 Android JVM）**，另有四个外部 fixture 测试跳过；**33 个 Android 仪器化测试**通过，包括日志导出/清除、固件库清理和三种语言的确认流程。Debug、lint 和 iOS 元数据编译通过。所有者报告构建 20 已在实体 FM-1 上正常运行，新功能与所有硬件组合仍需单独验证。
 
-未测试物理 FM-1/集线器或 iOS 二进制。供电、真实模式/描述符变化、序列号唯一性及完整硬件写入仍是验收条件。[构建报告](../../publication/qa/0.9.0-publication19.txt)提供文件身份和测试范围。
+未测试物理 FM-1/集线器或 iOS 二进制。供电、真实模式/描述符变化、序列号唯一性及完整硬件写入仍是验收条件。[构建报告](../../publication/qa/0.9.1-test21.txt)提供文件身份和测试范围。
 
 ## 隐私与署名
 
 无需账户，无广告或分析。固件库、名称、序列号观察值、芯片选择和任务历史保存在本地。外部目录/图片/下载服务器收到连接元数据，应用不会附加乐器身份。详见[隐私政策](privacy.md)。
 
 应用代码：[MIT](../../LICENSE.md)。[The Firmware Hub](https://thefirmwarehub.com) 目录使用 CC BY 4.0，固件遵循其作者的许可证。[Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) 是可选目录。依赖声明见 [third_party](../../third_party/)。联系：[ekim.pl@gmail.com](mailto:ekim.pl@gmail.com)。
+
+## 诊断与存储清理
+
+应用始终在本地保存操作日志（最多 256 KiB，自动移除最旧记录），重启后保留。日志包括时间、操作、USB/MIDI 端口变化、安装阶段和捕获的错误，不记录原始 MIDI 流量或固件字节。在**设置 → 实验功能**中使用**导出操作日志**（JSON Lines，`.jsonl`）或**清除操作日志**。导出打开系统文件选择器，不会自动上传。清除需一次确认，不会删除已导出的文件，后续事件仍会继续记录。独立的 MIDI 日志工具用于实时原始 MIDI 诊断。
+
+**设置 → 清除已下载固件**在一次确认后删除全部下载包与元数据，包括损坏及孤立文件，并清除当前选择和单包撤销记录。收藏、目录来源、乐器名称、任务历史和恢复备份保留。请先删除排队任务；操作进行中或存在排队/运行任务时禁止清理。离线安装前必须重新下载固件。
+
+**设备 → 模式与闪存芯片**提供分开的 MIDI 读取、下载模式和芯片检测卡片。检测成功会弹窗显示结果，之后关闭并重新开启乐器以返回 MIDI 模式。默认离线条目是临时的，自定义名称和排队目标会保留。来自同次更新旧端口的延迟 USB 断开事件不会中止下一阶段；其他乐器或集线器断开仍会阻止写入。

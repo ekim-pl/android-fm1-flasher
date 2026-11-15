@@ -10,6 +10,20 @@ class LocalLibraryTest {
         try { test(directory, LocalLibrary(directory)) } finally { directory.deleteRecursively() }
     }
 
+    @Test fun bulkClearRemovesDamagedAndOrphanFilesButKeepsPreferencesAndBackups() = withLibrary { dir, library ->
+        val raw = testPackage(); val entry = localEntry(raw)
+        library.save(entry, raw)
+        library.saveSettings(LibrarySettings(setOf(entry.id), true, entry.id))
+        File(dir, "packages/orphan.fwsc").writeText("broken")
+        File(dir, "records/broken.json").writeText("broken")
+        val backup = File(dir, "recovery/backup.bin").apply { parentFile.mkdirs(); writeText("keep") }
+        library.clearDownloads()
+        assertTrue(library.list().isEmpty())
+        assertTrue(File(dir, "packages").listFiles()!!.isEmpty())
+        assertTrue(File(dir, "records").listFiles()!!.isEmpty())
+        assertEquals(LibrarySettings(setOf(entry.id), true, null), library.settings())
+        assertEquals("keep", backup.readText())
+    }
     @Test fun savedBytesMetadataFavoritesAndOfflineSelectionSurviveRestart() = withLibrary { directory, library ->
         val raw = testPackage(); val entry = localEntry(raw)
         library.save(entry, raw, 42)

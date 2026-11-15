@@ -1,6 +1,6 @@
 # 多台 FM-1，一个安装计划。
 
-**Multiplatform FM-1 Flasher 0.9.0 / 19** 是面向 Android 14+ 的独立测试应用，通过 USB MIDI 和 OTG 集线器管理 M-VAVE FM-1 固件。本分支构建仅在本地准备，已作为 0.9.0 实验版发布到 GitHub Releases。
+**Multiplatform FM-1 Flasher 0.9.1 / 21** 是 Android 14+ 预发布版本，通过 OTG 集线器管理多台 FM-1。新增持久操作日志、实验模式日志导出/清除和安全的批量固件清理。所有者报告构建 20 已在实体乐器上测试成功。
 
 [当前指南](documentation.md) · [关于应用](../../about/README.zh-Hans.md) · [版本历史](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
@@ -22,7 +22,7 @@
 - [集线器上的多台乐器](documentation.md#multiple-fm1-devices-on-a-hub)
 - [构建与测试](documentation.md#building-and-testing)
 - [架构与平台边界](../../MIGRATION.md)
-- [测试构建报告](../../publication/qa/0.9.0-publication19.txt)
+- [测试构建报告](../../publication/qa/0.9.1-test21.txt)
 - [发布状态与工作流限制](publication.txt)
 - [构建网站](pages.md)
 

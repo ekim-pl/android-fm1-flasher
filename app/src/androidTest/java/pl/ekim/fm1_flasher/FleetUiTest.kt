@@ -117,4 +117,62 @@ class FleetUiTest : InstrumentationTestCase() {
         }
     }
 
+    fun testLogAndDownloadCleanupConfirmationsInAllLanguages() {
+        val actions = mutableListOf<AppAction>()
+        val backend = object : AppBackend {
+            override val state = MutableStateFlow(AppSnapshot(initialized = true, busy = false,
+                fleetAvailable = true, experimental = true, usbRecovery = true, downloads = listOf(LocalPackage(localEntry(), 0, 960))))
+            override fun perform(action: AppAction) { actions += action }
+            override fun saveBrowse(filters: BrowseFilters) = Unit
+            override fun document(name: String) = ""
+            override suspend fun artwork(entry: CatalogEntry): androidx.compose.ui.graphics.ImageBitmap? = null
+        }
+        val roots = mutableListOf<ViewRootForTest>()
+        val previous = ViewRootForTest.onViewCreatedCallback
+        instrumentation.runOnMainSync { ViewRootForTest.onViewCreatedCallback = { roots += it } }
+        val activity = instrumentation.startActivitySync(Intent(instrumentation.targetContext, ComposeActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as ComposeActivity
+        fun nodes() = roots.filter { it.view.isAttachedToWindow }.flatMap { it.semanticsOwner.getAllSemanticsNodes(mergingEnabled = true) }
+        fun click(label: String) {
+            repeat(15) {
+                instrumentation.waitForIdleSync(); Thread.sleep(80)
+                var clicked = false
+                instrumentation.runOnMainSync {
+                    val node = nodes().lastOrNull { it.config.getOrNull(SemanticsProperties.Text)?.any { t -> t.text == label } == true && it.config.getOrNull(SemanticsActions.OnClick) != null }
+                    if (node != null) { assertTrue(node.config[SemanticsActions.OnClick].action!!.invoke()); clicked = true }
+                    else nodes().firstOrNull { it.config.getOrNull(SemanticsActions.ScrollBy) != null }?.config?.getOrNull(SemanticsActions.ScrollBy)?.action?.invoke(0f, 350f)
+                }
+                if (clicked) return
+            }
+            error("Missing $label")
+        }
+        try {
+            instrumentation.runOnMainSync { activity.setContent { FlasherApp(backend) } }
+            for (language in listOf("en", "pl", "zh")) {
+                instrumentation.runOnMainSync { backend.state.value = backend.state.value.copy(language = language, chipDetection = null) }
+                val config = android.content.res.Configuration(instrumentation.targetContext.resources.configuration).apply {
+                    setLocale(java.util.Locale.forLanguageTag(if (language == "zh") "zh-Hans" else language))
+                }
+                val context = instrumentation.targetContext.createConfigurationContext(config)
+                fun t(key: String) = context.getString(context.resources.getIdentifier(key, "string", context.packageName))
+                click(t("settings"))
+                click(t("operation_log_export"))
+                assertEquals(AppActionKind.LOG_EXPORT, actions.last().kind)
+                click(t("operation_log_clear"))
+                val before = actions.size
+                click(t("cancel"))
+                assertEquals(before, actions.size)
+                click(t("operation_log_clear"))
+                click(t("operation_log_clear"))
+                assertEquals(AppActionKind.LOG_CLEAR, actions.last().kind)
+                click(t("downloads_clear"))
+                assertEquals(AppActionKind.LOG_CLEAR, actions.last().kind)
+                click(t("downloads_clear"))
+                assertEquals(AppActionKind.CLEAR_DOWNLOADS, actions.last().kind)
+                click(t("close"))
+            }
+        } finally {
+            instrumentation.runOnMainSync { activity.finish(); ViewRootForTest.onViewCreatedCallback = previous }
+        }
+    }
+
 }

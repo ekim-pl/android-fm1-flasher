@@ -93,8 +93,12 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             val usb = getSystemService(UsbManager::class.java)
             val device = usb.deviceList[pending.device.deviceName]
             if (device != null && device == pending.device && service?.usbEpoch(device.deviceName) == pending.epoch && usb.hasPermission(device)) {
-                runCatching(pending.action).onFailure { showFailure(it.appMessage(R.string.usb_permission_denied)) }
-            } else showFailure(msg(R.string.usb_permission_denied))
+                service?.recordEvent("USB_PERMISSION_GRANTED", device.deviceName)
+                runCatching(pending.action).onFailure { service?.recordFailure(it); showFailure(it.appMessage(R.string.usb_permission_denied)) }
+            } else {
+                service?.recordEvent("USB_PERMISSION_DENIED_OR_STALE", pending.device.deviceName, "WARN")
+                showFailure(msg(R.string.usb_permission_denied))
+            }
             dispatchUsbRequest()
         }
     }
@@ -137,14 +141,21 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             .putBoolean("downloaded", filters.downloadedOnly).putBoolean("favorites", filters.favoritesOnly).apply()
     }
     override fun document(name: String): String = runCatching { assets.open("docs/$name").bufferedReader().use { it.readText() } }.getOrElse { getString(R.string.about_document_unavailable) }
-    private fun showFailure(text: AppText) { state.value = state.value.copy(status = text) }
+    private fun showFailure(text: AppText) {
+        service?.recordEvent("UI_STATUS", resolve(text))
+        state.value = state.value.copy(status = text)
+    }
     override fun perform(action: AppAction) {
-        try { dispatch(action) } catch (failure: Exception) { showFailure(failure.appMessage(R.string.library_change_error)) }
+        try { dispatch(action) } catch (failure: Exception) { service?.recordFailure(failure); showFailure(failure.appMessage(R.string.library_change_error)) }
     }
     private fun dispatch(action: AppAction) {
         val active = service ?: return
         val next = active.state
+        active.recordAction(action)
         when (action.kind) {
+            AppActionKind.LOG_CLEAR -> active.clearOperationLog()
+            AppActionKind.LOG_EXPORT -> if (next.experimental && !next.busy) startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/plain").putExtra(Intent.EXTRA_TITLE, "fm1-operations-${System.currentTimeMillis()}.jsonl"), 62)
+            AppActionKind.CLEAR_DOWNLOADS -> active.clearDownloads()
             AppActionKind.UNDO_REMOVE -> active.undoRemove()
             AppActionKind.DEVICE_ALIAS -> active.configureDevice(action.id, alias = action.value)
             AppActionKind.DEVICE_CHIP -> active.configureDevice(action.id, chip = FlashChip.valueOf(action.value))
@@ -251,6 +262,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             if (usb.deviceList[request.device.deviceName] != request.device || service?.usbEpoch(request.device.deviceName) != request.epoch) continue
             if (usb.hasPermission(request.device)) { request.action(); continue }
             pendingUsb = request
+            service?.recordEvent("USB_PERMISSION_REQUESTED", request.device.deviceName)
             usb.requestPermission(request.device, PendingIntent.getBroadcast(this, request.token.hashCode(),
                 Intent(permissionAction).setPackage(packageName).setData(Uri.parse("fm1-permission:${request.token}"))
                     .putExtra("request", request.token), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_ONE_SHOT))
@@ -285,6 +297,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     @Deprecated("Platform document picker API")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 62 && resultCode == RESULT_OK) data?.data?.let { service?.exportOperationLog(it) }
         if (requestCode == 61) { exportBackupUri = if (resultCode == RESULT_OK) data?.data else null; if (exportBackupUri == null) exportBackupId = null; dispatchBackupExport() }
         if (requestCode == 41 && resultCode == RESULT_OK && service?.state?.experimental == true) {
             val snapshot = service!!.monitor.log.snapshot(); val uri = data?.data ?: return

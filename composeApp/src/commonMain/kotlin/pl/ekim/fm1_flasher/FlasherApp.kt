@@ -150,7 +150,7 @@ fun FlasherApp(backend: AppBackend) {
                                 LibraryTab.FLASHER -> FlasherScreen(state, language, { send(it.kind, it.id, it.value) }, { action, message -> confirmation = action to message }, { recovery = true }, { dialog = text("app_log") to AppText.Joined(state.logs, "\n\n") })
                                 LibraryTab.LOGGER -> LoggerScreen(state, language, backend)
                                 LibraryTab.ABOUT -> AboutScreen(
-                                    backend.document(text("about_document")), text("app_name"), text("about_version", "0.9.0"),
+                                    backend.document(text("about_document")), text("app_name"), text("about_version", "0.9.1"),
                                     if (!state.usbRecovery) text("ios_platform_limits") else null,
                                     text("privacy_title"), text("about_privacy_summary"), text("about_privacy_action"),
                                     { dialog = text("privacy_title") to msg("privacy_body") }, ::openDocumentOrLink)
@@ -199,6 +199,17 @@ fun FlasherApp(backend: AppBackend) {
             Row { Checkbox(state.offline, { send(AppActionKind.OFFLINE, it.toString()) }, enabled = !state.busy, modifier = Modifier.semantics { contentDescription = text("offline_mode") }); Text(text("offline_mode"), Modifier.padding(top = 12.dp)) }
             Row { Checkbox(state.experimental, { send(AppActionKind.EXPERIMENTAL, it.toString()) }, enabled = !state.busy, modifier = Modifier.semantics { contentDescription = text("experimental_features") }); Text(text("experimental_features"), Modifier.padding(top = 12.dp)) }
             Text(text("experimental_help"), style = MaterialTheme.typography.bodySmall)
+            if (state.experimental) {
+                HorizontalDivider()
+                Text(text("operation_log_title"), style = MaterialTheme.typography.titleMedium)
+                Text(text("operation_log_help"), style = MaterialTheme.typography.bodySmall)
+                TextButton({ send(AppActionKind.LOG_EXPORT) }, enabled = !state.busy) { Text(text("operation_log_export")) }
+                TextButton({ confirmation = AppAction(AppActionKind.LOG_CLEAR) to msg("operation_log_clear_confirm") }, enabled = !state.busy) { Text(text("operation_log_clear")) }
+            }
+            HorizontalDivider()
+            TextButton({ confirmation = AppAction(AppActionKind.CLEAR_DOWNLOADS) to msg("downloads_clear_confirm", state.downloads.size) },
+                enabled = !state.busy && state.jobs.none { it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) }) { Text(text("downloads_clear")) }
+            if (state.jobs.any { it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) }) Text(text("fleet_package_pinned"), style = MaterialTheme.typography.bodySmall)
             TextButton({ dialog = text("privacy_title") to msg("privacy_body") }) { Text(text("privacy_title")) }
         }
         if (sources) SourceSettings(state, language, backend) { sources = false }
@@ -214,9 +225,9 @@ fun FlasherApp(backend: AppBackend) {
         }
         dialog?.let { (heading, message) -> AppDialog(heading, { dialog = null }, text("close")) { Text(resolveCoreText(message, language)) } }
         confirmation?.let { (action, message) -> AlertDialog(onDismissRequest = { confirmation = null },
-            title = { Text(text(if (action.kind == AppActionKind.FLASH) "flash_confirm_title" else if (action.kind == AppActionKind.REMOVE) "remove_confirm_title" else "recovery_title")) },
+            title = { Text(text(if (action.kind == AppActionKind.FLASH) "flash_confirm_title" else if (action.kind == AppActionKind.REMOVE) "remove_confirm_title" else if (action.kind == AppActionKind.CLEAR_DOWNLOADS) "downloads_clear" else if (action.kind == AppActionKind.LOG_CLEAR) "operation_log_clear" else "recovery_title")) },
             text = { Column(Modifier.verticalScroll(rememberScrollState())) { Text(resolveCoreText(message, language)) } },
-            confirmButton = { TextButton({ confirmation = null; backend.perform(action) }, enabled = !state.busy) { Text(text(when(action.kind) { AppActionKind.FLASH -> "install_this_device"; AppActionKind.REMOVE -> "remove_package"; AppActionKind.RECOVERY_ENTER -> "recovery_enter"; else -> "recovery_write" })) } },
+            confirmButton = { TextButton({ confirmation = null; backend.perform(action) }, enabled = !state.busy) { Text(text(when(action.kind) { AppActionKind.FLASH -> "install_this_device"; AppActionKind.REMOVE -> "remove_package"; AppActionKind.CLEAR_DOWNLOADS -> "downloads_clear"; AppActionKind.LOG_CLEAR -> "operation_log_clear"; AppActionKind.RECOVERY_ENTER -> "recovery_enter"; else -> "recovery_write" })) } },
             dismissButton = { TextButton({ confirmation = null }) { Text(text("cancel")) } }) }
     }
 }

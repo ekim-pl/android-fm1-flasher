@@ -1,6 +1,6 @@
-# Implementation and verification — 0.9.0 / 19
+# Implementation and verification — 0.9.1 / 21
 
-Current architecture of `task/multiplatform-rework`, based on implementation commit `6e9947b`. This document describes the existing code, not a roadmap or a guarantee of hardware support. For operation instructions see [README](README.md); for recorded build results see [build-19 QA](publication/qa/0.9.0-publication19.txt).
+Current architecture of `task/multiplatform-rework`, based on the current branch implementation. This document describes the existing code, not a roadmap or a guarantee of hardware support. For operation instructions see [README](README.md); for recorded build results see [build-21 QA](publication/qa/0.9.1-test21.txt).
 
 ## Modules and entry points
 
@@ -68,9 +68,9 @@ adb -s DEVICE_SERIAL install -r app/build/outputs/apk/androidTest/debug/app-debu
 adb -s DEVICE_SERIAL shell am instrument -w -e class pl.ekim.fm1_flasher.FleetUiTest pl.ekim.multiplatform_fm1_flasher.test/android.test.InstrumentationTestRunner
 ```
 
-Run the explicit classes separately: `ExperimentalFeaturesTest`, `CatalogDatabaseTest`, `BackgroundCatalogTest`, `FirmwareSelectionTest`, `UsbPermissionIntentTest`, `MainActivityLaunchTest`, `ComposeCatalogUpdatesTest`, `FleetUiTest` (all in `pl.ekim.fm1_flasher`). This avoids the legacy runner's unbounded discovery startup timeout and isolates service/preferences fixtures. The test runner's exit alone is insufficient: inspect the reported OK/failure result.
+Run the explicit classes separately: `ExperimentalFeaturesTest`, `CatalogDatabaseTest`, `BackgroundCatalogTest`, `FirmwareSelectionTest`, `UsbPermissionIntentTest`, `MainActivityLaunchTest`, `ComposeCatalogUpdatesTest`, `FleetUiTest`, `OperationLogServiceTest` (all in `pl.ekim.fm1_flasher`). This avoids the legacy runner's unbounded discovery startup timeout and isolates service/preferences fixtures. The test runner's exit alone is insufficient: inspect the reported OK/failure result.
 
-Build 19 recorded 50 shared JVM passes, 120 Android JVM passes, four skipped external-fixture tests and 29 instrumentation passes on the dedicated Android 16 emulator. A final three-test catalog/fleet UI rerun passed after filter/theme edits. Lint/debug builds and iOS metadata passed. Test results and known runner issues are preserved in the QA report; documentation-only changes do not imply that hardware or all application tests were rerun.
+Build 21 passed 56 shared JVM tests and 123 Android JVM tests (four external-fixture cases skipped), plus 33 Android instrumentation tests. Debug APK/test APK, lint, generated resources and iOS Kotlin metadata compilation passed. The [current report](publication/qa/0.9.1-test21.txt) records the artifact. Historical build reports remain unchanged.
 
 ## iOS build boundary
 
@@ -92,12 +92,22 @@ Choose scheme `FM1Flasher`; configure a signing team for a physical device. The 
 ./gradlew :shared:iosSimulatorArm64Test
 ```
 
-Linux metadata compilation does not compile Swift, link/sign an iOS application or produce an IPA. No Xcode/native iOS result is available for build 19.
+Linux metadata compilation does not compile Swift, link/sign an iOS application or produce an IPA. No Xcode/native iOS result is available for build 21.
 
 ## Release boundaries
 
-0.9.0/19 is an experimental release artifact. The publication rebuild includes regenerated documentation. Debug signature continuity with build 18 was checked. A future rebuild after document changes has different APK bytes and needs a new checksum and packaging verification. Do not replace the historical report's checksum with one from a different build.
+0.9.1/21 is an experimental release artifact. The publication rebuild includes regenerated documentation. Debug signature continuity with build 18 was checked. A future rebuild after document changes has different APK bytes and needs a new checksum and packaging verification. Do not replace the historical report's checksum with one from a different build.
 
 Android CI tests/builds every branch. Pages builds every branch; deployment is allowed from the default branch or manual dispatch on task/multiplatform-rework. The inherited Google Play release and production workflows still target the original package; the F-Droid recipe and older store material also concern the original application. See [publication notes](publication/README.txt). None of these artifacts establishes a store release of this fork.
 
 Physical acceptance requires multiple FM-1 units, the intended powered/passive hubs and real phones; test mode descriptors, serial behavior, grant denial, missed/out-of-order events, safe reconnect faults, interruption and recovery separately. Emulator assertions establish software behavior, not electrical stability or hardware flash success.
+
+## Operation diagnostics and cleanup (0.9.1 / 21)
+
+`OperationLog` stores bounded JSON Lines in `diagnostics/operations.jsonl` (256 KiB, atomic replacement, complete oldest records pruned first). Callers serialize I/O: Android uses a dedicated executor, portable uses a coroutine dispatcher limited to one task. Diagnostic write failures never abort a transfer. Events use epoch-millisecond timestamps, level, stable event keys and bounded messages; URL queries/fragments are removed. Android records service lifecycle, dispatched actions (excluding high-frequency logger polling), USB/MIDI topology changes, status/transfer phases and caught failures. Portable records actions, statuses and task failures. This is an operational trace, not raw MIDI capture or an OS crash dump.
+
+Experimental settings expose export through the native document picker/share UI and clearing with confirmation. Both Android service methods independently enforce experimental mode and idle state. Clear removes the stored log and recent in-memory display; new activity resumes logging. Exported copies are independent.
+
+Android bulk cleanup clears SQLite download rows/selection and private library package/record files, including damaged/orphan files, then refreshes UI. It refuses all queued/running jobs before deletion. Favorites, source configuration, fleet/history, diagnostic logs and recovery backups use separate storage and are retained. Portable repository offers the corresponding package/record cleanup. Bulk removal deliberately has no Undo; ordinary single-package removal keeps its existing Undo. Partial filesystem failures are reported; retrying cleanup removes remaining files.
+
+The owner confirmed successful physical-device testing of build 20. This does not replace acceptance of the new diagnostics/cleanup paths or of ROM recovery on each supported chip.

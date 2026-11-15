@@ -140,6 +140,10 @@ class CatalogDatabase(private val context: Context, name: String = "firmware-lib
         val p = downloaded().singleOrNull { it.entry.key == key } ?: return
         writableDatabase.delete("downloaded_packages", "source_id=? AND entry_id=?", arrayOf(p.entry.sourceId, p.entry.id))
     }
+    fun clearPackages() = transaction {
+        writableDatabase.delete("downloaded_packages", null, null)
+        writableDatabase.delete("app_settings", "name=?", arrayOf("selected"))
+    }
     fun settings(): LibrarySettings {
         val favorites = readableDatabase.rawQuery("SELECT entry_key FROM favorites", null).use { c ->
             buildSet { while (c.moveToNext()) add(c.getString(0)) }

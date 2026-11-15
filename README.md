@@ -2,7 +2,7 @@
 
 Independent firmware manager for **M-VAVE FM-1**, built with Kotlin Multiplatform and Compose Multiplatform. The main Android workflow manages several instruments through an OTG hub and writes firmware **one instrument at a time**.
 
-This guide describes **0.9.0, Android build 19**, on `task/multiplatform-rework`, based on implementation commit `6e9947b`. A test APK with regenerated documentation has been prepared; this version is published as an **experimental GitHub Release**. The [build-19 report](publication/qa/0.9.0-publication19.txt) records the tested artifact and its checksum. Documentation edits after that build do not alter the previously supplied APK.
+This guide describes **0.9.1, Android build 21**, on `task/multiplatform-rework`. This prerelease adds persistent operation diagnostics and bulk download cleanup to the multi-instrument workflow. The [build report](publication/qa/0.9.1-test21.txt) records verification and known limits. The owner reported successful physical-device testing of build 20; this is user feedback, not a complete hardware acceptance matrix.
 
 [Polski](website/pl/documentation.md) · [简体中文](website/zh-CN/documentation.md) · [Implementation](MIGRATION.md) · [Privacy](PRIVACY_POLICY.md)
 
@@ -22,7 +22,7 @@ The Android application ID is `pl.ekim.multiplatform_fm1_flasher`. It installs s
 
 ## Getting started
 
-1. Install the test APK on Android 14 or newer. The build-19 debug certificate matches build 18: install it as an update without uninstalling to retain this fork's library and preferences.
+1. Install the test APK on Android 14 or newer. The build-21 debug certificate matches earlier multiplatform builds: install it as an update without uninstalling to retain this fork's library and preferences.
 2. Open **Library**, find firmware and download it from its detail screen. Downloading verifies the package; it does not start an installation.
 3. Connect instruments with data-capable cables and an OTG hub. A separately powered hub is recommended. The app cannot measure or certify hub power quality.
 4. In **Devices**, use **Read instrument** on each card and grant Android USB access when requested. Only a recognized FM-1 can be added to the plan.
@@ -100,16 +100,24 @@ See [implementation and reproducible test commands](MIGRATION.md), [acceptance c
 
 The Swift host and shared metadata are present, but no Xcode build or physical iPhone update has been validated. The fleet store/queue and Android multi-source scheduler are not ported to iOS. The host retains the previous single-instrument workflow with manual reconnect. Keep it foregrounded; finite background time is not equivalent to Android's service.
 
-The configured Kotlin targets are `iosArm64` and `iosSimulatorArm64`, not an Intel simulator. `iosApp/project.yml` defines the XcodeGen project, bundle ID `pl.ekim.multiplatform-fm1-flasher`, version 0.9.0/19 and deployment target iOS 15. The macOS/Xcode steps are in [MIGRATION.md](MIGRATION.md); Linux metadata compilation is not an iOS app build.
+The configured Kotlin targets are `iosArm64` and `iosSimulatorArm64`, not an Intel simulator. `iosApp/project.yml` defines the XcodeGen project, bundle ID `pl.ekim.multiplatform-fm1-flasher`, version 0.9.1/21 and deployment target iOS 15. The macOS/Xcode steps are in [MIGRATION.md](MIGRATION.md); Linux metadata compilation is not an iOS app build.
 
 ## Verification and limits
 
-For implementation build 19: **50 shared JVM tests and 120 Android JVM tests passed**; four optional external-fixture tests were skipped. **29 Android instrumentation tests passed**, with a final three-test UI rerun after the compact-filter/theme changes. Debug builds, lint, resource synchronization and iOS Kotlin metadata compilation passed. The dedicated Android 16 emulator was updated and the real cached catalog/UI checked. These are recorded results, not a claim that every later documentation edit reran the application suite.
+Current verification is recorded in the [0.9.1 / 21 report](publication/qa/0.9.1-test21.txt). Build 20 was reported working on physical instruments by the owner. ROM recovery, all chip/phone/hub combinations and an Apple binary still need separate verification.
 
-No physical FM-1/hub or iOS binary was verified. Power behavior, real mode/descriptor transitions, serial uniqueness and full hardware flash success remain acceptance gates. [The build report](publication/qa/0.9.0-publication19.txt) records the scope and artifact identity.
+No new physical FM-1/hub test or iOS binary was independently verified for build 21. Power behavior, real mode/descriptor transitions, serial uniqueness and full hardware flash success remain acceptance gates. [The build report](publication/qa/0.9.1-test21.txt) records the scope and artifact identity.
 
 ## Privacy and attribution
 
 No account, advertising or analytics. The library, names, observed serials, memory selections and task history are local. External catalog/artwork/download servers receive connection metadata; instrument identities are not attached to those requests. See the [privacy policy](PRIVACY_POLICY.md).
 
 App code: [MIT](LICENSE.md). Catalog attribution: [The Firmware Hub](https://thefirmwarehub.com), CC BY 4.0; firmware remains under its authors' licenses. [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) is an optional directory. Third-party notices are in [third_party](third_party/). Contact: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
+
+## Diagnostics and storage cleanup
+
+The app always records a bounded local operation log (256 KiB, oldest entries removed). It survives app restarts and includes timestamps, actions, USB/MIDI port changes, firmware-transfer stages and caught errors. Raw MIDI traffic and firmware bytes are not recorded. Open **Settings → Experimental features** to access **Export operation log** (JSON Lines, `.jsonl`) and **Clear operation log**. Export uses the system file picker; no log is uploaded automatically. Clearing requires one confirmation and does not delete copies you already exported. New events continue to be logged. The separate MIDI Logger remains a live raw-MIDI diagnostic tool.
+
+In **Settings → Clear downloaded firmware**, confirm once to delete all downloaded package files and metadata, including damaged/orphan files. The selected package and single-package Undo are cleared. Favorites, catalog sources, device names, task history and recovery backups remain. Remove queued tasks first; cleanup is blocked during work and while any queued/running job owns a package. Offline installation requires downloading packages again.
+
+**Devices → Modes and flash chip** provides MIDI selection/readout, download-mode entry and chip detection in separate cards. Successful chip detection opens a result popup. Power-cycle back to MIDI afterwards. Default disconnected device entries are temporary; custom names and queued targets are retained. Delayed USB detach events for a retired stage no longer invalidate the next stage of the same update. Unrelated device/hub loss still blocks writes.
