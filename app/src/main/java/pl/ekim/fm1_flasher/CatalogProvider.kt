@@ -23,6 +23,10 @@ internal object PackageUrlProvider : CatalogProvider {
     }
 }
 
+internal fun githubError(code: Int): AppText = if (code in listOf(401, 403, 404))
+    AppText.Joined(listOf(msg(R.string.http_error, code), msg("github_access_hint")))
+else msg(R.string.http_error, code)
+
 internal object RepositoryUrlProvider : CatalogProvider {
     override val type = CatalogProviderType.REPO_URL
     fun repository(address: String): String {
@@ -40,7 +44,7 @@ internal object RepositoryUrlProvider : CatalogProvider {
         var page = 1
         var current = response
         while (true) {
-            check(current.code == 200) { failed(msg(R.string.http_error, current.code)) }
+            check(current.code == 200) { failed(githubError(current.code)) }
             val text = current.bytes.toString(Charsets.UTF_8); JsonLimits.check(text)
             val releases = JSONArray(text)
             for (i in 0 until releases.length()) {
@@ -65,7 +69,7 @@ internal object RepositoryUrlProvider : CatalogProvider {
                         val digest = asset.optString("digest").removePrefix("sha256:").takeIf { it.matches(Regex("[0-9a-f]{64}")) }
                         val headers = buildMap { put("Accept", "application/octet-stream"); if (digest != null) put("Range", "bytes=0-959") }
                         val payload = get("https://api.github.com/repos/$repo/releases/assets/$id", headers)
-                        check(payload.code in listOf(200, 206)) { failed(msg(R.string.http_error, payload.code)) }
+                        check(payload.code in listOf(200, 206)) { failed(githubError(payload.code)) }
                         if (digest != null) { hash = digest; product = FirmwarePackage.productPrefix(payload.bytes) }
                         else { check(payload.code == 200); val image = FirmwarePackage.inspect(payload.bytes); hash = image.sha256; product = "FM-1_${image.identity.version}" }
                     }

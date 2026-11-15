@@ -1,0 +1,10 @@
+FM-1 Flasher 0.9.4-experimental.26 — build 26
+
+APK: FM1-Flasher-0.9.4-experimental.26.apk
+SHA-256: 6286d507505e31743b20c3dcebe88f9887e44a69b4d921cef632920f64aa74dd
+Debug signing certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
+Application ID: pl.ekim.fm1_flasher; minimum Android: 14 (API 34).
+
+Validation: shared JVM tests, Android JVM tests, debug lint, debug APK and Android test APK builds, source-resource synchronization, website build and link checks. Four Android JVM tests requiring external fixtures were skipped. A private GitHub release with a synthetic package was read and downloaded through the application provider and network code using an authenticated GitHub account; unauthenticated and invalid-token API responses were checked separately.
+
+No on-device Android instrumentation, fine-grained PAT test, or physical instrument flash was performed for this build. The APK is debug-signed, not a Play-signed release. The firmware developer Pages changes reside on the release branch and are not deployed to the default-branch site by publishing this prerelease.

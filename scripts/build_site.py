@@ -19,7 +19,7 @@ LANGUAGES = {
     'en': {
         'html': 'en', 'name': 'English', 'skip': 'Skip to content',
         'languages': 'Choose language', 'navigation': 'Project navigation',
-        'guide': 'Guide', 'about': 'About', 'privacy': 'Privacy',
+        'developers': 'Developers', 'guide': 'Guide', 'about': 'About', 'privacy': 'Privacy',
         'releases': 'Releases', 'license': 'License', 'independent': 'An Android app for browsing firmware and updating the M-VAVE FM-1 over USB MIDI. Firmware and artwork belong to their respective authors.',
         'awesome_text': 'Discover community firmware, projects and resources for the M-VAVE FM-1.', 'awesome_cta': 'Explore Awesome FM-1',
         'description': 'FM-1 Flasher for Android: M-VAVE FM-1 firmware updates over USB MIDI. Guides, documentation and privacy.',
@@ -29,14 +29,14 @@ LANGUAGES = {
             'privacy.html': 'Privacy policy', 'license.html': 'MIT License',
             'publication.html': 'Publication materials',
             'github-actions.html': 'GitHub Actions and Google Play',
-            'pages.html': 'Website deployment',
+            'pages.html': 'Website deployment', 'developers.html': 'For firmware developers',
             'commonmark-license.html': 'CommonMark — BSD-2-Clause license',
         },
     },
     'pl': {
         'html': 'pl', 'name': 'Polski', 'skip': 'Przejdź do treści',
         'languages': 'Wybierz język', 'navigation': 'Nawigacja projektu',
-        'guide': 'Instrukcja', 'about': 'O aplikacji', 'privacy': 'Prywatność',
+        'developers': 'Dla twórców', 'guide': 'Instrukcja', 'about': 'O aplikacji', 'privacy': 'Prywatność',
         'releases': 'Wydania', 'license': 'Licencja', 'independent': 'Aplikacja na Androida do przeglądania firmware i aktualizowania M-VAVE FM-1 przez USB MIDI. Firmware i grafiki należą do ich autorów.',
         'awesome_text': 'Odkryj firmware, projekty i zasoby społeczności dla M-VAVE FM-1.', 'awesome_cta': 'Poznaj Awesome FM-1',
         'description': 'FM-1 Flasher dla Androida: aktualizacja M-VAVE FM-1 przez USB MIDI. Instrukcje, dokumentacja i prywatność.',
@@ -46,14 +46,14 @@ LANGUAGES = {
             'privacy.html': 'Polityka prywatności', 'license.html': 'Licencja MIT',
             'publication.html': 'Materiały publikacyjne',
             'github-actions.html': 'GitHub Actions i Google Play',
-            'pages.html': 'Publikacja witryny',
+            'pages.html': 'Publikacja witryny', 'developers.html': 'Dla twórców firmware',
             'commonmark-license.html': 'CommonMark — licencja BSD-2-Clause',
         },
     },
     'zh-CN': {
         'html': 'zh-Hans', 'name': '简体中文', 'skip': '跳转到正文',
         'languages': '选择语言', 'navigation': '项目导航',
-        'guide': '使用指南', 'about': '关于应用', 'privacy': '隐私',
+        'developers': '固件开发者', 'guide': '使用指南', 'about': '关于应用', 'privacy': '隐私',
         'releases': '发布版本', 'license': '许可证', 'independent': '一款用于浏览固件并通过 USB MIDI 更新 M-VAVE FM-1 的 Android 应用。固件和图像的权利归各自作者所有。',
         'awesome_text': '探索 M-VAVE FM-1 的社区固件、项目和资源。', 'awesome_cta': '探索 Awesome FM-1',
         'description': 'Android 版 FM-1 Flasher：通过 USB MIDI 更新 M-VAVE FM-1 固件。使用指南、技术文档与隐私政策。',
@@ -63,12 +63,13 @@ LANGUAGES = {
             'privacy.html': '隐私政策', 'license.html': 'MIT 许可证',
             'publication.html': '发布材料',
             'github-actions.html': 'GitHub Actions 与 Google Play',
-            'pages.html': '网站部署',
+            'pages.html': '网站部署', 'developers.html': '固件开发者指南',
             'commonmark-license.html': 'CommonMark — BSD-2-Clause 许可证',
         },
     },
 }
 PAGES = {
+    'developers.html': {'en': 'website/developers.md', 'pl': 'website/pl/developers.md', 'zh-CN': 'website/zh-CN/developers.md'},
     'index.html': {'en': 'website/index.md', 'pl': 'website/pl/index.md', 'zh-CN': 'website/zh-CN/index.md'},
     'documentation.html': {'en': 'README.md', 'pl': 'website/pl/documentation.md', 'zh-CN': 'website/zh-CN/documentation.md'},
     'about.html': {'en': 'about/README.md', 'pl': 'about/README.pl.md', 'zh-CN': 'about/README.zh-Hans.md'},
@@ -179,7 +180,7 @@ def write_page(language, page, output):
                       f'hreflang="{html_language}" aria-label="{LANGUAGES[code]["name"]}" title="{LANGUAGES[code]["name"]}"{current}><span aria-hidden="true">{flags[code]}</span></a>')
         alternates += f'<link rel="alternate" hreflang="{html_language}" href="{target}">\n'
     nav = ''.join(f'<a href="{relative(f"{language}/{target}", output)}">{ui[label]}</a>'
-                  for target, label in [('documentation.html', 'guide'), ('about.html', 'about'),
+                  for target, label in [('documentation.html', 'guide'), ('developers.html', 'developers'), ('about.html', 'about'),
                                         ('privacy.html', 'privacy')])
     if repository_url:
         nav += f'<a href="{escape(repository_url, quote=True)}/releases">{ui["releases"]}</a>'

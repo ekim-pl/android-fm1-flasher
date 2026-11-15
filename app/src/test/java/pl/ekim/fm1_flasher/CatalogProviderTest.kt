@@ -44,6 +44,14 @@ class CatalogProviderTest {
             PackageUrlProvider.decode(source, CatalogResponse(200, raw.copyOf().apply { this[0] = (this[0].toInt() xor 1).toByte() }), emptyList()) { _, _ -> error("Unexpected request") }
         }
     }
+    @Test fun githubAccessErrorsOfferGuidanceWithoutGuessingTheCause() {
+        for (status in listOf(401, 403, 404)) {
+            val message = githubError(status) as AppText.Joined
+            assertEquals(msg("github_access_hint"), message.parts.last())
+            assertEquals(msg("http_error", status), message.parts.first())
+        }
+        assertEquals(msg("http_error", 500), githubError(500))
+    }
     @Test fun repositoryUrlsAndProviderRequestScopesAreValidated() {
         assertEquals("owner/repository", RepositoryUrlProvider.repository("https://github.com/owner/repository.git"))
         assertThrows(IllegalArgumentException::class.java) { RepositoryUrlProvider.repository("https://evil.example/owner/repository") }

@@ -172,6 +172,7 @@ internal val androidResourceKeys = mapOf(
     R.string.source_check_offline to "source_check_offline",
     R.string.source_chip_blocked to "source_chip_blocked",
     R.string.source_saved to "source_saved",
+    R.string.github_access_hint to "github_access_hint",
     R.string.chip_unknown to "chip_unknown",
     R.string.chip_new to "chip_new",
     R.string.chip_old to "chip_old",

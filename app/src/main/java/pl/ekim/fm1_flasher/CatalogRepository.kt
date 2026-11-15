@@ -106,7 +106,7 @@ class CatalogRepository(private val database: CatalogDatabase,
         }
         val downloadHeaders = if (source.provider == CatalogProviderType.REPO_URL) mapOf("Accept" to "application/octet-stream", "X-GitHub-Api-Version" to "2026-03-10") else emptyMap()
         val response = SourceNetwork.request(url, FirmwarePackage.MAX_SIZE, permitted, downloadHeaders, active = ::active, authentication = ::auth)
-        check(response.code == 200) { failed(msg(R.string.http_error, response.code)) }
+        check(response.code == 200) { failed(if (source.provider == CatalogProviderType.REPO_URL) githubError(response.code) else msg(R.string.http_error, response.code)) }
         check(active()) { failed(msg(R.string.source_changed)) }
         FirmwarePackage.parse(response.bytes, current.sha256, current.product)
         return response.bytes

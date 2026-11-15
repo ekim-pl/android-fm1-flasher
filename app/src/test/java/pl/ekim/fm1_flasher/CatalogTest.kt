@@ -12,6 +12,17 @@ class CatalogTest {
       "sha256":"${"a".repeat(64)}","product":"FM-1_900","chip":"new"
     }]}"""
 
+    @Test fun developerGuidesContainValidMatchingCatalogExamples() {
+        val paths = listOf("../website/developers.md", "../website/pl/developers.md", "../website/zh-CN/developers.md")
+        val examples = paths.map { path -> File(path).readText().substringAfter("```json\n").substringBefore("\n```") }
+        assertTrue(examples.all { it == examples.first() })
+        val source = CatalogSource("example", "Example", "https://firmware.example.com/catalog.json")
+        val entry = CatalogParser.parse(examples.first(), source).first.single()
+        assertEquals("https://firmware.example.com/releases/example.fwsc", entry.directUrl)
+        assertEquals("unknown", entry.chip)
+        assertEquals("FM-1_001", entry.product)
+    }
+
     @Test fun parsesPinnedAssetRatherThanGuessingTheNewestRelease() {
         val entry = CatalogParser.parse(source).first.single()
         assertEquals("1234", entry.assetId)

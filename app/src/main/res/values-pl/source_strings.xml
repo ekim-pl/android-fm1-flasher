@@ -47,4 +47,5 @@
     <string name="source_check_offline">Zapisano jako wyłączone. Po wyłączeniu trybu offline użyj Sprawdź teraz, aby przejrzeć zawartość.</string>
     <string name="source_chip_blocked">Nieznana zgodność z pamięcią urządzenia. Flashowanie tej paczki jest zablokowane.</string>
     <string name="source_saved">Zapisano ustawienia źródła. Nowe źródła pozostają wyłączone do ich jawnego włączenia.</string>
+    <string name="github_access_hint">Sprawdź adres repozytorium, dostęp konta, ważność i uprawnienia tokenu, zatwierdzenie organizacji lub limity API GitHub.</string>
 </resources>

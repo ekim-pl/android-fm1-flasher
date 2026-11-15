@@ -27,6 +27,27 @@ class SourceNetworkTest {
         assertEquals("Bearer private-token", seen.first().header("Authorization"))
         assertNull(seen.last().header("Authorization")); assertNull(seen.last().header("X-API-Key"))
     }
+    @Test fun privateGithubAssetRedirectDoesNotForwardCredentialsAndAuthFailuresArePreserved() {
+        val asset = "https://api.github.com/repos/owner/private/releases/assets/123"
+        val source = CatalogSource("private", "Private", "https://github.com/owner/private", provider = CatalogProviderType.REPO_URL)
+        val seen = mutableListOf<Request>()
+        val transport = client { request ->
+            seen += request
+            if (seen.size == 1) reply(request, 302, headers = mapOf("Location" to "https://release-assets.githubusercontent.com/file?signature=example"))
+            else reply(request, body = "firmware".toResponseBody())
+        }
+        val response = SourceNetwork.requestWith(transport, asset, 100, { CatalogProviders.permits(source, it) },
+            mapOf("Accept" to "application/octet-stream"), authentication = { mapOf("Authorization" to "Bearer token") })
+        assertEquals(200, response.code)
+        assertEquals("Bearer token", seen.first().header("Authorization"))
+        assertNull(seen.last().header("Authorization"))
+        for (status in listOf(401, 403, 404)) {
+            val result = SourceNetwork.requestWith(client { reply(it, status) }, asset, 100, { CatalogProviders.permits(source, it) },
+                authentication = { mapOf("Authorization" to "Bearer token") })
+            assertEquals(status, result.code)
+        }
+    }
+
     @Test fun tokenPostRedirectsAreRejectedAndNeverReplayClientSecrets() {
         var calls = 0
         val transport = client { request -> calls++; assertEquals("POST", request.method); reply(request, 302, headers = mapOf("Location" to "https://evil.example/token")) }

@@ -47,4 +47,5 @@
     <string name="source_check_offline">已保存为关闭状态。联网后使用立即检查以审阅内容。</string>
     <string name="source_chip_blocked">闪存芯片兼容性未知。禁止刷写此固件包。</string>
     <string name="source_saved">来源设置已保存。新来源在明确启用前保持禁用。</string>
+    <string name="github_access_hint">请检查仓库地址、账户访问权、令牌有效期和权限、组织批准以及 GitHub API 速率限制。</string>
 </resources>
