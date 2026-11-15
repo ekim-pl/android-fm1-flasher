@@ -68,7 +68,7 @@ must cover both SDK-free and Firebase builds.
 
 ## iOS configuration (requires macOS and Xcode 16+)
 
-Register `pl.ekim.multiplatform-fm1-flasher` in each Firebase project alongside Android.
+Register `pl.ekim.fm1-flasher` in each Firebase project alongside Android.
 Use two app streams in each environment's GA4 property. No cross-platform user matching.
 Place configs at `iosApp/Firebase/test/GoogleService-Info.plist` and
 `iosApp/Firebase/production/GoogleService-Info.plist`.

@@ -13,7 +13,7 @@ Architecture of the complete Android release **0.9.2** on `main`. A future iOS p
 
 Android starts `ComposeActivity`; notifications return there. `MainActivity` is legacy reference source and is not registered in the manifest. `fleetAvailable` selects the Android workspace; the portable host keeps the earlier single-instrument navigation. Normal Android writes enter the service through `QUEUE`, not the old `FLASH` action. Recovery uses separate `RECOVERY_*` actions.
 
-The Android ID is `pl.ekim.fm1_flasher`; the Kotlin/Android namespace remains `pl.ekim.fm1_flasher`. The Swift bundle ID is `pl.ekim.multiplatform-fm1-flasher`. Changing the package namespace is not necessary to update the installed fork. Updates require a matching signing certificate.
+The Android ID is `pl.ekim.fm1_flasher`; the Kotlin/Android namespace remains `pl.ekim.fm1_flasher`. The Swift bundle ID is `pl.ekim.fm1-flasher`. Changing the package namespace is not necessary to update the installed fork. Updates require a matching signing certificate.
 
 ## Identity and reconnection
 
