@@ -9,8 +9,8 @@ Languages: English, Polish, Simplified Chinese. Publisher/contact: ekim.pl@gmail
 The Android workspace is Devices / Library / Tasks with a persistent sequential queue.
 
 RELEASE STATUS
-0.9.0 build 19 was prepared locally for owner testing, not published to GitHub Releases.
-qa/0.9.0-test19.txt identifies that exact APK, checksum, signature and test scope.
+0.9.0 build 19 is an experimental GitHub Release with regenerated documentation.
+qa/0.9.0-publication19.txt identifies that exact APK, checksum, signature and test scope.
 The local dist/0.9.0-test directory is ignored by Git and is not part of a fresh clone.
 github-release.txt is a draft description, not evidence that a release exists.
 Documentation changes do not modify the previously supplied APK. A rebuilt APK needs

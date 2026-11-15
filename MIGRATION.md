@@ -1,6 +1,6 @@
 # Implementation and verification — 0.9.0 / 19
 
-Current architecture of `task/multiplatform-rework`, based on implementation commit `6e9947b`. This document describes the existing code, not a roadmap or a guarantee of hardware support. For operation instructions see [README](README.md); for recorded build results see [build-19 QA](publication/qa/0.9.0-test19.txt).
+Current architecture of `task/multiplatform-rework`, based on implementation commit `6e9947b`. This document describes the existing code, not a roadmap or a guarantee of hardware support. For operation instructions see [README](README.md); for recorded build results see [build-19 QA](publication/qa/0.9.0-publication19.txt).
 
 ## Modules and entry points
 
@@ -96,8 +96,8 @@ Linux metadata compilation does not compile Swift, link/sign an iOS application 
 
 ## Release boundaries
 
-0.9.0/19 is a local test artifact. Debug signature continuity with build 18 was checked. A future rebuild after document changes has different APK bytes and needs a new checksum and packaging verification. Do not replace the historical report's checksum with one from a different build.
+0.9.0/19 is an experimental release artifact. The publication rebuild includes regenerated documentation. Debug signature continuity with build 18 was checked. A future rebuild after document changes has different APK bytes and needs a new checksum and packaging verification. Do not replace the historical report's checksum with one from a different build.
 
-Android CI tests/builds every branch. Pages builds every branch but deploys only the repository default branch. The inherited Google Play release and production workflows still target the original package; the F-Droid recipe and older store material also concern the original application. See [publication notes](publication/README.txt). None of these artifacts establishes a store release of this fork.
+Android CI tests/builds every branch. Pages builds every branch; deployment is allowed from the default branch or manual dispatch on task/multiplatform-rework. The inherited Google Play release and production workflows still target the original package; the F-Droid recipe and older store material also concern the original application. See [publication notes](publication/README.txt). None of these artifacts establishes a store release of this fork.
 
 Physical acceptance requires multiple FM-1 units, the intended powered/passive hubs and real phones; test mode descriptors, serial behavior, grant denial, missed/out-of-order events, safe reconnect faults, interruption and recovery separately. Emulator assertions establish software behavior, not electrical stability or hardware flash success.

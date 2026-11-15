@@ -2,7 +2,7 @@
 
 Independent firmware manager for **M-VAVE FM-1**, built with Kotlin Multiplatform and Compose Multiplatform. The main Android workflow manages several instruments through an OTG hub and writes firmware **one instrument at a time**.
 
-This guide describes **0.9.0, Android build 19**, on `task/multiplatform-rework`, based on implementation commit `6e9947b`. A local test APK has been prepared; this version has **not been published as a GitHub Release**. The [build-19 report](publication/qa/0.9.0-test19.txt) records the tested artifact and its checksum. Documentation edits after that build do not alter the previously supplied APK.
+This guide describes **0.9.0, Android build 19**, on `task/multiplatform-rework`, based on implementation commit `6e9947b`. A test APK with regenerated documentation has been prepared; this version is published as an **experimental GitHub Release**. The [build-19 report](publication/qa/0.9.0-publication19.txt) records the tested artifact and its checksum. Documentation edits after that build do not alter the previously supplied APK.
 
 [Polski](website/pl/documentation.md) · [简体中文](website/zh-CN/documentation.md) · [Implementation](MIGRATION.md) · [Privacy](PRIVACY_POLICY.md)
 
@@ -106,7 +106,7 @@ The configured Kotlin targets are `iosArm64` and `iosSimulatorArm64`, not an Int
 
 For implementation build 19: **50 shared JVM tests and 120 Android JVM tests passed**; four optional external-fixture tests were skipped. **29 Android instrumentation tests passed**, with a final three-test UI rerun after the compact-filter/theme changes. Debug builds, lint, resource synchronization and iOS Kotlin metadata compilation passed. The dedicated Android 16 emulator was updated and the real cached catalog/UI checked. These are recorded results, not a claim that every later documentation edit reran the application suite.
 
-No physical FM-1/hub or iOS binary was verified. Power behavior, real mode/descriptor transitions, serial uniqueness and full hardware flash success remain acceptance gates. [The build report](publication/qa/0.9.0-test19.txt) records the scope and artifact identity.
+No physical FM-1/hub or iOS binary was verified. Power behavior, real mode/descriptor transitions, serial uniqueness and full hardware flash success remain acceptance gates. [The build report](publication/qa/0.9.0-publication19.txt) records the scope and artifact identity.
 
 ## Privacy and attribution
 

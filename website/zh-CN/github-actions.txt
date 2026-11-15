@@ -11,7 +11,7 @@ android-checks 保存 APK/报告 14 天。不测试真实 FM-1，不创建 GitHu
 
 PAGES (.github/workflows/pages.yml)
 在所有分支/PR 或手动运行时构建文档并检查链接。
-仅在非 PR 的仓库默认分支运行中部署。task/multiplatform-rework 的推送通常只验证，不部署。
+默认分支的非 PR 运行可部署；也允许手动运行 task/multiplatform-rework 来部署。task/multiplatform-rework 的推送通常只验证，不部署。
 当前分支文档可能与公共网站不同。本地命令与输出结构见 Pages 指南。
 
 GOOGLE PLAY RELEASE (.github/workflows/google-play.yml)：原应用配置

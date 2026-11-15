@@ -11,7 +11,7 @@
 3. 在 **Actions → GitHub Pages → Run workflow** 中选择默认分支。此后对该分支的更改会自动部署。
 4. 已发布网站为 [ekim-pl.github.io/android-fm1-flasher](https://ekim-pl.github.io/android-fm1-flasher/zh-CN/)。分叉仓库通常使用 `https://LOGIN.github.io/REPOSITORY/`；请查看部署摘要或 **Settings → Pages**。
 
-如果 `github-pages` 环境限制可部署的分支，请允许项目默认分支。工作流也构建拉取请求和其他分支，但只从默认分支部署。它无需应用 secrets 或 Google Play 访问权限。
+如果 `github-pages` 环境限制可部署的分支，请允许项目默认分支。工作流也构建拉取请求和其他分支；默认分支或手动运行 task/multiplatform-rework 可部署。它无需应用 secrets 或 Google Play 访问权限。
 
 ## 语言与稳定地址
 
@@ -55,3 +55,5 @@ CI 从 `GITHUB_SERVER_URL`、`GITHUB_REPOSITORY` 和 `GITHUB_REF_NAME` 读取源
 ## 与 F-Droid 仓库共同部署
 
 每个 GitHub 仓库在 Pages 上只有一个活动网站部署。如果加入 F-Droid 发布，应在上传 Pages 构建产物前，将 `fdroid/repo/` 加入 `build/site/`。网站和 APK 仓库必须一同部署：仅部署 APK 的工作流会替换网站，仅部署网站又会删除 APK 仓库。目前工作流只发布网站和文档。
+
+发布此实验版文档时，手动运行 Pages 并明确选择 `task/multiplatform-rework`；`github-pages` 环境必须允许该分支。这会部署仓库网站，默认分支的后续自动部署可能将其替换。

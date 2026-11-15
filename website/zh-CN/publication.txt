@@ -9,8 +9,8 @@ iOS bundle ID：pl.ekim.multiplatform-fm1-flasher；只有源码，没有已验�
 Android 提供设备 / 固件库 / 任务以及持久化顺序队列。
 
 发布状态
-0.9.0 构建 19 仅在本地准备供所有者测试，尚未发布到 GitHub Releases。
-publication/qa/0.9.0-test19.txt 记录具体 APK、哈希、签名与测试范围。
+0.9.0 构建 19 已作为实验版发布到 GitHub Releases，包含更新文档。
+publication/qa/0.9.0-publication19.txt 记录具体 APK、哈希、签名与测试范围。
 dist/0.9.0-test 被 Git 忽略，新克隆不包含该本地目录。
 publication/github-release.txt 是说明草稿，不代表版本已发布。
 修改文档不会改变已提供 APK。重新构建需生成自己的校验和并验证打包，保留历史报告。

@@ -2,7 +2,7 @@
 
 Niezależny menedżer firmware dla **M-VAVE FM-1**, napisany w Kotlin Multiplatform i Compose Multiplatform. Android obsługuje wiele instrumentów przez hub OTG, zapisując firmware **kolejno, na jednym instrumencie naraz**.
 
-Dokument opisuje **0.9.0, build Android 19**, branch `task/multiplatform-rework` i implementację `6e9947b`. Przygotowano lokalny testowy APK; **0.9.0 nie opublikowano na GitHub Releases**. [Raport buildu](../../publication/qa/0.9.0-test19.txt) identyfikuje sprawdzony plik i sumę kontrolną. Późniejsze zmiany dokumentacji nie zmieniają wcześniej przekazanego APK.
+Dokument opisuje **0.9.0, build Android 19**, branch `task/multiplatform-rework` i implementację `6e9947b`. Przygotowano lokalny testowy APK; **0.9.0 opublikowano jako eksperymentalne wydanie GitHub Releases**. [Raport buildu](../../publication/qa/0.9.0-publication19.txt) identyfikuje sprawdzony plik i sumę kontrolną. Późniejsze zmiany dokumentacji nie zmieniają wcześniej przekazanego APK.
 
 [English](../../README.md) · [简体中文](../zh-CN/documentation.md) · [Architektura](../../MIGRATION.md) · [Prywatność](privacy.md)
 
@@ -109,7 +109,7 @@ Skonfigurowane cele Kotlin to `iosArm64` i `iosSimulatorArm64`, bez symulatora I
 
 Dla implementacji buildu 19 zaliczono **50 testów shared JVM i 120 testów Android JVM**; pominięto cztery testy wymagające zewnętrznych fixture’ów. Zaliczone są **29 testów instrumentacyjnych Androida** i końcowa powtórka trzech testów UI po zmianie filtrów/motywu. Przeszły buildy debug, lint, synchronizacja zasobów i metadane Kotlin/iOS. W dedykowanym emulatorze Android 16 zaktualizowano aplikację i sprawdzono prawdziwy lokalny katalog/interfejs. To wyniki zapisanej próby, nie deklaracja ponowienia całego zestawu przy każdej późniejszej edycji dokumentacji.
 
-Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.9.0-test19.txt) zawiera identyfikację pliku i zakres prób.
+Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.9.0-publication19.txt) zawiera identyfikację pliku i zakres prób.
 
 ## Prywatność i autorstwo
 

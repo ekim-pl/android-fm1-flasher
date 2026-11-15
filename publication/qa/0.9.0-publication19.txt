@@ -1,0 +1,28 @@
+0.9.0 / 19 experimental publication rebuild — 2026-11-15
+Branch: task/multiplatform-rework
+Application ID: pl.ekim.multiplatform_fm1_flasher; Android 14+ / target SDK 36.
+APK: Multiplatform-FM1-Flasher-0.9.0-19-debug.apk
+Bytes: 31422129
+SHA-256: 8af6b88e1f2398399f5f7ee709f7810032f9cea57cf6d8dd48a3fd377b8e5cb5
+Debug signing certificate SHA-256:
+0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
+Signature matches the prior fork; install as an update without uninstalling.
+
+Rebuilt from the 0.9.0 implementation plus regenerated EN/PL/zh-Hans documentation.
+The earlier local build-19 report (0.9.0-test19.txt) identifies different APK bytes.
+Its checksum remains historical. This report identifies the published rebuild.
+
+Publication checks:
+- shared JVM: 50 passed.
+- Android JVM: 120 passed, 4 external-fixture tests skipped, no failures.
+- Android instrumentation: 29 passed, explicit classes in separate runs on emulator-5558.
+- Debug APK/test APK and lint passed; resource synchronization passed.
+- apksigner verification passed; all bundled About documents match current source bytes.
+- Website built and checked locally; 44 HTML pages, local links, anchors and languages.
+
+Devices / Library / Tasks, sequential immutable plans, per-device records,
+continuity checks, inline reconnect pairing, pinned packages and persistent history
+are implemented on Android. A stopped/interrupted write never resumes automatically.
+No physical FM-1/OTG hub or Xcode/iOS binary was validated. Multi-device automatic
+pairing remains disabled. ROM recovery is separate and unverified. The iOS host
+retains the previous single-device controller without the Android fleet adapter.

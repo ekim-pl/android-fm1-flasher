@@ -12,7 +12,7 @@ instrumentacyjnego Androida.
 
 PAGES (.github/workflows/pages.yml)
 Buduje dokumentację i sprawdza linki na wszystkich branchach/PR oraz ręcznie.
-Wdraża tylko spoza PR, z domyślnej gałęzi repozytorium. Push task/multiplatform-rework
+Wdraża spoza PR z gałęzi domyślnej; dopuszcza też ręczny dispatch task/multiplatform-rework. Push task/multiplatform-rework
 zwykle sprawdza stronę bez wdrożenia. Dokumentacja brancha może różnić się od strony
 publicznej. Komendy lokalne i strukturę opisuje poradnik Pages.
 

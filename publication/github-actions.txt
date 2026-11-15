@@ -13,7 +13,7 @@ perform the separate Android instrumentation acceptance suite.
 
 PAGES (.github/workflows/pages.yml)
 Builds documentation and checks links on every branch/PR or manual dispatch.
-Only non-PR runs on the repository default branch deploy to GitHub Pages.
+Non-PR default-branch runs deploy to Pages. Manual dispatch on task/multiplatform-rework may also deploy.
 A push to task/multiplatform-rework normally validates the site without deploying it.
 The current branch's documentation can differ from the public default-branch site.
 See website/pages.md for local commands and output layout.

@@ -2,7 +2,7 @@
 
 面向 **M-VAVE FM-1** 的独立固件管理器，使用 Kotlin Multiplatform 和 Compose Multiplatform。Android 可通过 OTG 集线器管理多台乐器，并且**每次只写入一台乐器**。
 
-本指南对应 `task/multiplatform-rework` 分支的 **0.9.0、Android 构建 19**，实现提交为 `6e9947b`。已准备本地测试 APK，**尚未在 GitHub Releases 发布 0.9.0**。[构建报告](../../publication/qa/0.9.0-test19.txt)记录了测试文件及校验和。之后修改文档不会改变此前提供的 APK。
+本指南对应 `task/multiplatform-rework` 分支的 **0.9.0、Android 构建 19**，实现提交为 `6e9947b`。已准备本地测试 APK，**0.9.0 已作为实验版发布到 GitHub Releases**。[构建报告](../../publication/qa/0.9.0-publication19.txt)记录了测试文件及校验和。之后修改文档不会改变此前提供的 APK。
 
 [English](../../README.md) · [Polski](../pl/documentation.md) · [实现说明](../../MIGRATION.md) · [隐私](privacy.md)
 
@@ -109,7 +109,7 @@ Kotlin 目标为 `iosArm64`、`iosSimulatorArm64`，未配置 Intel 模拟器。
 
 实现构建 19 已通过 **50 个 shared JVM 测试和 120 个 Android JVM 测试**，另有四个依赖外部 fixture 的测试被跳过。**29 个 Android 仪器化测试**通过；紧凑筛选/主题调整后又通过三个 UI 测试。Debug 构建、lint、资源同步及 Kotlin/iOS 元数据编译通过。在专用 Android 16 模拟器上更新应用并检查真实缓存目录/界面。这些是记录的测试结果，不表示每次后续文档修改都重跑全部应用测试。
 
-未测试物理 FM-1/集线器或 iOS 二进制。供电、真实模式/描述符变化、序列号唯一性及完整硬件写入仍是验收条件。[构建报告](../../publication/qa/0.9.0-test19.txt)提供文件身份和测试范围。
+未测试物理 FM-1/集线器或 iOS 二进制。供电、真实模式/描述符变化、序列号唯一性及完整硬件写入仍是验收条件。[构建报告](../../publication/qa/0.9.0-publication19.txt)提供文件身份和测试范围。
 
 ## 隐私与署名
 

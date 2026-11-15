@@ -1,34 +1,25 @@
-DRAFT — Multiplatform FM-1 Flasher 0.9.0, Android test build 19
-Not published. This is the planned test-release description, not a release record.
+# Multiplatform FM-1 Flasher 0.9.0 — experimental, build 19
 
-Android 14+ / pl.ekim.multiplatform_fm1_flasher / task/multiplatform-rework.
+Testowy build Android 14+ z aktualną dokumentacją PL / EN / 简体中文.
 
-Changes
-- Devices / Library / Tasks workspace, compact library filters and EN/PL/zh-Hans UI.
-- Per-instrument names, memory selections and local package assignments.
-- Persistent sequential plans with one approval, pinned target/hash, stage history
-  and stop-after-current. Interrupted work is unconfirmed and never auto-resumed.
-- USB/MIDI continuity tracking, stale-grant protection and generation-bound pairing.
-  Ambiguous returns and lost siblings block further writing.
-- Local-session Undo for ordinary package removal; updated privacy and About content.
+- **Urządzenia · Biblioteka · Zadania** — konfiguracja wielu FM-1 przez hub OTG.
+- Trwała kolejka instalacji sekwencyjnych, jedno zatwierdzenie planu i historia wyników.
+- Ochrona przypisania celu i paczki, blokada niepewnego powrotu po restarcie, obsługa spóźnionych zgód USB.
+- Zatrzymanie po bieżącym instrumencie; brak automatycznego wznowienia przerwanego zapisu.
+- Przepisana dokumentacja, instrukcje i opisy prywatności w trzech językach.
 
-Validation for the previously supplied build-19 APK
-50 shared JVM passes, 120 Android JVM passes, 4 external-fixture skips;
-29 Android instrumentation passes and a final 3-test UI rerun; debug build/lint,
-resource check and iOS Kotlin metadata passed. Android 16 emulator checked.
-See qa/0.9.0-test19.txt for exact artifact hash, signature and limits.
+## Pobieranie
+Wybierz APK poniżej. `pl.ekim.multiplatform_fm1_flasher` instaluje się oddzielnie od oryginalnej aplikacji.
+Podpis jest zgodny z wcześniejszym buildem forka; aktualizuj bez odinstalowania.
+To przebudowany build 19 z nową dokumentacją — suma APK różni się od wcześniejszej lokalnej paczki testowej.
+Archiwum dokumentacji działa również offline.
 
-Limits
-No real FM-1/OTG hub or Xcode/iOS binary was verified. Multi-device return pairing
-remains inline/manual; serials are not validated cross-mode hardware IDs.
-ROM recovery is separate, restricted and unverified. The iOS host retains its
-previous single-instrument controller, without the Android fleet/queue adapter.
+## Sprawdzenie
+170 testów jednostkowych zaliczonych, 4 pominięte (zewnętrzne fixture’y); 29 testów Androida zaliczonych.
+Build debug, lint, podpis i dokumenty w APK sprawdzone. Raport oraz SHA-256 dołączono.
 
-Assets to verify before an actual upload
-- Multiplatform-FM1-Flasher-0.9.0-19-debug.apk
-- Matching .apk.sha256 and test report
-This APK is a debug-signed test build; it updates the prior fork with the matching
-certificate. Existing original-app installations have a different application ID.
-If rebuilt after documentation changes, record the NEW bytes/hash and verify the
-bundle contents; do not silently reuse the historical checksum or validation claim.
-Publication awaits owner/hardware verification. No upload command is executed here.
+## Ograniczenia
+Nie wykonano testów fizycznego FM-1/huba ani kompilacji Xcode. Przy wielu instrumentach powrót wymaga powiązania na karcie zadania; automatyczne parowanie pozostaje wyłączone.
+Recovery ROM jest osobną funkcją eksperymentalną. Kolejki Androida nie przeniesiono do hosta iOS.
+
+[Dokumentacja po polsku](https://ekim-pl.github.io/android-fm1-flasher/pl/documentation.html) · [English](https://ekim-pl.github.io/android-fm1-flasher/en/documentation.html) · [简体中文](https://ekim-pl.github.io/android-fm1-flasher/zh-CN/documentation.html)
