@@ -165,7 +165,7 @@ def write_page(language, page, output):
         ])
     languages = ''
     alternates = ''
-    for code in ('pl', 'en', 'zh-CN'):
+    for code in ('en', 'pl', 'zh-CN'):
         target = relative(f'{code}/{page}', output)
         html_language = LANGUAGES[code]['html']
         current = ' aria-current="true"' if code == language else ''
@@ -191,7 +191,8 @@ def write_page(language, page, output):
 <nav class="languages" aria-label="{ui['languages']}">{languages}</nav>
 <nav aria-label="{ui['navigation']}">{nav}</nav></header>
 <main id="content">{body}</main>
-<footer>{ui['independent']} · MIT · <a href="{relative(f'{language}/license.html', output)}">{ui['license']}</a></footer></body></html>
+<footer>{ui['independent']} · MIT · <a href="{relative(f'{language}/license.html', output)}">{ui['license']}</a>
+<div><a href="https://ekim-pl.github.io/">Ekim</a> · <a href="https://github.com/ekim-pl">GitHub</a> · <a href="https://www.youtube.com/@ekim-pl">YouTube</a> · <a href="https://www.instagram.com/ekimpl/">Instagram</a> · <a href="https://discord.com/users/1422549758785880215">Discord</a></div></footer></body></html>
 '''
     destination = OUT / output
     destination.parent.mkdir(parents=True, exist_ok=True)

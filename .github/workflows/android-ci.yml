@@ -34,6 +34,8 @@ jobs:
         run: |
           python3 tools/sync-resources.py --check
           ./gradlew --no-daemon :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+      - name: Test release fixture gate
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
       - name: Save APK and reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -43,4 +45,55 @@ jobs:
             app/build/outputs/apk/debug/*.apk
             app/build/reports/
             shared/build/reports/
+            build/reports/dependency-verification/
           retention-days: 14
+
+  platform:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [34, 36]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+        with:
+          packages: 'platforms;android-36 build-tools;35.0.0 emulator system-images;android-${{ matrix.api }};google_apis;x86_64'
+          log-accepted-android-sdk-licenses: false
+      - name: Run platform tests
+        env:
+          TEST_API: ${{ matrix.api }}
+          ANDROID_AVD_HOME: ${{ runner.temp }}/avd
+        run: |
+          sudo chmod 666 /dev/kvm
+          mkdir -p "$ANDROID_AVD_HOME"
+          echo no | avdmanager create avd --force --name test --path "$ANDROID_AVD_HOME/test.avd" --package "system-images;android-$TEST_API;google_apis;x86_64"
+          "$ANDROID_HOME/emulator/emulator" -avd test -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          trap 'adb emu kill || true' EXIT
+          timeout 180 adb wait-for-device
+          timeout 180 bash -c 'until [[ "$(adb shell getprop sys.boot_completed | tr -d "\r")" == "1" ]]; do sleep 2; done'
+          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
+          adb install -r app/build/outputs/apk/debug/app-debug.apk
+          adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+          for test in BackgroundCatalogTest CatalogDatabaseTest ComposeCatalogUpdatesTest ExperimentalFeaturesTest FirmwareSelectionTest FleetUiTest MainActivityLaunchTest OperationLogServiceTest SettingsUiTest SourceAuthenticationTest UsbPermissionIntentTest; do
+            timeout 180 adb shell am instrument -w -e class "pl.ekim.fm1_flasher.$test" pl.ekim.multiplatform_fm1_flasher.test/android.test.InstrumentationTestRunner | tee "$RUNNER_TEMP/$test.log"
+            grep -Eq 'OK \([0-9]+ tests?\)' "$RUNNER_TEMP/$test.log"
+          done
+      - name: Save platform reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: platform-api-${{ matrix.api }}
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+            ${{ runner.temp }}/emulator.log
+            ${{ runner.temp }}/*Test.log

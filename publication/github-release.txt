@@ -1,13 +1,15 @@
-# Multiplatform FM-1 Flasher 0.9.2 — prerelease draft, build 23
+# Multiplatform FM-1 Flasher 0.9.2
 
-Prepared test build; this file does not publish a release.
+Stabilne wydanie aplikacji dla Androida 14 i nowszego.
 
-Pełnoekranowe ustawienia, edycja źródeł i zgodności paczek oraz polityka prywatności dostępna z ustawień. Hierarchiczny powrót i zachowanie niesekretnych pól po odtworzeniu Activity.
+- Pełnoekranowe ustawienia, edycja źródeł katalogów i zgodności paczek oraz polityka prywatności.
+- Providery: thefirmwarehub, awesome-fm1, repo-url (wydania GitHub i ich paczki) oraz pkg-url (bezpośredni plik FWSC).
+- Uwierzytelnianie HTTP: Basic, Bearer, klucz API i OAuth 2.0 — PKCE oraz Client Credentials. Szyfrowane poświadczenia i odświeżanie tokenów.
+- Zarządzanie wieloma FM-1 przez hub OTG, sekwencyjna kolejka instalacji, trwały log operacji i czyszczenie pobranych firmware.
+- Zaktualizowana dokumentacja i interfejs w językach polskim, angielskim i chińskim uproszczonym.
 
-Warstwa CatalogProvider: thefirmwarehub, awesome-fm1, repo-url (wydania GitHub i paczki FWSC), pkg-url (bezpośredni plik). Zachowano zgodność z wcześniejszymi katalogami JSON. Ręczna zgodność jest przypisana do SHA-256, a nie nazwy pliku.
+Weryfikacja: 191 zaliczonych testów jednostkowych oraz 44 testy instrumentacyjne Androida. Import publicznych wydań GitHub sprawdzony na 13 paczkach SLOOP.
 
-Uwierzytelnianie źródeł: Basic, Bearer, klucz API w nagłówku i OAuth 2.0 — PKCE oraz Client Credentials. Szyfrowane poświadczenia, odświeżanie tokenów, kontrola stanu callbacku i izolacja nagłówków między originami. Nowe adaptery są implementacją Androida.
+Instalacja: pobierz `Multiplatform-FM1-Flasher-0.9.2.apk` i zainstaluj jako aktualizację. Podpis zachowuje zgodność z wcześniejszymi wersjami multiplatformowymi.
 
-Weryfikacja: 191 testów jednostkowych zaliczonych, 4 pominięte z powodu zewnętrznych fixture’ów; 44 testy instrumentacyjne. Debug APK/test APK, lint, zasoby, witryna i metadane Kotlin/iOS. Szczegóły oraz SHA-256 w qa/0.9.2-test23.txt.
-
-Debug APK jest przeznaczony do testów na Androidzie 14+. Brak nowej weryfikacji fizycznego FM-1/huba, natywnej aplikacji iOS/Xcode i logowania u produkcyjnego dostawcy OAuth; OAuth sprawdzono na kontrolowanych odpowiedziach testowych. Nie jest to pakiet sklepu Play.
+Nowe adaptery katalogów i uwierzytelniania dotyczą Androida. Natywna aplikacja iOS oraz logowanie u produkcyjnego dostawcy OAuth wymagają osobnej weryfikacji. Narzędzia eksperymentalne pozostają opcjonalne.

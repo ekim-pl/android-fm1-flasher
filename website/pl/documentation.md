@@ -2,7 +2,7 @@
 
 Niezależny menedżer firmware dla **M-VAVE FM-1**, napisany w Kotlin Multiplatform i Compose Multiplatform. Android obsługuje wiele instrumentów przez hub OTG, zapisując firmware **kolejno, na jednym instrumencie naraz**.
 
-Dokument opisuje **0.9.2, build Android 23**, na branchu `task/multiplatform-rework`. Build testowy dodaje pełnoekranowe ustawienia, adaptery providerów i uwierzytelnianie HTTP przypisane do źródła. [Raport buildu](../../publication/qa/0.9.2-test23.txt) opisuje weryfikację i ograniczenia. Właściciel potwierdził fizyczne testy FM-1 dla buildu 20; nowe funkcje źródeł i uwierzytelniania wymagają osobnej akceptacji.
+Dokument opisuje stabilną wersję **0.9.2** na branchu `main`. Wersja dodaje pełnoekranowe ustawienia, adaptery providerów i uwierzytelnianie HTTP przypisane do źródła. [Raport buildu](../../publication/qa/0.9.2.txt) opisuje weryfikację i ograniczenia. Właściciel potwierdził fizyczne testy FM-1 dla buildu 20; nowe funkcje źródeł i uwierzytelniania wymagają osobnej akceptacji.
 
 [English](../../README.md) · [简体中文](../zh-CN/documentation.md) · [Architektura](../../MIGRATION.md) · [Prywatność](privacy.md)
 
@@ -109,7 +109,7 @@ Skonfigurowane cele Kotlin to `iosArm64` i `iosSimulatorArm64`, bez symulatora I
 
 W buildzie 23 zaliczono **191 testów jednostkowych (62 shared + 129 Android JVM)**; cztery testy zewnętrznych fixture’ów pominięto. Zaliczone są **44 testy instrumentacyjne Androida**, w tym eksport/czyszczenie logu, czyszczenie biblioteki i potwierdzenia w trzech językach. Przeszły debug, lint i kompilacja metadanych iOS. Właściciel potwierdził działanie buildu 20 na fizycznych FM-1; nowych funkcji i wszystkich kombinacji sprzętu nie zweryfikowano fizycznie.
 
-Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.9.2-test23.txt) zawiera identyfikację pliku i zakres prób.
+Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.9.2.txt) zawiera identyfikację pliku i zakres prób.
 
 ## Prywatność i autorstwo
 

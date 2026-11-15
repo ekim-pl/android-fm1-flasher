@@ -2,7 +2,7 @@
 
 Independent firmware manager for **M-VAVE FM-1**, built with Kotlin Multiplatform and Compose Multiplatform. The main Android workflow manages several instruments through an OTG hub and writes firmware **one instrument at a time**.
 
-This guide describes **0.9.2, Android build 23**, on `task/multiplatform-rework`. The test build adds full-screen settings, provider adapters and source-scoped HTTP authentication. The [build report](publication/qa/0.9.2-test23.txt) records verification and limits. The owner reported successful physical FM-1 tests of build 20; the new source/authentication features require their own acceptance.
+This guide describes stable **0.9.2** on `main`. This version adds full-screen settings, provider adapters and source-scoped HTTP authentication. The [build report](publication/qa/0.9.2.txt) records verification and limits. The owner reported successful physical FM-1 tests of build 20; the new source/authentication features require their own acceptance.
 
 [Polski](website/pl/documentation.md) · [简体中文](website/zh-CN/documentation.md) · [Implementation](MIGRATION.md) · [Privacy](PRIVACY_POLICY.md)
 
@@ -104,9 +104,9 @@ The configured Kotlin targets are `iosArm64` and `iosSimulatorArm64`, not an Int
 
 ## Verification and limits
 
-Current verification is recorded in the [0.9.2 / 23 report](publication/qa/0.9.2-test23.txt). Build 20 was reported working on physical instruments by the owner. ROM recovery, all chip/phone/hub combinations and an Apple binary still need separate verification.
+Current verification is recorded in the [0.9.2 / 23 report](publication/qa/0.9.2.txt). Build 20 was reported working on physical instruments by the owner. ROM recovery, all chip/phone/hub combinations and an Apple binary still need separate verification.
 
-No new physical FM-1/hub test or iOS binary was independently verified for build 23. Power behavior, real mode/descriptor transitions, serial uniqueness and full hardware flash success remain acceptance gates. [The build report](publication/qa/0.9.2-test23.txt) records the scope and artifact identity.
+No new physical FM-1/hub test or iOS binary was independently verified for build 23. Power behavior, real mode/descriptor transitions, serial uniqueness and full hardware flash success remain acceptance gates. [The build report](publication/qa/0.9.2.txt) records the scope and artifact identity.
 
 ## Privacy and attribution
 

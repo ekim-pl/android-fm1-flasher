@@ -2,7 +2,7 @@
 
 面向 **M-VAVE FM-1** 的独立固件管理器，使用 Kotlin Multiplatform 和 Compose Multiplatform。Android 可通过 OTG 集线器管理多台乐器，并且**每次只写入一台乐器**。
 
-本文描述 `task/multiplatform-rework` 分支的 **0.9.2，Android 构建 23**。测试版新增全屏设置、目录提供程序适配器和按来源隔离的 HTTP 认证。[构建报告](../../publication/qa/0.9.2-test23.txt) 记录验证与限制。所有者报告构建 20 已在实体 FM-1 上测试成功；新的来源和认证功能需单独验收。
+本文描述 `main` 分支的稳定版 **0.9.2**。此版本新增全屏设置、目录提供程序适配器和按来源隔离的 HTTP 认证。[构建报告](../../publication/qa/0.9.2.txt) 记录验证与限制。所有者报告构建 20 已在实体 FM-1 上测试成功；新的来源和认证功能需单独验收。
 
 [English](../../README.md) · [Polski](../pl/documentation.md) · [实现说明](../../MIGRATION.md) · [隐私](privacy.md)
 
@@ -109,7 +109,7 @@ Kotlin 目标为 `iosArm64`、`iosSimulatorArm64`，未配置 Intel 模拟器。
 
 构建 23 通过 **191 个单元测试（62 shared + 129 Android JVM）**，另有四个外部 fixture 测试跳过；**44 个 Android 仪器化测试**通过，包括日志导出/清除、固件库清理和三种语言的确认流程。Debug、lint 和 iOS 元数据编译通过。所有者报告构建 20 已在实体 FM-1 上正常运行，新功能与所有硬件组合仍需单独验证。
 
-未测试物理 FM-1/集线器或 iOS 二进制。供电、真实模式/描述符变化、序列号唯一性及完整硬件写入仍是验收条件。[构建报告](../../publication/qa/0.9.2-test23.txt)提供文件身份和测试范围。
+未测试物理 FM-1/集线器或 iOS 二进制。供电、真实模式/描述符变化、序列号唯一性及完整硬件写入仍是验收条件。[构建报告](../../publication/qa/0.9.2.txt)提供文件身份和测试范围。
 
 ## 隐私与署名
 

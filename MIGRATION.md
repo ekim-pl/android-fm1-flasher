@@ -1,6 +1,6 @@
 # Implementation and verification — 0.9.2 / 23
 
-Current architecture of `task/multiplatform-rework`, based on the current branch implementation. This document describes the existing code, not a roadmap or a guarantee of hardware support. For operation instructions see [README](README.md); for recorded build results see [build-23 QA](publication/qa/0.9.2-test23.txt).
+Current architecture of `task/multiplatform-rework`, based on the current branch implementation. This document describes the existing code, not a roadmap or a guarantee of hardware support. For operation instructions see [README](README.md); for recorded build results see [build-23 QA](publication/qa/0.9.2.txt).
 
 ## Modules and entry points
 
@@ -70,7 +70,7 @@ adb -s DEVICE_SERIAL shell am instrument -w -e class pl.ekim.fm1_flasher.FleetUi
 
 Run the explicit classes separately: `ExperimentalFeaturesTest`, `CatalogDatabaseTest`, `BackgroundCatalogTest`, `FirmwareSelectionTest`, `UsbPermissionIntentTest`, `MainActivityLaunchTest`, `ComposeCatalogUpdatesTest`, `FleetUiTest`, `OperationLogServiceTest`, `SettingsUiTest`, `SourceAuthenticationTest` (all in `pl.ekim.fm1_flasher`). This avoids the legacy runner's unbounded discovery startup timeout and isolates service/preferences fixtures. The test runner's exit alone is insufficient: inspect the reported OK/failure result.
 
-Build 23 passed 62 shared JVM tests and 129 Android JVM tests (four external-fixture cases skipped), plus 44 Android instrumentation tests. Debug APK/test APK, lint, generated resources and iOS Kotlin metadata compilation passed. The [current report](publication/qa/0.9.2-test23.txt) records the artifact. Historical build reports remain unchanged.
+Build 23 passed 62 shared JVM tests and 129 Android JVM tests (four external-fixture cases skipped), plus 44 Android instrumentation tests. Debug APK/test APK, lint, generated resources and iOS Kotlin metadata compilation passed. The [current report](publication/qa/0.9.2.txt) records the artifact. Historical build reports remain unchanged.
 
 ## iOS build boundary
 

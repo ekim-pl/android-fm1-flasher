@@ -1,6 +1,6 @@
 # Wiele FM-1. Jeden plan instalacji.
 
-**Multiplatform FM-1 Flasher 0.9.2 / 23** to build testowy z pełnoekranowymi ustawieniami, wspólnym interfejsem providerów i uwierzytelnianiem HTTP/OAuth dla źródeł Androida. Praca z wieloma FM-1 przez OTG nadal jest sekwencyjna.
+**Multiplatform FM-1 Flasher 0.9.2** to stabilne wydanie z pełnoekranowymi ustawieniami, wspólnym interfejsem providerów i uwierzytelnianiem HTTP/OAuth dla źródeł Androida. Praca z wieloma FM-1 przez OTG nadal jest sekwencyjna.
 
 [Aktualna instrukcja](documentation.md) · [O aplikacji](../../about/README.pl.md) · [Historia wydań](https://github.com/ekim-pl/android-fm1-flasher/releases)
 

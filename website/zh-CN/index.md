@@ -1,6 +1,6 @@
 # 多台 FM-1，一个安装计划。
 
-**Multiplatform FM-1 Flasher 0.9.2 / 23** 是测试构建，提供全屏设置、共享提供程序接口和 Android 来源的 HTTP/OAuth 认证。多台 FM-1 的 OTG 更新仍依次执行。
+**Multiplatform FM-1 Flasher 0.9.2** 是稳定版本，提供全屏设置、共享提供程序接口和 Android 来源的 HTTP/OAuth 认证。多台 FM-1 的 OTG 更新仍依次执行。
 
 [当前指南](documentation.md) · [关于应用](../../about/README.zh-Hans.md) · [版本历史](https://github.com/ekim-pl/android-fm1-flasher/releases)
 

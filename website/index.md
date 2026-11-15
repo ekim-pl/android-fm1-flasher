@@ -1,6 +1,6 @@
 # Several FM-1 instruments. One installation plan.
 
-**Multiplatform FM-1 Flasher 0.9.2 / 23** is a test build with full-screen settings, shared provider interfaces and HTTP/OAuth authentication for Android sources. The existing multi-instrument OTG workflow remains sequential.
+**Multiplatform FM-1 Flasher 0.9.2** is the stable release with full-screen settings, shared provider interfaces and HTTP/OAuth authentication for Android sources. The existing multi-instrument OTG workflow remains sequential.
 
 [Read the current guide](../README.md) · [About](../about/README.md) · [Release history](https://github.com/ekim-pl/android-fm1-flasher/releases)
 

@@ -66,6 +66,8 @@ def check():
     expected.update({ROOT / path: value for path, value in ALIASES.items()})
     assert documents.keys() == expected.keys(), 'Missing or unexpected generated pages'
     errors = []
+    if (documents[ROOT / 'index.html'].html_language, documents[ROOT / 'index.html'].language) != ('en', 'en'):
+        errors.append('index.html: default language must be English')
     for path, document in documents.items():
         language, page = expected[path]
         prefix = str(path.relative_to(ROOT))
@@ -76,7 +78,7 @@ def check():
             errors.append(f'{prefix}: duplicate anchors: {document.duplicate_ids}')
         if not ''.join(document.main_text).strip():
             errors.append(f'{prefix}: empty translated content')
-        if document.language_labels != ['Polski', 'English', '简体中文']:
+        if document.language_labels != ['English', 'Polski', '简体中文']:
             errors.append(f'{prefix}: incorrect language menu labels')
         selected = [link['data-language'] for link in document.language_links
                     if link.get('aria-current') == 'true']

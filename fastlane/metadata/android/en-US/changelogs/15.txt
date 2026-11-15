@@ -1,0 +1,1 @@
+Expanded About content in English, Polish and Simplified Chinese: managing firmware sources, refresh limits, background checks and offline use. Added an Awesome FM-1 project guide with activation and contribution instructions. Firmware Hub remains enabled by default; Awesome FM-1 is opt-in. Experimental tools and firmware compatibility checks retain their existing restrictions.

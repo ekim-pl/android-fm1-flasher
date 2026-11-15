@@ -1,4 +1,4 @@
-GitHub Actions：task/multiplatform-rework，0.9.2 / 23
+GitHub Actions：task/multiplatform-rework，0.9.2
 
 本文描述仓库中的工作流，不会执行发布。
 Android ID：pl.ekim.multiplatform_fm1_flasher。0.9.1 APK 仅为本地测试构建。
@@ -40,3 +40,5 @@ ANDROID_KEY_PASSWORD。无密钥配置时 bundleRelease 不签名。密钥和密
 确定应用 ID、商店条目、上传证书和 versionCode。复核两处 package_name、原应用 F-Droid
 归档配方、描述/截图及当前隐私数据清单。已有截图展示旧界面。
 先完成硬件验收与所有者测试 APK 确认。本次文档更新不修改工作流、secrets 或商店设置。
+
+0.9.2 更新：main 的 CI 保留 JVM 测试与资源检查；API 34/36 模拟器矩阵另行运行明确的仪器化测试类。这不代表实体 FM-1 验证。

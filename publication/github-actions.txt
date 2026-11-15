@@ -1,15 +1,15 @@
-GitHub Actions on task/multiplatform-rework — 0.9.2 / 23
+GitHub Actions on main — 0.9.2
 
 This is a description of the checked-in workflows, not a request to run or publish them.
 Android application ID: pl.ekim.multiplatform_fm1_flasher.
-The 0.9.1 test APK has been prepared locally; no release tag/publication is implied.
+Stable 0.9.2 uses the multiplatform-v0.9.2 GitHub tag; Google Play publication is separate.
 
 ANDROID CI (.github/workflows/android-ci.yml)
 Runs on branch pushes, pull requests and manual dispatch. Uses JDK 17, Android SDK 36
 and Build Tools 35.0.0. Checks generated resource bridges, shared JVM tests, Android
 JVM tests, debug lint and assembleDebug. Uploads APK/reports as android-checks for
-14 days. It does not run a physical FM-1, create a GitHub Release, build Swift or
-perform the separate Android instrumentation acceptance suite.
+14 days. The platform matrix separately runs explicit instrumentation classes on Android API 34 and 36.
+It does not run a physical FM-1, create a GitHub Release or build Swift.
 
 PAGES (.github/workflows/pages.yml)
 Builds documentation and checks links on every branch/PR or manual dispatch.
