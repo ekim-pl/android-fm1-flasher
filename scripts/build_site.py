@@ -96,6 +96,7 @@ ALIASES.update({
 })
 ASSETS = {
     'assets/icon.svg': 'assets/icon.svg',
+    'assets/readme-cover.png': 'assets/readme-cover.png',
     'website/style.css': 'assets/style.css',
     **{f'website/icons/{name}': f'assets/icons/{name}' for name in ('ekim.webp', 'awesome-fm1.svg', 'github.svg', 'youtube.svg', 'instagram.svg', 'discord.svg')},
     'third_party/commonmark-LICENSE.txt': 'licenses/commonmark.txt',
@@ -183,6 +184,11 @@ def write_page(language, page, output):
     if repository_url:
         nav += f'<a href="{escape(repository_url, quote=True)}/releases">{ui["releases"]}</a>'
 
+    if page == 'index.html':
+        intro, separator, rest = body.partition('<h2')
+        body = (f'<section class="home-hero"><div>{intro}</div>'
+                f'<img class="home-cover" src="{relative("assets/readme-cover.png", output)}" '
+                f'alt="" width="1536" height="1024"></section>{separator}{rest}')
     html = f'''<!doctype html>
 <html lang="{ui['html']}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
