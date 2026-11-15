@@ -1,0 +1,83 @@
+name: Android release (debug, F-Droid, Google Play)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing stable tag, for example v0.10.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    outputs:
+      commit: ${{ steps.source.outputs.commit }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    env:
+      FM1_RELEASE_TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Require a stable tag and no existing release
+        run: |
+          [[ "$FM1_RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          gh api "repos/$GH_REPO/git/ref/tags/$FM1_RELEASE_TAG" > /dev/null
+          gh api --paginate "repos/$GH_REPO/releases" --jq '.[].tag_name' > "$RUNNER_TEMP/release-tags.txt"
+          if grep -Fxq "$FM1_RELEASE_TAG" "$RUNNER_TEMP/release-tags.txt"; then
+            echo 'Release already exists; refusing to rebuild it.'
+            exit 1
+          fi
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          persist-credentials: false
+      - name: Resolve release commit
+        id: source
+        run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  google-play:
+    needs: validate
+    permissions:
+      contents: read
+    uses: ./.github/workflows/google-play.yml
+    with:
+      tag: ${{ inputs.tag }}
+      commit: ${{ needs.validate.outputs.commit }}
+
+  debug:
+    needs: validate
+    permissions:
+      contents: read
+    uses: ./.github/workflows/android-debug.yml
+    with:
+      tag: ${{ inputs.tag }}
+      commit: ${{ needs.validate.outputs.commit }}
+
+  fdroid:
+    needs: validate
+    permissions:
+      contents: read
+    uses: ./.github/workflows/fdroid-release.yml
+    with:
+      tag: ${{ inputs.tag }}
+      commit: ${{ needs.validate.outputs.commit }}
+
+  publish:
+    needs: [google-play, debug, fdroid]
+    permissions:
+      contents: write
+      actions: read
+    uses: ./.github/workflows/android-publish.yml
+    with:
+      tag: ${{ inputs.tag }}
+      debug_run_id: ${{ format('{0}', github.run_id) }}
+      fdroid_run_id: ${{ format('{0}', github.run_id) }}

@@ -23,3 +23,8 @@ iosApp/Firebase/
 iosApp/*.xcodeproj/
 iosApp/Info.plist
 iosApp/DerivedData/
+
+# Signing containers and release automation checkout
+*.p12
+*.pfx
+.release-tools/

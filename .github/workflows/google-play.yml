@@ -1,33 +1,59 @@
-name: Google Play build (Firebase)
+name: Google Play production AAB build
 
 on:
   workflow_dispatch:
     inputs:
-      publish:
-        description: Upload to Google Play internal testing (disable for first manual upload)
-        type: boolean
-        default: false
+      tag:
+        description: Optional tag; empty builds the selected branch
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      tag:
         required: true
+        type: string
+      commit:
+        description: Commit resolved once by the release workflow
+        type: string
+        default: ''
 
 permissions:
   contents: read
 
+# Independent builds never cancel another run's pending build.
 concurrency:
-  group: google-play
+  group: android-play-${{ github.run_id }}
   cancel-in-progress: false
 
 jobs:
-  release:
+  build:
+    name: Build Google Play AAB
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     environment: google-play
     env:
-      FM1_RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
-      FASTLANE_SKIP_UPDATE_CHECK: 'true'
-      FASTLANE_OPT_OUT_USAGE: 'true'
+      FM1_RELEASE_TAG: ${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name || '') }}
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Validate requested source
+        env:
+          SOURCE_COMMIT: ${{ inputs.commit }}
+        run: |
+          if [[ -n "$FM1_RELEASE_TAG" ]]; then
+            [[ "$FM1_RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          fi
+          if [[ -n "$SOURCE_COMMIT" ]]; then
+            [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          fi
+      - name: Checkout source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
+          ref: ${{ inputs.commit || (inputs.tag && format('refs/tags/{0}', inputs.tag)) || github.sha }}
+          persist-credentials: false
+      - name: Checkout release tooling
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          path: .release-tools
           persist-credentials: false
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
@@ -38,82 +64,72 @@ jobs:
         with:
           packages: 'platforms;android-36 build-tools;35.0.0'
           log-accepted-android-sdk-licenses: false
-      - name: Prepare pinned release fixtures
+      - name: Prepare release fixtures
         env:
           FM1_FIXTURE_ARCHIVE_URL: ${{ vars.FM1_FIXTURE_ARCHIVE_URL }}
           FM1_FIXTURE_ARCHIVE_SHA256: ${{ vars.FM1_FIXTURE_ARCHIVE_SHA256 }}
-        run: python3 scripts/release_fixtures.py prepare
-      - name: Check resources and test shared application logic
+        run: python3 .release-tools/scripts/release_fixtures.py prepare
+      - name: Check resources and shared tests
         run: |
           python3 tools/sync-resources.py --check
-          ./gradlew --no-daemon -Pfm1Analytics=false :shared:jvmTest :app:testDebugUnitTest
-      - name: Require all release fixture tests
-        run: python3 scripts/release_fixtures.py verify
-      - name: Prepare and lint production Firebase variant
+          ./gradlew --no-daemon -Pfm1Analytics=false :shared:jvmTest
+      - name: Test Android logic without analytics
+        run: |
+          ./gradlew --no-daemon -Pfm1Analytics=false :app:testDebugUnitTest
+          python3 .release-tools/scripts/release_fixtures.py verify
+      - name: Prepare production Firebase configuration
         env:
-          FIREBASE_PRODUCTION_ANDROID_JSON: ${{ secrets.FIREBASE_PRODUCTION_ANDROID_JSON }}
+          FIREBASE_CONFIG: ${{ secrets.FIREBASE_PRODUCTION_ANDROID_JSON }}
         run: |
           python3 - <<'PYCONFIG'
           import json, os
           from pathlib import Path
-          value = json.loads(os.environ['FIREBASE_PRODUCTION_ANDROID_JSON'])
+          value = json.loads(os.environ['FIREBASE_CONFIG'])
           target = Path('app/firebase/production/google-services.json')
           target.parent.mkdir(parents=True, exist_ok=True)
           target.write_text(json.dumps(value))
           PYCONFIG
-          ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production :app:lintRelease
-          ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production :app:dependencies --configuration releaseRuntimeClasspath > firebase-dependencies.txt
-          grep -q 'com.google.firebase:firebase-analytics:' firebase-dependencies.txt
-      - name: Build signed bundle
+      - name: Verify production Firebase dependency
+        run: |
+          ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production :app:dependencies --configuration releaseRuntimeClasspath > "$RUNNER_TEMP/firebase-dependencies.txt"
+          grep -q 'com.google.firebase:firebase-analytics:' "$RUNNER_TEMP/firebase-dependencies.txt"
+      - name: Build and validate play artifact
         env:
+          ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/fm1-play.p12
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/fm1-upload.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          EXPECTED_CERT_SHA256: ${{ secrets.PLAY_UPLOAD_CERT_SHA256 }}
         run: |
-          : "${ANDROID_KEYSTORE_BASE64:?Missing ANDROID_KEYSTORE_BASE64}"
-          : "${ANDROID_KEYSTORE_PASSWORD:?Missing ANDROID_KEYSTORE_PASSWORD}"
-          : "${ANDROID_KEY_ALIAS:?Missing ANDROID_KEY_ALIAS}"
-          : "${ANDROID_KEY_PASSWORD:?Missing ANDROID_KEY_PASSWORD}"
+          : "${ANDROID_KEYSTORE_BASE64:?Missing signing keystore}"
+          : "${ANDROID_KEYSTORE_PASSWORD:?Missing keystore password}"
+          : "${ANDROID_KEY_ALIAS:?Missing signing alias}"
+          : "${ANDROID_KEY_PASSWORD:?Missing key password}"
+          : "${EXPECTED_CERT_SHA256:?Missing pinned certificate fingerprint}"
           umask 077
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_FILE"
-          ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production :app:bundleRelease
-      - name: Save signed bundle
+          ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production :app:lintRelease :app:bundleRelease
+          python3 .release-tools/scripts/release_fixtures.py verify
+          python3 .release-tools/scripts/release_artifact.py create play app/build/outputs/bundle/release/app-release.aab dist
+      - name: Save validated artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: google-play-firebase-bundle-${{ github.run_id }}
-          path: app/build/outputs/bundle/release/app-release.aab
+          name: android-play-${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name) || 'dev' }}
+          path: dist/
           if-no-files-found: error
-          retention-days: 30
-      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1
-        if: inputs.publish
-        with:
-          ruby-version: '3.3'
-          bundler-cache: true
-      - name: Publish to internal testing
-        if: inputs.publish
-        env:
-          SUPPLY_JSON_KEY_DATA: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-        run: |
-          : "${SUPPLY_JSON_KEY_DATA:?Missing GOOGLE_PLAY_SERVICE_ACCOUNT_JSON}"
-          bundle exec fastlane supply \
-            --package_name pl.ekim.fm1_flasher \
-            --aab app/build/outputs/bundle/release/app-release.aab \
-            --track internal \
-            --release_status completed \
-            --metadata_path fastlane/metadata/android \
-            --skip_upload_apk true \
-            --skip_upload_metadata true \
-            --skip_upload_images true \
-            --skip_upload_screenshots true
-      - name: Remove upload key and Firebase configuration
+          overwrite: true
+          retention-days: 90
+      - name: Remove private build files
         if: always()
-        run: rm -f "$RUNNER_TEMP/fm1-upload.jks" app/firebase/production/google-services.json
+        run: rm -f "$RUNNER_TEMP/fm1-play.p12" app/firebase/production/google-services.json
       - name: Save reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: google-play-reports-${{ github.run_id }}
-          path: app/build/reports/
+          name: android-play-reports
+          overwrite: true
+          path: |
+            app/build/reports/
+            shared/build/reports/
           retention-days: 14

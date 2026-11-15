@@ -1,0 +1,81 @@
+name: Google Play upload existing AAB (internal)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Stable tag v<versionName>
+        required: true
+        type: string
+      run_id:
+        description: Successful Google Play build or combined release run ID
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      tag:
+        description: Stable tag v<versionName>
+        required: true
+        type: string
+      run_id:
+        description: Successful Google Play build or combined release run ID
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+# Serialize only store mutations with production promotions, not builds.
+concurrency:
+  group: google-play-store-publish
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: google-play-upload
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ inputs.tag }}
+      SOURCE_RUN: ${{ inputs.run_id }}
+      FASTLANE_SKIP_UPDATE_CHECK: 'true'
+      FASTLANE_OPT_OUT_USAGE: 'true'
+    steps:
+      - name: Validate stable tag
+        run: '[[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]'
+      - name: Checkout publication tooling
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Resolve current tag commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          path: .source
+          persist-credentials: false
+      - name: Record expected commit
+        run: echo "SOURCE_COMMIT=$(git -C .source rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Retrieve and verify existing AAB
+        run: python3 scripts/release_artifact.py fetch play "$SOURCE_RUN" "$RELEASE_TAG" "$SOURCE_COMMIT" play
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+      - name: Upload validated bundle to internal testing
+        env:
+          SUPPLY_JSON_KEY_DATA: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          : "${SUPPLY_JSON_KEY_DATA:?Missing GOOGLE_PLAY_SERVICE_ACCOUNT_JSON}"
+          bundle exec fastlane supply \
+            --package_name pl.ekim.fm1_flasher \
+            --aab "play/fm1-flasher-$RELEASE_TAG-play.aab" \
+            --track internal \
+            --release_status completed \
+            --skip_upload_apk true \
+            --skip_upload_metadata true \
+            --skip_upload_changelogs true \
+            --skip_upload_images true \
+            --skip_upload_screenshots true

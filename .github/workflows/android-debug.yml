@@ -1,0 +1,127 @@
+name: Developer debug APK (test Firebase)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Optional stable or preview tag matching versionName; empty builds the selected branch
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      commit:
+        description: Commit resolved once by the release workflow
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+# Independent builds never cancel another run's pending build.
+concurrency:
+  group: android-debug-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build debug APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    environment: android-debug
+    env:
+      FM1_RELEASE_TAG: ${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name || '') }}
+    steps:
+      - name: Validate requested source
+        env:
+          SOURCE_COMMIT: ${{ inputs.commit }}
+        run: |
+          if [[ -n "$FM1_RELEASE_TAG" ]]; then
+            [[ "$FM1_RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
+          fi
+          if [[ -n "$SOURCE_COMMIT" ]]; then
+            [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          fi
+      - name: Checkout source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.commit || (inputs.tag && format('refs/tags/{0}', inputs.tag)) || github.sha }}
+          persist-credentials: false
+      - name: Checkout release tooling
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          path: .release-tools
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          packages: 'platforms;android-36 build-tools;35.0.0'
+          log-accepted-android-sdk-licenses: false
+      - name: Prepare release fixtures
+        env:
+          FM1_FIXTURE_ARCHIVE_URL: ${{ vars.FM1_FIXTURE_ARCHIVE_URL }}
+          FM1_FIXTURE_ARCHIVE_SHA256: ${{ vars.FM1_FIXTURE_ARCHIVE_SHA256 }}
+        run: python3 .release-tools/scripts/release_fixtures.py prepare
+      - name: Check resources and shared tests
+        run: |
+          python3 tools/sync-resources.py --check
+          ./gradlew --no-daemon -Pfm1Analytics=false :shared:jvmTest
+      - name: Prepare test Firebase configuration
+        env:
+          FIREBASE_CONFIG: ${{ secrets.FIREBASE_TEST_ANDROID_JSON }}
+        run: |
+          python3 - <<'PYCONFIG'
+          import json, os
+          from pathlib import Path
+          value = json.loads(os.environ['FIREBASE_CONFIG'])
+          target = Path('app/firebase/test/google-services.json')
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_text(json.dumps(value))
+          PYCONFIG
+      - name: Build and validate debug artifact
+        env:
+          ANDROID_DEBUG_KEYSTORE_FILE: ${{ runner.temp }}/fm1-debug.p12
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          EXPECTED_CERT_SHA256: ${{ secrets.DEBUG_APP_CERT_SHA256 }}
+        run: |
+          : "${ANDROID_KEYSTORE_BASE64:?Missing signing keystore}"
+          : "${ANDROID_KEYSTORE_PASSWORD:?Missing keystore password}"
+          : "${ANDROID_KEY_ALIAS:?Missing signing alias}"
+          : "${ANDROID_KEY_PASSWORD:?Missing key password}"
+          : "${EXPECTED_CERT_SHA256:?Missing pinned certificate fingerprint}"
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_DEBUG_KEYSTORE_FILE"
+          ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+          python3 .release-tools/scripts/release_fixtures.py verify
+          python3 .release-tools/scripts/release_artifact.py create debug app/build/outputs/apk/debug/app-debug.apk dist
+      - name: Save validated artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: android-debug-${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name) || 'dev' }}
+          path: dist/
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 90
+      - name: Remove private build files
+        if: always()
+        run: rm -f "$RUNNER_TEMP/fm1-debug.p12" app/firebase/test/google-services.json
+      - name: Save reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: android-debug-reports
+          overwrite: true
+          path: |
+            app/build/reports/
+            shared/build/reports/
+          retention-days: 14

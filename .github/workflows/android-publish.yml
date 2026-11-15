@@ -1,0 +1,81 @@
+name: Publish existing Android APKs
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Stable tag v<versionName>
+        required: true
+        type: string
+      debug_run_id:
+        description: Optional debug build run ID; empty publishes only F-Droid
+        required: false
+        type: string
+        default: ''
+      fdroid_run_id:
+        description: Successful signed F-Droid build or combined release run ID
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      tag:
+        description: Stable tag v<versionName>
+        required: true
+        type: string
+      debug_run_id:
+        description: Optional debug build run ID; empty publishes only F-Droid
+        required: false
+        type: string
+        default: ''
+      fdroid_run_id:
+        description: Successful signed F-Droid build or combined release run ID
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: android-publish-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ inputs.tag }}
+      DEBUG_RUN: ${{ inputs.debug_run_id }}
+      FDROID_RUN: ${{ inputs.fdroid_run_id }}
+    steps:
+      - name: Validate stable tag
+        run: '[[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]'
+      - name: Checkout publication tooling
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Resolve current tag commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          path: .source
+          persist-credentials: false
+      - name: Record expected commit
+        run: echo "SOURCE_COMMIT=$(git -C .source rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Retrieve and verify APKs from successful builds
+        run: |
+          python3 scripts/release_artifact.py fetch fdroid "$FDROID_RUN" "$RELEASE_TAG" "$SOURCE_COMMIT" fdroid
+          mkdir dist
+          cp "fdroid/fm1-flasher-$RELEASE_TAG-fdroid.apk" dist/
+          cp fdroid/manifest.json dist/fdroid-manifest.json
+          if [[ -n "$DEBUG_RUN" ]]; then
+            python3 scripts/release_artifact.py fetch debug "$DEBUG_RUN" "$RELEASE_TAG" "$SOURCE_COMMIT" debug
+            cp "debug/fm1-flasher-$RELEASE_TAG-debug.apk" dist/
+            cp debug/manifest.json dist/debug-manifest.json
+          fi
+          (cd dist && sha256sum *.apk > SHA256SUMS)
+      - name: Publish or resume the same release
+        run: python3 scripts/publish_android_release.py

@@ -1,50 +1,136 @@
-GitHub Actions — 0.10.0
+GitHub Actions — 0.10.0 milestone 2
 
-TWO DISTRIBUTION BUILD WORKFLOWS
-Both run only on workflow_dispatch. The Android application ID is
-pl.ekim.fm1_flasher. Tags alone do not start a build or publish a release.
+OPERATION
+Workflows support manual dispatch. Build and publication workflows also support
+workflow_call, so the orchestrator uses exactly the same implementations.
+After merging, choose Actions -> workflow -> Run workflow. For release operations,
+select main as the workflow branch and enter the existing stable tag separately.
+Tag creation alone does not trigger a release. No workflow in this milestone
+publishes the application to Google Play production automatically.
 
-F-DROID (.github/workflows/fdroid.yml)
-Always passes -Pfm1Analytics=false. Runs shared/Android tests and release lint,
-then assembles an unsigned release APK. Rejects Firebase and Google Play services
-in the resolved release runtime dependencies. Artifact: fdroid-no-firebase-apk-<run>.
-No Firebase configuration, signing key or store credentials are used.
-This prepares the SDK-free distribution; it does not submit to F-Droid or establish
-repository acceptance. The old publication/fdroid recipe is historical and is not
-used by this workflow. F-Droid repository signing/build integration is separate.
+WORKFLOWS
+android-debug.yml — Developer debug APK (test Firebase)
+  Optional stable/preview tag matching versionName; empty uses the selected workflow
+  commit. Environment android-debug. Preview tags may use v0.10.1-preview.1.
+  Runs tests/lint, builds with test Firebase and a persistent developer signing key.
+  Artifact android-debug-<tag>, or android-debug-dev. No publication.
 
-GOOGLE PLAY (.github/workflows/google-play.yml)
-Always passes -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=production for release
-lint and bundle assembly, and checks that Firebase Analytics is resolved.
-There is no analytics toggle. Builds a signed AAB in the google-play environment.
-Artifact: google-play-firebase-bundle-<run>. The publish input defaults false;
-explicitly selecting it uploads to the internal testing track. No production
-publication occurs in this workflow.
-Required secrets: FIREBASE_PRODUCTION_ANDROID_JSON, ANDROID_KEYSTORE_BASE64,
-ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD.
-GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is needed only for upload.
+fdroid-release.yml — F-Droid signed APK
+  Required stable tag. Environment fdroid-release. Tests/lints without analytics,
+  rejects Firebase/Google Play services dependencies, inspects DEX, verifies APK
+  identity and pinned signing certificate. Artifact android-fdroid-<tag>.
 
-RELEASE FIXTURES (BOTH BUILD WORKFLOWS)
-Configure FM1_FIXTURE_ARCHIVE_URL and FM1_FIXTURE_ARCHIVE_SHA256 as repository
-variables. The pinned archive supplies v15.fwsc, v16.fwsc and catalog.json.
-Missing fixtures or skipped release tests fail the workflow; they are not bypassed.
-Current local tests may skip these external fixtures and are not release approval.
+fdroid.yml — F-Droid validation (unsigned, no Firebase)
+  Existing CI-style manual validation, with no signing secrets. Produces an
+  unsigned APK, not a distribution release. The historical recipe in
+  publication/fdroid/pl.ekim.fm1_flasher.yml is not used for publication.
 
-LOCAL TEST BUILDS
-F-Droid equivalent:
-  ./gradlew -Pfm1Analytics=false :app:assembleDebug
-Google Play equivalent, using a TEST project (never production in debug):
-  ./gradlew -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=test :app:assembleDebug
-Place test configuration in app/firebase/test/google-services.json (ignored by Git).
-Both debug APKs use the same app ID and debug certificate; install one at a time.
-Store certificates can differ; moving between stores requires compatible signing.
+google-play.yml — Google Play production AAB build
+  Optional stable tag; empty uses the selected workflow commit. Environment
+  google-play. Builds production Firebase AAB, checks its signature against
+  PLAY_UPLOAD_CERT_SHA256. Artifact android-play-<tag>, or android-play-dev.
+  Does not upload. A branch build without a tag is for validation only.
 
-OTHER WORKFLOWS
-android-ci.yml: unit tests, SDK-free and Firebase compile/lint checks, APK artifacts
-and Android API 34/36 instrumentation. This is CI, not distribution publication.
-pages.yml: site validation on branches/PRs; deployment from the default branch.
-promote-production.yml: separate manual promotion of an already-tested internal
-versionCode to production; no build. Uses google-play-production and a service account.
+android-publish.yml — Publish existing Android APKs
+  Inputs: tag, fdroid_run_id, optional debug_run_id. Leaving debug_run_id empty
+  publishes only F-Droid, independently of debug and Play. Run IDs can differ and
+  refer to standalone build workflows or the combined android-release workflow.
+  Requires successful source build jobs, verifies commit/tag/version/variant,
+  certificate metadata and SHA-256. Debug and F-Droid must share a versionCode.
+  Does not need Google Play artifacts or signing secrets. Creates a draft,
+  uploads selected APKs, manifests and SHA256SUMS, then publishes. It resumes only a draft
+  bound to the exact same manifests. Repeating publication of those exact files
+  is a no-op; replacing an existing public release is rejected.
 
-Build workflows do not establish Play account access, F-Droid acceptance, signing
-continuity or physical FM-1/hub safety. Complete those checks before publication.
+google-play-upload.yml — Google Play upload existing AAB (internal)
+  Inputs: tag, run_id of a standalone Play build or combined release. Environment
+  google-play-upload. Downloads/verifies the existing AAB, uploads to internal
+  testing without rebuilding. Requires only the Play service account credential.
+  Retry with the same input after a failed upload. If Play already accepted the
+  versionCode, verify it in Play Console before retrying; Play can reject duplicate
+  uploads. First-time app creation/initial manual upload may be required by Play.
+
+promote-production.yml — Google Play production
+  Input: version_code already tested on the internal track. Environment
+  google-play-production. Promotes existing bundle, with no build or re-upload.
+
+android-release.yml — Android release (debug, F-Droid, Google Play)
+  Required stable tag v<versionName>. Rejects an existing release/draft to avoid
+  rebuilding an already prepared release. Resolves the tag to a single commit,
+  invokes three independent builds in parallel and publishes APKs only after
+  all succeed. AAB remains available as an artifact. Upload to Play is a separate
+  explicit operation via google-play-upload.yml.
+
+EXAMPLES
+Complete release:
+  gh workflow run android-release.yml --ref main -f tag=v0.10.0
+Standalone builds:
+  gh workflow run android-debug.yml --ref main -f tag=v0.10.0
+  gh workflow run fdroid-release.yml --ref main -f tag=v0.10.0
+  gh workflow run google-play.yml --ref main -f tag=v0.10.0
+Independent F-Droid hotfix (use its actual build run ID):
+  gh workflow run android-publish.yml --ref main -f tag=v0.10.1 -f fdroid_run_id=456
+Experimental debug from a development branch (no public release):
+  gh workflow run android-debug.yml --ref preview-branch
+Publish standalone or recover failed publication (use actual run IDs):
+  gh workflow run android-publish.yml --ref main -f tag=v0.10.0 -f debug_run_id=123 -f fdroid_run_id=456
+Upload existing AAB (use actual run ID):
+  gh workflow run google-play-upload.yml --ref main -f tag=v0.10.0 -f run_id=789
+Find run IDs via Actions or gh run list. Individual reusable jobs inside a combined
+release share the parent's run ID. Re-run failed jobs can preserve successful
+builds; a fresh invocation of the orchestrator rebuilds all variants.
+
+ENVIRONMENTS AND SECRETS
+android-debug:
+  FIREBASE_TEST_ANDROID_JSON; ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+  ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD; DEBUG_APP_CERT_SHA256.
+  Use a real test Firebase project and a persistent developer keystore.
+fdroid-release:
+  ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS,
+  ANDROID_KEY_PASSWORD; FDROID_APP_CERT_SHA256. No Firebase credentials.
+google-play:
+  FIREBASE_PRODUCTION_ANDROID_JSON; ANDROID_KEYSTORE_BASE64,
+  ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD;
+  PLAY_UPLOAD_CERT_SHA256. This is the upload key, not necessarily Play's app key.
+google-play-upload and google-play-production:
+  GOOGLE_PLAY_SERVICE_ACCOUNT_JSON in each environment. No signing keystore.
+All four ANDROID_* secret names are environment-scoped; their values can differ.
+Use environment secrets, not repository-wide duplicates. Deployment restrictions
+apply to the workflow's selected branch, not the tag field checked out by a step.
+Debug is available on development branches. Production signing/upload workflows
+use main as their workflow branch. Signing keys are never placed in artifacts
+and temporary keystores/Firebase configuration are removed even after failure.
+See fdroid/signing.md for key generation and backup instructions.
+
+ARTIFACT IDENTITY AND RECOVERY
+Each distribution artifact contains exactly the build file, manifest.json and
+SHA256SUMS. Manifest records package, versionName, versionCode, source commit,
+tag, variant, source run ID/attempt, certificate SHA-256 and binary SHA-256.
+Tooling is checked out from the workflow's commit separately from application
+source. Historical tags need not contain the new release scripts.
+Source tags must be kept immutable. If a tag moves, publication/upload rejects
+artifacts from the old commit. Branch-only builds cannot be published as stable
+releases. Allocate monotonically increasing versionCodes for distribution updates.
+F-Droid and Play may publish different versions on independent schedules. Preview
+debug builds remain Actions artifacts and are not automatically GitHub prereleases.
+Manifests and checksums supplement the successful trusted build job;
+they are not a replacement for APK/AAB signing or a signed F-Droid index.
+Artifacts are retained for 90 days; reports for 14. Recovery without rebuilding
+requires artifacts to remain available. Preserve release APKs and keys separately.
+Build concurrency is isolated per run; different tags do not block each other.
+Same-tag publication is serialized; Play mutations share a separate group.
+GitHub's default concurrency queue is not a durable FIFO: repeated pending requests
+can replace older pending requests. Monitor dispatch results and retry as needed.
+
+RELEASE FIXTURES AND CI
+Repository variables FM1_FIXTURE_ARCHIVE_URL and FM1_FIXTURE_ARCHIVE_SHA256 must
+point to a permitted pinned archive with v15.fwsc, v16.fwsc and catalog.json.
+Skipped/missing fixture tests fail release builds; no bypass is provided.
+android-ci.yml validates release tooling with unit tests and actionlint without
+signing secrets, alongside existing Android tests and compilation checks.
+
+PAGES AND F-DROID REPOSITORY
+pages.yml still builds/validates documentation and deploys from main. Signed
+F-Droid index generation and merging fdroid/repo into the Pages artifact remain
+a separate implementation step. No repository URL/fingerprint is advertised as
+ready by these workflows. Existing archival metadata are not current repo config.

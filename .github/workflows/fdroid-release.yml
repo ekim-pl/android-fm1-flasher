@@ -1,0 +1,121 @@
+name: F-Droid signed APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing stable tag v<versionName>
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      commit:
+        description: Commit resolved once by the release workflow
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+# Independent builds never cancel another run's pending build.
+concurrency:
+  group: android-fdroid-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build F-Droid APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    environment: fdroid-release
+    env:
+      FM1_RELEASE_TAG: ${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name || '') }}
+    steps:
+      - name: Validate requested source
+        env:
+          SOURCE_COMMIT: ${{ inputs.commit }}
+        run: |
+          if [[ -n "$FM1_RELEASE_TAG" ]]; then
+            [[ "$FM1_RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          fi
+          if [[ -n "$SOURCE_COMMIT" ]]; then
+            [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          fi
+      - name: Checkout source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.commit || (inputs.tag && format('refs/tags/{0}', inputs.tag)) || github.sha }}
+          persist-credentials: false
+      - name: Checkout release tooling
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          path: .release-tools
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          packages: 'platforms;android-36 build-tools;35.0.0'
+          log-accepted-android-sdk-licenses: false
+      - name: Prepare release fixtures
+        env:
+          FM1_FIXTURE_ARCHIVE_URL: ${{ vars.FM1_FIXTURE_ARCHIVE_URL }}
+          FM1_FIXTURE_ARCHIVE_SHA256: ${{ vars.FM1_FIXTURE_ARCHIVE_SHA256 }}
+        run: python3 .release-tools/scripts/release_fixtures.py prepare
+      - name: Check resources and shared tests
+        run: |
+          python3 tools/sync-resources.py --check
+          ./gradlew --no-daemon -Pfm1Analytics=false :shared:jvmTest
+      - name: Build and validate fdroid artifact
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/fm1-fdroid.p12
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          EXPECTED_CERT_SHA256: ${{ secrets.FDROID_APP_CERT_SHA256 }}
+        run: |
+          : "${ANDROID_KEYSTORE_BASE64:?Missing signing keystore}"
+          : "${ANDROID_KEYSTORE_PASSWORD:?Missing keystore password}"
+          : "${ANDROID_KEY_ALIAS:?Missing signing alias}"
+          : "${ANDROID_KEY_PASSWORD:?Missing key password}"
+          : "${EXPECTED_CERT_SHA256:?Missing pinned certificate fingerprint}"
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_FILE"
+          ./gradlew --no-daemon -Pfm1Analytics=false :app:testDebugUnitTest :app:lintRelease :app:assembleRelease
+          python3 .release-tools/scripts/release_fixtures.py verify
+          python3 .release-tools/scripts/verify_fdroid_apk.py app/build/outputs/apk/release/app-release.apk "$ANDROID_HOME/build-tools/35.0.0/aapt"
+          ./gradlew --no-daemon -Pfm1Analytics=false :app:dependencies --configuration releaseRuntimeClasspath > "$RUNNER_TEMP/fdroid-dependencies.txt"
+          if grep -Eq 'com\.google\.(firebase|android\.gms):' "$RUNNER_TEMP/fdroid-dependencies.txt"; then
+            echo 'F-Droid must not include Firebase or Google Play services'
+            exit 1
+          fi
+          python3 .release-tools/scripts/release_artifact.py create fdroid app/build/outputs/apk/release/app-release.apk dist
+      - name: Save validated artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: android-fdroid-${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name) || 'dev' }}
+          path: dist/
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 90
+      - name: Remove private build files
+        if: always()
+        run: rm -f "$RUNNER_TEMP/fm1-fdroid.p12"
+      - name: Save reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: android-fdroid-reports
+          overwrite: true
+          path: |
+            app/build/reports/
+            shared/build/reports/
+          retention-days: 14
