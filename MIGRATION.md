@@ -1,6 +1,6 @@
 # Implementation and verification — 0.9.2 / 23
 
-Architecture of the complete Android release **0.9.2** on `main`. A future iOS port is planned; the Apple sources described here are development groundwork, not a released application. This document describes the existing code, not a roadmap or a guarantee of hardware support. For operation instructions see [README](README.md); for recorded build results see [build-23 QA](publication/qa/0.9.2.txt).
+Architecture of the complete Android release **0.9.2** on `main`. A future iOS port is planned; the Apple sources described here are development groundwork, not a released application. This document describes the existing code, not a roadmap or a guarantee of hardware support. For operation instructions see the [user guide](docs/user-guide.md); for recorded build results see [build-23 QA](publication/qa/0.9.2.txt).
 
 ## Modules and entry points
 

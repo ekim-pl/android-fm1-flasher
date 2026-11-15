@@ -43,3 +43,11 @@
 [隐私政策](privacy.md) · [MIT 许可证](license.md) · [CommonMark 许可证](commonmark-license.md)
 
 联系：[ekim.pl@gmail.com](mailto:ekim.pl@gmail.com)。
+
+## Google Play
+
+即将上架 Google Play！我正在招募 Beta 测试者，欢迎[联系我](mailto:ekim.pl@gmail.com)参与测试。
+
+## F-Droid
+
+计划提供专用构建和 F-Droid 软件仓库。

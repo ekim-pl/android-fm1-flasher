@@ -40,7 +40,7 @@ CI reads source links from `GITHUB_SERVER_URL`, `GITHUB_REPOSITORY` and `GITHUB_
 
 ## Editing content
 
-- `README.md`, `website/index.md` and `website/pages.md`: the English technical guide, home page and deployment guide.
+- `docs/user-guide.md`, `website/index.md` and `website/pages.md`: the English detailed guide, home page and deployment guide. Existing website links to `README.md` still resolve to the detailed guide.
 - `publication/README.txt` and `publication/github-actions.txt`: English publication and Google Play guides.
 - `website/pl/` and `website/zh-CN/`: complete website translations, including license and privacy-policy text.
 - `about/README*.md`: localized website About documents; `about/app*.md` is bundled in the app.

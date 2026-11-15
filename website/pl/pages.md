@@ -40,7 +40,7 @@ W CI adres źródeł jest pobierany z `GITHUB_SERVER_URL`, `GITHUB_REPOSITORY` i
 
 ## Edycja treści
 
-- `README.md`, `website/index.md` i `website/pages.md`: angielska instrukcja techniczna, strona główna i poradnik wdrażania.
+- `docs/user-guide.md`, `website/index.md` i `website/pages.md`: angielska szczegółowa instrukcja, strona główna i poradnik wdrażania. Dotychczasowe odnośniki witryny do `README.md` nadal prowadzą do szczegółowej instrukcji.
 - `publication/README.txt` i `publication/github-actions.txt`: angielskie instrukcje publikacji i Google Play.
 - `website/pl/` i `website/zh-CN/`: pełne tłumaczenia witryny, w tym licencji i polityki prywatności.
 - `about/README*.md`: tłumaczenia opisu na stronie; `about/app*.md` jest dołączane do aplikacji.

@@ -40,7 +40,7 @@ CI 从 `GITHUB_SERVER_URL`、`GITHUB_REPOSITORY` 和 `GITHUB_REF_NAME` 读取源
 
 ## 编辑内容
 
-- `README.md`、`website/index.md` 和 `website/pages.md`：英语技术指南、首页和部署指南。
+- `docs/user-guide.md`、`website/index.md` 和 `website/pages.md`：英语详细指南、首页和部署指南。网站中现有的 `README.md` 链接仍指向详细指南。
 - `publication/README.txt` 和 `publication/github-actions.txt`：英语发布与 Google Play 指南。
 - `website/pl/` 和 `website/zh-CN/`：完整网站译本，包括许可证和隐私政策。
 - `about/README*.md`：网站简介译本；`about/app*.md` 打包进应用。

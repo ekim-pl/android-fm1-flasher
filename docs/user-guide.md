@@ -1,0 +1,173 @@
+# FM-1 Flasher user guide
+
+Detailed instructions for the Android application: local firmware, offline use, firmware sources, sequential updates and experimental tools. Commands in this guide run from the repository root.
+
+This guide follows the current source tree, including experimental features. Stable release: **0.9.3**; current experimental build: **0.9.5-experimental.30**. Features may differ between APKs. See [releases](https://github.com/ekim-pl/android-fm1-flasher/releases) for downloads and [release verification](../publication/qa/0.9.2.txt) for the recorded test scope.
+
+[Project README](../README.md) · [Polski](../website/pl/documentation.md) · [简体中文](../website/zh-CN/documentation.md) · [Privacy](../PRIVACY_POLICY.md)
+
+**Contents:** [Getting started](#getting-started) · [Local files and offline use](#local-files-and-offline-use) · [Firmware sources](#library-and-sources) · [Several instruments](#multiple-fm1-devices-on-a-hub) · [Full-flash backups](#full-flash-backups) · [Experimental tools](#settings-and-experimental-tools) · [Build and tests](#building-and-testing)
+
+## Platform support
+
+Android 14+, USB Host/OTG and MIDI are required.
+
+The Android application ID is `pl.ekim.fm1_flasher`. English, Polish and Simplified Chinese interfaces and light/dark/system themes are available.
+
+## Getting started
+
+1. Install the 0.9.3 APK on Android 14 or newer. The build-24 debug certificate matches earlier builds of this application: install it as an update without uninstalling to retain this fork's library and preferences.
+2. Open **Library**, find firmware and download it from its detail screen. Downloading verifies the package; it does not start an installation.
+3. Connect instruments with data-capable cables and an OTG hub. A separately powered hub is recommended. The app cannot measure or certify hub power quality.
+4. In **Devices**, use **Read instrument** on each card and grant Android USB access when requested. Only a recognized FM-1 can be added to the plan.
+5. Open **Details** to set a useful instrument name. Choose the memory type from known hardware information and a local package for that instrument. A package compatible with both supported memory types can be allowed even when memory type is unknown; explicitly incompatible packages remain blocked; unknown compatibility requires the separate force confirmation described below.
+6. Choose **Add to plan** for each instrument. Each device can have one pending/running job. Package assignments may differ between devices.
+7. Open **Tasks**, review names, versions and hashes, then choose **Install on N instruments**. This is the plan approval; there is no second ordinary confirmation dialog.
+
+Preserve power and USB connections until verification finishes. Use firmware-specific tools to back up instrument data when available; an OTA update is not an automatic backup. Firmware can change instrument settings.
+
+## Local files and offline use
+
+Downloaded firmware packages are stored as local `.fwsc` files in the application's private storage. The local library database keeps catalog entries, source settings, favorites and download records. Device names and task history are also stored locally. These records survive app restarts; they do not require an app account or cloud storage.
+
+Download a package in **Library** before going offline. Merely viewing a catalog entry or checking a source does not make its firmware available offline. Saved packages are checked again when loaded for installation.
+
+Enable **Settings → Offline mode** to stop catalog, artwork and firmware-download requests and pause background checking. You can browse cached catalog information, use favorites and install already downloaded packages. Offline mode cannot discover new releases or newly withdrawn packages. Previously known withdrawal and conflict information still applies.
+
+Local files remain available while kept in app storage. Clearing downloaded firmware removes the package files; clearing app data or uninstalling removes locally stored app data. Export recovery backups separately if you need to retain them outside the app.
+
+## Library and sources
+
+**Library** combines search, favorites and local downloads. **Only downloaded** and **Favorites** are filters, not separate Android navigation tabs. **Filters & sort** expands category, sort and source controls. When the downloaded filter is active, the package-update action is available.
+
+Package details show versions, source/author links, compatibility and SHA-256. Selecting a saved package returns to Devices; it does not write firmware. Ordinary removal has **Undo** during the current app session for a valid package. A package referenced by a queued or running job cannot be deleted or replaced: remove its pending task first. Favorites survive package removal.
+
+Treat all firmware sources, including built-in catalogs, as **untrusted third-party content**. Inclusion is not an endorsement or a guarantee of safety. Hash checks verify file integrity, not publisher identity or firmware quality. Unsafe or incompatible firmware can cause data loss or leave the instrument unable to boot. Check the author and hardware compatibility before installing, and read the [third-party firmware risk notice](firmware-safety.md).
+
+Open **Settings → Firmware sources**:
+
+- **[The Firmware Hub](https://thefirmwarehub.com)** starts enabled; **Awesome FM-1** starts disabled. [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) is a community directory linking to firmware projects and their publishers.
+- A custom source needs an HTTPS catalog in the supported Hub-style JSON format, a name, a 24–168 hour interval and approved package/artwork URL scopes. **Save** records the configuration; **Check now** is a separate action. Newly configured sources start disabled.
+- Refresh and Check now respect the source interval, including failed attempts. Repeated tapping does not bypass the minimum 24-hour budget. The source screen shows errors and the next allowed check.
+- Disabled sources make no automatic requests. An explicit Check now may check a disabled source. A failed source retains its cached snapshot; other sources can still update.
+- Removing a custom subscription preserves packages, favorites, provenance and known withdrawals. Restoring defaults enables Hub and disables Awesome FM-1 without removing custom subscriptions.
+- Optional background catalog checking starts off. It checks enabled catalogs when network conditions allow; it neither downloads packages nor installs firmware.
+
+Offline mode suppresses catalog, package and artwork network requests and pauses background checking. Saved packages can be flashed without a network request. Offline use cannot discover a withdrawal that has not yet reached the local catalog. Catalog declarations and hashes do not by themselves establish publisher authenticity.
+
+In **Settings → Firmware sources → Source color**, choose one of eight colors or Automatic for each source. The dot beside the source name marks its firmware in the library, downloaded packages and package details. Colors are stored on this device and can be changed offline.
+
+## Catalog providers and authentication
+
+Android has adapters behind the shared `CatalogProvider` interface:
+
+| Provider | Behavior |
+| --- | --- |
+| `thefirmwarehub` | Built-in Firmware Hub JSON catalog and its existing package policy |
+| `awesome-fm1` | Built-in Awesome FM-1 JSON catalog and approved URL scopes |
+| `repo-url` | GitHub.com repository URL, published releases/prereleases and `.fwsc` assets; drafts are excluded |
+| `pkg-url` | A direct HTTPS `.fwsc` URL, identified and hashed from the actual package |
+
+The `catalog-json` adapter preserves existing custom JSON subscriptions. Adding providers does not discard old source IDs, favorites, local packages or history. Save a manual source, use **Check now**, and enable it to make its offers available. Checks are bounded; a failed/incomplete import preserves the previous snapshot. GitHub pagination and asset responses respect retry delays. Large repositories may need authentication to fit GitHub rate limits.
+
+For repository assets, GitHub SHA-256 digests are used when available; the app reads a package prefix for its product identity. Older assets without a digest require fetching and validating the package to compute its hash. A direct package check also fetches and validates the package. These checks may transfer binary bytes without marking a package as downloaded for offline use. **Download** remains the action that stores it in the firmware library; no installation is automatic.
+
+Manual providers do not infer supported flash chips from filenames. After checking a source, open **Edit → Package compatibility**, confirm the publisher information for each SHA-256, return and save. The declaration updates metadata for matching bytes, including a matching local copy; it does not apply to another binary at the same URL or another release. Unknown compatibility blocks normal installation; forcing requires a separate warning and risk confirmation. An unknown declaration does not contradict known metadata; contradictory explicit identities/chip declarations still block use.
+
+The source form offers None, HTTP Basic, Bearer, API key in a chosen safe header, and OAuth 2.0. Basic takes username/password; Bearer takes the token without the `Bearer` prefix. API key sends the entered header value literally (including an explicit prefix if using `Authorization`). Passwords, tokens and client secrets are encrypted with Android Keystore, separate from SQLite source metadata, and are not logged. Empty secret fields keep a saved secret only for unchanged source/provider/authentication identity; a different URL cannot inherit it. Source deletion and restoring built-in defaults remove the relevant saved secrets.
+
+**OAuth migration:** The new redirect below applies to Android 0.9.4-experimental.27 and later. Version 0.9.4-experimental.26 and earlier use the redirect shown in that app’s source settings. Register the new redirect with the issuer before upgrading or authorizing again. In build 28, a sign-in started with build 26 or earlier must be restarted after upgrading.
+
+OAuth supports browser Authorization Code with **PKCE S256** and service **Client Credentials**. Configure your issuer, client ID, scope, token endpoint and, for browser sign-in, authorization endpoint. Register `pl.ekim.fm1-flasher://oauth/callback` with the issuer. Client Credentials needs a client secret; a public PKCE client does not. Select `client_secret_basic` or `client_secret_post` as required by the issuer. Save, then choose **Authorize OAuth 2.0** on the source card. Tokens are refreshed when expired if the server supplies a refresh token; Client Credentials can obtain another token. Browser state is one-use, source/revision-bound and expires after ten minutes. No universal OAuth client ID or secret is bundled.
+
+Authenticated requests are limited to the configured source origin (GitHub API origin for `repo-url`). Authorization is stripped on cross-origin redirects, including CDNs; token POST redirects are refused. HTTPS and existing public-address/URL-scope restrictions remain. Source checks normally follow the 24–168 hour schedule. Explicitly replacing credentials or completing authorization permits a new check so a previous authentication failure does not force a full-day wait.
+
+## Multiple FM1 devices on a hub
+
+A device card has a local record, name/color, observed firmware identity, memory selection and current attachment. **USB addresses are not physical hub socket numbers.** Model/version, VID/PID and JEDEC chip type do not uniquely identify an instrument. Observed USB serials are retained locally but have not been validated as unique across FM-1 operating modes.
+
+Only one job changes modes at a time. After a planned restart, Android tracks USB/MIDI events, excludes unchanged neighbors and requires a single eligible return. All other observed attachments must remain continuous. With several instruments, use the **inline pairing action in Tasks** only for the instrument being updated. There is no override to guess among multiple candidates. Do not swap indistinguishable devices during a transition.
+
+Automatic multi-device pairing remains disabled pending physical tests. The older conservative automatic path is available only when there are no MIDI siblings and Android reports one eligible MIDI endpoint and one USB device. An observed serial never independently authorizes automatic matching. System USB permission may be required again after disconnect/re-enumeration.
+
+A lost neighbor, hub reset, changed attachment generation, contradictory serial or ambiguous port arrangement stops further writing. Multiple MIDI port pairs or multiple MIDI endpoints on one USB device are blocked. A confirmed result means the return and expected firmware model/version were checked; it is not a complete flash-memory readback.
+
+Saved names survive restart, but live bindings do not survive process death or an untrusted disconnect. Read and physically identify the instrument again, remove affected pending jobs, then use **Saved instruments → Assign this saved name**. Pairing resets the old memory-type selection; choose it again before rebuilding the plan.
+
+## Tasks, stopping and failures
+
+Jobs freeze the target record/attachment, expected identity, memory selection, package key and hash. All plan packages are checked before the first write; each job is checked again before its transfer. Changing the UI's selected package cannot redirect an active job.
+
+- **Stop after this instrument** finishes the current write and return verification. Remaining jobs stay queued. There is no button that abruptly cancels a live firmware write.
+- A failed job stops the run. Inspect the instrument and the task's details before a new attempt; the app does not silently move its package to another device.
+- Progress and results remain in Tasks. Details show the full package hash and recorded stage times. Persistent stage history is bounded to 64 entries per job.
+- After process interruption, an active job becomes **unconfirmed**. No transfer resumes automatically from a saved percentage. Pending jobs remain visible but their old live bindings must be rebuilt.
+- If the plan no longer matches current connections/packages, remove affected tasks, read the instruments and add fresh tasks. A rejected USB request does not authorize writing.
+
+The Android foreground service and time-limited wake lock support an active transfer while the screen is off or another app is foregrounded. They cannot guarantee USB power or prevent every system/process interruption. Return to the app when an inline pairing or system grant is needed.
+
+## Full-flash backups
+
+A downloaded firmware package is an installation file. A recovery backup is a copy read from the instrument's flash memory. Normal MIDI firmware installation does not automatically create this backup.
+
+To access the backup tools, enable **Settings → Experimental features**, open the device tools and connect a supported instrument in **USB ROM/download mode**. This is separate from the normal MIDI update workflow. The backup operation accepts only recognized flash chips and the supported device key.
+
+The tool reads the entire **1 MiB flash memory twice** and saves a backup only if both reads match. It stores the image (`full-flash-before.bin`), a checksum and device metadata locally. Use the backup export action to save a ZIP archive through Android's file picker; the archive includes the full image, metadata and any recorded recovery result.
+
+**There is no general-purpose full-backup import or restore workflow.** Current recovery writes only the hash-pinned stock V15 application region, requires recognized boot and chip conditions, and preserves the bootloader and data outside that region. Preparing recovery creates a backup first; writing requires a separate approved plan. It is not an automatic fallback after an interrupted MIDI update.
+
+The backup and recovery logic has unit tests with simulated flash memory. Physical recovery remains unverified; a saved backup does not guarantee that the app can restore an instrument to its previous state.
+
+## Settings and experimental tools
+
+Settings contains language/theme, offline mode, sources, About and privacy. **Experimental features** is off by default. Enabling it exposes MIDI Logger and the recovery tools; it cannot be changed during a busy operation. Regular Android installation uses Devices and Tasks.
+
+The receive-only MIDI logger has bounded buffers and selected inputs. It stops automatically when connecting/flashing; simultaneous logging and flashing are not promised.
+
+JEDEC detection uses a separate USB ROM/download-mode device. The result is never automatically assigned to a MIDI instrument. ROM recovery is a separate, explicitly approved operation with backup/export and a prepared write plan. It is restricted to the hash-pinned stock V15 application region and recognized boot/chip conditions, and does not write the bootloader. It is not a general-purpose unbricking tool or an automatic fallback after OTA failure. Physical recovery remains unverified.
+
+## Full-screen settings (0.9.2)
+
+**Settings** is a full screen with Interface, Firmware library, Experimental features and Application cards. Language and theme use inline radio choices. Sources, source editing, per-package compatibility and privacy open as full pages. The header and system Back return one level; the original Library/Devices/Tasks tab and non-secret source drafts survive activity recreation. Password/token inputs are intentionally not saved in activity state. Destructive confirmations and the requested chip-result popup remain dialogs.
+
+## Diagnostics and storage cleanup
+
+The app always records a bounded local operation log (256 KiB, oldest entries removed). It survives app restarts and includes timestamps, actions, USB/MIDI port changes, firmware-transfer stages and caught errors. Raw MIDI traffic and firmware bytes are not recorded. Open **Settings → Experimental features** to access **Export operation log** (JSON Lines, `.jsonl`) and **Clear operation log**. Export uses the system file picker; no log is uploaded automatically. Clearing requires one confirmation and does not delete copies you already exported. New events continue to be logged. The separate MIDI Logger remains a live raw-MIDI diagnostic tool.
+
+In **Settings → Clear downloaded firmware**, confirm once to delete all downloaded package files and metadata, including damaged/orphan files. The selected package and single-package Undo are cleared. Favorites, catalog sources, device names, task history and recovery backups remain. Remove queued tasks first; cleanup is blocked during work and while any queued/running job owns a package. Offline installation requires downloading packages again.
+
+**Devices → Modes and flash chip** provides MIDI selection/readout, download-mode entry and chip detection in separate cards. Successful chip detection opens a result popup. Power-cycle back to MIDI afterwards. Default disconnected device entries are temporary; custom names and queued targets are retained. Delayed USB detach events for a retired stage no longer invalidate the next stage of the same update. Unrelated device/hub loss still blocks writes.
+
+## Building and testing
+
+Use JDK 17, Android SDK platform 36 and Build Tools 35.0.0. The project pins Gradle through its wrapper, AGP 8.13.2, Kotlin 2.2.21 and Compose 1.9.3. Configure the SDK through the local environment or Android tooling.
+
+```sh
+python3 tools/sync-resources.py --check
+./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
+```
+
+APK: `app/build/outputs/apk/debug/app-debug.apk`. Test APK: `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`. `dist/` is ignored by Git; the prepared build-19 copy is local, not a guaranteed file in a fresh clone.
+
+Android XML under `app/src/main/res/values*` is authoritative for UI translations. Run `python3 tools/sync-resources.py` after changing it. App About documents are `about/app*.md`; Android bundles them with license/third-party documents through `:app:bundleProjectDocs`. The root README is not the in-app About document.
+
+See [implementation and reproducible test commands](../MIGRATION.md), [acceptance checklist](../tests/android14-acceptance.txt) and [website build instructions](../website/pages.md). Publishing is a separate step; [the inherited Google Play workflows do not currently target this fork's application ID](../publication/github-actions.txt).
+
+## Future iOS port
+
+A port to iOS is planned for the future. There is no iOS release or announced release date.
+
+## Privacy and attribution
+
+No application account or advertising; optional Firebase builds provide default-on statistics with a Settings opt-out (see [analytics setup](../docs/ANALYTICS.md)); optional source authentication uses the account or service credentials you configure. The library, names, observed serials, memory selections and task history are local. External catalog/artwork/download servers receive connection metadata; instrument identities are not attached to those requests. See the [privacy policy](../PRIVACY_POLICY.md).
+
+App code: [MIT](../LICENSE.md). Catalog attribution: [The Firmware Hub](https://thefirmwarehub.com), CC BY 4.0; firmware remains under its authors' licenses. [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) is an optional directory. Dependency licenses and attribution are in [third_party](../third_party/README.md). Contact: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
+
+
+## Forced installation when compatibility is unknown
+
+The memory selector uses descriptions: **Older memory** supports older firmware; **Newer memory** needs firmware with explicit support for the newer chip. **Unknown** means the instrument memory has not been identified. Firmware version alone does not identify the memory.
+
+Normal installation stays conservative. If the instrument memory is unknown and the package supports only older memory, or the package declares `chip: unknown`, select **Force installation (unknown compatibility)**. Review the instrument, package version and SHA-256, read the additional warning and tick the risk acknowledgement before confirming. On Android this adds a visibly marked task; review the plan in **Tasks** and explicitly start installation. The approval is saved only with that task, never as a global setting. On iOS the usual installation confirmation follows the additional warning.
+
+Wrong firmware can leave the instrument unable to boot and require hardware recovery. Check with the firmware author and back up data first. Explicit incompatibility (older-only firmware on known newer memory), unsupported packages, withdrawn/conflicting packages, hash/product validation and device/reconnection checks cannot be bypassed. Removing the task requires a new approval for another forced attempt.

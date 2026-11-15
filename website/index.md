@@ -4,7 +4,7 @@
 
 **FM-1 Flasher 0.9.3** is the stable release with full-screen settings, shared provider interfaces and HTTP/OAuth authentication for Android sources. The existing multi-instrument OTG workflow remains sequential.
 
-[Read the current guide](../README.md) · [About](../about/README.md) · [Release history](https://github.com/ekim-pl/android-fm1-flasher/releases)
+[Read the current guide](../docs/user-guide.md) · [About](../about/README.md) · [Release history](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
 ## Devices · Library · Tasks
 
@@ -28,9 +28,9 @@ To join Awesome FM-1, fork the repository, add a short project proposal and open
 
 ## Documentation
 
-- [Installation and daily use](../README.md#getting-started)
-- [Several instruments through a hub](../README.md#multiple-fm1-devices-on-a-hub)
-- [Build and tests](../README.md#building-and-testing)
+- [Installation and daily use](../docs/user-guide.md#getting-started)
+- [Several instruments through a hub](../docs/user-guide.md#multiple-fm1-devices-on-a-hub)
+- [Build and tests](../docs/user-guide.md#building-and-testing)
 - [Architecture and platform boundaries](../MIGRATION.md)
 - [Release verification](../publication/qa/0.9.2.txt)
 - [Publication status and workflow limitations](../publication/README.txt)
@@ -43,3 +43,11 @@ No account or advertising. Standard builds have no analytics SDK; Firebase-enabl
 [Privacy policy](../PRIVACY_POLICY.md) · [MIT license](../LICENSE.md) · [CommonMark license](../third_party/commonmark-LICENSE.txt)
 
 Contact: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
+
+## Google Play
+
+Coming soon to Google Play! I'm looking for beta testers — [get in touch](mailto:ekim.pl@gmail.com) if you'd like to join.
+
+## F-Droid
+
+A dedicated build and an F-Droid repository are planned.

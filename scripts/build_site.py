@@ -71,7 +71,7 @@ LANGUAGES = {
 PAGES = {
     'developers.html': {'en': 'website/developers.md', 'pl': 'website/pl/developers.md', 'zh-CN': 'website/zh-CN/developers.md'},
     'index.html': {'en': 'website/index.md', 'pl': 'website/pl/index.md', 'zh-CN': 'website/zh-CN/index.md'},
-    'documentation.html': {'en': 'README.md', 'pl': 'website/pl/documentation.md', 'zh-CN': 'website/zh-CN/documentation.md'},
+    'documentation.html': {'en': 'docs/user-guide.md', 'pl': 'website/pl/documentation.md', 'zh-CN': 'website/zh-CN/documentation.md'},
     'about.html': {'en': 'about/README.md', 'pl': 'about/README.pl.md', 'zh-CN': 'about/README.zh-Hans.md'},
     'privacy.html': {'en': 'PRIVACY_POLICY.md', 'pl': 'website/pl/privacy.md', 'zh-CN': 'website/zh-CN/privacy.md'},
     'license.html': {'en': 'LICENSE.md', 'pl': 'website/pl/license.md', 'zh-CN': 'website/zh-CN/license.md'},
@@ -81,11 +81,14 @@ PAGES = {
     'commonmark-license.html': {'en': 'third_party/commonmark-LICENSE.txt', 'pl': 'website/pl/commonmark-license.md', 'zh-CN': 'website/zh-CN/commonmark-license.md'},
 }
 SOURCE_PAGES = {source: page for page, translations in PAGES.items() for source in translations.values()}
+# Preserve existing README links to the detailed English guide and its anchors.
+SOURCE_PAGES['README.md'] = 'documentation.html'
 EXPLICIT_LANGUAGES = {
     source: language
     for page in ('about.html', 'documentation.html')
     for language, source in PAGES[page].items()
 }
+EXPLICIT_LANGUAGES['README.md'] = 'en'
 ALIASES = {page: ('en', page) for page in PAGES}
 ALIASES.update({
     'about/en.html': ('en', 'about.html'),

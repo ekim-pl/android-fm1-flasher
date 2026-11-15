@@ -43,3 +43,11 @@ Bez konta i reklam. Standardowe kompilacje nie zawierają SDK analityki; wersje 
 [Polityka prywatności](privacy.md) · [Licencja MIT](license.md) · [Licencja CommonMark](commonmark-license.md)
 
 Kontakt: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
+
+## Google Play
+
+Już wkrótce w Google Play! Poszukuję beta testerów — [napisz do mnie](mailto:ekim.pl@gmail.com), jeśli chcesz dołączyć.
+
+## F-Droid
+
+Planowane są dedykowany build oraz repozytorium F-Droid.

@@ -77,4 +77,4 @@ Your server is responsible for accounts, payment, license checks and access deci
 - Test expired and revoked credentials, HTTP 401/403/404, redirects, and offline behavior. Never put real credentials in documentation or issues.
 - [Open an integration issue](https://github.com/ekim-pl/android-fm1-flasher/issues/new?template=firmware-source.md) for help or built-in source consideration; public issues must not contain private URLs or secrets.
 
-GitHub Pages hosts this documentation as static content. Your authorization and licensing service runs separately. See the [full technical guide](../README.md#catalog-providers-and-authentication).
+GitHub Pages hosts this documentation as static content. Your authorization and licensing service runs separately. See the [full technical guide](../docs/user-guide.md#catalog-providers-and-authentication).
