@@ -1,4 +1,4 @@
-# FM-1 Flasher
+# FM-1 Flasher 0.10.0
 
 An independent firmware manager for **M-VAVE FM-1**. Requires Android 14 or newer, USB Host/OTG, MIDI, a data cable and stable power. A powered hub is recommended.
 
@@ -27,3 +27,7 @@ In **Settings → Firmware sources → Source color**, choose one of eight color
 The app requires no account and contains no advertising. Standard builds contain no analytics SDK. Builds configured with Google Analytics for Firebase collect usage statistics by default from the first online launch. You can turn statistics off at any time in Settings → Usage statistics. Library data, device names and task history are stored locally. Catalog and download servers receive connection metadata. See the [privacy policy](../PRIVACY_POLICY.md) and [MIT license](../LICENSE.md); firmware and third-party components retain their own licenses.
 
 Optional analytics SDK terms: [Firebase notices](../third_party/firebase-analytics-NOTICE.md).
+
+Publisher: **Ekim** · [Contact](mailto:ekim.pl@gmail.com) · [Third-party licenses](../third_party/README.md). Free and open source.
+
+[CommonMark (BSD-2-Clause)](../third_party/commonmark-LICENSE.txt) · [Android (Apache 2.0)](../third_party/Apache-2.0.txt) · [m-flasher (MIT)](../third_party/m-flasher-LICENSE.txt)

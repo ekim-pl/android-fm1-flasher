@@ -1,5 +1,7 @@
 # Polityka prywatności — FM-1 Flasher
 
+FM-1 Flasher 0.10.0: kolory źródeł i ustawienia interfejsu pozostają na tym urządzeniu. Lokalny APK testowy nie zawiera SDK analityki; dystrybucje z Firebase podlegają zasadom statystyk opisanym poniżej.
+
 ## Wydawca i kontakt
 
 ekim.pl@gmail.com. Data obowiązywania: 15 listopada 2026 r. Dokument opisuje sposób przetwarzania danych przez FM-1 Flasher.

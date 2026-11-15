@@ -16,8 +16,8 @@ Ustawienia i eksperymenty
 Polski, angielski i chiński uproszczony; motyw jasny/ciemny/systemowy; O aplikacji i prywatność offline. Sprawdzanie katalogów w tle jest opcjonalne i domyślnie wyłączone; nie pobiera ani nie instaluje firmware. Włączany osobno Logger MIDI zatrzymuje się na czas łączenia/zapisu. Osobne wykrywanie kości i ograniczone recovery stock V15 są eksperymentalne; nie stanowią automatycznej ani uniwersalnej naprawy.
 
 Wymagania i stan
-Android 14+, USB Host/OTG i MIDI, instrumenty FM-1, przewody danych i stabilne zasilanie. Zalecany jest zasilany hub; aplikacja nie mierzy jakości zasilania. Opisy firmware pozostają w językach autorów. Build 19 jest eksperymentalny, bez fizycznej weryfikacji FM-1/huba. Używaj narzędzi kopii danych danego firmware, jeśli są dostępne; OTA nie robi automatycznego backupu. Kolejki Androida nie przeniesiono do niezweryfikowanego hosta iOS.
+Android 14+, USB Host/OTG i MIDI, instrumenty FM-1, przewody danych i stabilne zasilanie. Zalecany jest zasilany hub; aplikacja nie mierzy jakości zasilania. Opisy firmware pozostają w językach autorów. Odbiór tego wydania na fizycznym FM-1/hubie pozostaje do wykonania. Używaj narzędzi kopii danych danego firmware, jeśli są dostępne; OTA nie robi automatycznego backupu. Kolejki Androida nie przeniesiono do niezweryfikowanego hosta iOS.
 
 Niezależny projekt MIT, nieoficjalny wobec M-VAVE. Firmware pozostaje u wydawców. Katalog Firmware Hub: CC BY 4.0. Aplikacja nie wymaga konta i nie zawiera reklam. Standardowe kompilacje nie zawierają SDK analityki. Wersje skonfigurowane z Google Analytics for Firebase domyślnie zbierają statystyki od pierwszego uruchomienia online. Możesz je wyłączyć w każdej chwili w Ustawienia → Statystyki użytkowania. Nazwy, seriale i historia zadań są lokalne; serwisy pobrań/katalogów otrzymują metadane połączenia. Kontakt: ekim.pl@gmail.com.
 
-Projekt opisu implementacji testowej 0.9.0; nie oznacza publikacji w sklepie.
+Projekt opisu FM-1 Flasher 0.10.0; publikacja w Google Play jest przed nami.

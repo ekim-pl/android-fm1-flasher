@@ -1,5 +1,7 @@
 # 隐私政策 — FM-1 Flasher
 
+FM-1 Flasher 0.10.0：来源颜色和界面偏好仅保存在本设备。本地测试 APK 不含分析 SDK；启用 Firebase 的发行版本遵循下方的统计政策。
+
 ## 发布者与联系方式
 
 ekim.pl@gmail.com。生效日期：2026 年 11 月 15 日。本文说明 FM-1 Flasher 如何处理数据。

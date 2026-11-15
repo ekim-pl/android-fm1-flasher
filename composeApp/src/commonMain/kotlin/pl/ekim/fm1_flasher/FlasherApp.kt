@@ -206,7 +206,7 @@ fun FlasherApp(backend: AppBackend) {
                                 LibraryTab.FLASHER -> FlasherScreen(state, language, { send(it.kind, it.id, it.value) }, { action, message -> confirmation = action to message }, { recovery = true }, { dialog = text("app_log") to AppText.Joined(state.logs, "\n\n") })
                                 LibraryTab.LOGGER -> LoggerScreen(state, language, backend)
                                 LibraryTab.ABOUT -> AboutScreen(
-                                    backend.document(text("about_document")), text("app_name"), text("about_version", "0.9.5-experimental.30"),
+                                    backend.document(text("about_document")), text("app_name"), text("about_version", "0.10.0"),
                                     if (!state.usbRecovery) text("ios_platform_limits") else null,
                                     text("privacy_title"), text("about_privacy_summary"), text("about_privacy_action"),
                                     { dialog = text("privacy_title") to msg("privacy_body") }, ::openDocumentOrLink)

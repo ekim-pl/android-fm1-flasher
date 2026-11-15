@@ -1,7 +1,7 @@
 {
   "applicationId": "pl.ekim.fm1_flasher",
-  "versionCode": 19,
-  "versionName": "0.9.0",
+  "versionCode": 31,
+  "versionName": "0.10.0",
   "defaultListingLanguage": "en-US",
   "localizedListings": [
     "pl-PL",
@@ -16,7 +16,7 @@
   "containsAds": false,
   "accountRequired": false,
   "inAppPurchasesImplemented": false,
-  "reviewerAccess": "No login. Library/settings are available without hardware. Physical multi-device flashing requires FM-1 instruments, an OTG hub, a data-capable Android 14+ host and stable power; not verified on physical hardware for build 19.",
+  "reviewerAccess": "No login. Library/settings are available without hardware. Physical multi-device flashing requires FM-1 instruments, an OTG hub, a data-capable Android 14+ host and stable power; not verified on physical hardware for this milestone.",
   "dataInventory": {
     "publisherTelemetryBackend": false,
     "advertisingOrAnalyticsSdks": false,
@@ -29,7 +29,7 @@
       "instrument UUIDs, names/colors, observed USB serials and last firmware identity",
       "memory-type selections",
       "job target/package hashes, outcomes and bounded stage history",
-      "session-only app log and most recently removed valid package for Undo",
+      "bounded persistent operation log (256 KiB); session-only Undo for the last valid package",
       "optional ROM recovery backups"
     ],
     "externalServers": [
@@ -54,7 +54,8 @@
     ],
     "encryptedInTransit": true,
     "deletion": "Clear Android app data or uninstall. Individual package removal is available inside the app. There is no app account.",
-    "dataSafetyForm": "Review third-party operators' actual collection and retention before final answers. Do not equate absence of publisher telemetry with absence of data received by external servers."
+    "dataSafetyForm": "Review third-party operators' actual collection and retention before final answers. Do not equate absence of publisher telemetry with absence of data received by external servers.",
+    "buildScope": "SDK-free test APK; for Firebase-enabled distribution also review analytics-0.10.0.json"
   },
   "foregroundServiceType": "connectedDevice",
   "requiredManualChoices": [

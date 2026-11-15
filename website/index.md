@@ -1,8 +1,7 @@
 # Several FM-1 instruments. One installation plan.
 
-**Experimental build: [0.9.5-experimental.30](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.30).** Adds configurable source colors and clearer firmware cards, with separate version/category labels and compact descriptions. This build uses Firebase usage statistics, enabled by default; disable them in **Settings → Usage statistics**. Earlier opt-outs remain disabled. Stable release: **0.9.3**.
+FM-1 Flasher **0.10.0** is being prepared for Google Play. It includes a local firmware library, source colors, full-screen settings and sequential installation tasks. Store publication is pending.
 
-**FM-1 Flasher 0.9.3** is the stable release with full-screen settings, shared provider interfaces and HTTP/OAuth authentication for Android sources. The existing multi-instrument OTG workflow remains sequential.
 
 [Read the current guide](../docs/user-guide.md) · [About](../about/README.md) · [Release history](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
@@ -32,7 +31,7 @@ To join Awesome FM-1, fork the repository, add a short project proposal and open
 - [Several instruments through a hub](../docs/user-guide.md#multiple-fm1-devices-on-a-hub)
 - [Build and tests](../docs/user-guide.md#building-and-testing)
 - [Architecture and platform boundaries](../MIGRATION.md)
-- [Release verification](../publication/qa/0.9.2.txt)
+- [Release verification](../publication/qa/0.10.0.txt)
 - [Publication status and workflow limitations](../publication/README.txt)
 - [Building this website](pages.md)
 

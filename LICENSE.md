@@ -22,5 +22,5 @@ SOFTWARE.
 
 This license applies to the original application source code. Third-party
 components, firmware packages, catalog entries, names, and artwork retain
-their respective licenses and copyrights; see the project's README and the
-upstream source for their terms.
+their respective licenses and copyrights; see [third-party notices](third_party/README.md) and each upstream source
+for their terms. FM-1 Flasher 0.10.0 does not relicense downloaded firmware.

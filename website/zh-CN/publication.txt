@@ -1,54 +1,6 @@
-FM-1 Flasher — 发布文档
-稳定版本：main 上的 0.9.2。标签：v0.9.2。
-公开附件仅使用版本号命名；内部 versionCode 保持不变。
+FM-1 Flasher 0.10.0 / 31 — Google Play 发布准备的第一阶段。
 
-当前应用
-Android ID：pl.ekim.fm1_flasher。
-Android 14+ / minSdk 34；target 和 compile SDK 36。
-未来计划推出 iOS 移植版。目前没有 iOS 版本，也未公布发布日期。
-语言：英语、波兰语、简体中文。联系：ekim.pl@gmail.com。
-Android 提供设备 / 固件库 / 任务以及持久化顺序队列。
-
-发布状态
-0.9.2 是稳定 GitHub Release，包含更新文档。
-publication/qa/0.9.2.txt 记录具体 APK、哈希、签名与测试范围。
-dist/0.9.2-test23 被 Git 忽略，新克隆不包含该本地目录。
-publication/github-release.txt 是说明草稿，不代表版本已发布。
-修改文档不会改变已提供 APK。重新构建需生成自己的校验和并验证打包，保留历史报告。
-
-构建与交付
-在仓库根目录运行：
-  python3 tools/sync-resources.py --check
-  ./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
-APK：app/build/outputs/apk/debug/app-debug.apk。
-检查 apksigner、ID/版本/minSdk、SHA-256 及更新签名连续性。
-先把测试 APK 和报告交给所有者，再考虑发布。
-:app:bundleRelease 可生成 AAB；未配置 ANDROID_KEYSTORE_FILE、ANDROID_KEYSTORE_PASSWORD、
-ANDROID_KEY_ALIAS、ANDROID_KEY_PASSWORD 时不签名。调试 APK 不是 Play 签名发布包。
-
-文档与商店文本
-README.md 是指南，MIGRATION.md 是架构说明，about/app*.md 是应用内文档。
-fastlane/metadata/android/{en-US,pl-PL,zh-CN}/ 包含描述草稿和历史变更记录。
-版本 19 对应当前实现，旧记录保留其历史含义。
-play-console.json 是当前事实草稿，不是已提交或批准的声明。编辑文件不会上传商店。
-
-历史材料与工作流
-已有商店截图/图形展示旧界面，不能证明 0.9.2 队列流程。提交商店前需重新截图。
-图形脚本只生成或排版素材，不会重新截取运行应用。
-publication/validation.json 明确是原应用的历史报告。
-github-actions.txt 说明触发条件；Play 工作流需手动启动。
-重新生成文档不会修改工作流、商店账户、标签或执行发布。
-
-隐私与网站
-PRIVACY_POLICY.md、应用资源、网站译文及 publication/privacy/ 描述本地名称、序列号、芯片选择、
-任务历史、固件库和网络行为。
-网站地址：https://ekim-pl.github.io/android-fm1-flasher/
-线上默认分支内容可能不同于当前分支。本地构建不更新公共网站。
-scripts/build_site.py 和 scripts/check_site.py 构建并检查文档，详情见 Pages 指南。
-部署前不要假设公开隐私地址已经包含本分支变更。
-
-验收
-参见 publication/test-checklist.txt、tests/android14-acceptance.txt 和 QA 报告。
-多台真实 FM-1 的模式切换、供电、序列号和 USB 授权仍需实机测试。
-多设备自动配对保持关闭。ROM 恢复独立且未经实机验证；iOS 队列和 Xcode 验证尚未完成。
-foreground-service.txt 描述硬件演示录制步骤，不声称已有该录像。
+已更新文档、关于、隐私和许可证。测试 APK 不含分析 SDK，使用本地调试签名。
+尚未提交商店。验证记录：../../publication/qa/0.10.0.txt。
+发布前需要签名 AAB、商店配置、最终数据声明和实体 FM-1/集线器验收。
+构建说明：../../publication/README.txt。

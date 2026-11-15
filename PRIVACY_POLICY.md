@@ -1,5 +1,7 @@
 # Privacy Policy — FM‑1 Flasher
 
+FM-1 Flasher 0.10.0: source colors and interface preferences are stored only on this device. The local test APK contains no analytics SDK; Firebase-enabled distributions follow the statistics policy below.
+
 ## Publisher and contact
 
 ekim.pl@gmail.com. Effective date: November 15, 2026. This policy describes how FM-1 Flasher processes data.

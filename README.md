@@ -8,7 +8,7 @@
 
 Browse, save and install firmware for your **M-VAVE FM-1** from an Android phone. Keep a local firmware library and update one instrument or several in sequence over USB OTG.
 
-**[Download APKs](https://github.com/ekim-pl/android-fm1-flasher/releases)** — stable: **0.9.3** · experimental: **[0.9.5-experimental.30](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.30)**.
+**Version 0.10.0** — preparation for Google Play. [Available APKs](https://github.com/ekim-pl/android-fm1-flasher/releases) · [Build and verification](publication/qa/0.10.0.txt).
 
 ## Project manifesto
 
@@ -49,7 +49,7 @@ The experimental backup tool reads the **entire 1 MiB flash memory** of supporte
 
 ## Privacy and more information
 
-No app account or advertising. The library, device names and task history stay on your phone. Firebase-enabled builds, including the current experimental APK, collect usage statistics by default; turn them off in **Settings → Usage statistics**. External firmware services receive connection metadata. [Privacy policy](PRIVACY_POLICY.md).
+No app account or advertising. The library, device names and task history stay on your phone. Firebase-enabled builds collect usage statistics by default; turn them off in **Settings → Usage statistics**. External firmware services receive connection metadata. [Privacy policy](PRIVACY_POLICY.md).
 
 [Detailed user guide](docs/user-guide.md) · [Project website](https://ekim-pl.github.io/android-fm1-flasher/) · [Polski](website/pl/documentation.md) · [简体中文](website/zh-CN/documentation.md) · [Development and tests](MIGRATION.md) · [Dependency licenses](third_party/README.md)
 

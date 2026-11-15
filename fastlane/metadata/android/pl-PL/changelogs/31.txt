@@ -1,0 +1,1 @@
+0.10.0: odświeżone O aplikacji, prywatność, licencje i dokumentacja. Lokalna biblioteka firmware, kolory źródeł i sekwencyjne zadania instalacji. Przygotowanie do Google Play.

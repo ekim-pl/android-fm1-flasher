@@ -1,0 +1,44 @@
+FM-1 Flasher 0.10.0 / 31 — milestone 1
+Date: 2026-11-15
+Publisher: Ekim (GitHub ekim-pl).
+Android: pl.ekim.fm1_flasher; minSdk 34, target/compile SDK 36.
+
+CHANGES
+Current README, user/developer guides and website no longer advertise experimental
+builds. About, privacy and license references refreshed in EN/PL/zh-Hans.
+Optional experimental tools retain their safety notices. Historical QA/release records
+and changelogs remain unchanged as evidence of their original artifacts.
+Store listing drafts and version-31 changelogs updated. No store publication.
+
+VALIDATION
+:shared:jvmTest: 76 tests, no failures/errors/skips.
+:app:testDebugUnitTest: 140 tests, no failures/errors, 4 external-fixture skips.
+:app:lintDebug, :app:assembleDebug, :app:assembleDebugAndroidTest passed.
+Final documentation packaging rebuild :app:assembleDebug passed.
+Resource synchronization check and git diff --check passed.
+Python release-fixture suite: 2 tests passed.
+Website: 48 generated HTML pages passed links/anchors/translation checks.
+All 15 bundled Markdown/license documents match repository bytes exactly.
+APK signature verification passed; manifest version/application ID/SDK checked.
+
+ARTIFACT
+Local: dist/0.10.0-test31/FM1-Flasher-0.10.0-test31.apk (ignored by Git).
+SHA-256: 786c69230ae4d4ee9e8781f4f0eea810c90da7ff671b03bd18edcefc7486b9be
+Certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
+Android Debug certificate. SDK-free debug variant; no Firebase configuration used.
+This is a test APK, not a signed Play upload AAB. No iOS binary.
+
+SCREENSHOTS AND DEVICE TESTS — BLOCKED
+Requested: English Library, Devices, Tasks, Settings, About, privacy and licenses;
+one Library screen each in Polish and Simplified Chinese.
+Both Android 16 emulators are held by other agent-device sessions. Opening
+FM1_Flasher_API_36 failed with DEVICE_IN_USE; session inspection and one bounded
+retry confirmed the blocker. No other session was taken over or closed.
+No fresh screenshots, APK installation or instrumentation run are claimed.
+Existing fastlane screenshots remain historical, unsuitable for this release.
+Resume UI verification and capture after the device owner frees the emulator.
+
+REMAINING BEFORE PUBLICATION
+Physical FM-1/hub, power/reconnect and ROM recovery acceptance; API 34/36 platform
+CI; final signed AAB, Play configuration, final SDK/data inventory and retention.
+The source changes do not deploy Pages or publish Google Play/GitHub releases.

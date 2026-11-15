@@ -1,8 +1,8 @@
-GitHub Actions on main — 0.9.2
+GitHub Actions — 0.10.0 preparation
 
 This is a description of the checked-in workflows, not a request to run or publish them.
 Android application ID: pl.ekim.fm1_flasher.
-Stable 0.9.2 uses the v0.9.2 GitHub tag; Google Play publication is separate.
+Version 0.10.0 is in preparation; no release tag or Play submission is created by this milestone.
 
 ANDROID CI (.github/workflows/android-ci.yml)
 Runs on branch pushes, pull requests and manual dispatch. Uses JDK 17, Android SDK 36

@@ -11,3 +11,5 @@ Powyższa informacja o prawach autorskich i niniejsza informacja o zezwoleniu mu
 OPROGRAMOWANIE JEST DOSTARCZANE „TAK JAK JEST”, BEZ JAKICHKOLWIEK GWARANCJI, WYRAŹNYCH LUB DOROZUMIANYCH, W TYM MIĘDZY INNYMI GWARANCJI PRZYDATNOŚCI HANDLOWEJ, PRZYDATNOŚCI DO OKREŚLONEGO CELU I NIENARUSZANIA PRAW. W ŻADNYM WYPADKU AUTORZY ANI POSIADACZE PRAW AUTORSKICH NIE PONOSZĄ ODPOWIEDZIALNOŚCI ZA JAKIEKOLWIEK ROSZCZENIA, SZKODY ANI INNE ZOBOWIĄZANIA, CZY TO W RAMACH UMOWY, CZYNU NIEDOZWOLONEGO CZY W INNY SPOSÓB, WYNIKAJĄCE Z OPROGRAMOWANIA LUB ZWIĄZANE Z NIM, JEGO UŻYCIEM LUB INNYM WYKORZYSTANIEM.
 
 Ta licencja dotyczy oryginalnego kodu źródłowego aplikacji. Komponenty podmiotów trzecich, paczki firmware, wpisy katalogowe, nazwy i grafiki zachowują własne licencje i prawa autorskie; ich warunki znajdują się w README projektu i źródłach upstream.
+
+Licencje zależności: [wykaz i teksty](../../third_party/README.md). Licencja aplikacji nie zmienia licencji pobieranego firmware.
