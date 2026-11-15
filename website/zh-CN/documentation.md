@@ -1,29 +1,21 @@
-# Multiplatform FM-1 Flasher 使用指南
+# FM-1 Flasher 使用指南
 
-面向 **M-VAVE FM-1** 的独立固件管理器，使用 Kotlin Multiplatform 和 Compose Multiplatform。Android 可通过 OTG 集线器管理多台乐器，并且**每次只写入一台乐器**。
+面向 **M-VAVE FM-1** 的独立固件管理器，适用于 Android。Android 可通过 OTG 集线器管理多台乐器，并且**每次只写入一台乐器**。
 
-本文描述 `main` 分支的稳定版 **0.9.2**。此版本新增全屏设置、目录提供程序适配器和按来源隔离的 HTTP 认证。[构建报告](../../publication/qa/0.9.2.txt) 记录验证与限制。所有者报告构建 20 已在实体 FM-1 上测试成功；新的来源和认证功能需单独验收。
+本文描述 `main` 分支的稳定版 **0.9.2**。此版本新增全屏设置、目录提供程序适配器和按来源隔离的 HTTP 认证。[构建报告](../../publication/qa/0.9.2.txt) 记录验证与限制。所有者报告构建 20 已在实体 FM-1 上测试成功；来源和认证的验证范围见报告。
 
 [English](../../README.md) · [Polski](../pl/documentation.md) · [实现说明](../../MIGRATION.md) · [隐私](privacy.md)
 
 ## 平台支持
 
-| 能力 | Android | iOS 宿主源码 |
-| --- | --- | --- |
-| 运行要求 | Android 14+，USB Host/OTG 与 MIDI | 部署目标 iOS 15；尚无已验证的 Apple 应用文件 |
-| 主要流程 | 设备 · 固件库 · 任务 | 之前的单乐器控制器 |
-| 设备记录、持久队列与历史 | 已实现 | 尚未移植 |
-| 目录 | Firmware Hub、可选 Awesome FM-1、自定义来源 | Hub 仓库 |
-| 后台目录检查 | 可选 WorkManager 任务 | 无对应适配器 |
-| MIDI 固件传输 | 原生服务依次执行任务 | 共享会话、手动重连；未经实机验证 |
-| 原始 USB 芯片检测与 ROM 恢复 | 独立实验工具 | 不可用 |
+需要 Android 14+、USB Host/OTG 和 MIDI。
 
 Android 应用 ID 是 `pl.ekim.multiplatform_fm1_flasher`。它与原应用 `pl.ekim.fm1_flasher` 分开安装，不会导入原应用的私有数据。界面支持英语、波兰语和简体中文，以及浅色、深色和跟随系统主题。
 
 <a id="getting-started"></a>
 ## 开始使用
 
-1. 在 Android 14 或更高版本安装测试 APK。构建 23 的调试签名与构建 18 一致；直接更新、不要卸载，可保留此分支应用的固件库及偏好。
+1. 在 Android 14 或更高版本安装 0.9.2 APK。构建 23 的调试签名与构建 18 一致；直接更新、不要卸载，可保留此分支应用的固件库及偏好。
 2. 在**固件库**查找固件，从详情下载。下载会校验固件包，不会开始安装。
 3. 使用支持数据传输的线缆，通过 OTG 集线器连接乐器。建议独立供电；应用不能测量或保证集线器供电质量。
 4. 在**设备**中逐台选择**读取乐器信息**，按需授予 Android USB 权限。只有识别为 FM-1 的设备才能加入计划。
@@ -86,7 +78,7 @@ JEDEC 检测针对独立的 USB ROM/download 模式设备，不会自动把结�
 <a id="building-and-testing"></a>
 ## 构建与测试
 
-需要 JDK 17、Android SDK platform 36、Build Tools 35.0.0。Gradle 由 wrapper 固定；AGP 为 8.13.2、Kotlin 为 2.2.21、Compose Multiplatform 为 1.9.3。通过本地环境或 Android 工具配置 SDK。
+需要 JDK 17、Android SDK platform 36、Build Tools 35.0.0。Gradle 由 wrapper 固定；AGP 为 8.13.2、Kotlin 为 2.2.21、Compose 为 1.9.3。通过本地环境或 Android 工具配置 SDK。
 
 ```sh
 python3 tools/sync-resources.py --check
@@ -99,11 +91,9 @@ APK：`app/build/outputs/apk/debug/app-debug.apk`。测试 APK：`app/build/outp
 
 另见[架构与测试命令](../../MIGRATION.md)、[验收清单](../../tests/android14-acceptance.txt)及[网站构建](pages.md)。[继承的 Google Play 工作流仍指向不同应用 ID](github-actions.txt)，发布是独立步骤。
 
-## iOS 开发状态
+## 未来的 iOS 移植
 
-已有 Swift 宿主和共享元数据，但尚未验证 Xcode 构建或物理 iPhone 更新。设备记录/队列以及 Android 多来源调度器尚未移植。宿主保留之前的单乐器界面与手动重连。使用时保持前台；有限后台时间不等同于 Android 服务。
-
-Kotlin 目标为 `iosArm64`、`iosSimulatorArm64`，未配置 Intel 模拟器。`iosApp/project.yml` 定义 XcodeGen 项目、bundle ID `pl.ekim.multiplatform-fm1-flasher`、版本 0.9.2/23 和部署目标 iOS 15。macOS/Xcode 步骤见 [MIGRATION.md](../../MIGRATION.md)。Linux 元数据编译不会生成 iOS 应用。
+未来计划推出 iOS 移植版。目前没有 iOS 版本，也未公布发布日期。
 
 ## 验证范围
 
@@ -152,4 +142,4 @@ OAuth 支持浏览器 Authorization Code **PKCE S256** 与服务 **Client Creden
 
 认证只发送给配置的来源原点（`repo-url` 使用 GitHub API 原点）。跨原点跳转（包括 CDN）不携带认证；令牌 POST 跳转会被拒绝。仍要求 HTTPS、公共地址和批准的 URL 范围。常规检查间隔为 24–168 小时；明确替换凭据或完成授权后可重新检查，避免因旧认证失败等待一天。
 
-这些提供程序与认证适配器在 Android 实现。iOS 主机保留原有单一 Hub 仓库；共享接口/UI 已编译元数据，但尚未验证 Apple 二进制或原生凭据适配器。
+未来计划推出 iOS 移植版。目前没有 iOS 版本，也未公布发布日期。

@@ -1,6 +1,6 @@
 # Strona projektu na GitHub Pages
 
-Ten branch opisuje testową implementację 0.9.2/23. Zbudowanie dokumentacji nie publikuje APK ani zmian brancha w witrynie. Publiczna strona z gałęzi domyślnej może nadal opisywać oryginalną aplikację. Przy przenoszeniu dokumentacji zachowaj jednoznaczny stan wydania i identyfikator aplikacji.
+Witryna opisuje kompletne wydanie **0.9.2** na Androida. Zmiany wysłane na gałąź domyślną są budowane, sprawdzane i wdrażane przez GitHub Actions.
 
 Witryna, dokumentacja oraz polityka prywatności powstają ze źródeł w tym repozytorium. Każda podstrona jest dostępna po angielsku, polsku i chińsku uproszczonym, wraz z nawigacją, instrukcjami publikacji oraz tłumaczeniami licencji. Odnośniki **Polski**, **English** i **简体中文** przełączają tę samą podstronę na inny język.
 
@@ -11,7 +11,7 @@ Witryna, dokumentacja oraz polityka prywatności powstają ze źródeł w tym re
 3. W **Actions → GitHub Pages → Run workflow** wybierz domyślną gałąź. Kolejne zmiany w tej gałęzi publikują stronę automatycznie.
 4. Opublikowana witryna to [ekim-pl.github.io/android-fm1-flasher](https://ekim-pl.github.io/android-fm1-flasher/pl/). Forki zwykle używają adresu `https://LOGIN.github.io/REPOSITORY/`; sprawdź podsumowanie wdrożenia lub **Settings → Pages**.
 
-Jeżeli środowisko `github-pages` ogranicza dozwolone gałęzie, dopuść domyślną gałąź projektu. Workflow buduje też pull requesty i pozostałe gałęzie. Publikuje z gałęzi domyślnej lub po ręcznym uruchomieniu task/multiplatform-rework. Nie wymaga sekretów aplikacji ani dostępu do Google Play.
+Jeżeli środowisko `github-pages` ogranicza dozwolone gałęzie, dopuść domyślną gałąź projektu. Workflow buduje też pull requesty i pozostałe gałęzie. Publikuje z gałęzi domyślnej. Nie wymaga sekretów aplikacji ani dostępu do Google Play.
 
 ## Języki i stałe adresy
 
@@ -55,5 +55,3 @@ Dokumentacja repozytorium jest po angielsku. Opisy aplikacji, jej zasoby i mater
 ## Wspólna publikacja z repozytorium F-Droid
 
 GitHub Pages ma jedno aktywne wdrożenie witryny dla repozytorium. Po dodaniu publikacji F-Droid należy dołączać katalog `fdroid/repo/` do `build/site/` przed wysłaniem artefaktu Pages. Witryna i repozytorium APK muszą być publikowane razem: workflow wdrażający wyłącznie APK zastąpiłby witrynę, a wdrożenie samej witryny usunęłoby repozytorium APK. Obecny workflow publikuje witrynę i dokumentację.
-
-Dla tej eksperymentalnej dokumentacji wybierz jawnie `task/multiplatform-rework` przy ręcznym uruchomieniu Pages. Środowisko `github-pages` musi dopuszczać dokładnie ten branch. To wdraża witrynę repozytorium; późniejszy automatyczny deploy z gałęzi domyślnej może ją zastąpić.

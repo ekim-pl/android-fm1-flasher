@@ -1,11 +1,11 @@
-Multiplatform FM-1 Flasher — 发布文档
+FM-1 Flasher — 发布文档
 稳定版本：main 上的 0.9.2。标签：multiplatform-v0.9.2。
 公开附件仅使用版本号命名；内部 versionCode 保持不变。
 
 当前应用
 Android ID：pl.ekim.multiplatform_fm1_flasher，与原应用 pl.ekim.fm1_flasher 不同。
 Android 14+ / minSdk 34；target 和 compile SDK 36。
-iOS bundle ID：pl.ekim.multiplatform-fm1-flasher；只有源码，没有已验证 IPA。
+未来计划推出 iOS 移植版。目前没有 iOS 版本，也未公布发布日期。
 语言：英语、波兰语、简体中文。联系：ekim.pl@gmail.com。
 Android 提供设备 / 固件库 / 任务以及持久化顺序队列。
 

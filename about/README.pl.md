@@ -1,6 +1,6 @@
 # FM-1 Flasher
 
-Niezależny, eksperymentalny menedżer firmware dla **M-VAVE FM-1**. Android organizuje instrumenty podłączone przez hub OTG w **Urządzenia · Bibliotekę · Zadania**, zapisując firmware na jednym instrumencie naraz.
+Niezależny menedżer firmware dla **M-VAVE FM-1**. Android organizuje instrumenty podłączone przez hub OTG w **Urządzenia · Bibliotekę · Zadania**, zapisując firmware na jednym instrumencie naraz.
 
 ## Twoje instrumenty
 
@@ -38,7 +38,7 @@ Ustawienia udostępniają polski, angielski i chiński uproszczony, motyw jasny/
 
 Wykrywanie kości dotyczy osobnego urządzenia ROM/download i nie przypisuje się automatycznie do instrumentu MIDI. Recovery ROM wymaga osobnego zatwierdzenia kopii/planu zapisu i ogranicza się do rozpoznanego obszaru aplikacji stock V15. Nie zapisuje bootloadera ani nie uruchamia się samo po błędzie OTA. Recovery nie zweryfikowano fizycznie.
 
-Android wymaga **14+**, USB Host/OTG, MIDI, przewodu danych i stabilnego zasilania. Zalecany jest zasilany hub. Host iOS zachowuje poprzedni przebieg dla jednego instrumentu: androidowej kolejki i harmonogramu wielu źródeł nie przeniesiono, a kompilacji Xcode i działania na iOS nie zweryfikowano.
+Android wymaga **14+**, USB Host/OTG, MIDI, przewodu danych i stabilnego zasilania. Zalecany jest zasilany hub. Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani ogłoszonego terminu.
 
 ## Prywatność i licencje
 

@@ -1,11 +1,11 @@
-Multiplatform FM-1 Flasher — publication documentation
+FM-1 Flasher — publication documentation
 Stable release: 0.9.2 on main. Release tag: multiplatform-v0.9.2.
 Public assets use version-only names; internal versionCode remains unchanged.
 
 CURRENT APPLICATION
 Android ID: pl.ekim.multiplatform_fm1_flasher (not the original pl.ekim.fm1_flasher).
 Android 14+ / minSdk 34; target and compile SDK 36.
-iOS bundle ID: pl.ekim.multiplatform-fm1-flasher; sources only, no verified IPA.
+A port to iOS is planned for the future. There is no iOS release or announced release date.
 Languages: English, Polish, Simplified Chinese. Publisher/contact: ekim.pl@gmail.com.
 The Android workspace is Devices / Library / Tasks with a persistent sequential queue.
 

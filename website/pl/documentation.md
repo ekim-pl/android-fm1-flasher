@@ -1,29 +1,21 @@
-# Multiplatform FM-1 Flasher — instrukcja
+# FM-1 Flasher — instrukcja
 
-Niezależny menedżer firmware dla **M-VAVE FM-1**, napisany w Kotlin Multiplatform i Compose Multiplatform. Android obsługuje wiele instrumentów przez hub OTG, zapisując firmware **kolejno, na jednym instrumencie naraz**.
+Niezależny menedżer firmware dla **M-VAVE FM-1** na Androida. Android obsługuje wiele instrumentów przez hub OTG, zapisując firmware **kolejno, na jednym instrumencie naraz**.
 
-Dokument opisuje stabilną wersję **0.9.2** na branchu `main`. Wersja dodaje pełnoekranowe ustawienia, adaptery providerów i uwierzytelnianie HTTP przypisane do źródła. [Raport buildu](../../publication/qa/0.9.2.txt) opisuje weryfikację i ograniczenia. Właściciel potwierdził fizyczne testy FM-1 dla buildu 20; nowe funkcje źródeł i uwierzytelniania wymagają osobnej akceptacji.
+Dokument opisuje stabilną wersję **0.9.2** na branchu `main`. Wersja dodaje pełnoekranowe ustawienia, adaptery providerów i uwierzytelnianie HTTP przypisane do źródła. [Raport buildu](../../publication/qa/0.9.2.txt) opisuje weryfikację i ograniczenia. Właściciel potwierdził fizyczne testy FM-1 dla buildu 20; zakres testów źródeł i uwierzytelniania opisano w raporcie.
 
 [English](../../README.md) · [简体中文](../zh-CN/documentation.md) · [Architektura](../../MIGRATION.md) · [Prywatność](privacy.md)
 
 ## Obsługiwane platformy
 
-| Funkcja | Android | Źródła hosta iOS |
-| --- | --- | --- |
-| Wymagania | Android 14+, USB Host/OTG i MIDI | Deployment target iOS 15; brak zweryfikowanego pliku aplikacji |
-| Główny interfejs | Urządzenia · Biblioteka · Zadania | Poprzedni kontroler jednego instrumentu |
-| Rejestr, trwała kolejka i historia | Wdrożone | Nieprzeniesione |
-| Katalogi | Firmware Hub, opcjonalny Awesome FM-1, własne źródła | Repozytorium Hub |
-| Sprawdzanie katalogów w tle | Opcjonalny WorkManager | Brak odpowiednika |
-| Zapis przez MIDI | Sekwencyjne zadania w usłudze natywnej | Wspólna sesja z ręcznym powiązaniem po restarcie; bez testu sprzętowego |
-| Wykrywanie kości i recovery ROM | Osobne narzędzia eksperymentalne | Niedostępne |
+Wymagany jest Android 14+, USB Host/OTG i MIDI.
 
 Identyfikator Androida to `pl.ekim.multiplatform_fm1_flasher`. Aplikacja instaluje się obok oryginalnej `pl.ekim.fm1_flasher` i nie importuje jej prywatnych danych. Interfejs obsługuje polski, angielski i chiński uproszczony oraz motyw jasny, ciemny i systemowy.
 
 <a id="getting-started"></a>
 ## Pierwsza instalacja i plan aktualizacji
 
-1. Zainstaluj testowy APK na Androidzie 14 lub nowszym. Podpis debug buildu 23 odpowiada buildowi 18: instalacja jako aktualizacja, bez odinstalowania, zachowuje bibliotekę i preferencje tego forka.
+1. Zainstaluj APK 0.9.2 na Androidzie 14 lub nowszym. Podpis debug buildu 23 odpowiada buildowi 18: instalacja jako aktualizacja, bez odinstalowania, zachowuje bibliotekę i preferencje tego forka.
 2. W **Bibliotece** znajdź firmware i pobierz paczkę z jej szczegółów. Pobranie sprawdza integralność, ale nie rozpoczyna instalacji.
 3. Podłącz instrumenty przewodami do transmisji danych przez hub OTG. Zalecany jest hub z osobnym zasilaniem. Aplikacja nie mierzy jakości zasilania.
 4. W **Urządzeniach** wybierz **Odczytaj instrument** na każdej karcie. Udziel systemowej zgody USB, gdy będzie potrzebna. Do planu można dodać rozpoznany FM-1.
@@ -86,7 +78,7 @@ Wykrywanie JEDEC dotyczy osobnego urządzenia USB w trybie ROM/download. Wynik n
 <a id="building-and-testing"></a>
 ## Budowanie i testy
 
-Wymagane są JDK 17, Android SDK platform 36 i Build Tools 35.0.0. Wrapper ustala Gradle; projekt ustala AGP 8.13.2, Kotlin 2.2.21 i Compose Multiplatform 1.9.3. Skonfiguruj SDK lokalnie przez środowisko lub narzędzia Androida.
+Wymagane są JDK 17, Android SDK platform 36 i Build Tools 35.0.0. Wrapper ustala Gradle; projekt ustala AGP 8.13.2, Kotlin 2.2.21 i Compose 1.9.3. Skonfiguruj SDK lokalnie przez środowisko lub narzędzia Androida.
 
 ```sh
 python3 tools/sync-resources.py --check
@@ -99,11 +91,9 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`. Testy: `app/build/outputs/apk/
 
 Zobacz [architekturę i komendy testów](../../MIGRATION.md), [listę odbiorową](../../tests/android14-acceptance.txt) i [budowanie witryny](pages.md). [Odziedziczone workflow Google Play wskazują inny identyfikator aplikacji](github-actions.txt); publikacja jest osobnym działaniem.
 
-## Stan iOS
+## Planowany port na iOS
 
-Host Swift i metadane wspólnego kodu istnieją, ale nie zweryfikowano kompilacji Xcode ani aktualizacji fizycznego iPhone’a. Rejestr/kolejka i androidowy harmonogram wielu źródeł nie zostały przeniesione. Host zachowuje wcześniejszy interfejs jednego instrumentu i ręczny reconnect. Pozostaw aplikację na wierzchu; skończony czas pracy w tle nie zastępuje usługi Androida.
-
-Skonfigurowane cele Kotlin to `iosArm64` i `iosSimulatorArm64`, bez symulatora Intel. `iosApp/project.yml` opisuje projekt XcodeGen, bundle ID `pl.ekim.multiplatform-fm1-flasher`, wersję 0.9.2/23 i deployment target iOS 15. Kroki dla macOS/Xcode zawiera [MIGRATION.md](../../MIGRATION.md). Kompilacja metadanych pod Linuksem nie tworzy aplikacji iOS.
+Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani ogłoszonego terminu.
 
 ## Zakres weryfikacji
 
@@ -152,4 +142,4 @@ OAuth obsługuje logowanie w przeglądarce Authorization Code z **PKCE S256** or
 
 Uwierzytelnienie jest ograniczone do pochodzenia źródła (API GitHub dla `repo-url`). Przy zmianie domeny w przekierowaniu, także do CDN, jest usuwane; przekierowania POST tokenów są odrzucane. Nadal obowiązuje HTTPS oraz kontrola publicznych adresów i zakresów URL. Zwykłe sprawdzanie zachowuje harmonogram 24–168 godzin. Jawna zmiana sekretu lub ukończona autoryzacja pozwala sprawdzić źródło ponownie, bez całodobowego oczekiwania po błędzie logowania.
 
-Te adaptery providerów i uwierzytelniania są wdrożone w Androidzie. Host iOS zachowuje poprzednie repozytorium Hub; wspólny interfejs/UI kompilują się jako metadane, ale pliku Apple i natywnego adaptera poświadczeń nie zweryfikowano.
+Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani ogłoszonego terminu.

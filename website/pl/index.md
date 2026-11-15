@@ -1,6 +1,6 @@
 # Wiele FM-1. Jeden plan instalacji.
 
-**Multiplatform FM-1 Flasher 0.9.2** to stabilne wydanie z pełnoekranowymi ustawieniami, wspólnym interfejsem providerów i uwierzytelnianiem HTTP/OAuth dla źródeł Androida. Praca z wieloma FM-1 przez OTG nadal jest sekwencyjna.
+**FM-1 Flasher 0.9.2** to stabilne wydanie z pełnoekranowymi ustawieniami, wspólnym interfejsem providerów i uwierzytelnianiem HTTP/OAuth dla źródeł Androida. Praca z wieloma FM-1 przez OTG nadal jest sekwencyjna.
 
 [Aktualna instrukcja](documentation.md) · [O aplikacji](../../about/README.pl.md) · [Historia wydań](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
@@ -14,7 +14,7 @@
 
 Przy wielu instrumentach trzeba powiązać jedynego dopuszczalnego kandydata na karcie zadania. Utrata sąsiada, niejednoznaczny powrót lub reset huba blokuje dalszy zapis. Adresy USB nie oznaczają fizycznych gniazd; automatyczne parowanie wielu urządzeń jest wyłączone do testów sprzętowych. Przerwany zapis nie wznawia się automatycznie.
 
-Używaj przewodów danych i stabilnego zasilania; zalecany jest zasilany hub. Aplikacja nie certyfikuje jakości zasilania. Nie zweryfikowano fizycznego FM-1/huba ani pliku aplikacji iOS dla tego buildu. Host iOS zachowuje wcześniejszy kontroler jednego instrumentu, bez kolejki Androida.
+Używaj przewodów danych i stabilnego zasilania; zalecany jest zasilany hub. Aplikacja nie certyfikuje jakości zasilania. Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani ogłoszonego terminu.
 
 ## Dokumentacja
 
@@ -22,7 +22,7 @@ Używaj przewodów danych i stabilnego zasilania; zalecany jest zasilany hub. Ap
 - [Wiele instrumentów przez hub](documentation.md#multiple-fm1-devices-on-a-hub)
 - [Budowanie i testy](documentation.md#building-and-testing)
 - [Architektura i granice platform](../../MIGRATION.md)
-- [Raport testowego buildu](../../publication/qa/0.9.2-test23.txt)
+- [Raport wydania](../../publication/qa/0.9.2.txt)
 - [Stan publikacji i ograniczenia workflow](publication.txt)
 - [Budowanie witryny](pages.md)
 

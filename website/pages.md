@@ -1,6 +1,6 @@
 # Project website on GitHub Pages
 
-This branch documents the 0.9.2/23 test implementation. Building it does not publish the APK or deploy branch-only documentation. The default-branch public site may still describe the original application. Keep the release status and application ID explicit when promoting documentation.
+This website documents the complete Android release **0.9.2**. Changes pushed to the default branch are built, checked and deployed by GitHub Actions.
 
 The website, documentation and privacy policy are built from this repository. Every page is available in English, Polish and Simplified Chinese, including navigation, publishing instructions and license translations. The **Polski**, **English** and **简体中文** links switch to the same page in another language.
 
@@ -11,7 +11,7 @@ The website, documentation and privacy policy are built from this repository. Ev
 3. In **Actions → GitHub Pages → Run workflow**, select the default branch. Subsequent changes to that branch deploy automatically.
 4. The published site is [ekim-pl.github.io/android-fm1-flasher](https://ekim-pl.github.io/android-fm1-flasher/). Forks usually use `https://LOGIN.github.io/REPOSITORY/`; check the deployment summary or **Settings → Pages**.
 
-If the `github-pages` environment restricts deployment branches, allow the project's default branch. The workflow builds pull requests and other branches. It deploys from the default branch or by explicit manual dispatch on task/multiplatform-rework. It needs no application secrets or Google Play access.
+If the `github-pages` environment restricts deployment branches, allow the project's default branch. The workflow builds pull requests and other branches. It deploys from the default branch. It needs no application secrets or Google Play access.
 
 ## Languages and stable addresses
 
@@ -55,5 +55,3 @@ Repository documentation is in English. App About documents, app resources and s
 ## Sharing deployment with an F-Droid repository
 
 GitHub Pages has one active site deployment per repository. If F-Droid publishing is added, include `fdroid/repo/` in `build/site/` before uploading the Pages artifact. The website and APK repository must deploy together: an APK-only workflow would replace the website, and a website-only deployment would remove the APK repository. The current workflow publishes the website and documentation.
-
-For this experimental documentation release, explicitly select `task/multiplatform-rework` when manually running Pages. The `github-pages` environment must allow that exact branch. This deploys the repository site; an automatic deployment from the default branch can later replace it.

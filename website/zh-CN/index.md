@@ -1,6 +1,6 @@
 # 多台 FM-1，一个安装计划。
 
-**Multiplatform FM-1 Flasher 0.9.2** 是稳定版本，提供全屏设置、共享提供程序接口和 Android 来源的 HTTP/OAuth 认证。多台 FM-1 的 OTG 更新仍依次执行。
+**FM-1 Flasher 0.9.2** 是稳定版本，提供全屏设置、共享提供程序接口和 Android 来源的 HTTP/OAuth 认证。多台 FM-1 的 OTG 更新仍依次执行。
 
 [当前指南](documentation.md) · [关于应用](../../about/README.zh-Hans.md) · [版本历史](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
@@ -14,7 +14,7 @@
 
 多设备需要在任务卡片中确认唯一合格的返回设备。邻居丢失、返回不明确或集线器重置会阻止后续写入。USB 地址不是物理端口；完成实机测试前，多设备自动匹配保持关闭。中断的写入不会自动恢复。
 
-请使用数据线和稳定供电，建议独立供电的集线器。应用不能认证电源质量。本构建未验证真实 FM-1/集线器或 iOS 二进制。iOS 宿主保留先前的单乐器控制器，没有 Android 队列。
+请使用数据线和稳定供电，建议独立供电的集线器。应用不能认证电源质量。未来计划推出 iOS 移植版。目前没有 iOS 版本，也未公布发布日期。
 
 ## 文档
 
@@ -22,7 +22,7 @@
 - [集线器上的多台乐器](documentation.md#multiple-fm1-devices-on-a-hub)
 - [构建与测试](documentation.md#building-and-testing)
 - [架构与平台边界](../../MIGRATION.md)
-- [测试构建报告](../../publication/qa/0.9.2-test23.txt)
+- [版本验证报告](../../publication/qa/0.9.2.txt)
 - [发布状态与工作流限制](publication.txt)
 - [构建网站](pages.md)
 

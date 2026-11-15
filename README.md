@@ -1,28 +1,20 @@
-# Multiplatform FM-1 Flasher
+# FM-1 Flasher
 
-Independent firmware manager for **M-VAVE FM-1**, built with Kotlin Multiplatform and Compose Multiplatform. The main Android workflow manages several instruments through an OTG hub and writes firmware **one instrument at a time**.
+Independent Android firmware manager for **M-VAVE FM-1**. The main Android workflow manages several instruments through an OTG hub and writes firmware **one instrument at a time**.
 
-This guide describes stable **0.9.2** on `main`. This version adds full-screen settings, provider adapters and source-scoped HTTP authentication. The [build report](publication/qa/0.9.2.txt) records verification and limits. The owner reported successful physical FM-1 tests of build 20; the new source/authentication features require their own acceptance.
+This guide describes stable **0.9.2** on `main`. This version adds full-screen settings, provider adapters and source-scoped HTTP authentication. The [build report](publication/qa/0.9.2.txt) records verification and limits. The owner reported successful physical FM-1 tests of build 20; see the report for the scope of source/authentication verification.
 
 [Polski](website/pl/documentation.md) · [简体中文](website/zh-CN/documentation.md) · [Implementation](MIGRATION.md) · [Privacy](PRIVACY_POLICY.md)
 
 ## Platform support
 
-| Capability | Android | iOS host sources |
-| --- | --- | --- |
-| Runtime requirement | Android 14+, USB Host/OTG and MIDI | iOS 15 deployment target; no verified Apple binary |
-| Main workflow | Devices · Library · Tasks | Previous single-instrument controller |
-| Device registry, persistent queue and history | Implemented | Not ported |
-| Catalog sources | Firmware Hub, optional Awesome FM-1, custom sources | Hub repository |
-| Background catalog checks | Optional WorkManager task | No equivalent adapter |
-| MIDI firmware transfer | Sequential jobs through native service | Shared session with manual reconnect; unverified on hardware |
-| Raw USB chip detection and ROM recovery | Separate experimental tools | Unavailable |
+Android 14+, USB Host/OTG and MIDI are required.
 
 The Android application ID is `pl.ekim.multiplatform_fm1_flasher`. It installs separately from the original `pl.ekim.fm1_flasher` app and does not import that app's private data. English, Polish and Simplified Chinese interfaces and light/dark/system themes are available.
 
 ## Getting started
 
-1. Install the test APK on Android 14 or newer. The build-23 debug certificate matches earlier multiplatform builds: install it as an update without uninstalling to retain this fork's library and preferences.
+1. Install the 0.9.2 APK on Android 14 or newer. The build-23 debug certificate matches earlier builds of this application: install it as an update without uninstalling to retain this fork's library and preferences.
 2. Open **Library**, find firmware and download it from its detail screen. Downloading verifies the package; it does not start an installation.
 3. Connect instruments with data-capable cables and an OTG hub. A separately powered hub is recommended. The app cannot measure or certify hub power quality.
 4. In **Devices**, use **Read instrument** on each card and grant Android USB access when requested. Only a recognized FM-1 can be added to the plan.
@@ -83,7 +75,7 @@ JEDEC detection uses a separate USB ROM/download-mode device. The result is neve
 
 ## Building and testing
 
-Use JDK 17, Android SDK platform 36 and Build Tools 35.0.0. The project pins Gradle through its wrapper, AGP 8.13.2, Kotlin 2.2.21 and Compose Multiplatform 1.9.3. Configure the SDK through the local environment or Android tooling.
+Use JDK 17, Android SDK platform 36 and Build Tools 35.0.0. The project pins Gradle through its wrapper, AGP 8.13.2, Kotlin 2.2.21 and Compose 1.9.3. Configure the SDK through the local environment or Android tooling.
 
 ```sh
 python3 tools/sync-resources.py --check
@@ -96,11 +88,9 @@ Android XML under `app/src/main/res/values*` is authoritative for UI translation
 
 See [implementation and reproducible test commands](MIGRATION.md), [acceptance checklist](tests/android14-acceptance.txt) and [website build instructions](website/pages.md). Publishing is a separate step; [the inherited Google Play workflows do not currently target this fork's application ID](publication/github-actions.txt).
 
-## iOS development status
+## Future iOS port
 
-The Swift host and shared metadata are present, but no Xcode build or physical iPhone update has been validated. The fleet store/queue and Android multi-source scheduler are not ported to iOS. The host retains the previous single-instrument workflow with manual reconnect. Keep it foregrounded; finite background time is not equivalent to Android's service.
-
-The configured Kotlin targets are `iosArm64` and `iosSimulatorArm64`, not an Intel simulator. `iosApp/project.yml` defines the XcodeGen project, bundle ID `pl.ekim.multiplatform-fm1-flasher`, version 0.9.2/23 and deployment target iOS 15. The macOS/Xcode steps are in [MIGRATION.md](MIGRATION.md); Linux metadata compilation is not an iOS app build.
+A port to iOS is planned for the future. There is no iOS release or announced release date.
 
 ## Verification and limits
 
@@ -149,4 +139,4 @@ OAuth supports browser Authorization Code with **PKCE S256** and service **Clien
 
 Authenticated requests are limited to the configured source origin (GitHub API origin for `repo-url`). Authorization is stripped on cross-origin redirects, including CDNs; token POST redirects are refused. HTTPS and existing public-address/URL-scope restrictions remain. Source checks normally follow the 24–168 hour schedule. Explicitly replacing credentials or completing authorization permits a new check so a previous authentication failure does not force a full-day wait.
 
-These provider and authentication adapters are implemented in Android. The iOS host retains its previous single-Hub repository; the common interface/UI compile as metadata, but an Apple binary and native credential adapter have not been verified.
+A port to iOS is planned for the future. There is no iOS release or announced release date.
