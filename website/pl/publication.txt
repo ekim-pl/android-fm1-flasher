@@ -3,7 +3,7 @@ Stabilne wydanie: 0.9.2 na main. Tag: v0.9.2.
 Publiczne pliki używają wyłącznie wersji; wewnętrzny versionCode pozostaje bez zmian.
 
 BIEŻĄCA APLIKACJA
-Android ID: pl.ekim.multiplatform_fm1_flasher, odrębny od pl.ekim.fm1_flasher.
+Android ID: pl.ekim.fm1_flasher.
 Android 14+ / minSdk 34; target i compile SDK 36.
 Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani ogłoszonego terminu.
 Języki: polski, angielski, chiński uproszczony. Kontakt: ekim.pl@gmail.com.
@@ -41,9 +41,8 @@ kolejki 0.9.2. Przed publikacją sklepową wykonaj nowe zdjęcia ekranu. Skrypt 
 ramuje/generuje materiały, ale nie wykonuje nowych zrzutów aplikacji.
 publication/validation.json to jawnie historyczny raport oryginalnej aplikacji.
 publication/fdroid/pl.ekim.fm1_flasher.yml to archiwalna recepta oryginału, nie tego forka.
-Odziedziczone workflow Google Play podają pl.ekim.fm1_flasher, choć branch buduje inne ID.
-Nie używaj ich do publikacji forka. github-actions.txt opisuje tę rozbieżność i wyzwalacze;
-tagi v* mogą uruchamiać działania Play. Aktualizacja dokumentacji nie zmienia workflow,
+Przed publikacją sprawdź podpis i konfigurację sklepu. github-actions.txt opisuje wyzwalacze;
+workflow Play uruchamia się ręcznie. Aktualizacja dokumentacji nie zmienia workflow,
 konta sklepowego, tagów ani nie publikuje wydania.
 
 PRYWATNOŚĆ I STRONA

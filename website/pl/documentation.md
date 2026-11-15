@@ -10,7 +10,7 @@ Dokument opisuje stabilną wersję **0.9.2** na branchu `main`. Wersja dodaje pe
 
 Wymagany jest Android 14+, USB Host/OTG i MIDI.
 
-Identyfikator Androida to `pl.ekim.multiplatform_fm1_flasher`. Aplikacja instaluje się obok oryginalnej `pl.ekim.fm1_flasher` i nie importuje jej prywatnych danych. Interfejs obsługuje polski, angielski i chiński uproszczony oraz motyw jasny, ciemny i systemowy.
+Identyfikator Androida to `pl.ekim.fm1_flasher`. Interfejs obsługuje polski, angielski i chiński uproszczony oraz motyw jasny, ciemny i systemowy.
 
 <a id="getting-started"></a>
 ## Pierwsza instalacja i plan aktualizacji

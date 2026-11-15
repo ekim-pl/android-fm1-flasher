@@ -6,7 +6,6 @@ Status: local test build; no GitHub release or tag created/published.
 ARTIFACT
 Multiplatform-FM1-Flasher-0.9.0-19-debug.apk
 31,422,129 bytes; Android 14+ (minSdk 34), targetSdk 36.
-Application ID: pl.ekim.multiplatform_fm1_flasher
 SHA-256: b571a7b188e52459b1c3e63e8f0797da89ce19ab3acb9be0b08f5f1ea7d6674f
 Debug certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
 Certificate matches build 18. Install as an update without uninstalling to retain data.

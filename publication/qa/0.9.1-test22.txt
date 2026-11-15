@@ -1,6 +1,5 @@
 Multiplatform FM-1 Flasher 0.9.1 prerelease — Android build 22
 Branch: task/multiplatform-rework
-Application ID: pl.ekim.multiplatform_fm1_flasher
 Android 14+ (minSdk 34), target/compile SDK 36
 APK: Multiplatform-FM1-Flasher-0.9.1-22-debug.apk
 Bytes: 30819103

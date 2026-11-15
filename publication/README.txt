@@ -3,7 +3,7 @@ Stable release: 0.9.3 on main. Release tag: v0.9.3.
 Public assets use version-only names; Android versionCode is 24.
 
 CURRENT APPLICATION
-Android ID: pl.ekim.multiplatform_fm1_flasher (not the original pl.ekim.fm1_flasher).
+Android ID: pl.ekim.fm1_flasher.
 Android 14+ / minSdk 34; target and compile SDK 36.
 A port to iOS is planned for the future. There is no iOS release or announced release date.
 Languages: English, Polish, Simplified Chinese. Publisher/contact: ekim.pl@gmail.com.
@@ -42,9 +42,8 @@ the 0.9.2 fleet workflow; capture fresh images before a store submission. The gr
 script only frames/generates assets and does not refresh live screenshots.
 validation.json records the original app's earlier build and is explicitly historical.
 fdroid/pl.ekim.fm1_flasher.yml is an archival original-app recipe, not a recipe for this fork.
-The inherited Google Play release/promote workflows still pass pl.ekim.fm1_flasher
-while this branch builds a different package. Do not use them to publish this fork.
-Read github-actions.txt before any tag/workflow action; v* tags can trigger Play work.
+The Google Play workflows target pl.ekim.fm1_flasher; verify signing and store configuration before publication.
+Read github-actions.txt before any workflow action; Play workflows require manual dispatch.
 No workflow configuration, store account, release tag or publishing action is changed
 by regenerating this documentation.
 

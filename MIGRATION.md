@@ -13,7 +13,7 @@ Architecture of the complete Android release **0.9.2** on `main`. A future iOS p
 
 Android starts `ComposeActivity`; notifications return there. `MainActivity` is legacy reference source and is not registered in the manifest. `fleetAvailable` selects the Android workspace; the portable host keeps the earlier single-instrument navigation. Normal Android writes enter the service through `QUEUE`, not the old `FLASH` action. Recovery uses separate `RECOVERY_*` actions.
 
-The Android ID is `pl.ekim.multiplatform_fm1_flasher`; the Kotlin/Android namespace remains `pl.ekim.fm1_flasher`. The Swift bundle ID is `pl.ekim.multiplatform-fm1-flasher`. Changing the package namespace is not necessary to update the installed fork. The original app's private storage is not imported.
+The Android ID is `pl.ekim.fm1_flasher`; the Kotlin/Android namespace remains `pl.ekim.fm1_flasher`. The Swift bundle ID is `pl.ekim.multiplatform-fm1-flasher`. Changing the package namespace is not necessary to update the installed fork. Updates require a matching signing certificate.
 
 ## Identity and reconnection
 
@@ -65,7 +65,7 @@ For one known, selected test device, replace `DEVICE_SERIAL` with its actual adb
 ```sh
 adb -s DEVICE_SERIAL install -r app/build/outputs/apk/debug/app-debug.apk
 adb -s DEVICE_SERIAL install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-adb -s DEVICE_SERIAL shell am instrument -w -e class pl.ekim.fm1_flasher.FleetUiTest pl.ekim.multiplatform_fm1_flasher.test/android.test.InstrumentationTestRunner
+adb -s DEVICE_SERIAL shell am instrument -w -e class pl.ekim.fm1_flasher.FleetUiTest pl.ekim.fm1_flasher.test/android.test.InstrumentationTestRunner
 ```
 
 Run the explicit classes separately: `ExperimentalFeaturesTest`, `CatalogDatabaseTest`, `BackgroundCatalogTest`, `FirmwareSelectionTest`, `UsbPermissionIntentTest`, `MainActivityLaunchTest`, `ComposeCatalogUpdatesTest`, `FleetUiTest`, `OperationLogServiceTest`, `SettingsUiTest`, `SourceAuthenticationTest` (all in `pl.ekim.fm1_flasher`). This avoids the legacy runner's unbounded discovery startup timeout and isolates service/preferences fixtures. The test runner's exit alone is insufficient: inspect the reported OK/failure result.

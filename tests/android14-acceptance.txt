@@ -1,5 +1,5 @@
 Multiplatform FM-1 Flasher 0.9.0 / 19 — Android acceptance
-Application ID: pl.ekim.multiplatform_fm1_flasher. minSdk 34, target/compileSdk 36.
+Historical build 19; minSdk 34, target/compileSdk 36.
 This is a pending acceptance checklist; actual recorded results are in
 publication/qa/0.9.0-test19.txt. Keep physical tests separate from emulator tests.
 

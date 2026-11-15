@@ -19,7 +19,7 @@ This guide describes **0.9.3** on `main`. The app includes a concise guide with 
 
 Android 14+, USB Host/OTG and MIDI are required.
 
-The Android application ID is `pl.ekim.multiplatform_fm1_flasher`. It installs separately from the original `pl.ekim.fm1_flasher` app and does not import that app's private data. English, Polish and Simplified Chinese interfaces and light/dark/system themes are available.
+The Android application ID is `pl.ekim.fm1_flasher`. English, Polish and Simplified Chinese interfaces and light/dark/system themes are available.
 
 ## Getting started
 

@@ -14,7 +14,7 @@ android {
     useLibrary "android.test.runner"
     useLibrary "android.test.base"
     defaultConfig {
-        applicationId 'pl.ekim.multiplatform_fm1_flasher'
+        applicationId 'pl.ekim.fm1_flasher'
         minSdk 34
         targetSdk 36
         testInstrumentationRunner "android.test.InstrumentationTestRunner"

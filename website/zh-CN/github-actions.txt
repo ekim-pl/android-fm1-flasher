@@ -1,7 +1,7 @@
 GitHub Actions：task/multiplatform-rework，0.9.2
 
 本文描述仓库中的工作流，不会执行发布。
-Android ID：pl.ekim.multiplatform_fm1_flasher。0.9.1 APK 仅为本地测试构建。
+Android ID：pl.ekim.fm1_flasher。0.9.1 APK 仅为本地测试构建。
 
 ANDROID CI (.github/workflows/android-ci.yml)
 分支推送、PR 或手动触发。使用 JDK 17、SDK 36、Build Tools 35.0.0。
@@ -16,8 +16,7 @@ PAGES (.github/workflows/pages.yml)
 
 GOOGLE PLAY RELEASE (.github/workflows/google-play.yml)：原应用配置
 仅手动 dispatch 会触发，手动 publish 默认 true。
-它构建签名 AAB 并可能上传 internal，但 fastlane --package_name 仍是 pl.ekim.fm1_flasher，
-而本分支生成 pl.ekim.multiplatform_fm1_flasher。不能用于发布此 fork。
+它构建签名 AAB 并可能上传 internal，包名为 pl.ekim.fm1_flasher。发布前需验证签名和商店配置。
 标签不会触发 Play 工作流。
 现有工作流没有自动创建 GitHub Releases 的步骤。
 
@@ -27,7 +26,7 @@ GOOGLE PLAY RELEASE (.github/workflows/google-play.yml)：原应用配置
 
 GOOGLE PLAY PRODUCTION (.github/workflows/promote-production.yml)
 手动输入正整数 version_code，将 internal 现有 bundle 提升到 production。
-它同样指向原应用 pl.ekim.fm1_flasher，不构建新包，也不适用于此 fork。
+它指向 pl.ekim.fm1_flasher，不构建新包。
 
 签名配置事实
 本地 Gradle 读取 ANDROID_KEYSTORE_FILE、ANDROID_KEYSTORE_PASSWORD、ANDROID_KEY_ALIAS、

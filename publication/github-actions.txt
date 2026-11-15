@@ -1,7 +1,7 @@
 GitHub Actions on main — 0.9.2
 
 This is a description of the checked-in workflows, not a request to run or publish them.
-Android application ID: pl.ekim.multiplatform_fm1_flasher.
+Android application ID: pl.ekim.fm1_flasher.
 Stable 0.9.2 uses the v0.9.2 GitHub tag; Google Play publication is separate.
 
 ANDROID CI (.github/workflows/android-ci.yml)
@@ -21,9 +21,7 @@ See website/pages.md for local commands and output layout.
 GOOGLE PLAY RELEASE (.github/workflows/google-play.yml) — ORIGINAL-APP CONFIGURATION
 Triggered by manual dispatch only. The manual publish input defaults
 true. The workflow builds a signed AAB and can upload it to the internal track.
-However, its fastlane --package_name is still pl.ekim.fm1_flasher, while this branch's
-AAB has pl.ekim.multiplatform_fm1_flasher. This is not a configured publishing route
-for the fork. Tags do not start the Play workflow. No automatic GitHub Release creation is defined.
+The package name is pl.ekim.fm1_flasher. Verify signing and store configuration before publishing. Tags do not start the Play workflow. No automatic GitHub Release creation is defined.
 
 The Gradle FM1_RELEASE_TAG guard expects v<versionName> when that variable is set.
 A future GitHub prerelease needs a deliberately chosen tag/commit and manually or
@@ -33,7 +31,7 @@ Keep test handoff, owner/hardware acceptance and publication as separate steps.
 GOOGLE PLAY PRODUCTION (.github/workflows/promote-production.yml)
 Manual dispatch accepts a positive version_code and promotes an internal-track
 bundle to production. It also targets the original pl.ekim.fm1_flasher package.
-It does not build a new bundle and is not a promotion route for this fork.
+It does not build a new bundle.
 
 SIGNING CONFIGURATION (CODE FACTS)
 Local Gradle release signing reads ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD,

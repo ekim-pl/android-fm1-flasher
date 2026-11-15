@@ -1,5 +1,5 @@
 {
-  "applicationId": "pl.ekim.multiplatform_fm1_flasher",
+  "applicationId": "pl.ekim.fm1_flasher",
   "versionCode": 19,
   "versionName": "0.9.0",
   "defaultListingLanguage": "en-US",
@@ -67,5 +67,5 @@
     "applicable account and testing requirements"
   ],
   "status": "Draft inventory for local test build; not submitted or approved",
-  "publishingBlocker": "Inherited Google Play workflows still target the original pl.ekim.fm1_flasher package; adapt and validate before any store publication."
+  "publishingBlocker": "Verify signing, store configuration and hardware acceptance before publication."
 }

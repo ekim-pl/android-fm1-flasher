@@ -10,7 +10,7 @@
 
 需要 Android 14+、USB Host/OTG 和 MIDI。
 
-Android 应用 ID 是 `pl.ekim.multiplatform_fm1_flasher`。它与原应用 `pl.ekim.fm1_flasher` 分开安装，不会导入原应用的私有数据。界面支持英语、波兰语和简体中文，以及浅色、深色和跟随系统主题。
+Android 应用 ID 是 `pl.ekim.fm1_flasher`。界面支持英语、波兰语和简体中文，以及浅色、深色和跟随系统主题。
 
 <a id="getting-started"></a>
 ## 开始使用
