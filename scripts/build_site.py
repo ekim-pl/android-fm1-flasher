@@ -21,6 +21,7 @@ LANGUAGES = {
         'languages': 'Choose language', 'navigation': 'Project navigation',
         'guide': 'Guide', 'about': 'About', 'privacy': 'Privacy',
         'releases': 'Releases', 'license': 'License', 'independent': 'An Android app for browsing firmware and updating the M-VAVE FM-1 over USB MIDI.',
+        'awesome_text': 'Discover community firmware, projects and resources for the M-VAVE FM-1.', 'awesome_cta': 'Explore Awesome FM-1',
         'description': 'FM-1 Flasher for Android: M-VAVE FM-1 firmware updates over USB MIDI. Guides, documentation and privacy.',
         'titles': {
             'index.html': 'FM-1 Flasher — firmware over USB MIDI',
@@ -37,6 +38,7 @@ LANGUAGES = {
         'languages': 'Wybierz język', 'navigation': 'Nawigacja projektu',
         'guide': 'Instrukcja', 'about': 'O aplikacji', 'privacy': 'Prywatność',
         'releases': 'Wydania', 'license': 'Licencja', 'independent': 'Aplikacja na Androida do przeglądania firmware i aktualizowania M-VAVE FM-1 przez USB MIDI.',
+        'awesome_text': 'Odkryj firmware, projekty i zasoby społeczności dla M-VAVE FM-1.', 'awesome_cta': 'Poznaj Awesome FM-1',
         'description': 'FM-1 Flasher dla Androida: aktualizacja M-VAVE FM-1 przez USB MIDI. Instrukcje, dokumentacja i prywatność.',
         'titles': {
             'index.html': 'FM-1 Flasher — firmware przez USB MIDI',
@@ -53,6 +55,7 @@ LANGUAGES = {
         'languages': '选择语言', 'navigation': '项目导航',
         'guide': '使用指南', 'about': '关于应用', 'privacy': '隐私',
         'releases': '发布版本', 'license': '许可证', 'independent': '一款用于浏览固件并通过 USB MIDI 更新 M-VAVE FM-1 的 Android 应用。',
+        'awesome_text': '探索 M-VAVE FM-1 的社区固件、项目和资源。', 'awesome_cta': '探索 Awesome FM-1',
         'description': 'Android 版 FM-1 Flasher：通过 USB MIDI 更新 M-VAVE FM-1 固件。使用指南、技术文档与隐私政策。',
         'titles': {
             'index.html': 'FM-1 Flasher — USB MIDI 固件更新',
@@ -94,7 +97,7 @@ ALIASES.update({
 ASSETS = {
     'assets/icon.svg': 'assets/icon.svg',
     'website/style.css': 'assets/style.css',
-    **{f'website/icons/{name}': f'assets/icons/{name}' for name in ('ekim.webp', 'github.svg', 'youtube.svg', 'instagram.svg', 'discord.svg')},
+    **{f'website/icons/{name}': f'assets/icons/{name}' for name in ('ekim.webp', 'awesome-fm1.svg', 'github.svg', 'youtube.svg', 'instagram.svg', 'discord.svg')},
     'third_party/commonmark-LICENSE.txt': 'licenses/commonmark.txt',
 }
 repository = os.environ.get('GITHUB_REPOSITORY', '')
@@ -192,6 +195,7 @@ def write_page(language, page, output):
 <nav class="languages" aria-label="{ui['languages']}">{languages}</nav>
 <nav aria-label="{ui['navigation']}">{nav}</nav></header>
 <main id="content">{body}</main>
+<section class="awesome-promo" aria-labelledby="awesome-title"><img src="{relative('assets/icons/awesome-fm1.svg', output)}" alt="" width="160" height="160"><div><h2 id="awesome-title">Awesome FM-1</h2><p>{ui['awesome_text']}</p><a class="awesome-cta" href="https://ekim-pl.github.io/awesome-fm1/">{ui['awesome_cta']} <span aria-hidden="true">→</span></a></div></section>
 <footer><span class="footer-brand"><img src="{relative('assets/icon.svg', output)}" alt="" width="28" height="28">FM-1 Flasher</span><p>{ui['independent']}</p><a href="{relative(f'{language}/license.html', output)}">MIT · {ui['license']}</a>
 <nav class="footer-links" aria-label="Social links"><a class="personal-site" href="https://ekim-pl.github.io/" aria-label="Ekim"><img class="ekim-logo" src="{relative('assets/icons/ekim.webp', output)}" alt="" width="70" height="28"></a> <a href="https://github.com/ekim-pl" aria-label="GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-4 1-4-2-6-2m12 4v-3c0-1 .1-1.5-.5-2 3-.3 6-1.5 6-6a4.5 4.5 0 0 0-1.2-3.1A4 4 0 0 0 19.2 3S18 2.6 15 4.5a14 14 0 0 0-6 0C6 2.6 4.8 3 4.8 3a4 4 0 0 0-.1 3.9A4.5 4.5 0 0 0 3.5 10c0 4.5 3 5.7 6 6-.5.5-.6 1-.5 2v3"/></svg></a> <a href="https://www.youtube.com/@ekim-pl" aria-label="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="m10 9 5 3-5 3Z"/></svg></a> <a href="https://www.instagram.com/ekimpl/" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg></a> <a href="https://www.tiktok.com/@ekim_pl" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h3a5 5 0 0 0 5 5v3a8 8 0 0 1-5-1.7V16a6 6 0 1 1-6-6v3a3 3 0 1 0 3 3Z"/></svg></a> <a href="https://discord.com/users/1422549758785880215" aria-label="Discord"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5a19 19 0 0 1 10 0l1-2m-11 2L6 3M7 5C4 6 2 11 2 17l5 3 2-3m8-12c3 1 5 6 5 12l-5 3-2-3M6 16a15 15 0 0 0 12 0"/><circle cx="8" cy="12" r="1"/><circle cx="16" cy="12" r="1"/></svg></a></nav></footer></body></html>
 '''
