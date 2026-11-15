@@ -86,3 +86,7 @@ body:not([data-page="index.html"]) h1 { font-size: clamp(36px, 4.5vw, 56px); let
   .home-hero { grid-template-columns: 1fr; padding: 20px 0 40px; }
   .home-hero h1 { font-size: clamp(34px, 9vw, 48px); }
 }
+
+header { padding-bottom: 0; }
+header .project-nav { justify-content: center; align-items: center; gap: .35rem 0; padding: 14px 0; font-variant: small-caps; letter-spacing: .06em; }
+header .project-nav a + a::before { content: '·'; display: inline-block; margin: 0 1rem; color: var(--muted); }
