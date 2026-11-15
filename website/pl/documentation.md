@@ -1,6 +1,6 @@
 # FM-1 Flasher — instrukcja
 
-**Wydanie eksperymentalne: [0.9.5-experimental.29](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.29).** Łączy integrację dla twórców firmware, aktualny adres powrotu OAuth i wymuszanie instalacji przy nieznanej zgodności po wyraźnym potwierdzeniu. Ten build zawiera statystyki Firebase, domyślnie włączone; wyłączysz je w **Ustawienia → Statystyki użytkowania**. Wcześniejsze wyłączenie zostaje zachowane. Wydanie stabilne: **0.9.3**.
+**Wydanie eksperymentalne: [0.9.5-experimental.30](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.30).** Dodaje wybór koloru każdego źródła oraz czytelniejsze kafelki firmware z osobnymi etykietami wersji i kategorii oraz krótszym opisem. Ten build zawiera statystyki Firebase, domyślnie włączone; wyłączysz je w **Ustawienia → Statystyki użytkowania**. Wcześniejsze wyłączenie zostaje zachowane. Wydanie stabilne: **0.9.3**.
 
 Niezależny menedżer firmware dla **M-VAVE FM-1** na Androida. Android obsługuje wiele instrumentów przez hub OTG, zapisując firmware **kolejno, na jednym instrumencie naraz**.
 

@@ -38,8 +38,8 @@ android {
             resValue 'string', 'project_id', analyticsConfig.project.project_id
             resValue 'string', 'gcm_defaultSenderId', analyticsConfig.project.project_number
         }
-        versionCode 29
-        versionName '0.9.5-experimental.29'
+        versionCode 30
+        versionName '0.9.5-experimental.30'
     }
     signingConfigs {
         if (uploadKeystore) {

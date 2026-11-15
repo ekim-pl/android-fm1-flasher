@@ -1,0 +1,12 @@
+# FM-1 Flasher 0.9.5 experimental — build 30
+
+- Choose a color for each firmware source in Settings → Firmware sources. Eight colors plus Automatic; choices persist across restarts and work offline.
+- Firmware cards now show a source-colored strip, a clear title and author, separate version/category labels, a compact description and a distinct downloaded-version row. Empty artwork placeholders no longer take up space in the list.
+- Source names and colors remain visible in the library, downloads and firmware details. Removed the redundant “Catalog: The Firmware Hub” footer link; license information remains available.
+- Retains build 29's developer integrations and production Firebase analytics. Statistics are enabled by default from the first online launch and can be disabled in Settings → Usage statistics. Existing opt-outs are preserved. Disabling stops new collection and resets local analytics data; it does not erase previously uploaded data.
+
+Android 14 or newer. Install as an update to preserve local data. Signed with the same Android debug certificate as build 29; this is a GitHub prerelease, not a Google Play production release. The stable release remains 0.9.3.
+
+Local unit tests, lint, signed release build and documentation checks passed. Source colors, card layout, favorites and details were checked on the Android 16 emulator using a development build. No physical FM-1 flashing or native iOS build was performed. See the attached QA report for scope and limitations.
+
+SHA-256: `4130b41693edad826a9b96adb4cd60b33b9b748de75d30f1621daf19b9495595`. Matching checksum file attached.

@@ -1,6 +1,6 @@
 # FM-1 Flasher
 
-**Experimental build: [0.9.5-experimental.29](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.29).** Includes firmware developer integration, the current OAuth callback and explicitly confirmed unknown-compatibility installs. This build uses Firebase usage statistics, enabled by default; disable them in **Settings → Usage statistics**. Earlier opt-outs remain disabled. Stable release: **0.9.3**.
+**Experimental build: [0.9.5-experimental.30](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.9.5-experimental.30).** Adds configurable source colors and clearer firmware cards, with separate version/category labels and compact descriptions. This build uses Firebase usage statistics, enabled by default; disable them in **Settings → Usage statistics**. Earlier opt-outs remain disabled. Stable release: **0.9.3**.
 
 ![FM-1 Flasher — Your FM-1 setup. More possibilities.](https://raw.githubusercontent.com/ekim-pl/android-fm1-flasher/main/assets/readme-cover.png)
 

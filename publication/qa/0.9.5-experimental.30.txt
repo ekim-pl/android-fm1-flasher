@@ -1,0 +1,40 @@
+FM-1 Flasher 0.9.5-experimental.30
+Date: 2026-11-15
+Android: pl.ekim.fm1_flasher, versionCode 30, minSdk 34, target/compile SDK 36.
+iOS: pl.ekim.fm1-flasher, marketing 0.9.5/build 30; no native iOS binary.
+
+INTEGRATION
+Build 29 plus 32a504a (persistent source colors) and 3435517 (firmware card layout).
+Both feature commits are integrated on main. Analytics/developer worktrees were
+already merged in build 29. This release adds no firmware installation behavior.
+
+VALIDATION
+Shared JVM: 76 tests, zero failures/errors/skips.
+Android JVM: 140 tests, zero failures/errors, 4 external fixture skips (136 passed).
+SDK-free lintDebug passed. Generated resources and git diff checks passed.
+Documentation: 48 HTML pages passed local links/languages checks.
+Source-color persistence/offline/no-provider-request behavior covered by shared tests.
+Android 16 emulator: development build verified source color persistence, card
+layout, favorite toggle in both directions and opening/closing firmware details.
+Removed catalog credit is absent; license information remains in the list footer.
+
+PACKAGING
+Release-type APK uses production Firebase project fm-1-flasher, with default-on
+statistics and a persistent Settings opt-out. Existing opt-outs survive updates.
+Firebase configurations remain ignored local files. No Google Play publication.
+Signed using the existing experimental Android debug certificate, matching build 29.
+
+LIMITATIONS
+The emulator UI verification used a development build, not the production Firebase
+release APK. No physical FM-1 flashing, USB hub/power or ROM recovery test.
+Native iOS/Xcode and actual Firebase traffic/DebugView/console retention unverified.
+CI matrix results and Pages deployment are linked in the GitHub release notes.
+Stable 0.9.3 is unchanged.
+
+ARTIFACT VERIFICATION
+Production Firebase lintRelease and signed assembleRelease passed.
+APK: FM1-Flasher-0.9.5-experimental.30.apk
+SHA-256: 4130b41693edad826a9b96adb4cd60b33b9b748de75d30f1621daf19b9495595
+Certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
+Package, versionCode 30, versionName and SDK levels verified with aapt.
+Signature verified with apksigner.

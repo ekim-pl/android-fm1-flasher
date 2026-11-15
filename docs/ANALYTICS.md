@@ -1,7 +1,7 @@
 # Firebase Analytics — 0.9.5 experimental release
 
 The current experimental Android release is
-`0.9.5-experimental.29` (code 29); iOS marketing version is 0.9.5/build 29.
+`0.9.5-experimental.30` (code 30); iOS marketing version is 0.9.5/build 30.
 The normal Android build and base iOS project contain no Firebase SDK and show no analytics prompt.
 
 ## Architecture and behavior
