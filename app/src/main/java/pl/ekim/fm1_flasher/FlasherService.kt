@@ -218,10 +218,11 @@ class FlasherService : Service() {
         if (state.busy) return
         fleet.pair(oldId, liveId); publishFleet()
     }
-    fun enqueue(id: String, packageKey: String) {
+    fun enqueue(id: String, packageKey: String, forceUnknown: Boolean = false, confirmedHash: String = "") {
         if (state.busy) return
         val entry = state.downloads.singleOrNull { it.entry.key == packageKey }?.entry ?: return
-        fleet.enqueue(id, entry); publishFleet()
+        check(!forceUnknown || entry.sha256 == confirmedHash) { failed(msg("local_package_changed")) }
+        fleet.enqueue(id, entry, forceUnknown); publishFleet()
     }
     fun cancelJob(id: String) { if (!state.queueRunning) { fleet.cancel(id); publishFleet() } }
     fun stopQueue() { stopQueue = true; update { it.copy(queueStopping = true) } }
@@ -319,7 +320,7 @@ class FlasherService : Service() {
     private fun detectChipStopped(device: android.hardware.usb.UsbDevice) = libraryTask {
         val id = ChipDetector.detect(getSystemService(UsbManager::class.java), device, assets)
         // ROM enumeration is not evidence that this is the selected MIDI instrument.
-        val result = msg(R.string.chip_detected_separate, device.deviceName, "0x%06X".format(id))
+        val result = msg(R.string.chip_detected_separate, device.deviceName, msg(ChipDetector.classify(id).labelKey))
         update { it.copy(chipDetection = result) }
         status(result)
     }
@@ -592,7 +593,7 @@ class FlasherService : Service() {
                     // Validate every pinned package before the first device receives any command.
                     FleetPolicy.runPlan(plan, { stopQueue }, prepare = { job ->
                         val (saved, _) = library.load(job.packageKey, repository.cached())
-                        check(saved.entry.sha256 == job.hash && job.chip.allows(saved.entry)) { failed(msg("local_package_changed")) }
+                        check(saved.entry.sha256 == job.hash && job.chip.allows(saved.entry, job.forceUnknown)) { failed(msg("local_package_changed")) }
                     }, run = { job ->
                         check(FleetPolicy.ready(job, fleet.devices.singleOrNull { it.id == job.deviceId })) { failed(msg("fleet_plan_changed")) }
                         runJob(job)
@@ -624,7 +625,7 @@ class FlasherService : Service() {
             check(getSystemService(UsbManager::class.java).hasPermission(target.usb)) { failed(msg("reconnect_permission")) }
             MidiSessionGuard.acquire(); ownsMidi = true; wake.acquire(16 * 60_000L)
             val (saved, firmware) = library.load(job.packageKey, repository.cached())
-            check(saved.entry.sha256 == job.hash && job.chip.allows(saved.entry)) { failed(msg("local_package_changed")) }
+            check(saved.entry.sha256 == job.hash && job.chip.allows(saved.entry, job.forceUnknown)) { failed(msg("local_package_changed")) }
             fleet.result(job.id, JobOutcome.RUNNING, "flash_preparing"); activeJob = job.id; publishFleet()
             update { it.copy(target = target, identity = job.expected, chip = job.chip, progress = -1) }
             journal.record(job.hash, job.deviceId, "preparing")
@@ -758,7 +759,7 @@ class FlasherService : Service() {
                     } else {
                         val backup = Recovery.backup(flash, recoveryStore, ::status)
                         update { it.copy(recoveryBackups = recoveryStore.list()) }
-                        status(msg(R.string.recovery_backup_done, backup.id, "0x%06X".format(backup.flashId),
+                        status(msg(R.string.recovery_backup_done, backup.id, msg(ChipDetector.classify(backup.flashId).labelKey),
                             if (Recovery.knownBoot(backup.bootHash)) msg(R.string.recovery_boot_known) else msg(R.string.recovery_boot_unknown)), 100)
                         if (action == "RECOVERY_PREPARE") {
                             val prepared = Recovery.plan(backup, recoveryStore, image!!, device.deviceName, device.deviceId, packageId!!)

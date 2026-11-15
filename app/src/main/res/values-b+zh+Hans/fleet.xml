@@ -95,7 +95,7 @@
     <string name="source_pkg_url">FWSC 固件包地址</string>
     <string name="provider_repo_invalid">请输入 HTTPS GitHub 仓库地址：https://github.com/owner/repository。</string>
     <string name="provider_chip_support">固件包存储芯片兼容性</string>
-    <string name="provider_chip_help">请向发布者确认兼容性。文件名或产品版本不能确定支持的闪存芯片。未知兼容性会阻止安装。</string>
+    <string name="provider_chip_help">请向发布者确认兼容性。文件名或产品版本不能确定支持的闪存芯片。兼容性未知时，强制安装需要单独的风险警告和确认。</string>
     <string name="auth_title">HTTP 认证</string>
     <string name="auth_oauth2">OAuth 2.0</string>
     <string name="auth_username">用户名</string>
@@ -121,6 +121,6 @@
     <string name="oauth_token_error">OAuth 令牌交换失败。请检查客户端、端点和授权权限。</string>
     <string name="oauth_callback_error">OAuth 响应无效、已过期或已取消。请重新开始授权。</string>
     <string name="provider_package_policies">各固件包兼容性</string>
-    <string name="provider_package_policies_help">请向发布者确认每个固件包的兼容性。返回来源表单并保存后更改才会生效。未知兼容性会阻止安装。</string>
+    <string name="provider_package_policies_help">请向发布者确认每个固件包的兼容性。返回来源表单并保存后更改才会生效。兼容性未知时，强制安装需要单独的风险警告和确认。</string>
     <string name="provider_package_policies_empty">请先保存并检查来源以发现固件包，然后为每个 SHA-256 配置兼容性。不同的文件需要单独声明。</string>
 </resources>

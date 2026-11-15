@@ -22,7 +22,7 @@ The Android app supports three options:
 2. **Direct package:** provide the HTTPS URL of one `.fwsc` file. The app reads and validates it when checking the source.
 3. **JSON catalog:** serve a Hub-style HTTPS catalog and package files. This allows multiple packages and publisher-provided descriptions and compatibility information.
 
-For example, replace every placeholder below with actual package information. The hash is lowercase SHA-256 of the complete `.fwsc`; `product` must match the package identity. Confirm the correct chip for the actual hardware and bytes; `unknown` blocks installation until compatibility is confirmed.
+For example, replace every placeholder below with actual package information. The hash is lowercase SHA-256 of the complete `.fwsc`; `product` must match the package identity. Confirm the correct chip for the actual hardware and bytes; `unknown` blocks normal installation. Users can explicitly force installation after an additional warning and risk confirmation; this does not establish hardware compatibility.
 
 ```json
 {

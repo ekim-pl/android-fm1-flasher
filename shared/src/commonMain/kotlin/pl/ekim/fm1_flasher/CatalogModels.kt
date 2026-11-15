@@ -2,6 +2,9 @@ package pl.ekim.fm1_flasher
 
 enum class FlashChip(val labelKey: String) {
     UNKNOWN("chip_unknown"), NEW("chip_new"), OLD("chip_old");
+    fun canForce(entry: CatalogEntry) = !allows(entry) && entry.chip in listOf("unknown", "old") &&
+        (entry.chip == "unknown" || this == UNKNOWN)
+    fun allows(entry: CatalogEntry, forceUnknown: Boolean) = allows(entry) || (forceUnknown && canForce(entry))
     fun allows(entry: CatalogEntry) = entry.chip == "new" || (this == OLD && (entry.chip == "old" || (entry.stock && StockFirmware.eligible(entry))))
 }
 

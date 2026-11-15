@@ -40,7 +40,7 @@ enum class AppActionKind {
 }
 data class SourceConfiguration(val name: String, val url: String, val hours: Int, val packages: Set<String>, val artwork: Set<String>,
     val provider: CatalogProviderType? = null, val authentication: HttpCredentials? = null, val packageChips: Map<String, String> = emptyMap())
-data class AppAction(val kind: AppActionKind, val id: String = "", val value: String = "", val source: SourceConfiguration? = null)
+data class AppAction(val kind: AppActionKind, val id: String = "", val value: String = "", val source: SourceConfiguration? = null, val forceUnknown: Boolean = false, val confirmedHash: String = "")
 interface AppBackend {
     val state: StateFlow<AppSnapshot>
     fun perform(action: AppAction)

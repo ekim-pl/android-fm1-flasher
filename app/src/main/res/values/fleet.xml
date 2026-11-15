@@ -95,7 +95,7 @@
     <string name="source_pkg_url">FWSC package URL</string>
     <string name="provider_repo_invalid">Enter an HTTPS GitHub repository URL: https://github.com/owner/repository.</string>
     <string name="provider_chip_support">Package memory compatibility</string>
-    <string name="provider_chip_help">Confirm compatibility with the publisher. A filename or product version does not identify supported flash chips. Unknown compatibility blocks installation.</string>
+    <string name="provider_chip_help">Confirm compatibility with the publisher. A filename or product version does not identify supported flash chips. Unknown compatibility requires a separate force warning and confirmation.</string>
     <string name="auth_title">HTTP authentication</string>
     <string name="auth_oauth2">OAuth 2.0</string>
     <string name="auth_username">Username</string>
@@ -121,6 +121,6 @@
     <string name="oauth_token_error">OAuth token exchange failed. Check the client, endpoint and granted permissions.</string>
     <string name="oauth_callback_error">OAuth response is invalid, expired or cancelled. Start authorization again.</string>
     <string name="provider_package_policies">Package compatibility</string>
-    <string name="provider_package_policies_help">Confirm compatibility for each asset with its publisher. Changes are applied after you return to the source form and save. Unknown compatibility blocks installation.</string>
+    <string name="provider_package_policies_help">Confirm compatibility for each asset with its publisher. Changes are applied after you return to the source form and save. Unknown compatibility requires a separate force warning and confirmation.</string>
     <string name="provider_package_policies_empty">Save and check the source first to discover its packages, then configure compatibility for each SHA-256. A different binary requires its own declaration.</string>
 </resources>

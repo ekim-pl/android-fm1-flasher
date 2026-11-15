@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="chip_unknown">Unknown flash chip</string>
-    <string name="chip_new">New · 0xB36014</string>
-    <string name="chip_old">Older · 0x856014</string>
+    <string name="chip_new">Newer memory · requires compatible firmware</string>
+    <string name="chip_old">Older memory · supports older firmware</string>
     <string name="category_all">All categories</string>
     <string name="category_synth">Synthesizers</string>
     <string name="category_groove">Grooveboxes</string>
@@ -116,7 +116,7 @@
     <string name="select_device_accessibility">Select one USB MIDI device</string>
     <string name="flash_chip_label">Instrument flash chip</string>
     <string name="flash_chip_accessibility">Flash chip type of selected FM‑1</string>
-    <string name="flash_chip_help">Unsure of the chip type? Keep the first option. Only packages supporting the new chip will be allowed.</string>
+    <string name="flash_chip_help">Unsure of the memory type? Keep Unknown. Packages supporting both types work normally. For other packages with unknown compatibility, use the separate force action only after checking with the author.</string>
     <string name="local_package_heading">02  /  LOCAL PACKAGE</string>
     <string name="connection_log">Connection log</string>
     <string name="experimental_warning">Experimental build · flashing a physical FM‑1 still needs verification. Back up your instrument data before updating.</string>
@@ -265,7 +265,7 @@
     <string name="about_document">about/app.md</string>
     <string name="detect_chip">Detect chip (download mode)</string>
     <string name="detect_chip_help">Connect only one instrument in USB download mode. Detection loads code into RAM without writing flash. After detection, power cycle into MIDI mode, connect, and select the reported chip type.</string>
-    <string name="chip_detected">Flash ID: %1$s. Power cycle into MIDI mode, connect, then select the reported chip type.</string>
+    <string name="chip_detected">Flash memory: %1$s. Power cycle into MIDI mode, connect, then select the reported chip type.</string>
     <string name="tab_logger">MIDI Logger</string>
     <string name="logger_help">Experimental · passive USB MIDI reception from selected instrument outputs. Long-press a message for full HEX. Export includes the entire buffer.</string>
     <string name="logger_ports">Select outputs</string>
@@ -337,4 +337,7 @@
     <string name="ios_platform_limits">On iOS, confirm the same instrument’s new MIDI port after each restart and keep the app open during updating. USB ROM recovery and flash-chip detection require Android.</string>
     <string name="about_privacy_summary">No account, advertising or analytics. Favorites, settings and downloaded firmware stay on your device. Catalog and package servers receive your IP address when you connect.</string>
     <string name="about_privacy_action">Read the privacy policy</string>
+    <string name="force_unknown">Force installation (unknown compatibility)</string>
+    <string name="force_unknown_warning">Compatibility of this package with the instrument memory is unknown. Incorrect firmware can prevent the instrument from booting and may require hardware recovery. Back up your data. Force only after checking compatibility with the firmware author. This approval applies only to this instrument and package; other validation still applies.</string>
+    <string name="force_unknown_ack">I understand the risk and want to force installation.</string>
 </resources>

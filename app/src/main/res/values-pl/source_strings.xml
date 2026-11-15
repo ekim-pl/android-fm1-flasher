@@ -45,7 +45,7 @@
     <string name="source_save_check">Zapisz i sprawdź</string>
     <string name="source_review">Sprawdź katalog, przejrzyj wskazane hosty, a następnie jawnie skonfiguruj dozwolone adresy. Zapis nie włącza nowego źródła.</string>
     <string name="source_check_offline">Zapisano jako wyłączone. Po wyłączeniu trybu offline użyj Sprawdź teraz, aby przejrzeć zawartość.</string>
-    <string name="source_chip_blocked">Nieznana zgodność z pamięcią urządzenia. Flashowanie tej paczki jest zablokowane.</string>
+    <string name="source_chip_blocked">Nieznana zgodność z pamięcią urządzenia. Zwykła instalacja jest zablokowana; wymuszenie wymaga osobnego potwierdzenia ryzyka.</string>
     <string name="source_saved">Zapisano ustawienia źródła. Nowe źródła pozostają wyłączone do ich jawnego włączenia.</string>
     <string name="github_access_hint">Sprawdź adres repozytorium, dostęp konta, ważność i uprawnienia tokenu, zatwierdzenie organizacji lub limity API GitHub.</string>
 </resources>

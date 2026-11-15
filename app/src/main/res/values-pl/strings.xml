@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="chip_unknown">Nie znam typu kości flash</string>
-    <string name="chip_new">Nowa · 0xB36014</string>
-    <string name="chip_old">Starsza · 0x856014</string>
+    <string name="chip_new">Nowsza pamięć · wymaga zgodnego firmware</string>
+    <string name="chip_old">Starsza pamięć · obsługuje starsze firmware</string>
     <string name="category_all">Wszystkie kategorie</string>
     <string name="category_synth">Syntezatory</string>
     <string name="category_groove">Grooveboxy</string>
@@ -116,7 +116,7 @@
     <string name="select_device_accessibility">Wybierz jedno urządzenie USB MIDI</string>
     <string name="flash_chip_label">Kość flash instrumentu</string>
     <string name="flash_chip_accessibility">Typ kości flash wybranego FM‑1</string>
-    <string name="flash_chip_help">Nie znasz typu pamięci? Pozostaw pierwszy wybór. Dopuszczamy wtedy tylko paczki z obsługą nowej kości.</string>
+    <string name="flash_chip_help">Nie znasz typu pamięci? Pozostaw Nie znam. Paczki zgodne z oboma typami działają normalnie. Dla pozostałych paczek o nieznanej zgodności użyj osobnego wymuszenia dopiero po sprawdzeniu u autora.</string>
     <string name="local_package_heading">02  /  LOKALNA PACZKA</string>
     <string name="connection_log">Dziennik połączenia</string>
     <string name="experimental_warning">Wersja eksperymentalna · zapis na fizycznym FM‑1 wymaga weryfikacji. Przed aktualizacją zrób kopię danych instrumentu.</string>
@@ -265,7 +265,7 @@
     <string name="about_document">about/app.pl.md</string>
     <string name="detect_chip">Wykryj kość (tryb download)</string>
     <string name="detect_chip_help">Podłącz tylko jeden instrument w trybie USB download. Detekcja uruchamia kod w RAM bez zapisu flash. Następnie uruchom instrument ponownie w trybie MIDI, połącz i wybierz odczytany typ kości.</string>
-    <string name="chip_detected">ID flash: %1$s. Uruchom ponownie w trybie MIDI, połącz i wybierz odczytany typ kości.</string>
+    <string name="chip_detected">Pamięć flash: %1$s. Uruchom ponownie w trybie MIDI, połącz i wybierz odczytany typ kości.</string>
     <string name="tab_logger">Logger MIDI</string>
     <string name="logger_help">Eksperymentalny · pasywny odbiór USB MIDI z wybranych wyjść instrumentów. Przytrzymaj wpis, aby zobaczyć pełny HEX. Eksport obejmuje cały bufor.</string>
     <string name="logger_ports">Wybierz wyjścia</string>
@@ -337,4 +337,7 @@
     <string name="ios_platform_limits">Na iOS po każdym restarcie potwierdź nowy port MIDI tego samego instrumentu i pozostaw aplikację otwartą podczas aktualizacji. Odzyskiwanie ROM przez USB i wykrywanie kości wymagają Androida.</string>
     <string name="about_privacy_summary">Bez konta, reklam i analityki. Ulubione, ustawienia i pobrane firmware pozostają na urządzeniu. Serwery katalogów i paczek otrzymują Twój adres IP podczas połączenia.</string>
     <string name="about_privacy_action">Przeczytaj politykę prywatności</string>
+    <string name="force_unknown">Wymuś instalację (nieznana zgodność)</string>
+    <string name="force_unknown_warning">Zgodność tej paczki z pamięcią instrumentu jest nieznana. Niewłaściwy firmware może uniemożliwić uruchomienie instrumentu i wymagać naprawy sprzętowej. Zrób kopię danych. Wymuszaj dopiero po sprawdzeniu zgodności u autora firmware. Zgoda dotyczy tylko tego instrumentu i paczki; pozostałe kontrole nadal obowiązują.</string>
+    <string name="force_unknown_ack">Rozumiem ryzyko i chcę wymusić instalację.</string>
 </resources>

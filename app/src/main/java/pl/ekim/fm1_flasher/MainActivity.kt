@@ -777,7 +777,7 @@ class MainActivity : Activity() {
     private fun confirmRecovery() {
         val plan = state.recoveryPlan ?: run { recoveryMessage(s(R.string.recovery_no_plan)); return }
         AlertDialog.Builder(this).setTitle(s(R.string.recovery_write_plan))
-            .setMessage(s(R.string.recovery_confirmation, plan.deviceName, "0x%06X".format(plan.backup.flashId),
+            .setMessage(s(R.string.recovery_confirmation, plan.deviceName, s(ChipDetector.classify(plan.backup.flashId).label),
                 plan.changedSectors, plan.backup.id, plan.backup.sha256))
             .setNegativeButton(s(R.string.cancel), null)
             .setPositiveButton(s(R.string.recovery_write)) { _, _ ->
@@ -789,7 +789,7 @@ class MainActivity : Activity() {
         val backups = state.recoveryBackups
         if (backups.isEmpty()) { recoveryMessage(s(R.string.recovery_no_backups)); return }
         AlertDialog.Builder(this).setTitle(s(R.string.recovery_export))
-            .setItems(backups.map { "${it.id} · 0x%06X".format(it.flashId) }.toTypedArray()) { _, index ->
+            .setItems(backups.map { "${it.id} · ${s(ChipDetector.classify(it.flashId).label)}" }.toTypedArray()) { _, index ->
                 exportBackupId = backups[index].id
                 startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
                     .setType("application/zip").putExtra(Intent.EXTRA_TITLE, "fm1-backup-${backups[index].id}.zip"), 61)

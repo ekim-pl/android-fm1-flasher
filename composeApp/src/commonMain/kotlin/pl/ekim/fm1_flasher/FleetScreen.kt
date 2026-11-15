@@ -11,6 +11,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 
 private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2, 0xFF8FCB87, 0xFF70BCE1)
 
@@ -42,6 +44,7 @@ private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2
             var alias by rememberSaveable(device.id, device.alias) { mutableStateOf(device.alias) }
             var selected by rememberSaveable(device.id) { mutableStateOf(state.ready?.key.orEmpty()) }
             val entry = state.downloads.singleOrNull { it.entry.key == selected }?.entry
+            var forceDialog by remember(device, entry) { mutableStateOf(false) }
             val pinned = state.jobs.any { it.deviceId == device.id && it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) }
             val endpoint = device.endpoint!!
             val portId = "${endpoint.id}:${endpoint.usbPath}:${endpoint.generation}"
@@ -71,6 +74,14 @@ private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2
                     if (expanded) Text(t("fleet_chip_evidence"), style = MaterialTheme.typography.bodySmall)
                     Choice(t("fleet_package"), entry?.let { "${it.name} · ${it.version}" } ?: t("no_package_selected"), state.downloads.map { it.entry.key to "${it.entry.name} · ${it.entry.version}" }, { selected = it }, enabled = !state.busy && !pinned)
                     if (entry != null && !device.chip.allows(entry)) Text(t("chip_not_supported"), color = MaterialTheme.colorScheme.error)
+                    if (entry != null && device.chip.canForce(entry)) {
+                        OutlinedButton({ forceDialog = true }, enabled = !state.busy && !pinned) { Text(t("force_unknown")) }
+                        if (forceDialog) ForceUnknownDialog(language, "${device.alias} · ${entry.name} · ${entry.version}\nSHA-256 ${entry.sha256}", !state.busy && !pinned,
+                            { forceDialog = false }) {
+                            forceDialog = false
+                            send(AppAction(AppActionKind.QUEUE_ADD, device.id, entry.key, forceUnknown = true, confirmedHash = entry.sha256))
+                        }
+                    }
                     if (state.downloads.isEmpty()) TextButton(library) { Text(t("fleet_open_library")) }
                     FilledTonalButton({ send(AppAction(AppActionKind.QUEUE_ADD, device.id, selected)) }, enabled = !state.busy && !pinned && entry != null && device.chip.allows(entry)) {
                         Text(t(if (pinned) "fleet_in_plan" else "fleet_add"))
@@ -138,6 +149,7 @@ private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2
     OutlinedCard(Modifier.fillMaxWidth()) { Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(job.alias, style = MaterialTheme.typography.titleMedium)
         Text("${job.title} · ${job.version}")
+        if (job.forceUnknown) Text(t("force_unknown"), color = MaterialTheme.colorScheme.error)
         Text("SHA-256 ${job.hash.take(16)}…", style = MaterialTheme.typography.labelSmall)
         val label = when (job.outcome) {
             JobOutcome.QUEUED -> "fleet_queued"
@@ -162,4 +174,20 @@ private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2
         }
         if (editable && job.outcome == JobOutcome.QUEUED) TextButton(remove) { Text(t("fleet_remove_job")) }
     } }
+}
+
+@Composable internal fun ForceUnknownDialog(language: String, target: String, enabled: Boolean, dismiss: () -> Unit, confirm: () -> Unit) {
+    fun t(key: String) = resolveCoreText(msg(key), language)
+    var acknowledged by remember { mutableStateOf(false) }
+    AlertDialog(onDismissRequest = dismiss, title = { Text(t("force_unknown")) }, text = {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(target)
+            Text(t("force_unknown_warning"), color = MaterialTheme.colorScheme.error)
+            Row {
+                Checkbox(acknowledged, { acknowledged = it }, enabled = enabled, modifier = Modifier.semantics { contentDescription = t("force_unknown_ack") })
+                Text(t("force_unknown_ack"), modifier = Modifier.weight(1f))
+            }
+        }
+    }, confirmButton = { TextButton(confirm, enabled = enabled && acknowledged) { Text(t("force_unknown")) } },
+        dismissButton = { TextButton(dismiss) { Text(t("back")) } })
 }

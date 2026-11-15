@@ -243,6 +243,7 @@ private fun title(entry: CatalogEntry, language: String) = if (entry.stock) reso
         DeviceToolsScreen(state, language, send, confirm, recovery, logs)
         return
     }
+    var forceDialog by remember(state.ready, state.target, state.chip, state.identity) { mutableStateOf(false) }
     var port by rememberSaveable { mutableStateOf("") }
     var reconnect by rememberSaveable { mutableStateOf("") }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -272,6 +273,13 @@ private fun title(entry: CatalogEntry, language: String) = if (entry.stock) reso
             val ready = state.ready; val target = state.target
             if (state.fleetAvailable) Text(text("fleet_legacy_queue")) else Button({ if (ready != null && target != null) confirm(AppAction(AppActionKind.FLASH, target.id, ready.sha256), msg("flash_confirmation", target.label, state.identity ?: "", title(ready, language), ready.version, ready.product)) },
                 enabled = !state.busy && ready != null && target != null && state.identity != null && state.ports.any { it.id == target.id } && state.chip.allows(ready) && state.downloads.any { it.entry.key == ready.key && it.entry.sha256 == ready.sha256 }) { Text(text("install_selected")) }
+            if (ready != null && target != null && state.chip.canForce(ready)) {
+                OutlinedButton({ forceDialog = true }, enabled = !state.busy && state.identity != null && state.ports.any { it.id == target.id }) { Text(text("force_unknown")) }
+                if (forceDialog) ForceUnknownDialog(language, "${target.label} · ${title(ready, language)} · ${ready.version}\nSHA-256 ${ready.sha256}", !state.busy, { forceDialog = false }) {
+                    forceDialog = false
+                    confirm(AppAction(AppActionKind.FLASH, target.id, ready.sha256, forceUnknown = true), msg("flash_confirmation", target.label, state.identity ?: "", title(ready, language), ready.version, ready.product))
+                }
+            }
             Text(text("experimental_warning"), style = MaterialTheme.typography.bodySmall)
             TextButton(logs) { Text(text("connection_log")) }
         }

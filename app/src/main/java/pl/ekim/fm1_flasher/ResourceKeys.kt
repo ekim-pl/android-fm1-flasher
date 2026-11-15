@@ -510,5 +510,8 @@ internal val androidResourceKeys = mapOf(
     R.string.ios_platform_limits to "ios_platform_limits",
     R.string.about_privacy_summary to "about_privacy_summary",
     R.string.about_privacy_action to "about_privacy_action",
+    R.string.force_unknown to "force_unknown",
+    R.string.force_unknown_warning to "force_unknown_warning",
+    R.string.force_unknown_ack to "force_unknown_ack",
 )
 internal val androidResourceIds = androidResourceKeys.entries.associate { it.value to it.key }

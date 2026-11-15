@@ -95,7 +95,7 @@
     <string name="source_pkg_url">Adres paczki FWSC</string>
     <string name="provider_repo_invalid">Wpisz adres HTTPS repozytorium GitHub: https://github.com/właściciel/repozytorium.</string>
     <string name="provider_chip_support">Zgodność paczek z pamięcią</string>
-    <string name="provider_chip_help">Potwierdź zgodność u autora. Nazwa pliku ani wersja produktu nie określa obsługiwanej kości. Nieznana zgodność blokuje instalację.</string>
+    <string name="provider_chip_help">Potwierdź zgodność u autora. Nazwa pliku ani wersja produktu nie określa obsługiwanej kości. Nieznana zgodność wymaga osobnego ostrzeżenia i potwierdzenia wymuszenia.</string>
     <string name="auth_title">Uwierzytelnianie HTTP</string>
     <string name="auth_oauth2">OAuth 2.0</string>
     <string name="auth_username">Nazwa użytkownika</string>
@@ -121,6 +121,6 @@
     <string name="oauth_token_error">Nie udała się wymiana tokenu OAuth. Sprawdź klienta, endpoint i przyznane uprawnienia.</string>
     <string name="oauth_callback_error">Odpowiedź OAuth jest nieprawidłowa, wygasła lub logowanie anulowano. Rozpocznij autoryzację ponownie.</string>
     <string name="provider_package_policies">Zgodność poszczególnych paczek</string>
-    <string name="provider_package_policies_help">Potwierdź u autora zgodność każdej paczki. Zmiany zostaną zastosowane po powrocie do formularza źródła i zapisaniu. Nieznana zgodność blokuje instalację.</string>
+    <string name="provider_package_policies_help">Potwierdź u autora zgodność każdej paczki. Zmiany zostaną zastosowane po powrocie do formularza źródła i zapisaniu. Nieznana zgodność wymaga osobnego ostrzeżenia i potwierdzenia wymuszenia.</string>
     <string name="provider_package_policies_empty">Najpierw zapisz i sprawdź źródło, aby wykryć paczki, a następnie określ zgodność dla konkretnej sumy SHA-256. Inny plik wymaga osobnej deklaracji.</string>
 </resources>

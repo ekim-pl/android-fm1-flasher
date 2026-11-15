@@ -29,7 +29,7 @@ class FleetStore(private val file: File) {
                     it.getString("package"), it.getString("hash"), it.getString("title"), it.getString("version"),
                     it.getJSONObject("expected").identity(), FlashChip.valueOf(it.getString("chip")),
                     JobOutcome.valueOf(it.getString("outcome")), it.getString("phase"), it.getInt("progress"), it.getLong("time"),
-                    it.optJSONArray("events")?.let { events -> (0 until events.length()).map { n -> events.getJSONObject(n).let { e -> JobEvent(e.getString("phase"), e.getLong("time")) } } } ?: emptyList())
+                    it.optJSONArray("events")?.let { events -> (0 until events.length()).map { n -> events.getJSONObject(n).let { e -> JobEvent(e.getString("phase"), e.getLong("time")) } } } ?: emptyList(), it.optBoolean("forceUnknown", false))
             } })
             persist()
         }
@@ -67,13 +67,13 @@ class FleetStore(private val file: File) {
             if (it.id == id) it.copy(endpoint = endpoint, identity = identity ?: it.identity) else it
         }; persist()
     }
-    @Synchronized fun enqueue(deviceId: String, entry: CatalogEntry) {
+    @Synchronized fun enqueue(deviceId: String, entry: CatalogEntry, forceUnknown: Boolean = false) {
         val device = devices.single { it.id == deviceId }
         check(devices.count { it.endpoint?.usbPath == device.endpoint?.usbPath } == 1) { failed(msg("fleet_ports_ambiguous")) }
-        check(device.endpoint != null && device.identity != null && device.chip.allows(entry)) { failed(msg("flash_missing_requirements")) }
+        check(device.endpoint != null && device.identity != null && device.chip.allows(entry, forceUnknown)) { failed(msg("flash_missing_requirements")) }
         check(jobs.none { it.deviceId == deviceId && it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) }) { failed(msg("fleet_device_pinned")) }
         jobs = jobs + FlashJob(UUID.randomUUID().toString(), device.id, device.alias, checkNotNull(device.endpoint),
-            entry.key, entry.sha256, entry.name, entry.version, checkNotNull(device.identity), device.chip, updatedAt = System.currentTimeMillis()); persist()
+            entry.key, entry.sha256, entry.name, entry.version, checkNotNull(device.identity), device.chip, updatedAt = System.currentTimeMillis(), forceUnknown = forceUnknown && device.chip.canForce(entry)); persist()
     }
     @Synchronized fun result(id: String, outcome: JobOutcome, phase: String, progress: Int = -1) {
         val time = System.currentTimeMillis()
@@ -91,7 +91,7 @@ class FleetStore(private val file: File) {
             .put("midi", it.endpoint.id).put("path", it.endpoint.usbPath).put("generation", it.endpoint.generation)
             .put("package", it.packageKey).put("hash", it.hash).put("title", it.title).put("version", it.version)
             .put("expected", it.expected.json()).put("chip", it.chip.name).put("outcome", it.outcome.name)
-            .put("phase", it.phase).put("progress", it.progress).put("time", it.updatedAt)
+            .put("forceUnknown", it.forceUnknown).put("phase", it.phase).put("progress", it.progress).put("time", it.updatedAt)
             .put("events", JSONArray().apply { it.events.forEach { e -> put(JSONObject().put("phase", e.phase).put("time", e.time)) } })) }
         try {
             LocalLibrary.atomicWrite(file, JSONObject().put("devices", ds).put("jobs", js).toString().toByteArray())

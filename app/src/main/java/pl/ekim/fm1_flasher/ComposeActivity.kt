@@ -72,9 +72,9 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             ports = next.devices.map(::port), target = next.target?.let(::port), identity = next.identity, chip = next.chip, chipDetection = next.chipDetection,
             ready = next.ready, awaitingPort = next.awaitingPort, candidates = next.reconnectCandidates.map(::port),
             progress = next.progress, status = next.status, logs = next.logs, usbRecovery = true,
-            backups = next.recoveryBackups.map { BackupRow(it.id, "${it.id} · 0x%06X".format(it.flashId)) },
+            backups = next.recoveryBackups.map { BackupRow(it.id, "${it.id} · ${getString(ChipDetector.classify(it.flashId).label)}") },
             recovery = next.recoveryPlan?.let { RecoveryView(it.token, msg(R.string.recovery_confirmation, it.deviceName,
-                "0x%06X".format(it.backup.flashId), it.changedSectors, it.backup.id, it.backup.sha256)) })
+                msg(ChipDetector.classify(it.backup.flashId).labelKey), it.changedSectors, it.backup.id, it.backup.sha256)) })
         refreshLogger()
         if (!next.awaitingPort) automaticPermission = null
         next.automaticReconnect?.let { target ->
@@ -187,7 +187,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             AppActionKind.DEVICE_ALIAS -> active.configureDevice(action.id, alias = action.value)
             AppActionKind.DEVICE_CHIP -> active.configureDevice(action.id, chip = FlashChip.valueOf(action.value))
             AppActionKind.DEVICE_PAIR -> active.pairDevice(action.id, action.value)
-            AppActionKind.QUEUE_ADD -> active.enqueue(action.id, action.value)
+            AppActionKind.QUEUE_ADD -> active.enqueue(action.id, action.value, action.forceUnknown, action.confirmedHash)
             AppActionKind.QUEUE_REMOVE -> active.cancelJob(action.id)
             AppActionKind.QUEUE_STOP -> active.stopQueue()
             AppActionKind.QUEUE_START -> {

@@ -22,7 +22,7 @@ Aplikacja na Androida obsługuje trzy możliwości:
 2. **Bezpośredni pakiet:** podaj adres HTTPS jednego pliku `.fwsc`. Aplikacja odczytuje i sprawdza pakiet podczas sprawdzania źródła.
 3. **Katalog JSON:** udostępnij katalog HTTPS zgodny z formatem Hub oraz pliki pakietów. Możesz w ten sposób udostępnić wiele pakietów wraz z opisem i informacjami o zgodności.
 
-Zastąp poniższe wartości rzeczywistymi danymi. `sha256` to suma całego pliku `.fwsc` zapisana małymi literami, a `product` musi odpowiadać identyfikatorowi w pakiecie. Potwierdź właściwy chip dla sprzętu i konkretnych bajtów; `unknown` blokuje instalację do czasu potwierdzenia zgodności.
+Zastąp poniższe wartości rzeczywistymi danymi. `sha256` to suma całego pliku `.fwsc` zapisana małymi literami, a `product` musi odpowiadać identyfikatorowi w pakiecie. Potwierdź właściwy chip dla sprzętu i konkretnych bajtów; `unknown` blokuje zwykłą instalację. Użytkownik może wymusić instalację po dodatkowym ostrzeżeniu i potwierdzeniu ryzyka; nie stanowi to potwierdzenia zgodności sprzętu.
 
 ```json
 {

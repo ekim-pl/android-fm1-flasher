@@ -17,6 +17,31 @@ class FleetStoreTest {
         store.configure(id, alias = "Bass", chip = FlashChip.OLD)
         return store.devices.single()
     }
+    @Test fun forceApprovalIsPerJobAndSurvivesPersistenceWithoutGrantingCompatibility() = fixture { store, file ->
+        val device = ready(store)
+        val unknown = localEntry().copy(chip = "unknown")
+        assertThrows(IllegalStateException::class.java) { store.enqueue(device.id, unknown) }
+        store.enqueue(device.id, unknown, forceUnknown = true)
+        val job = store.jobs.single()
+        assertTrue(job.forceUnknown)
+        assertEquals(unknown.sha256, job.hash)
+        assertTrue(FleetStore(file).jobs.single().forceUnknown)
+        assertFalse(device.chip.allows(unknown))
+        store.cancel(job.id)
+        assertThrows(IllegalStateException::class.java) { store.enqueue(device.id, unknown) }
+    }
+    @Test fun forcingOnlyBypassesUnknownCompatibility() = fixture { _, _ ->
+        val entry = localEntry()
+        for (chip in FlashChip.entries) {
+            assertFalse(chip.allows(entry.copy(chip = "unknown"), false))
+            assertTrue(chip.allows(entry.copy(chip = "unknown"), true))
+            assertFalse(chip.allows(entry.copy(chip = "unsupported"), true))
+        }
+        assertTrue(FlashChip.UNKNOWN.allows(entry.copy(chip = "old"), true))
+        assertFalse(FlashChip.UNKNOWN.allows(entry.copy(chip = "old"), false))
+        assertFalse(FlashChip.NEW.allows(entry.copy(chip = "old"), true))
+        assertTrue(FlashChip.UNKNOWN.allows(entry.copy(chip = "new"), false))
+    }
     @Test fun processDeathKeepsHistoryButNeverRestoresPhysicalAttachment() = fixture { store, file ->
         val device = ready(store); store.enqueue(device.id, localEntry())
         val job = store.jobs.single(); store.result(job.id, JobOutcome.RUNNING, "flash_stage_write", 47)

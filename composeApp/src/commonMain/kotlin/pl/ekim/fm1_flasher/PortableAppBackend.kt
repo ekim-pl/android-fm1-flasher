@@ -192,7 +192,7 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
         check(target.id == action.id && selected.sha256 == action.value) { failed(msg("local_package_changed")) }
         monitor.stopMonitor(); refreshPorts(); check(state.value.ports.any { it.id == target.id }) { failed(msg("usb_port_gone")) }
         val (saved, image) = repository.load(selected.id)
-        check(saved.entry.sha256 == action.value && snapshot.chip.allows(saved.entry)) { failed(msg("local_chip_unsupported")) }
+        check(saved.entry.sha256 == action.value && snapshot.chip.allows(saved.entry, action.forceUnknown)) { failed(msg("local_chip_unsupported")) }
         state.update { it.copy(flashing = true) }; host.setFlashing(true)
         val deadline = monotonicTimeMillis() + FlashSession.MAX_SESSION_MS
         var before = midi.devices().map { it.id }.toSet()

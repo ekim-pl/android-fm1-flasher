@@ -13,7 +13,7 @@ data class FlashJob(
     val packageKey: String, val hash: String, val title: String, val version: String,
     val expected: FirmwareIdentity, val chip: FlashChip,
     val outcome: JobOutcome = JobOutcome.QUEUED, val phase: String = "fleet_queued",
-    val progress: Int = -1, val updatedAt: Long = 0, val events: List<JobEvent> = emptyList(),
+    val progress: Int = -1, val updatedAt: Long = 0, val events: List<JobEvent> = emptyList(), val forceUnknown: Boolean = false,
 )
 object FleetPolicy {
     fun runPlan(jobs: List<FlashJob>, stopped: () -> Boolean, prepare: (FlashJob) -> Unit, run: (FlashJob) -> Unit) {

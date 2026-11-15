@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="chip_unknown">不清楚闪存芯片型号</string>
-    <string name="chip_new">新版 · 0xB36014</string>
-    <string name="chip_old">旧版 · 0x856014</string>
+    <string name="chip_new">新版闪存 · 需要兼容的固件</string>
+    <string name="chip_old">旧版闪存 · 支持旧版固件</string>
     <string name="category_all">全部类别</string>
     <string name="category_synth">合成器</string>
     <string name="category_groove">音乐工作站</string>
@@ -116,7 +116,7 @@
     <string name="select_device_accessibility">选择一台 USB MIDI 设备</string>
     <string name="flash_chip_label">设备闪存芯片</string>
     <string name="flash_chip_accessibility">所选 FM‑1 的闪存芯片型号</string>
-    <string name="flash_chip_help">不清楚芯片型号？请保留第一项，此时仅允许使用支持新版芯片的固件包。</string>
+    <string name="flash_chip_help">不清楚闪存型号？保留未知。支持两种型号的固件包可正常安装。其他兼容性未知的固件包应先向作者核实，再使用单独的强制安装操作。</string>
     <string name="local_package_heading">02  /  本地固件包</string>
     <string name="connection_log">连接日志</string>
     <string name="experimental_warning">实验版本 · 尚需在实体 FM‑1 上验证刷写。更新前请备份设备数据。</string>
@@ -265,7 +265,7 @@
     <string name="about_document">about/app.zh-Hans.md</string>
     <string name="detect_chip">检测芯片（下载模式）</string>
     <string name="detect_chip_help">请仅连接一台处于 USB 下载模式的设备。检测仅加载 RAM，不写入闪存。完成后重新启动为 MIDI 模式，连接并选择检测到的芯片类型。</string>
-    <string name="chip_detected">闪存 ID：%1$s。请重新启动为 MIDI 模式，连接并选择检测到的芯片类型。</string>
+    <string name="chip_detected">闪存：%1$s。请重新启动为 MIDI 模式，连接并选择检测到的芯片类型。</string>
     <string name="tab_logger">MIDI 日志</string>
     <string name="logger_help">实验性功能 · 被动接收所选乐器输出端口的 USB MIDI。长按消息可查看完整 HEX。导出包含整个缓冲区。</string>
     <string name="logger_ports">选择输出</string>
@@ -337,4 +337,7 @@
     <string name="ios_platform_limits">在 iOS 上，每次重启后请确认同一设备的新 MIDI 端口，并在更新期间保持应用打开。USB ROM 恢复和闪存检测需要 Android。</string>
     <string name="about_privacy_summary">无需账户，无广告和分析服务。收藏、设置和已下载的固件保存在你的设备上。连接目录和固件包服务器时，这些服务器会收到你的 IP 地址。</string>
     <string name="about_privacy_action">阅读隐私政策</string>
+    <string name="force_unknown">强制安装（兼容性未知）</string>
+    <string name="force_unknown_warning">此固件包与设备闪存的兼容性未知。错误的固件可能导致设备无法启动，并需要硬件恢复。请备份数据，并先向固件作者核实兼容性。此确认仅适用于此设备和固件包，其他验证仍然有效。</string>
+    <string name="force_unknown_ack">我了解风险并希望强制安装。</string>
 </resources>

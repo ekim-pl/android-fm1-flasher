@@ -19,7 +19,7 @@ Identyfikator Androida to `pl.ekim.fm1_flasher`. Interfejs obsługuje polski, an
 2. W **Bibliotece** znajdź firmware i pobierz paczkę z jej szczegółów. Pobranie sprawdza integralność, ale nie rozpoczyna instalacji.
 3. Podłącz instrumenty przewodami do transmisji danych przez hub OTG. Zalecany jest hub z osobnym zasilaniem. Aplikacja nie mierzy jakości zasilania.
 4. W **Urządzeniach** wybierz **Odczytaj instrument** na każdej karcie. Udziel systemowej zgody USB, gdy będzie potrzebna. Do planu można dodać rozpoznany FM-1.
-5. W **Szczegółach** nadaj czytelną nazwę. Wskaż typ pamięci na podstawie znanego sprzętu i wybierz lokalną paczkę. Paczka zgodna z obydwoma wspieranymi typami pamięci może być dopuszczona także przy nieznanym typie kości; paczki niezgodne lub o niepotwierdzonej zgodności pozostają zablokowane.
+5. W **Szczegółach** nadaj czytelną nazwę. Wskaż typ pamięci na podstawie znanego sprzętu i wybierz lokalną paczkę. Paczka zgodna z obydwoma wspieranymi typami pamięci może być dopuszczona także przy nieznanym typie kości; paczki jawnie niezgodne pozostają zablokowane; nieznana zgodność wymaga osobnego potwierdzenia wymuszenia opisanego poniżej.
 6. Wybierz **Dodaj do planu** dla kolejnych instrumentów. Urządzenie może mieć jedno oczekujące lub wykonywane zadanie. Każdy instrument może otrzymać inną paczkę.
 7. W **Zadaniach** sprawdź nazwy, wersje i sumy paczek, a następnie wybierz **Zainstaluj na N instrumentach**. Ten przycisk zatwierdza plan; zwykła instalacja nie wyświetla drugiego okna potwierdzenia.
 
@@ -145,3 +145,12 @@ OAuth obsługuje logowanie w przeglądarce Authorization Code z **PKCE S256** or
 Uwierzytelnienie jest ograniczone do pochodzenia źródła (API GitHub dla `repo-url`). Przy zmianie domeny w przekierowaniu, także do CDN, jest usuwane; przekierowania POST tokenów są odrzucane. Nadal obowiązuje HTTPS oraz kontrola publicznych adresów i zakresów URL. Zwykłe sprawdzanie zachowuje harmonogram 24–168 godzin. Jawna zmiana sekretu lub ukończona autoryzacja pozwala sprawdzić źródło ponownie, bez całodobowego oczekiwania po błędzie logowania.
 
 Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani ogłoszonego terminu.
+
+
+## Wymuszenie przy nieznanej zgodności
+
+Lista pamięci pokazuje opisy: **Starsza pamięć** obsługuje starsze firmware, a **Nowsza pamięć** wymaga firmware z jawną obsługą nowej kości. **Nie znam** oznacza nierozpoznany typ pamięci instrumentu. Sama wersja firmware nie określa kości.
+
+Zwykła instalacja zachowuje ostrożne reguły. Gdy typ kości instrumentu jest nieznany, a paczka obsługuje tylko starszą pamięć, albo paczka ma `chip: unknown`, wybierz **Wymuś instalację (nieznana zgodność)**. Sprawdź instrument, wersję paczki i SHA-256, przeczytaj dodatkowe ostrzeżenie, zaznacz akceptację ryzyka i potwierdź. Na Androidzie powstanie wyraźnie oznaczone zadanie; przejrzyj plan w **Zadaniach** i uruchom instalację. Zgoda zostaje tylko przy tym zadaniu, nigdy jako ustawienie globalne. Na iOS po dodatkowym ostrzeżeniu pojawia się zwykłe potwierdzenie instalacji.
+
+Niewłaściwy firmware może uniemożliwić uruchomienie instrumentu i wymagać naprawy sprzętowej. Sprawdź zgodność u autora i zrób kopię danych. Wymuszenie nie omija jawnej niezgodności (paczka tylko dla starszej pamięci przy znanej nowszej kości), niewspieranych, wycofanych lub sprzecznych paczek, kontroli hash/produktu ani weryfikacji urządzenia i ponownego połączenia. Po usunięciu zadania kolejna wymuszona próba wymaga nowej zgody.

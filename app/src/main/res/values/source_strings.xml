@@ -45,7 +45,7 @@
     <string name="source_save_check">Save and check</string>
     <string name="source_review">Check the catalog, review referenced hosts, then explicitly configure allowed URLs. Saving never enables a new source.</string>
     <string name="source_check_offline">Saved disabled. Go online and use Check now to review its contents.</string>
-    <string name="source_chip_blocked">Chip compatibility is unknown. Flashing this package is blocked.</string>
+    <string name="source_chip_blocked">Chip compatibility is unknown. Normal installation is blocked; forcing requires a separate risk confirmation.</string>
     <string name="source_saved">Source settings saved. New sources remain disabled until explicitly enabled.</string>
     <string name="github_access_hint">Check the repository URL, account access, token expiry and permissions, organization approval, or GitHub API rate limits.</string>
 </resources>

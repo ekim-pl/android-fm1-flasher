@@ -50,19 +50,26 @@ class PortableAppBackendTest {
         override fun openLink(url: String) = Unit
         override fun exportText(name: String, text: String) = Unit
     }
-    @Test fun offlineFullFlashRequiresBothExplicitReconnectsAndPersistsConfirmedJournal() = runBlocking {
+    @Test fun offlineFullFlashRequiresBothExplicitReconnectsAndPersistsConfirmedJournal() = fullFlash("new", false)
+    @Test fun unknownPackageRequiresExplicitForceAndStillVerifiesBothReconnects() = fullFlash("unknown", true)
+    private fun fullFlash(chip: String, forceUnknown: Boolean) = runBlocking {
         val storage = Storage(); val midi = Midi(); val host = Host(); var requests = 0
         val http = object : HttpClient { override fun get(url: String, limit: Int, artworkOnly: Boolean): ByteArray { requests++; error("Offline") } }
         val repository = FirmwareRepository(storage, http, ::epochMillis)
         val raw = testPackage(); val hash = FirmwarePackage.sha256(raw)
-        val entry = localEntry(raw).copy(chip = "new")
+        val entry = localEntry(raw).copy(chip = chip)
         repository.save(entry, raw); repository.saveSettings(LibrarySettings(offline = true))
         val backend = PortableAppBackend(midi, midi, storage, http, host)
         suspend fun idle() = withTimeout(5000) { backend.state.first { it.initialized && !it.busy } }
         idle(); assertEquals("pl", backend.state.value.language)
         backend.perform(AppAction(AppActionKind.USE, entry.id)); idle()
         backend.perform(AppAction(AppActionKind.CONNECT, "1")); idle()
-        backend.perform(AppAction(AppActionKind.FLASH, "1", hash))
+        if (forceUnknown) {
+            backend.perform(AppAction(AppActionKind.FLASH, "1", hash)); idle()
+            assertEquals(msg("local_chip_unsupported"), backend.state.value.status)
+            assertFalse(midi.sent.values.flatten().any { it.contentEquals(Protocol.upgrade) })
+        }
+        backend.perform(AppAction(AppActionKind.FLASH, "1", hash, forceUnknown = forceUnknown))
         withTimeout(15000) { backend.state.first { it.awaitingPort && it.candidates.any { p -> p.id == "2" } } }
         assertTrue(host.flashActive)
         assertFalse(midi.sent[2].orEmpty().any { it.contentEquals(Protocol.upgrade) })
