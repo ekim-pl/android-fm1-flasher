@@ -16,6 +16,14 @@ Multiple instruments require inline pairing of the unique returning unit. A lost
 
 Use data cables and stable power; a powered hub is recommended. The app cannot certify power quality. A port to iOS is planned for the future. There is no iOS release or announced release date.
 
+## For developers
+
+Building firmware for the M-VAVE FM-1? Submit your project to the Awesome FM-1 community catalog or share your own source directly with selected users.
+
+To join Awesome FM-1, fork the repository, add a short project proposal and open a pull request. For private distribution, publish `.fwsc` files as GitHub Release assets and add the repository in **Settings → Firmware sources** using your own access token. Each recipient needs their own repository access and token.
+
+[Submit a project to Awesome FM-1](https://github.com/ekim-pl/awesome-fm1#contributing) · [Developer guide](developers.md)
+
 ## Documentation
 
 - [Installation and daily use](../README.md#getting-started)

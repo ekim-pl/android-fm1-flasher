@@ -6,6 +6,14 @@ Udostępnij swoje firmware użytkownikom FM-1 Flasher ze źródła, nad którym 
 
 Użytkownik może samodzielnie dodać źródło bez zgłaszania go do projektu. Propozycja dodania źródła domyślnego jest rozpatrywana osobno i nie gwarantuje przyjęcia.
 
+## Dołącz do Awesome FM-1
+
+Aby zgłosić firmware do [społecznościowego katalogu Awesome FM-1](https://github.com/ekim-pl/awesome-fm1), utwórz fork repozytorium, dodaj plik `submissions/nazwa-projektu.md` i otwórz pull request. Podaj nazwę projektu, krótki opis, autora, publiczny adres HTTPS pakietu lub repozytorium, znaną wersję oraz dowody zgodności sprzętowej albo oznaczenie „unknown”. Opiekunowie sprawdzą zgłoszenie i pomogą przygotować wpis katalogu przed publikacją.
+
+Pliki firmware pozostają u wydawcy; katalog przechowuje metadane i odnośniki. Prywatne źródło nie wymaga zgłoszenia do Awesome FM-1.
+
+[Zgłoś projekt do Awesome FM-1](https://github.com/ekim-pl/awesome-fm1#contributing)
+
 ## Przygotuj źródło
 
 Aplikacja na Androida obsługuje trzy możliwości:
@@ -35,7 +43,14 @@ Użytkownik wybiera **Ustawienia → Źródła firmware**, dodaje typ i adres ź
 
 ## Prywatne repozytorium GitHub
 
-Jeśli odbiorcy nie powinni czytać kodu projektu, użyj osobnego prywatnego repozytorium dystrybucyjnego bez kodu źródłowego. Odbiorca potrzebuje własnego konta GitHub z dostępem do repozytorium i własnego fine-grained personal access token ograniczonego do tego repozytorium, z uprawnieniem **Contents: read**. W ustawieniach źródła wybiera **Bearer** i podaje token bez prefiksu `Bearer`. Nie udostępniaj tokenu właściciela i nie publikuj sekretów w zgłoszeniach. Odczyt repozytorium daje dostęp także do innych treści, nie tylko plików wydań.
+Dołącz pliki `.fwsc` do opublikowanego wydania GitHub Release w prywatnym repozytorium. Jeśli odbiorcy nie powinni czytać kodu projektu, użyj osobnego prywatnego repozytorium dystrybucyjnego bez kodu źródłowego.
+
+1. Przejdź do **Ustawienia → Źródła firmware**, dodaj źródło typu **Repozytorium GitHub** i podaj adres `https://github.com/OWNER/REPO`.
+2. Wybierz autoryzację **Bearer** i wpisz własny token z prawem odczytu repozytorium, bez prefiksu `Bearer`.
+3. Zapisz źródło, wybierz **Sprawdź teraz**, a następnie je włącz.
+4. Przed instalacją otwórz **Edytuj → Zgodność pakietów** i potwierdź zgodność każdego pakietu z pamięcią urządzenia.
+
+Każdy odbiorca potrzebuje własnego konta GitHub z dostępem do repozytorium i własnego tokenu. Wybierz możliwie najmniejszy zakres dostępu. Nie udostępniaj tokenu właściciela i nie publikuj sekretów w zgłoszeniach. Odczyt repozytorium daje dostęp także do innych treści, nie tylko plików wydań. Dodanie prywatnego źródła nie wymaga zgłoszenia do Awesome FM-1.
 
 GitHub może zwrócić HTTP 404 dla niedostępnego prywatnego repozytorium. Sprawdź adres, dostęp konta, uprawnienia i ważność tokenu oraz wymagane zatwierdzenia organizacji. Po cofnięciu dostępu pobrane wcześniej firmware nadal jest dostępne offline.
 

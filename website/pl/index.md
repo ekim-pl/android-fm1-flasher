@@ -16,6 +16,14 @@ Przy wielu instrumentach trzeba powiązać jedynego dopuszczalnego kandydata na 
 
 Używaj przewodów danych i stabilnego zasilania; zalecany jest zasilany hub. Aplikacja nie certyfikuje jakości zasilania. Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani ogłoszonego terminu.
 
+## Dla deweloperów
+
+Tworzysz firmware dla M-VAVE FM-1? Zgłoś projekt do społecznościowego katalogu Awesome FM-1 albo udostępniaj własne źródło bezpośrednio wybranym użytkownikom.
+
+Aby dołączyć do Awesome FM-1, utwórz fork repozytorium, dodaj krótkie zgłoszenie projektu i otwórz pull request. Przy prywatnej dystrybucji opublikuj pliki `.fwsc` jako załączniki do GitHub Release i dodaj repozytorium w **Ustawienia → Źródła firmware**, używając własnego tokenu dostępu. Każdy odbiorca potrzebuje własnego dostępu do repozytorium i tokenu.
+
+[Zgłoś projekt do Awesome FM-1](https://github.com/ekim-pl/awesome-fm1#contributing) · [Instrukcja dla deweloperów](developers.md)
+
 ## Dokumentacja
 
 - [Instalacja i codzienne użycie](documentation.md#getting-started)

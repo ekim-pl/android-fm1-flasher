@@ -6,6 +6,14 @@ Make your firmware available to FM-1 Flasher users through a source you control.
 
 Users can add a source themselves without submitting it to this project. A proposal to include a built-in source is reviewed separately and is not guaranteed to be accepted.
 
+## Join Awesome FM-1
+
+To submit your firmware to the [Awesome FM-1 community catalog](https://github.com/ekim-pl/awesome-fm1), fork the repository, add `submissions/project-name.md` and open a pull request. Include the project name, a short description, author, a public HTTPS package or repository URL, version if known, and hardware compatibility evidence or “unknown”. Maintainers review the proposal and help prepare the catalog entry before publication.
+
+Firmware files remain hosted by their publisher; the catalog stores metadata and links. A private source does not need to be submitted to Awesome FM-1.
+
+[Submit a project to Awesome FM-1](https://github.com/ekim-pl/awesome-fm1#contributing)
+
 ## Prepare a source
 
 The Android app supports three options:
@@ -35,7 +43,14 @@ Tell users to open **Settings → Firmware sources**, add the appropriate source
 
 ## Private GitHub repository
 
-Use a separate private distribution repository without source code if recipients should not read the project source. A recipient needs their own GitHub account with access to the repository and a fine-grained personal access token restricted to that repository with **Contents: read**. In the source settings, choose **Bearer** and enter the token without the `Bearer` prefix. Never share the owner's token or post credentials in an issue. Repository read access grants more than access to release binaries.
+Publish `.fwsc` files as assets of a published GitHub Release in your private repository. Use a separate private distribution repository without source code if recipients should not read the project source.
+
+1. Open **Settings → Firmware sources**, add a **GitHub repository** source and enter `https://github.com/OWNER/REPO`.
+2. Choose **Bearer** authentication and enter your own token with permission to read the repository, without the `Bearer` prefix.
+3. Save the source, select **Check now**, then enable it.
+4. Before installation, open **Edit → Package compatibility** and confirm each package's compatibility with the device's memory type.
+
+Each recipient needs their own GitHub account with access to the repository and their own token. Use the narrowest access scope available. Never share the owner's token or post credentials in an issue. Repository read access grants more than access to release binaries. Adding a private source does not require submitting it to Awesome FM-1.
 
 GitHub may return HTTP 404 for an inaccessible private repository. Check the repository URL, account access, token permissions, expiry and any organization approval requirements. Firmware remains available offline after it has been downloaded, even if repository access is later revoked.
 

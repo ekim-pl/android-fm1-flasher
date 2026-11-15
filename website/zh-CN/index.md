@@ -16,6 +16,14 @@
 
 请使用数据线和稳定供电，建议独立供电的集线器。应用不能认证电源质量。未来计划推出 iOS 移植版。目前没有 iOS 版本，也未公布发布日期。
 
+## 开发者
+
+正在为 M-VAVE FM-1 开发固件？欢迎将项目提交到 Awesome FM-1 社区目录，也可以通过自己的来源直接向指定用户分发固件。
+
+加入 Awesome FM-1 时，先 Fork 仓库，添加简短的项目提案，再提交拉取请求（PR）。私有分发时，将 `.fwsc` 文件作为 GitHub Release 附件发布，然后在**设置 → 固件来源**中使用自己的访问令牌添加仓库。每位接收者都需要自己的仓库访问权和令牌。
+
+[向 Awesome FM-1 提交项目](https://github.com/ekim-pl/awesome-fm1#contributing) · [开发者指南](developers.md)
+
 ## 文档
 
 - [安装与日常使用](documentation.md#getting-started)
