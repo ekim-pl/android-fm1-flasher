@@ -70,16 +70,28 @@ class OperationLogServiceTest : InstrumentationTestCase() {
             assertTrue("Pending export did not finish", check())
         }
         try {
-            assertTrue(connected.await(10, TimeUnit.SECONDS)); waitUntil { !service!!.state.busy }
-            val active = service!!; previous = active.state.experimental
-            instrumentation.runOnMainSync {
-                active.setExperimental(true)
-                active.recordEvent("DOCUMENT_RESULT_TEST")
-                active.onAppOpened()
-                assertTrue(active.state.busy)
-                val callback = ComposeActivity::class.java.getDeclaredMethod("onActivityResult", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Intent::class.java)
-                callback.isAccessible = true
-                callback.invoke(activity, 62, android.app.Activity.RESULT_OK, Intent().setData(Uri.fromFile(output)))
+            assertTrue(connected.await(10, TimeUnit.SECONDS))
+            val active = service!!
+            val activityService = ComposeActivity::class.java.getDeclaredField("service").apply { isAccessible = true }
+            var started = false
+            // The Activity binds independently and can start another foreground refresh.
+            // Check readiness and deliver the result in one main-thread turn.
+            waitUntil {
+                instrumentation.runOnMainSync {
+                    if (!started && activityService.get(activity) === active && !active.state.busy) {
+                        previous = active.state.experimental
+                        active.setExperimental(true)
+                        assertTrue(active.state.experimental)
+                        active.recordEvent("DOCUMENT_RESULT_TEST")
+                        active.onAppOpened()
+                        assertTrue(active.state.busy)
+                        val callback = ComposeActivity::class.java.getDeclaredMethod("onActivityResult", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Intent::class.java)
+                        callback.isAccessible = true
+                        callback.invoke(activity, 62, android.app.Activity.RESULT_OK, Intent().setData(Uri.fromFile(output)))
+                        started = true
+                    }
+                }
+                started
             }
             waitUntil { output.exists() && output.readText().contains("DOCUMENT_RESULT_TEST") }
         } finally {

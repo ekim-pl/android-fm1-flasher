@@ -38,3 +38,11 @@ SHA-256: 4130b41693edad826a9b96adb4cd60b33b9b748de75d30f1621daf19b9495595
 Certificate SHA-256: 0ac5c7e1c3eb4360c8bdfe35207ccdf523960fa54b74606d290e5f4ae29e5bb9
 Package, versionCode 30, versionName and SDK levels verified with aapt.
 Signature verified with apksigner.
+
+CI FOLLOW-UP
+The initial CI run exposed a readiness race in the deferred-export instrumentation
+test: the Activity binds separately and can trigger a new foreground refresh after
+the test observes the service as idle. The test now waits for the Activity's binding
+and checks readiness/enables diagnostics/delivers the result in one main-thread turn.
+It still asserts a busy refresh and actual exported event contents. Both operation-log
+tests passed locally on Android 16 after this test-only correction. The APK is unchanged.
