@@ -1,0 +1,85 @@
+ZADANIE C — F3/F4, raport implementacji
+
+Zakres
+- release_bundle.py: bundletool 1.18.3, pobieranie HTTPS, SHA-256 sprawdzany
+  także dla cache przed wykonaniem JAR. Pin pochodzi z digest assetu wydania:
+  https://api.github.com/repos/google/bundletool/releases/tags/1.18.3
+  a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29
+- bundletool validate i dump manifest --module=base; package, versionName,
+  versionCode, minSdkVersion, targetSdkVersion porównane ze źródłem.
+  Odrzucane także versionCodeMajor != 0 i nieoczekiwany maxSdkVersion.
+- create zapisuje pin narzędzia i SDK w provenance. fetch Play ponownie
+  odczytuje rzeczywiste bajty AAB po sprawdzeniu checksum/provenance.
+  Stare AAB bez tej walidacji muszą zostać przebudowane.
+- Wspólny fetch wymaga bramki API34/36 dla resolved SHA; obejmuje GitHub
+  publication (także combined android-release), Play internal upload oraz
+  production promotion. Sam build nadal może działać bez platform CI.
+- Narzędzia publikacji pochodzą z domyślnej gałęzi; joby publikacji wykonują
+  się tylko dla dispatch z domyślnej gałęzi. permissions actions:read zachowane.
+  Play consumers mają jawny setup Java 17 do ponownej walidacji AAB.
+- Nie zmieniono podpisywania, pinów certyfikatów ani dowodów integracji V15/V16.
+
+Polityka zaufania i rerunów
+- Android CI musi pochodzić z tego repozytorium, jego domyślnej gałęzi,
+  event push/workflow_dispatch, właściwego workflow ID i dokładnej ścieżki.
+  PR, fork i branch feature nie dostarczają zaufanej akceptacji publikacji.
+- head_sha runu i każdego jobu musi odpowiadać dokładnemu resolved SHA tagu.
+- Plik android-ci.yml tego SHA musi być identyczny z zaufaną kopią narzędzi
+  publikacji. Zmiana workflow może więc zablokować promocję starego SHA;
+  nie ma automatycznego wyjątku omijającego tę granicę zaufania.
+- Najnowszy zaufany run dla SHA musi być completed/success. Nie cofamy się
+  do wcześniejszego zielonego runu po nowszym failed/cancelled/pending.
+- Dla każdej komórki platform (34)/(36) liczy się jej najnowszy run_attempt.
+  Częściowy rerun może zachować sukces drugiej komórki ze starszej próby;
+  nowsza porażka zawsze zastępuje stary sukces. Wymagany udany krok
+  Run platform tests. Brak, skipped, duplikat lub niekompletna macierz blokują.
+- Ponowny odczyt runu wykrywa rerun uruchomiony podczas walidacji.
+  REST paginowany; przekroczenie limitu 1000 rekordów blokuje zamiast
+  traktować niepełne dane jako dowód sukcesu. Błąd API blokuje publikację.
+
+Mapa testów do ryzyk
+F3: test_release_bundle.BundleTest
+  - dopasowanie wszystkich pól manifestu; błędny package/name/code/min/target;
+  - brak/duplikat uses-sdk, versionCodeMajor, maxSdkVersion;
+  - zły hash download/cache; validate struktury przed dump manifestu.
+F3: SignedBundleIntegrationTest (wykonany z FM1_BUNDLE_INTEGRATION=1)
+  - prawdziwy aapt2 proto manifest -> bundletool build-bundle -> jarsigner;
+  - ephemeral lokalny certyfikat, faktyczna kontrola podpisu i fingerprintu;
+  - create przyjmuje zgodny AAB, odrzuca pięć poprawnie podpisanych niezgodnych
+    AAB (package, versionCode, versionName, minimum SDK, target SDK);
+  - rzeczywisty bundletool odrzuca uszkodzony plik;
+  - testy włączone także w jobie release-tools Android CI.
+F4: test_release_platform.PlatformTest
+  - kompletny poprawny zestaw, brak CI, inny SHA, workflow ID/path, fork,
+    PR/event i gałąź; zmieniony plik workflow i disabled workflow;
+  - failed/cancelled/pending najnowszego runu bez cofania do starego sukcesu;
+  - brak/failed/skipped/duplikat komórki, inny SHA jobu, pominięty krok;
+  - częściowy rerun naprawia failure, ale nowszy failure blokuje stary success;
+  - rerun w trakcie walidacji, paginacja/limit, niepoprawny resolved SHA.
+Integracja: test_release_artifact.ArtifactTest
+  - sukces producenta wywołuje bramkę dla dokładnego SHA;
+  - odrzucenie platform blokuje fetch fdroid i play;
+  - wszystkie trzy workflowy stosują fetch przed operacją publikacji;
+  - stare provenance AAB odrzucone;
+  - istniejące testy certyfikatów, hash/provenance, V15/V16 i retry publikacji
+    zachowane (operacje publikacji są mockowane).
+
+Walidacja lokalna
+- FM1_BUNDLE_INTEGRATION=1 python3 -m unittest discover -s scripts -p 'test_*.py' -v
+  34 testy, sukces, zero pominiętych; prawdziwe narzędzia AAB opisane wyżej.
+- go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7 -shellcheck= .github/workflows/*.yml
+  sukces.
+- git diff --check: sukces.
+
+Ograniczenia / przekazanie do integracji
+- Nie uruchamiano emulatorów API34/36 ani zdalnych workflowów; testy polityki
+  REST są deterministycznymi mockami. Po scaleniu trzeba uzyskać rzeczywisty
+  zielony Android CI na domyślnej gałęzi dokładnie dla wydawanego SHA.
+- Nie wykonano uploadu, promocji, publikacji, push ani PR. Nie użyto
+  produkcyjnego klucza podpisującego ani konfiguracji Firebase.
+- Nie wykonano ponownie Gradle V15/V16; ich dotychczasowy dowód i testy
+  narzędzi pozostały obowiązkowe. Nie jest to akceptacja fizycznego FM-1.
+- Zaufanie do domyślnej gałęzi i jej administratorów pozostaje założeniem;
+  kod nie zastępuje ochrony gałęzi, środowisk i sekretów GitHub.
+- Przyszła aktualizacja bundletool wymaga aktualizacji pinu i przebudowy AAB.
+- Dokumentację MIGRATION/README i wspólny plan pozostawiono nadrzędnemu.

@@ -9,6 +9,8 @@ import re
 import subprocess
 
 from release_fixtures import evidence, fixtures
+from release_bundle import validate as validate_bundle, VERSION as BUNDLETOOL_VERSION, SHA256 as BUNDLETOOL_SHA256
+from release_platform import require_platform
 
 PACKAGE = 'pl.ekim.fm1_flasher'
 PRODUCERS = {
@@ -61,7 +63,11 @@ def create(variant, path, directory):
     expected = os.environ['EXPECTED_CERT_SHA256'].replace(':', '').strip().upper()
     if cert != expected:
         raise ValueError('Signing certificate does not match pinned fingerprint')
-    if variant != 'play':
+    if variant == 'play':
+        minimum = int(re.search(r'minSdk\s+(\d+)', gradle).group(1))
+        target_sdk = int(re.search(r'targetSdk\s+(\d+)', gradle).group(1))
+        validate_bundle(path, package, name, code, minimum, target_sdk)
+    else:
         aapt = str(Path(os.environ['ANDROID_HOME']) / 'build-tools/35.0.0/aapt')
         badging = output(aapt, 'dump', 'badging', str(path))
         identity = f"package: name='{PACKAGE}' versionCode='{code}' versionName='{name}'"
@@ -77,6 +83,9 @@ def create(variant, path, directory):
                     run_id=os.environ['GITHUB_RUN_ID'], run_attempt=int(os.environ['GITHUB_RUN_ATTEMPT']),
                     file=filename, sha256=digest(target),
                     certificate_sha256=cert)
+    if variant == 'play':
+        manifest['bundletool'] = dict(version=BUNDLETOOL_VERSION, sha256=BUNDLETOOL_SHA256,
+                                      min_sdk=minimum, target_sdk=target_sdk)
     if variant in ('fdroid', 'play') and tag:
         manifest['integration'] = evidence()
     (directory / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
@@ -109,6 +118,12 @@ def verify(directory, variant, tag, commit, run_id):
     path = directory / filename
     if path.is_symlink() or not path.is_file() or digest(path) != manifest.get('sha256'):
         raise ValueError('Artifact checksum mismatch or missing file')
+    if variant == 'play':
+        tool = manifest.get('bundletool', {})
+        if (tool.get('version') != BUNDLETOOL_VERSION or tool.get('sha256') != BUNDLETOOL_SHA256 or
+                type(tool.get('min_sdk')) is not int or type(tool.get('target_sdk')) is not int or
+                not 1 <= tool['min_sdk'] <= tool['target_sdk']):
+            raise ValueError('Missing pinned AAB manifest validation provenance; rebuild required')
     return manifest
 
 
@@ -142,6 +157,11 @@ def fetch(variant, run_id, tag, commit, directory):
     manifest = verify(directory, variant, tag, commit, run_id)
     if manifest['run_attempt'] not in successful_attempts:
         raise ValueError('Artifact was not produced by a successful build attempt')
+    require_platform(api, repo, commit)
+    if variant == 'play':
+        tool = manifest['bundletool']
+        validate_bundle(directory / manifest['file'], PACKAGE, manifest['version_name'],
+                        manifest['version_code'], tool['min_sdk'], tool['target_sdk'])
     return manifest
 
 

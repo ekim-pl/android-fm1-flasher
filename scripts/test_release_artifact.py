@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from release_artifact import fetch, fingerprint, verify
 from release_fixtures import fixtures
+from release_bundle import VERSION, SHA256
 from publish_android_release import publish
 
 
@@ -77,10 +78,16 @@ class ArtifactTest(unittest.TestCase):
 
     def test_play_requires_the_same_integration_gate_as_fdroid(self):
         old = self.directory / self.manifest['file']
-        self.manifest.update(variant='play', file='fm1-flasher-v0.10.0-play.aab')
+        self.manifest.update(variant='play', file='fm1-flasher-v0.10.0-play.aab',
+                             bundletool=dict(version=VERSION, sha256=SHA256, min_sdk=34, target_sdk=36))
         old.rename(self.directory / self.manifest['file'])
         self.save()
         self.assertEqual(verify(self.directory, 'play', self.tag, self.commit, '123'), self.manifest)
+        tool = self.manifest.pop('bundletool')
+        self.save()
+        with self.assertRaisesRegex(ValueError, 'rebuild required'):
+            verify(self.directory, 'play', self.tag, self.commit, '123')
+        self.manifest['bundletool'] = tool
         del self.manifest['integration']
         self.save()
         with self.assertRaises(ValueError):
@@ -105,13 +112,42 @@ class ArtifactTest(unittest.TestCase):
         for workflow, name in [('fdroid-release.yml', 'Build F-Droid APK'),
                                ('android-release.yml', 'fdroid / Build F-Droid APK')]:
             with self.subTest(workflow=workflow), patch.dict(os.environ, GH_REPO='owner/repo'), \
-                    patch('release_artifact.api') as api, patch('release_artifact.subprocess.run'):
+                    patch('release_artifact.api') as api, patch('release_artifact.subprocess.run'), \
+                    patch('release_artifact.require_platform') as gate:
                 api.side_effect = [dict(path='.github/workflows/' + workflow,
                                         event='workflow_dispatch',
                                         head_repository=dict(full_name='owner/repo')),
                                    {'jobs': [dict(name=name, conclusion='success', run_attempt=1),
                                              dict(name=name, conclusion='failure', run_attempt=2)]}]
                 self.assertEqual(fetch('fdroid', '123', self.tag, self.commit, self.directory), self.manifest)
+                gate.assert_called_once_with(api, 'owner/repo', self.commit)
+
+    def test_platform_gate_failure_blocks_successful_producer(self):
+        for variant in ('fdroid', 'play'):
+            with self.subTest(variant=variant), patch.dict(os.environ, GH_REPO='owner/repo'), \
+                    patch('release_artifact.api') as api, patch('release_artifact.subprocess.run'), \
+                    patch('release_artifact.verify', return_value=self.manifest), \
+                    patch('release_artifact.require_platform', side_effect=ValueError('platform failed')) as gate, \
+                    patch('release_artifact.validate_bundle') as bundle:
+                workflow, name = ('fdroid-release.yml', 'Build F-Droid APK') if variant == 'fdroid' else ('google-play.yml', 'Build Google Play AAB')
+                api.side_effect = [dict(path='.github/workflows/' + workflow, event='workflow_dispatch',
+                                        head_repository=dict(full_name='owner/repo')),
+                                   {'jobs': [dict(name=name, conclusion='success', run_attempt=1)]}]
+                with self.assertRaisesRegex(ValueError, 'platform failed'):
+                    fetch(variant, '123', self.tag, self.commit, self.directory)
+                gate.assert_called_once_with(api, 'owner/repo', self.commit)
+                bundle.assert_not_called()
+
+    def test_all_publication_workflows_use_fetch_before_mutations(self):
+        for filename, variant, mutation in [('android-publish.yml', 'fdroid', 'scripts/publish_android_release.py'),
+                                             ('google-play-upload.yml', 'play', 'bundle exec fastlane supply'),
+                                             ('promote-production.yml', 'play', 'bundle exec fastlane supply')]:
+            with self.subTest(workflow=filename):
+                workflow = (Path('.github/workflows') / filename).read_text()
+                self.assertLess(workflow.index('scripts/release_artifact.py fetch ' + variant), workflow.index(mutation))
+                self.assertIn('actions: read', workflow)
+                self.assertIn("if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)", workflow)
+                self.assertIn('ref: ${{ github.event.repository.default_branch }}', workflow)
 
     def test_wrong_workflow_is_rejected(self):
         with patch.dict(os.environ, GH_REPO='owner/repo'), patch('release_artifact.api') as api:
