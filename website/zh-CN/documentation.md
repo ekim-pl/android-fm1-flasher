@@ -159,8 +159,6 @@ OAuth 支持浏览器 Authorization Code **PKCE S256** 与服务 **Client Creden
 
 ## 应用截图
 
-[应用截图 — 0.10.0](gallery.md)
-
 [![简体中文固件库](../../fastlane/metadata/android/zh-CN/images/phoneScreenshots/01.png)](../../fastlane/metadata/android/zh-CN/images/phoneScreenshots/01.png)
 
 

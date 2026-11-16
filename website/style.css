@@ -94,7 +94,3 @@ header .project-nav a + a::before { content: '·'; display: inline-block; margin
 /* Captured app screens, with full-resolution image links. */
 main img { max-width: 100%; height: auto; }
 body[data-page="documentation.html"] main img { max-width: min(100%, 320px); border-radius: 16px; }
-body[data-page="gallery.html"] main { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 24px; }
-body[data-page="gallery.html"] main > * { grid-column: 1 / -1; }
-body[data-page="gallery.html"] main > .screenshot-card { grid-column: auto; margin: 0; padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; }
-.screenshot-card img { display: block; width: 100%; border-radius: 10px; margin-bottom: 12px; }

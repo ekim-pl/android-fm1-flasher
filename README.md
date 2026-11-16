@@ -64,6 +64,6 @@ Local Google Play test APKs use the test Firebase project. F-Droid test APKs use
 
 ## Screenshots
 
-[Browse the screenshot gallery](website/gallery.md) — seven English screens, plus Polish and Simplified Chinese. Captured from version 0.10.0 on Android 16.
+Screenshots are included in the [user guide](docs/user-guide.md#screenshots). Captured from version 0.10.0 on Android 16.
 
-[<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/01.png" width="270" alt="FM-1 Flasher firmware library">](website/gallery.md)
+[<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/01.png" width="270" alt="FM-1 Flasher firmware library">](fastlane/metadata/android/en-US/images/phoneScreenshots/01.png)

@@ -30,7 +30,7 @@ fastlane/metadata/android/{en-US,pl-PL,zh-CN}/ contains store text and screensho
 Version 31 changelogs describe this milestone; earlier changelogs remain historical.
 Current 0.10.0 screenshots: seven English screens and one each in Polish and
 Simplified Chinese. Captured on Android 16 from the Firebase test variant. See
-qa/0.10.0.txt and ../website/gallery.md. The gallery is available in all three languages.
+qa/0.10.0.txt. Screenshots are embedded in the localized user guides.
 Build the public website with scripts/build_site.py; validate with scripts/check_site.py.
 Branch changes do not update the live privacy URL until deployment.
 

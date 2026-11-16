@@ -55,5 +55,3 @@ Dokumentacja repozytorium jest po angielsku. Opisy aplikacji, jej zasoby i mater
 ## Wspólna publikacja z repozytorium F-Droid
 
 GitHub Pages ma jedno aktywne wdrożenie witryny dla repozytorium. Po dodaniu publikacji F-Droid należy dołączać katalog `fdroid/repo/` do `build/site/` przed wysłaniem artefaktu Pages. Witryna i repozytorium APK muszą być publikowane razem: workflow wdrażający wyłącznie APK zastąpiłby witrynę, a wdrożenie samej witryny usunęłoby repozytorium APK. Obecny workflow publikuje witrynę i dokumentację.
-
-Galeria ma przetłumaczone podpisy i odnośniki do oryginalnych PNG. Używa tych samych dziewięciu zrzutów co materiały sklepowe. Generator kopiuje pliki do witryny i sprawdza galerię w trzech językach.

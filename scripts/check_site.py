@@ -17,7 +17,6 @@ class Document(HTMLParser):
         self.ids = set()
         self.duplicate_ids = set()
         self.links = []
-        self.images = []
         self.html_language = None
         self.language = None
         self.page = None
@@ -34,8 +33,6 @@ class Document(HTMLParser):
             if attrs['id'] in self.ids:
                 self.duplicate_ids.add(attrs['id'])
             self.ids.add(attrs['id'])
-        if tag == 'img' and self.in_main:
-            self.images.append(attrs)
         if tag == 'html':
             self.html_language = attrs.get('lang')
         elif tag == 'body':
@@ -80,14 +77,6 @@ def check():
         if (document.html_language != LANGUAGES[language]['html']
                 or document.language != language or document.page != page):
             errors.append(f'{prefix}: wrong page language or identity')
-        if page == 'gallery.html':
-            if len(document.images) != 9:
-                errors.append(f'{prefix}: expected seven English and two translated screenshots')
-            for shot in document.images:
-                if not shot.get('alt') or shot.get('loading') != 'lazy':
-                    errors.append(f'{prefix}: screenshot needs a caption and lazy loading')
-                if not shot.get('src', '').startswith('../assets/screenshots/') and not shot.get('src', '').startswith('assets/screenshots/'):
-                    errors.append(f'{prefix}: screenshot was not copied into the site')
         if document.duplicate_ids:
             errors.append(f'{prefix}: duplicate anchors: {document.duplicate_ids}')
         if not ''.join(document.main_text).strip():

@@ -159,8 +159,6 @@ Odnośniki do licencji w O aplikacji otwierają pełnoekranowy widok **Licencja*
 
 ## Zrzuty ekranu
 
-[Zrzuty ekranu — 0.10.0](gallery.md)
-
 [![Biblioteka po polsku](../../fastlane/metadata/android/pl-PL/images/phoneScreenshots/01.png)](../../fastlane/metadata/android/pl-PL/images/phoneScreenshots/01.png)
 
 

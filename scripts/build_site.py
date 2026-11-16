@@ -20,11 +20,10 @@ LANGUAGES = {
         'html': 'en', 'name': 'English', 'skip': 'Skip to content',
         'languages': 'Choose language', 'navigation': 'Project navigation',
         'developers': 'Developers', 'guide': 'Guide', 'about': 'About', 'privacy': 'Privacy',
-        'gallery': 'Gallery', 'releases': 'Releases', 'license': 'License', 'independent': 'An Android app for browsing firmware and updating the M-VAVE FM-1 over USB MIDI. Firmware and artwork belong to their respective authors.',
+        'releases': 'Releases', 'license': 'License', 'independent': 'An Android app for browsing firmware and updating the M-VAVE FM-1 over USB MIDI. Firmware and artwork belong to their respective authors.',
         'awesome_text': 'Discover community firmware, projects and resources for the M-VAVE FM-1.', 'awesome_cta': 'Explore Awesome FM-1',
         'description': 'FM-1 Flasher for Android: M-VAVE FM-1 firmware updates over USB MIDI. Guides, documentation and privacy.',
         'titles': {
-            'gallery.html': 'Screenshot gallery',
             'index.html': 'FM-1 Flasher — firmware over USB MIDI',
             'documentation.html': 'Technical guide', 'about.html': 'About the app',
             'privacy.html': 'Privacy policy', 'license.html': 'MIT License',
@@ -38,11 +37,10 @@ LANGUAGES = {
         'html': 'pl', 'name': 'Polski', 'skip': 'Przejdź do treści',
         'languages': 'Wybierz język', 'navigation': 'Nawigacja projektu',
         'developers': 'Dla twórców', 'guide': 'Instrukcja', 'about': 'O aplikacji', 'privacy': 'Prywatność',
-        'gallery': 'Galeria', 'releases': 'Wydania', 'license': 'Licencja', 'independent': 'Aplikacja na Androida do przeglądania firmware i aktualizowania M-VAVE FM-1 przez USB MIDI. Firmware i grafiki należą do ich autorów.',
+        'releases': 'Wydania', 'license': 'Licencja', 'independent': 'Aplikacja na Androida do przeglądania firmware i aktualizowania M-VAVE FM-1 przez USB MIDI. Firmware i grafiki należą do ich autorów.',
         'awesome_text': 'Odkryj firmware, projekty i zasoby społeczności dla M-VAVE FM-1.', 'awesome_cta': 'Poznaj Awesome FM-1',
         'description': 'FM-1 Flasher dla Androida: aktualizacja M-VAVE FM-1 przez USB MIDI. Instrukcje, dokumentacja i prywatność.',
         'titles': {
-            'gallery.html': 'Galeria ekranów',
             'index.html': 'FM-1 Flasher — firmware przez USB MIDI',
             'documentation.html': 'Instrukcja techniczna', 'about.html': 'O aplikacji',
             'privacy.html': 'Polityka prywatności', 'license.html': 'Licencja MIT',
@@ -56,11 +54,10 @@ LANGUAGES = {
         'html': 'zh-Hans', 'name': '简体中文', 'skip': '跳转到正文',
         'languages': '选择语言', 'navigation': '项目导航',
         'developers': '固件开发者', 'guide': '使用指南', 'about': '关于应用', 'privacy': '隐私',
-        'gallery': '截图', 'releases': '发布版本', 'license': '许可证', 'independent': '一款用于浏览固件并通过 USB MIDI 更新 M-VAVE FM-1 的 Android 应用。固件和图像的权利归各自作者所有。',
+        'releases': '发布版本', 'license': '许可证', 'independent': '一款用于浏览固件并通过 USB MIDI 更新 M-VAVE FM-1 的 Android 应用。固件和图像的权利归各自作者所有。',
         'awesome_text': '探索 M-VAVE FM-1 的社区固件、项目和资源。', 'awesome_cta': '探索 Awesome FM-1',
         'description': 'Android 版 FM-1 Flasher：通过 USB MIDI 更新 M-VAVE FM-1 固件。使用指南、技术文档与隐私政策。',
         'titles': {
-            'gallery.html': '应用截图库',
             'index.html': 'FM-1 Flasher — USB MIDI 固件更新',
             'documentation.html': '技术指南', 'about.html': '关于应用',
             'privacy.html': '隐私政策', 'license.html': 'MIT 许可证',
@@ -72,7 +69,6 @@ LANGUAGES = {
     },
 }
 PAGES = {
-    'gallery.html': {'en': 'website/gallery.md', 'pl': 'website/pl/gallery.md', 'zh-CN': 'website/zh-CN/gallery.md'},
     'developers.html': {'en': 'website/developers.md', 'pl': 'website/pl/developers.md', 'zh-CN': 'website/zh-CN/developers.md'},
     'index.html': {'en': 'website/index.md', 'pl': 'website/pl/index.md', 'zh-CN': 'website/zh-CN/index.md'},
     'documentation.html': {'en': 'docs/user-guide.md', 'pl': 'website/pl/documentation.md', 'zh-CN': 'website/zh-CN/documentation.md'},
@@ -131,10 +127,6 @@ class Links(Treeprocessor):
                 if source.startswith('fastlane/metadata/android/'):
                     element.set('width', '1080')
                     element.set('height', '2400')
-        if self.source.endswith('gallery.md'):
-            for paragraph in tree.iter('p'):
-                if paragraph.find('.//img') is not None:
-                    paragraph.set('class', 'screenshot-card')
         for element in tree.iter('a'):
             href = element.get('href', '')
             url = urlsplit(href)
@@ -201,7 +193,7 @@ def write_page(language, page, output):
                       f'hreflang="{html_language}" aria-label="{LANGUAGES[code]["name"]}" title="{LANGUAGES[code]["name"]}"{current}><span aria-hidden="true">{flags[code]}</span></a>')
         alternates += f'<link rel="alternate" hreflang="{html_language}" href="{target}">\n'
     nav = ''.join(f'<a href="{relative(f"{language}/{target}", output)}">{ui[label]}</a>'
-                  for target, label in [('documentation.html', 'guide'), ('gallery.html', 'gallery'), ('developers.html', 'developers'), ('about.html', 'about'),
+                  for target, label in [('documentation.html', 'guide'), ('developers.html', 'developers'), ('about.html', 'about'),
                                         ('privacy.html', 'privacy')])
     if repository_url:
         nav += f'<a href="{escape(repository_url, quote=True)}/releases">{ui["releases"]}</a>'

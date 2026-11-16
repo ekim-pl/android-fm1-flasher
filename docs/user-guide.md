@@ -176,8 +176,6 @@ License links in About open a full-screen **License** page. The header and syste
 
 ## Screenshots
 
-[Screenshots — 0.10.0](../website/gallery.md)
-
 [![Library — search, source colors and firmware cards](../fastlane/metadata/android/en-US/images/phoneScreenshots/01.png)](../fastlane/metadata/android/en-US/images/phoneScreenshots/01.png)
 
 [![Devices — no instrument connected](../fastlane/metadata/android/en-US/images/phoneScreenshots/02.png)](../fastlane/metadata/android/en-US/images/phoneScreenshots/02.png)
