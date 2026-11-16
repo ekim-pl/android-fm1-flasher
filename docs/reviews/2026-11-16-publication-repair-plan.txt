@@ -66,6 +66,6 @@ ZAKOŃCZENIE 2026-11-16
 A–E wykonane lokalnie; wszystkie implementacje scalone, przegląd i ponowny
 audyt testów zapisane w 2026-11-16-publication-coverage-review.txt.
 387 wykonań JVM, 18 integracyjnych firmware, 34 narzędzi publikacji,
-55 API36 oraz dwa cold-process etapy OAuth: poprawne. Pozostałe warunki
+53 API36 oraz dwa cold-process etapy OAuth: poprawne. Pozostałe warunki
 akceptacji sprzętowej i zdalnego CI są jawnie wymienione w raporcie końcowym.
 Bez push/PR/publikacji.

@@ -84,7 +84,7 @@ WYKONANE PO SCALENIU PRZEZ AGENTA NADRZĘDNEGO
 - :app:firmwareIntegrationTest: 18/18, świeże wykonanie, fixture V15/V16,
   symulowany transport/recovery. BUILD SUCCESSFUL.
 - API36 (Android16 emulator-5554): zbudowane tutaj APK zainstalowane ponownie.
-  13 klas zgodnych z CI, 55/55 testów, osobno cold seed i recover 2/2.
+  13 klas zgodnych z CI, 53/53 testów, osobno cold seed i recover 2/2.
   Każde uruchomienie sprawdzone przez wynik OK, nie sam kod wyjścia adb.
 - FM1_BUNDLE_INTEGRATION=1 python3 -m unittest discover -s scripts -p 'test_*.py':
   34/34, bez pominięć, w tym realne AAB.
