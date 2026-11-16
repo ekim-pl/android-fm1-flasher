@@ -163,6 +163,7 @@ class FirmwareRepository(private val storage: AppStorage, private val http: Http
         val latest = catalog?.entries?.singleOrNull { it.id == id }
         check(catalog == null || latest != null) { failed(msg("firmware_removed")) }
         val effective = if (latest?.sha256 == saved.entry.sha256) latest else saved.entry
+        check(catalog?.conflicting(effective) != true) { failed(msg("source_conflict")) }
         val bytes = storage.read(packagePath(saved.entry.sha256), FirmwarePackage.MAX_SIZE) ?: failed(msg("local_file_invalid"))
         check(bytes.size.toLong() == saved.bytes) { failed(msg("local_file_invalid")) }
         return saved.copy(entry = effective) to FirmwarePackage.parse(bytes, effective.sha256, effective.product)
