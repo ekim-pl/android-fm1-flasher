@@ -1,0 +1,20 @@
+FM-1 Flasher 0.10.0-experimental.38 — final prerelease candidate
+versionCode: 38; package: pl.ekim.fm1_flasher; minimum Android: 14 / API 34.
+
+Persistent device colors, debug-only FM1 Color Demo and EN/PL/ZH documentation.
+Includes fixes discovered during candidate validation:
+- Scroll the color UI test to saved devices on smaller emulator screens.
+- Keep ComposeActivity as the default package launcher; the demo has lower priority.
+
+Local verification:
+- 26 instrumentation tests passed on Android 16, covering FleetUiTest,
+  MainActivityLaunchTest, OperationLogServiceTest, SettingsUiTest,
+  SourceAuthenticationTest, PendingOAuthCallbackTest and UsbPermissionIntentTest.
+- Prior candidate passed shared JVM/app unit tests, lint and signed APK build.
+- Website build/check passed (48 pages).
+
+Final build requires signed android-debug.yml success and exact-commit API34/36
+platform CI success. Downloaded APK, manifest, checksum and verification report
+are stored in dist/0.10.0-experimental.38/.
+No public GitHub release or Play upload is part of this build preparation.
+Physical USB flashing and native iOS runtime acceptance remain unverified.

@@ -1,7 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
         <activity android:name=".FleetDemoActivity" android:exported="true" android:label="FM1 Color Demo">
-            <intent-filter>
+            <!-- Keep the real application as the default package launch target. -->
+            <intent-filter android:priority="-1">
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>

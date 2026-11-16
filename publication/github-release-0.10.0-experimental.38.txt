@@ -1,0 +1,19 @@
+FM-1 Flasher 0.10.0 experimental — build 38
+
+Android 14+ developer prerelease build. Not a Google Play production release.
+
+Changes since build 35:
+- Choose one of six colors for connected or saved/disconnected FM1 instruments.
+- Preserve manually chosen colors after restart and explicit device pairing, even with a default instrument name.
+- Show matching accents in device lists, queued tasks, task history and flashing progress.
+- Keep each task's original color in history; preserve error/warning indicators and block editing for active/queued devices.
+- Add the debug-only FM1 Color Demo launcher for hardware-free visual testing.
+- Keep the real application as the default package launcher when the debug demo is installed.
+- Make the color UI test scroll to disconnected devices on smaller emulator screens.
+- Update English, Polish and Simplified Chinese guides and in-app About documents.
+
+The CI developer APK uses the TEST Firebase project and the existing developer signing key.
+Usage statistics are enabled by default unless previously disabled; Settings → Usage statistics allows opt-out.
+Demo preferences are separate from the real device list. No physical USB flashing is performed by the demo.
+
+Validation and artifact identity are recorded in publication/qa/0.10.0-experimental.38.txt.
