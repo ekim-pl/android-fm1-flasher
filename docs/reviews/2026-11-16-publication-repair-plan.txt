@@ -1,0 +1,52 @@
+PLAN NAPRAW PO AUDYCIE PUBLIKACYJNYM
+Gałąź integracyjna: repair/publication-audit-2026-11-16
+Baza kodu: a64ee492fa55c6c66c435cd02eeeefc8dfc68ffd
+Źródło: 2026-11-16-publication-audit.txt
+
+Każdy agent implementuje w osobnym worktree z zatwierdzonej wspólnej bazy,
+wykonuje testy swojego zakresu i zostawia commit do scalenia. Bez push/PR,
+publikacji i dalszego delegowania. Nie osłabiać walidacji firmware, tożsamości,
+ciągłości, pinningu ani utrwalania informacji o rozpoczęciu zapisu.
+
+A. F1 + F6: Bezpieczna obsługa błędów trwałości i ograniczenie historii.
+Właściciel: agent implementacji transferu/storage.
+Zakres: FlasherService, FleetStore, FlashJournal i potrzebne małe helpery;
+testy JVM/instrumentalne tego zakresu. Zachować obowiązkowy zapis przed
+pierwszą komendą zmieniającą instrument. Awaria zapisu postępu nie przerywa
+aktywnego transferu; blokuje kolejne zadania, daje zachowawczy wynik po
+restarcie i widoczny błąd zapisu. Nie mylić potwierdzenia instrumentu z zapisem
+historii. Ograniczyć zakończoną historię bez usuwania aktywnych zadań,
+ograniczyć I/O postępu i usunąć kosztowne zapisy floty z głównego wątku.
+Testy: awaria przed/w trakcie/po transferze, błąd zapisu wyniku błędu, stop
+kolejki, restart, retencja i pinning, duża historia. Bez zmian ComposeActivity.
+
+B. F2: Odporny na lifecycle callback OAuth.
+Właściciel: agent implementacji OAuth.
+Zakres: ComposeActivity, ewentualny dedykowany magazyn callbacków, testy.
+Obsługa po rotacji i zimnym starcie podczas busy; dokładnie jedna wymiana,
+TTL i deduplikacja, brak kodów/tokenów w logach i zwykłym Bundle. Zachować
+PKCE/state i granice źródła. Nie edytować FlasherService/FleetStore.
+
+C. F3 + F4: Tożsamość AAB i bramka testów platformowych.
+Właściciel: agent narzędzi publikacji.
+Zakres: scripts/release_artifact.py, helpery/testy Python, workflowy wydania.
+Odczytać manifest base AAB (przypięty, zweryfikowany bundletool), sprawdzić
+package/versionName/versionCode/SDK, nie polegać tylko na build.gradle.
+Wymagać zaufanych udanych testów API34/36 dokładnie wydawanego SHA przed
+publikacją/produkcją, z obsługą braków, błędów i niekompletnej macierzy.
+Testy negatywne dla obu bramek. Nie wykonywać operacji na sklepach/GitHub.
+
+D. F5 i integracja: agent nadrzędny.
+Po zakończeniu implementacji scalić wszystkie commity; rozwiązać konflikty,
+wykonać testy i review scalonego kodu. Aktualizować bieżącą dokumentację
+architektury, build/publish/upload/promote i odnośniki; nie przepisywać
+historycznych wyników QA. Nie obiecywać przyjęcia do F-Droid.
+
+E. Ponowny audyt skierowany na pokrycie testami.
+Po scaleniu zmapować ryzyka i ścieżki na rzeczywiste testy: sukcesy, odrzucenia,
+awarie I/O, restart/lifecycle, współbieżność, transport, granice zaufania,
+artefakty. Oddzielić unit/integration/platform/hardware i testy wykonane od
+jedynie istniejących. Uzupełnić kluczowe braki ujawnione przez review; nie
+podawać procentu pokrycia bez pomiaru. Raport: ustalenia, poprawki, wyniki,
+pozostałe luki i wymagania sprzętowe. Jeśli możliwy jest pomiar coverage,
+opisać zakres i ograniczenia zamiast utożsamiać go z jakością testów.
