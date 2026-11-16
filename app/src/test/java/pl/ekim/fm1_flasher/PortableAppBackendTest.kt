@@ -51,6 +51,27 @@ class PortableAppBackendTest {
         override fun openLink(url: String) = Unit
         override fun exportText(name: String, text: String) = Unit
     }
+    @Test fun logRetentionPersistsAndRejectsInvalidPeriods() = runBlocking {
+        val storage = Storage(); val midi = Midi()
+        val http = object : HttpClient { override fun get(url: String, limit: Int, artworkOnly: Boolean): ByteArray = error("No network") }
+        FirmwareRepository(storage, http, ::epochMillis).saveSettings(LibrarySettings(offline = true))
+        val backend = PortableAppBackend(midi, midi, storage, http, Host())
+        withTimeout(5000) { backend.state.first { it.initialized && !it.busy } }
+        backend.perform(AppAction(AppActionKind.LOG_RETENTION, "30"))
+        delay(50)
+        assertEquals(7, backend.state.value.operationLogDays)
+        backend.perform(AppAction(AppActionKind.EXPERIMENTAL, "true"))
+        withTimeout(5000) { backend.state.first { !it.busy && it.experimental } }
+        backend.perform(AppAction(AppActionKind.LOG_RETENTION, "14"))
+        withTimeout(5000) { backend.state.first { it.operationLogDays == 14 } }
+        assertEquals(14, OperationLog(storage, ::epochMillis).retentionDays())
+        backend.perform(AppAction(AppActionKind.LOG_RETENTION, "0"))
+        withTimeout(5000) { backend.state.first { (it.status as? AppText.Resource)?.key == "library_change_error" } }
+        assertEquals(14, backend.state.value.operationLogDays)
+        val restored = PortableAppBackend(midi, midi, storage, http, Host())
+        withTimeout(5000) { restored.state.first { it.initialized && !it.busy } }
+        assertEquals(14, restored.state.value.operationLogDays)
+    }
     @Test fun sourceColorPersistsOfflineWithoutProviderRequests() = runBlocking {
         val storage = Storage(); val midi = Midi(); var requests = 0
         val http = object : HttpClient { override fun get(url: String, limit: Int, artworkOnly: Boolean): ByteArray { requests++; error("Network must not be used") } }

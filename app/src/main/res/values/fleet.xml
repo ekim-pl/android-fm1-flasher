@@ -68,7 +68,7 @@
     <string name="tools_open">Modes / chip</string>
     <string name="mode_current">Current MIDI device: %1$s</string>
     <string name="operation_log_title">Operation log</string>
-    <string name="operation_log_help">The app keeps a local operation and error log (up to 256 KiB). Export it when reporting a problem. No log is uploaded automatically.</string>
+    <string name="operation_log_help">The app keeps a local operation and error log (daily files, seven days by default; up to 256 KiB per day and 10 MiB total). Export it when reporting a problem. No log is uploaded automatically.</string>
     <string name="operation_log_export">Export operation log</string>
     <string name="operation_log_clear">Clear operation log</string>
     <string name="operation_log_clear_confirm">Delete the local operation log? Previously exported files remain unchanged.</string>

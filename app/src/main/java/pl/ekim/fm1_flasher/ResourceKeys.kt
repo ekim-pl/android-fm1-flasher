@@ -530,5 +530,8 @@ internal val androidResourceKeys = mapOf(
     R.string.analytics_offline to "analytics_offline",
     R.string.analytics_save_failed to "analytics_save_failed",
     R.string.license_title to "license_title",
+    R.string.log_retention to "log_retention",
+    R.string.retention_days to "retention_days",
+    R.string.log_retention_help to "log_retention_help",
 )
 internal val androidResourceIds = androidResourceKeys.entries.associate { it.value to it.key }

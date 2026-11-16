@@ -35,6 +35,7 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
     init { scope.launch {
         try {
             readConfiguration()
+            state.update { it.copy(operationLogDays = operationLog.retentionDays()) }
             analytics.setOffline(repository.settings().offline)
             state.update { it.copy(analyticsAvailable = analytics.available, analyticsPreference = analytics.preference) }
             host.setAppearance(state.value.appearance)
@@ -124,6 +125,11 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
                 runCatching { analytics.setPreference(AnalyticsPreference.valueOf(action.id)) }
                     .onFailure { report(msg("analytics_save_failed")) }
                 state.update { it.copy(analyticsPreference = analytics.preference) }
+            }
+            AppActionKind.LOG_RETENTION -> if (state.value.experimental && !state.value.busy) logScope.launch {
+                runCatching { operationLog.setRetentionDays(action.id.toInt()) }
+                    .onFailure { report(it.appMessage("library_change_error")) }
+                state.update { it.copy(operationLogDays = operationLog.retentionDays()) }
             }
             AppActionKind.LOG_EXPORT -> if (state.value.experimental && !state.value.busy) logScope.launch {
                 runCatching { host.exportText("fm1-operations-${epochMillis()}.jsonl", operationLog.export()) }

@@ -68,7 +68,7 @@
     <string name="tools_open">Tryby / kość</string>
     <string name="mode_current">Bieżące urządzenie MIDI: %1$s</string>
     <string name="operation_log_title">Log operacji</string>
-    <string name="operation_log_help">Aplikacja zapisuje lokalnie operacje i błędy (do 256 KiB). Wyeksportuj log przy zgłaszaniu problemu. Log nie jest automatycznie wysyłany.</string>
+    <string name="operation_log_help">Aplikacja zapisuje lokalnie operacje i błędy (pliki dzienne, domyślnie siedem dni; do 256 KiB dziennie i 10 MiB łącznie). Wyeksportuj log przy zgłaszaniu problemu. Log nie jest automatycznie wysyłany.</string>
     <string name="operation_log_export">Eksportuj log operacji</string>
     <string name="operation_log_clear">Wyczyść log operacji</string>
     <string name="operation_log_clear_confirm">Usunąć lokalny log operacji? Wcześniej wyeksportowane pliki pozostaną bez zmian.</string>

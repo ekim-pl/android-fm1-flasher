@@ -132,7 +132,7 @@ JEDEC detection uses a separate USB ROM/download-mode device. The result is neve
 
 ## Diagnostics and storage cleanup
 
-The app always records a bounded local operation log (256 KiB, oldest entries removed). It survives app restarts and includes timestamps, actions, USB/MIDI port changes, firmware-transfer stages and caught errors. Raw MIDI traffic and firmware bytes are not recorded. Open **Settings → Experimental features** to access **Export operation log** (JSON Lines, `.jsonl`) and **Clear operation log**. Export uses the system file picker; no log is uploaded automatically. Clearing requires one confirmation and does not delete copies you already exported. New events continue to be logged. The separate MIDI Logger remains a live raw-MIDI diagnostic tool.
+The app always records a bounded local operation log (daily files, seven days by default; up to 256 KiB per day and 10 MiB total). It survives app restarts and includes timestamps, actions, USB/MIDI port changes, firmware-transfer stages and caught errors. Raw MIDI traffic and firmware bytes are not recorded. Open **Settings → Experimental features** to access **Export operation log** (JSON Lines, `.jsonl`) and **Clear operation log**. Export uses the system file picker; no log is uploaded automatically. Clearing requires one confirmation and does not delete copies you already exported. New events continue to be logged. The separate MIDI Logger remains a live raw-MIDI diagnostic tool.
 
 In **Settings → Clear downloaded firmware**, confirm once to delete all downloaded package files and metadata, including damaged/orphan files. The selected package and single-package Undo are cleared. Favorites, catalog sources, device names, task history and recovery backups remain. Remove queued tasks first; cleanup is blocked during work and while any queued/running job owns a package. Offline installation requires downloading packages again.
 
@@ -183,3 +183,6 @@ License links in About open a full-screen **License** page. The header and syste
 [![Devices — no instrument connected](../fastlane/metadata/android/en-US/images/phoneScreenshots/02.png)](../fastlane/metadata/android/en-US/images/phoneScreenshots/02.png)
 
 [![Tasks — an empty installation plan](../fastlane/metadata/android/en-US/images/phoneScreenshots/03.png)](../fastlane/metadata/android/en-US/images/phoneScreenshots/03.png)
+
+
+Completed task history is kept for 30 days by default; Settings lets you change retention or clear completed history. Queued/running jobs, backups and unresolved-session evidence are protected. Diagnostic log retention is configurable to 7, 14 or 30 days. Expired logs are removed when logs are written or accessed; an unused app cleans up on its next activity. Manual log clearing removes retained daily files, not exported copies.

@@ -72,6 +72,10 @@ import androidx.compose.ui.unit.dp
                 HorizontalDivider()
                 Text(t("operation_log_title"), style = MaterialTheme.typography.titleMedium)
                 Text(t("operation_log_help"), style = MaterialTheme.typography.bodySmall)
+                SettingOptions(t("log_retention"), state.operationLogDays.toString(), OperationLog.RETENTION_DAYS.map { it.toString() to t("retention_days", it) }, !state.busy) {
+                    send(AppAction(AppActionKind.LOG_RETENTION, it))
+                }
+                Text(t("log_retention_help"), style = MaterialTheme.typography.bodySmall)
                 OutlinedButton({ send(AppAction(AppActionKind.LOG_EXPORT)) }, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(t("operation_log_export")) }
                 OutlinedButton({ confirm(AppAction(AppActionKind.LOG_CLEAR), msg("operation_log_clear_confirm")) }, modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(t("operation_log_clear")) }
             }

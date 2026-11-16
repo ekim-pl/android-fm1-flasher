@@ -68,7 +68,7 @@
     <string name="tools_open">模式 / 芯片</string>
     <string name="mode_current">当前 MIDI 设备：%1$s</string>
     <string name="operation_log_title">操作日志</string>
-    <string name="operation_log_help">应用在本地记录操作和错误（最多 256 KiB）。报告问题时可导出日志。不会自动上传日志。</string>
+    <string name="operation_log_help">应用在本地记录操作和错误（按日保存，默认保留七天；每天最多 256 KiB，总计最多 10 MiB）。报告问题时可导出日志。不会自动上传日志。</string>
     <string name="operation_log_export">导出操作日志</string>
     <string name="operation_log_clear">清除操作日志</string>
     <string name="operation_log_clear_confirm">删除本地操作日志？已导出的文件不受影响。</string>

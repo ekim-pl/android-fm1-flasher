@@ -155,6 +155,8 @@ class FleetUiTest : InstrumentationTestCase() {
                 val context = instrumentation.targetContext.createConfigurationContext(config)
                 fun t(key: String) = context.getString(context.resources.getIdentifier(key, "string", context.packageName))
                 click(t("settings"))
+                click(context.getString(context.resources.getIdentifier("retention_days", "string", context.packageName), 14))
+                assertEquals(AppAction(AppActionKind.LOG_RETENTION, "14"), actions.last())
                 click(t("operation_log_export"))
                 assertEquals(AppActionKind.LOG_EXPORT, actions.last().kind)
                 click(t("operation_log_clear"))

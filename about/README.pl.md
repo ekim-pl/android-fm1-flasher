@@ -50,7 +50,7 @@ Kontakt: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
 
 ## Diagnostyka i czyszczenie pamięci
 
-Aplikacja stale zapisuje lokalny log operacji (do 256 KiB; najstarsze wpisy są usuwane). Log przetrwa restart aplikacji i zawiera czas, działania, zmiany portów USB/MIDI, etapy instalacji oraz przechwycone błędy. Nie zapisuje surowego ruchu MIDI ani plików firmware. Włącz **Ustawienia → Funkcje eksperymentalne**, aby użyć **Eksportuj log operacji** (JSON Lines, `.jsonl`) i **Wyczyść log operacji**. Eksport otwiera systemowy wybór pliku; log nie jest automatycznie wysyłany. Czyszczenie wymaga jednego potwierdzenia i nie usuwa wcześniej wyeksportowanych kopii. Kolejne zdarzenia są nadal zapisywane. Osobny Logger MIDI służy do podglądu surowego ruchu MIDI.
+Aplikacja stale zapisuje lokalny log operacji (pliki dzienne, domyślnie siedem dni; do 256 KiB dziennie i 10 MiB łącznie). Log przetrwa restart aplikacji i zawiera czas, działania, zmiany portów USB/MIDI, etapy instalacji oraz przechwycone błędy. Nie zapisuje surowego ruchu MIDI ani plików firmware. Włącz **Ustawienia → Funkcje eksperymentalne**, aby użyć **Eksportuj log operacji** (JSON Lines, `.jsonl`) i **Wyczyść log operacji**. Eksport otwiera systemowy wybór pliku; log nie jest automatycznie wysyłany. Czyszczenie wymaga jednego potwierdzenia i nie usuwa wcześniej wyeksportowanych kopii. Kolejne zdarzenia są nadal zapisywane. Osobny Logger MIDI służy do podglądu surowego ruchu MIDI.
 
 **Ustawienia → Wyczyść pobrane firmware** usuwa po jednym potwierdzeniu wszystkie pobrane paczki i metadane, w tym uszkodzone i osierocone pliki. Czyści wybór paczki i możliwość cofnięcia pojedynczego usunięcia. Zachowuje ulubione, źródła katalogu, nazwy instrumentów, historię zadań i kopie odzyskiwania. Najpierw usuń oczekujące zadania; czyszczenie jest blokowane podczas pracy oraz przy paczkach przypisanych do oczekujących/trwających zadań. Instalacja offline wymaga ponownego pobrania paczek.
 
@@ -62,3 +62,6 @@ Aplikacja stale zapisuje lokalny log operacji (do 256 KiB; najstarsze wpisy są 
 
 
 Źródła katalogów na Androidzie korzystają z thefirmwarehub, awesome-fm1, wydań GitHub (repo-url) lub pliku FWSC (pkg-url). Edycja źródła obsługuje Basic, Bearer, klucz API w nagłówku oraz OAuth 2.0 (PKCE w przeglądarce lub Client Credentials). Poświadczenia są szyfrowane lokalnie. Ręczna deklaracja zgodności dotyczy wyłącznie konkretnego SHA-256. Nowe adaptery sieciowe i autoryzacja dotyczą Androida; backend Apple zachowuje dotychczasową obsługę Hub.
+
+
+Historia zakończonych zadań jest domyślnie przechowywana przez 30 dni. W Ustawieniach można zmienić okres lub wyczyścić zakończoną historię. Zadania oczekujące i trwające, backupy oraz zapis nierozstrzygniętej sesji są chronione. Logi diagnostyczne można przechowywać przez 7, 14 lub 30 dni. Starsze logi są usuwane przy zapisie lub odczycie; nieużywana aplikacja sprząta przy kolejnej aktywności. Ręczne czyszczenie usuwa zachowane pliki dzienne, ale nie wyeksportowane kopie.

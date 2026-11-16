@@ -50,7 +50,7 @@ Contact: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
 
 ## Diagnostics and storage cleanup
 
-The app always records a bounded local operation log (256 KiB, oldest entries removed). It survives app restarts and includes timestamps, actions, USB/MIDI port changes, firmware-transfer stages and caught errors. Raw MIDI traffic and firmware bytes are not recorded. Open **Settings → Experimental features** to access **Export operation log** (JSON Lines, `.jsonl`) and **Clear operation log**. Export uses the system file picker; no log is uploaded automatically. Clearing requires one confirmation and does not delete copies you already exported. New events continue to be logged. The separate MIDI Logger remains a live raw-MIDI diagnostic tool.
+The app always records a bounded local operation log (daily files, seven days by default; up to 256 KiB per day and 10 MiB total). It survives app restarts and includes timestamps, actions, USB/MIDI port changes, firmware-transfer stages and caught errors. Raw MIDI traffic and firmware bytes are not recorded. Open **Settings → Experimental features** to access **Export operation log** (JSON Lines, `.jsonl`) and **Clear operation log**. Export uses the system file picker; no log is uploaded automatically. Clearing requires one confirmation and does not delete copies you already exported. New events continue to be logged. The separate MIDI Logger remains a live raw-MIDI diagnostic tool.
 
 In **Settings → Clear downloaded firmware**, confirm once to delete all downloaded package files and metadata, including damaged/orphan files. The selected package and single-package Undo are cleared. Favorites, catalog sources, device names, task history and recovery backups remain. Remove queued tasks first; cleanup is blocked during work and while any queued/running job owns a package. Offline installation requires downloading packages again.
 
@@ -62,3 +62,6 @@ In **Settings → Clear downloaded firmware**, confirm once to delete all downlo
 
 
 Android catalog sources use thefirmwarehub, awesome-fm1, GitHub releases (repo-url) or a direct FWSC file (pkg-url). Source editing supports Basic, Bearer, API-key headers and OAuth 2.0 (browser PKCE or Client Credentials). Credentials are encrypted locally. Manual package compatibility applies only to its SHA-256. These new network/authentication adapters are Android-specific; the Apple backend retains its prior Hub workflow.
+
+
+Completed task history is kept for 30 days by default; Settings lets you change retention or clear completed history. Queued/running jobs, backups and unresolved-session evidence are protected. Diagnostic log retention is configurable to 7, 14 or 30 days. Expired logs are removed when logs are written or accessed; an unused app cleans up on its next activity. Manual log clearing removes retained daily files, not exported copies.

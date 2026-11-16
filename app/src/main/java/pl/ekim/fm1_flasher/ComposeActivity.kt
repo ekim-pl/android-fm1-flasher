@@ -115,6 +115,10 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         captureOAuthCallback(intent)
+        AndroidOperationLogger.get(this).execute { log ->
+            val days = log.retentionDays()
+            runOnUiThread { state.value = state.value.copy(operationLogDays = days) }
+        }
         exportOperationLogUri = savedInstanceState?.getString("exportOperationLogUri")?.let(Uri::parse)
         exportBackupId = savedInstanceState?.getString("exportBackupId")
         exportBackupUri = savedInstanceState?.getString("exportBackupUri")?.let(Uri::parse)
@@ -183,6 +187,14 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         val next = active.state
         active.recordAction(action)
         when (action.kind) {
+            AppActionKind.LOG_RETENTION -> if (next.experimental && !next.busy) AndroidOperationLogger.get(this).execute { log ->
+                val result = runCatching { log.setRetentionDays(action.id.toInt()) }
+                val days = log.retentionDays()
+                runOnUiThread {
+                    state.value = state.value.copy(operationLogDays = days)
+                    if (result.isFailure) showFailure(msg("library_change_error"))
+                }
+            }
             AppActionKind.LOG_CLEAR -> active.clearOperationLog()
             AppActionKind.LOG_EXPORT -> if (next.experimental && !next.busy) startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/plain").putExtra(Intent.EXTRA_TITLE, "fm1-operations-${System.currentTimeMillis()}.jsonl"), 62)
             AppActionKind.ANALYTICS_PREFERENCE -> Unit
