@@ -9,16 +9,18 @@ import java.nio.ByteOrder
 /** Bulk-only SCSI transport and M-Flasher v2.3 RAM loader. See third_party/m-flasher-NOTICE.md. */
 class UsbBootConnection private constructor(
     private val connection: UsbDeviceConnection, private val iface: UsbInterface,
-    private val input: UsbEndpoint, private val output: UsbEndpoint,
+    private val input: UsbEndpoint, private val output: UsbEndpoint, private val writePlan: FlashWritePlan?,
 ) : RecoveryFlash, Closeable {
     private class Refused : Exception("USB command refused")
     private var tag = java.util.Random().nextInt()
     private val deadline = System.nanoTime() + java.util.concurrent.TimeUnit.MINUTES.toNanos(12)
     override var flashId = 0L; private set
     override var chipKey = 0; private set
+    var diagnostics: DeviceDiagnostics? = null; private set
 
     companion object {
-        fun open(manager: UsbManager, device: UsbDevice, assets: AssetManager): UsbBootConnection {
+        fun open(manager: UsbManager, device: UsbDevice, assets: AssetManager, plan: FlashWritePlan? = null): UsbBootConnection {
+            if (plan != null) check(DeviceToolsHardware.qualified(plan)) { "Hardware qualification required" }
             require(ChipDetector.supports(device))
             val iface = (0 until device.interfaceCount).map(device::getInterface).single {
                 it.interfaceClass == 8 && it.interfaceSubclass == 6 && it.interfaceProtocol == 80
@@ -28,7 +30,7 @@ class UsbBootConnection private constructor(
             val input = endpoints.single { it.direction == UsbConstants.USB_DIR_IN }
             val output = endpoints.single { it.direction == UsbConstants.USB_DIR_OUT }
             val connection = checkNotNull(manager.openDevice(device)) { "USB open failed" }
-            val session = UsbBootConnection(connection, iface, input, output)
+            val session = UsbBootConnection(connection, iface, input, output, plan)
             try {
                 check(connection.claimInterface(iface, true)) { "USB interface busy" }
                 session.start(assets)
@@ -69,7 +71,7 @@ class UsbBootConnection private constructor(
         return reply
     }
 
-    private fun start(assets: AssetManager) {
+    private fun start(assets: AssetManager, retry: Boolean = true) {
         val inquiry = execute(byteArrayOf(0x12, 0, 0, 0, 36, 0), ByteArray(36))
         check(String(inquiry, 8, 8).trim() == "WL82" && String(inquiry, 16, 16).trim() == "UBOOT1.00") { "Not a JieLi download device" }
         val running = try { call(0xFC40).also { check(String(it, 2, 4) == "MFLR") } } catch (_: Refused) { null }
@@ -90,9 +92,18 @@ class UsbBootConnection private constructor(
         call(0xFB08, be(address, 4) + be(1, 2))
         Thread.sleep(150)
         check(String(call(0xFC40), 2, 4) == "MFLR") { "Loader did not start" }
-        flashId = Protocol.uint(call(0xFC0A), 4, 4)
+        val online = call(0xFC0A)
+        if (online[2] != 3.toByte()) {
+            if (retry) { start(assets, false); return }
+            error("Flash unavailable: ${FlashLayout.hex(Protocol.uint(online, 4, 4))}")
+        }
+        flashId = Protocol.uint(online, 4, 4)
         val key = call(0xFC09, be(0xAC6900, 4))
         chipKey = Protocol.uint(ChipDetector.scramble(byteArrayOf(key[7], key[6])), 0, 2).toInt()
+        val identity = call(0xFC40)
+        val uid = if (identity[14].toInt() and 2 != 0) DeviceDiagnostics.uid(call(0xFC42).copyOfRange(2, 10)) else null
+        diagnostics = DeviceDiagnostics(flashId, chipKey, if ((flashId and 255) == 0x14L) Recovery.FLASH_SIZE else 0,
+            uid, String(identity, 6, 3), "ROM")
     }
 
     override fun read(address: Int, length: Int): ByteArray {
@@ -106,12 +117,12 @@ class UsbBootConnection private constructor(
     }
 
     override fun eraseSector(address: Int) {
-        Recovery.checkSector(address)
+        if (writePlan == null) Recovery.checkSector(address) else writePlan.checkSector(address)
         call(0xFB01, be(address, 4))
     }
 
     override fun programSector(address: Int, data: ByteArray) {
-        Recovery.checkSector(address)
+        if (writePlan == null) Recovery.checkSector(address) else writePlan.checkSector(address)
         require(data.size == Recovery.SECTOR_SIZE)
         // 256-byte writes work within the loader's minimum supported buffer and NOR page size.
         for (offset in data.indices step 256) {

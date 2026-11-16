@@ -35,12 +35,21 @@ class ExperimentalFeaturesTest : InstrumentationTestCase() {
                 active.toggleMonitor()
                 active.enterDownloadMode()
                 active.onStartCommand(Intent().setAction("RECOVERY_WRITE"), 0, 1)
+                for (action in listOf("TOOLS_READ", "TOOLS_PREPARE", "TOOLS_WRITE", "TOOLS_MIDI_INFO", "TOOLS_MIDI_BACKUP")) {
+                    active.onStartCommand(Intent().setAction(action), 0, 1)
+                    assertNull(active.state.tools)
+                    assertNull(active.state.diagnostics)
+                }
                 assertFalse(active.monitor.running)
                 assertFalse(active.state.flashing)
                 assertFalse(active.state.busy)
                 active.setExperimental(true)
                 assertTrue(active.state.experimental)
                 assertTrue(preferences.getBoolean("experimental", false))
+                // Fabricated write intents cannot bypass hardware, export or session gates.
+                active.onStartCommand(Intent().setAction("TOOLS_WRITE").putExtra("token", "forged"), 0, 1)
+                assertFalse(active.state.flashing)
+                assertFalse(active.state.busy)
                 active.setExperimental(false)
                 assertFalse(active.state.experimental)
                 assertNull(active.state.recoveryPlan)

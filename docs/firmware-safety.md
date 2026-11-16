@@ -22,3 +22,13 @@ The experimental full-flash backup tool can save and export a copy of supported 
 A local copy remains third-party content. Offline mode cannot discover newly reported defects or firmware withdrawals. Previously known withdrawal and conflict checks still apply, but keeping a file locally does not certify its safety.
 
 [User guide](user-guide.md) · [Project README](../README.md)
+
+### Device-tools preview build
+
+Build 40's new bootloader, generic ROM firmware and backup-restore operations are
+preview-only pending physical chip/artifact qualification. Previewing reads flash
+and saves a verified backup; it does not erase or program. The original limited V15
+application recovery retains its existing restrictions. Unknown/invalid layouts do
+not grant write permission, and factory key/MAC remains protected in every new plan.
+Read-only MBOOT commands require a validated capability handshake before flash reads.
+Imported hashes establish integrity against supplied metadata, not authenticity.

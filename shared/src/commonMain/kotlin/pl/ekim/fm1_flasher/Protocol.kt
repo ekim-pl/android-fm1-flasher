@@ -60,7 +60,7 @@ object Protocol {
         return byteArrayOf(0xF0.toByte()) + pack7(decoded) + 0xF7.toByte()
     }
 
-    private fun body(packet: ByteArray, command: Int): ByteArray? {
+    internal fun payload(packet: ByteArray, command: Int): ByteArray? {
         if (packet.size < 4 || packet.first() != 0xF0.toByte() || packet.last() != 0xF7.toByte()) return null
         val decoded = unpack7(packet.copyOfRange(1, packet.lastIndex)) ?: return null
         if (decoded.size < 7 || decoded[0] != 0.toByte() || decoded[1] != 0x59.toByte() ||
@@ -75,7 +75,7 @@ object Protocol {
     }
 
     fun identity(packet: ByteArray): FirmwareIdentity? {
-        val payload = body(packet, 0x11)?.takeIf { it.size == 27 } ?: return null
+        val payload = payload(packet, 0x11)?.takeIf { it.size == 27 } ?: return null
         val plain = payload.latin1().trimEnd('\u0000')
         val match = Regex("([A-Za-z0-9-]+)_([0-9]{1,16})").matchEntire(plain)
         if (match != null) return FirmwareIdentity(match.groupValues[1], match.groupValues[2])
@@ -91,7 +91,7 @@ object Protocol {
     }
 
     fun request(packet: ByteArray): ReadRequest? {
-        val body = body(packet, 0x30)?.takeIf { it.size == 8 } ?: return null
+        val body = payload(packet, 0x30)?.takeIf { it.size == 8 } ?: return null
         return ReadRequest(body[0].toInt() and 255, uint(body, 1, 4), uint(body, 5, 3).toInt())
     }
 

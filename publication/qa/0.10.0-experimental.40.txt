@@ -1,0 +1,20 @@
+FM-1 Flasher 0.10.0-experimental.40 — prerelease build record
+versionCode: 40; package: pl.ekim.fm1_flasher; minimum Android: 14 / API 34.
+
+Scope: device-tools diagnostics, backup inspection/import, flash layout parsing,
+MBOOT read extensions, bootloader/firmware/restore previews and a bounded writer.
+New destructive operations are hardware-gated and disabled in this artifact.
+
+Local validation passed (2026-11-16):
+- Resource synchronization; 113 shared JVM tests, 184 Android JVM tests and lint.
+- Explicit pinned V15/V16 fixture integration, including m-bootloader target
+  construction and stock boot-area restoration: 19 tests, no physical hardware.
+- Debug APK and test APK compilation; 48-page documentation/link validation.
+
+Remote publication gates still required:
+- Android CI API34/API36 service/UI acceptance.
+- TEST Firebase developer APK built and signed by android-debug.yml.
+
+The GitHub prerelease records final successful run URLs, exact source commit,
+APK hash, developer signing certificate and the verified artifact manifest.
+Physical FM-1/OTG acceptance, power-loss recovery and iOS are NOT validated.

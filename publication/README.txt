@@ -1,7 +1,8 @@
-CURRENT DEVELOPER PRERELEASE: 0.10.0-experimental.39 (versionCode 39)
-Configurable catalog refresh intervals; experimental manual checks can bypass the interval for non-Hub sources while respecting server retry delays.
-Notes: github-release-0.10.0-experimental.39.txt.
-Verification: qa/0.10.0-experimental.39.txt.
+CURRENT DEVELOPER PRERELEASE: 0.10.0-experimental.40 (versionCode 40)
+Experimental ROM/MBOOT diagnostics, flash maps, backup inspection/import and
+operation previews. New destructive writes are hardware-gated and disabled.
+Notes: github-release-0.10.0-experimental.40.txt.
+Verification: qa/0.10.0-experimental.40.txt.
 This preview is separate from the milestone-1 materials below.
 
 FM-1 Flasher 0.10.0 — milestone 1: Google Play preparation

@@ -16,3 +16,20 @@ V15 application region; the chip-detection operation remains read-only for flash
 Loader assets are SHA-256 checked before upload. Recovery policy and known stock
 hashes were cross-checked against Quixotic7/MvaveFM1Unbricker (MIT):
 https://github.com/Quixotic7/MvaveFM1Unbricker/blob/main/fm1_unbrick.py
+
+Experimental device tools additionally adapt bounded table parsing, boot-area
+validation/construction, sector maps and operation planning from m-flasher
+revision 8fbece7348d758ac284325eed455781675ac95ff (formats.rs, boards.rs,
+sectormap.rs, ops.rs). Kotlin ports retain independent bounds and write-policy
+checks; this is not a claim of hardware validation.
+
+fm1-uboot-2.4.boot is unmodified fm1-uboot.boot from m-bootloader v2.4
+(2.4-395e6cc), MIT, Copyright (c) 2026 Julius Vitkauskas.
+SHA-256: 677ae52a11721b1811b2688b45f6f0cfae51882810e0a4f4b409da08ce5b49e4
+Verified against the release SHA256SUMS. The existing v2.3 RAM loaders remain
+unchanged. MIDI read extensions and the READ_KEY reference vector follow
+m-bootloader docs/SPEC.md at 3ac7651a019fa44daba061b05654278496477b64.
+
+New bootloader, generic ROM firmware and backup-restore writes are disabled
+pending physical validation of the exact chip/artifact combination. Previewing
+an operation reads and saves a backup but never sends erase/program commands.

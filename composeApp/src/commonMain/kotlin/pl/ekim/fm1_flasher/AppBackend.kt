@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.StateFlow
 data class AppPort(val id: String, val label: String)
 data class LogRow(val id: Long, val source: String, val channel: Int?, val type: String, val text: String)
 data class BackupRow(val id: String, val label: String)
+data class ToolsView(val backupId: String, val hash: String, val info: DeviceDiagnostics, val analysis: FlashLayout.Analysis,
+    val operation: FlashOperation? = null, val changed: List<Int> = emptyList(), val target: FlashLayout.Analysis? = null,
+    val token: String? = null, val qualified: Boolean = false, val exported: Boolean = false, val layoutChanges: Boolean = false)
 data class RecoveryView(val token: String, val confirmation: AppText)
 data class AppSnapshot(
     val defaultSourceRefreshHours: Int = 8,
@@ -23,7 +26,7 @@ data class AppSnapshot(
     val favorites: Set<String> = emptySet(), val offline: Boolean = false,
     val busy: Boolean = true, val flashing: Boolean = false, val experimental: Boolean = false,
     val ports: List<AppPort> = emptyList(), val target: AppPort? = null, val identity: FirmwareIdentity? = null,
-    val chipDetection: AppText? = null,
+    val chipDetection: AppText? = null, val diagnostics: DeviceDiagnostics? = null, val tools: ToolsView? = null,
     val chip: FlashChip = FlashChip.UNKNOWN, val ready: CatalogEntry? = null,
     val awaitingPort: Boolean = false, val candidates: List<AppPort> = emptyList(),
     val progress: Int = -1, val status: AppText = msg("loading_catalog"), val logs: List<AppText> = emptyList(),
@@ -40,6 +43,7 @@ enum class AppActionKind {
     AUTH_LOGIN, SOURCE_COLOR, SOURCE_ENABLE, SOURCE_CHECK, SOURCE_REMOVE, SOURCE_RESTORE, SOURCE_SAVE, BACKGROUND_SYNC,
     PORTS_REFRESH, REFRESH, OFFLINE, FAVORITE, DOWNLOAD, USE, REMOVE, UPDATE_ALL, CONNECT, CHIP, FLASH, RECONNECT,
     EXPERIMENTAL, LOGGER_PORT, LOGGER_TOGGLE, LOGGER_CLEAR, LOGGER_EXPORT, LOGGER_REFRESH,
+    TOOLS_INSPECT, TOOLS_IMPORT, TOOLS_READ, TOOLS_MIDI_INFO, TOOLS_MIDI_BACKUP, TOOLS_PREPARE, TOOLS_WRITE,
     DETECT, RECOVERY_ENTER, RECOVERY_BACKUP, RECOVERY_PREPARE, RECOVERY_WRITE, RECOVERY_EXPORT,
     LANGUAGE, APPEARANCE, OPEN_LINK,
 }

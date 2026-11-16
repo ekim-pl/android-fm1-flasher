@@ -68,6 +68,7 @@ class FlashSession(
             check(current.sameAs(expectedCurrent) && current.baseModel == image.identity.model) {
                 failed(msg("flash_identity_changed"))
             }
+            var twoPassLoader = current.isLoader && current.version == "900"
             if (!current.isLoader) {
                 report(msg("flash_stage_verify"), -1)
                 serve(link, image, Protocol.VERIFIED, 15_000, started)
@@ -79,9 +80,12 @@ class FlashSession(
                 checkTime()
                 val loader = identify(link)
                 check(loader.isLoader && loader.baseModel == image.identity.model) { failed(msg("loader_not_fm1")) }
+                twoPassLoader = loader.version == "900"
             }
-            report(msg("flash_stage_write"), 0)
-            serve(link, image, Protocol.FINISHED, 180_000, started)
+            // A directly connected loader may validate and request the image twice (MBOOT).
+            // Bytes served are not evidence of bytes written in that mode.
+            report(msg(if (twoPassLoader) "flash_stage_verify" else "flash_stage_write"), if (twoPassLoader) -1 else 0)
+            serve(link, image, Protocol.FINISHED, 180_000, started, twoPassLoader)
             pause(1500)
             val previous = link.endpoint
             link.close()
@@ -100,13 +104,13 @@ class FlashSession(
         }
     }
 
-    private fun serve(link: MidiConnection, image: FirmwarePackage, terminal: Long, idleMs: Long, started: Long) {
+    private fun serve(link: MidiConnection, image: FirmwarePackage, terminal: Long, idleMs: Long, started: Long, indeterminate: Boolean = false) {
         checkTime()
         validate(link.endpoint)
         link.send(Protocol.upgrade)
         pause(2000)
         var lastRequest = now()
-        val covered = if (terminal == Protocol.FINISHED) BooleanArray(image.logical.size) else null
+        val covered = if (terminal == Protocol.FINISHED && !indeterminate) BooleanArray(image.logical.size) else null
         var coveredBytes = 0
         var requests = 0
         var lastPercent = -1

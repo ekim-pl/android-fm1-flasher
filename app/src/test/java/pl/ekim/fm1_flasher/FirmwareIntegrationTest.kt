@@ -33,4 +33,24 @@ internal class FirmwareIntegrationTest : RecoveryTest() {
             assertThrows(IllegalArgumentException::class.java) { FirmwarePackage.parse(raw, image.sha256, image.identity.toString()) }
         }
     }
+    @Test fun deviceToolsParseOfficialLayoutsAndBuildBothBootTargets() {
+        val boot = File("src/main/assets/fm1-uboot-2.4.boot").readBytes()
+        for (version in listOf("v15", "v16")) {
+            val pkg = packageFor(version)
+            val full = ByteArray(FlashLayout.SIZE) { -1 }.also { pkg.flashImage.copyInto(it) }
+            val analysis = FlashLayout.analyze(full, 0x980F)
+            assertTrue("$version layout", analysis.layoutValid)
+            assertTrue("$version FM1", analysis.fm1Evidence)
+            assertTrue("$version app", analysis.appValid)
+            assertTrue("$version boot", analysis.bootValid)
+            val info = DeviceDiagnostics(0x856014, 0x980F, full.size)
+            val plan = FlashWritePlan.create(FlashOperation.MBOOT, full, info, boot, FirmwarePackage.sha256(boot))
+            FlashLayout.checkBoot(plan.targetImage())
+            assertEquals("2.4-395e6cc", FlashLayout.bootIdentity(FlashLayout.storedBoot(plan.targetImage()))!!.second)
+            val raw = File(System.getProperty("fm1.fixtureDir"), "v15.fwsc").readBytes()
+            val stock = FlashWritePlan.create(FlashOperation.STOCK_BOOT, plan.targetImage(), info, raw, FirmwarePackage.sha256(raw))
+            FlashLayout.checkBoot(stock.targetImage())
+            assertArrayEquals(packageFor("v15").flashImage.copyOfRange(0, 0x4000), stock.targetImage().copyOfRange(0, 0x4000))
+        }
+    }
 }

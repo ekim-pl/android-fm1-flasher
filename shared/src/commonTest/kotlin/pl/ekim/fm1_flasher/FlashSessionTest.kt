@@ -117,4 +117,33 @@ class FlashSessionTest {
         assertFalse(other.sent.any { it.contentEquals(Protocol.upgrade) })
         assertTrue(target.closed && other.closed)
     }
+    @Test fun mbootServesTwoPassesWithoutIntermediateReconnectOrFalseProgress() {
+        val image = image()
+        val queue = ArrayDeque<ByteArray>()
+        val initial = object : MidiConnection {
+            override val endpoint = Endpoint(1, "mboot")
+            override fun send(bytes: ByteArray) {
+                if (bytes.contentEquals(Protocol.identityQuery)) queue += identity("ota-FM-1_900")
+                if (bytes.contentEquals(Protocol.upgrade)) {
+                    repeat(2) {
+                        for (at in image.logical.indices step 512) queue += readRequest(at.toLong(), minOf(512, image.logical.size - at))
+                        queue += readRequest(0, 32)
+                    }
+                    queue += readRequest(Protocol.FINISHED, 8)
+                }
+            }
+            override fun receive(timeoutMs: Long) = queue.removeFirstOrNull()
+            override fun close() = Unit
+        }
+        var reconnects = 0
+        val reports = mutableListOf<Int>()
+        val result = session({ _, loader ->
+            assertFalse(loader); reconnects++
+            Link(Endpoint(2, "app"), "FM-1_900", null)
+        }, reports).flash(image, initial, FirmwareIdentity("ota-FM-1", "900"))
+        assertEquals(image.identity, result)
+        assertEquals(1, reconnects)
+        assertTrue(reports.dropLast(1).all { it == -1 })
+        assertEquals(100, reports.last())
+    }
 }
