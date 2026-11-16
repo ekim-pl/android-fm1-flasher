@@ -35,6 +35,18 @@ class FirmwareRepositoryConflictTest {
         }
     }
 
+    @Test fun conflictBlocksBothIdFormatsWithoutClearingSelection() {
+        repo.save(local, raw)
+        repo.saveSettings(LibrarySettings(offline = true, selectedId = local.key))
+        val current = catalog(local, local.copy(id = "conflict", chip = "new"))
+        for (id in listOf(local.id, local.key)) {
+            val failure = assertFailsWith<OperationFailed> { repo.load(id, current) }
+            assertEquals(msg("source_conflict"), failure.text)
+            assertEquals(local.key, repo.settings().selectedId)
+            assertEquals(local, repo.list().single().entry)
+        }
+    }
+
     @Test fun conflictingProductForSameBytesIsBlocked() {
         repo.save(local, raw)
         val conflict = local.copy(id = "conflict", product = "FM-1_901")

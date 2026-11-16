@@ -19,7 +19,7 @@ class PortableSelectionTest {
         override val midiLog = MidiLog()
         override val monitorRunning = false
         override fun devices() = emptyList<ProbePort>()
-        override fun open(id: Int): MidiConnection = error("Selection must not open MIDI")
+        override fun open(port: ProbePort): MidiConnection = error("Selection must not open MIDI")
         override fun monitorPorts() = devices()
         override fun startMonitor(ids: List<Int>) = Unit
         override fun stopMonitor() = Unit
