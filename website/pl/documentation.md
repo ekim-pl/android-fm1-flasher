@@ -13,6 +13,19 @@ Wymagany jest Android 14+, USB Host/OTG i MIDI.
 Identyfikator Androida to `pl.ekim.fm1_flasher`. Interfejs obsługuje polski, angielski i chiński uproszczony oraz motyw jasny, ciemny i systemowy.
 
 <a id="getting-started"></a>
+## Kolory instrumentów
+
+W **Urządzenia → Szczegóły → Kolor instrumentu** wybierz jeden z sześciu nazwanych kolorów. Wybór zapisuje się od razu; można też zmienić kolor zapamiętanego, odłączonego FM1. Nazwy i znacznik zaznaczenia pozwalają korzystać z wyboru bez rozpoznawania samych barw.
+
+Akcent pojawia się przy nazwie urządzenia na listach, w kolejce i historii oraz na jego pasku postępu flashowania. Kolory błędów i ostrzeżeń zachowują swoje znaczenie. Edycja koloru jest zablokowana podczas zajętości aplikacji oraz gdy urządzenie ma zadanie oczekujące lub uruchomione.
+
+Ręczny wybór koloru zapamiętuje wpis także z domyślną nazwą. Kolor przetrwa restart aplikacji i ręczne przypisanie powracającego FM1. Nie identyfikuje sprzętu i nie włącza automatycznego parowania. Zadanie zachowuje kolor z chwili dodania do kolejki; późniejsza zmiana nie przemalowuje historii.
+
+### Sprawdzenie bez sprzętu
+
+Build debug zawiera osobną ikonę **FM1 Color Demo**. W szczegółach urządzenia zmienisz kolor. **Jasny / ciemny** przełącza motyw, a **Pokaż / wyczyść zadania** tworzy lub usuwa przykładowe stany, w tym stały postęp 47%. Wyczyść zadania przed kolejną zmianą kolorów. Kolory demo przetrwają restart w osobnych preferencjach. Demo nie łączy się z USB, nie zmienia właściwej floty i nie trafia do wariantu release.
+
+
 ## Pierwsza instalacja i plan aktualizacji
 
 1. Zainstaluj APK 0.10.0 na Androidzie 14 lub nowszym. Aktualizacja wymaga tego samego certyfikatu podpisu; wersja Google Play może używać innego certyfikatu niż lokalny build testowy.
@@ -115,7 +128,7 @@ Aplikacja stale zapisuje lokalny log operacji (pliki dzienne, domyślnie siedem 
 
 **Ustawienia → Wyczyść pobrane firmware** usuwa po jednym potwierdzeniu wszystkie pobrane paczki i metadane, w tym uszkodzone i osierocone pliki. Czyści wybór paczki i możliwość cofnięcia pojedynczego usunięcia. Zachowuje ulubione, źródła katalogu, nazwy instrumentów, historię zadań i kopie odzyskiwania. Najpierw usuń oczekujące zadania; czyszczenie jest blokowane podczas pracy oraz przy paczkach przypisanych do oczekujących/trwających zadań. Instalacja offline wymaga ponownego pobrania paczek.
 
-**Urządzenia → Tryby i kość pamięci** rozdziela odczyt MIDI, przejście w tryb download i wykrywanie kości na czytelne karty. Wynik detekcji otwiera popup. Potem wyłącz i włącz instrument, aby wrócić do MIDI. Domyślne odłączone wpisy są tymczasowe; własne nazwy i cele kolejki pozostają. Opóźnione odłączenie poprzedniego portu USB nie przerywa kolejnego etapu tej samej aktualizacji. Utrata innego instrumentu lub huba nadal blokuje zapis.
+**Urządzenia → Tryby i kość pamięci** rozdziela odczyt MIDI, przejście w tryb download i wykrywanie kości na czytelne karty. Wynik detekcji otwiera popup. Potem wyłącz i włącz instrument, aby wrócić do MIDI. Domyślne odłączone wpisy są tymczasowe; własne nazwy, ręcznie wybrane kolory i cele kolejki pozostają. Opóźnione odłączenie poprzedniego portu USB nie przerywa kolejnego etapu tej samej aktualizacji. Utrata innego instrumentu lub huba nadal blokuje zapis.
 
 ## Pełnoekranowe ustawienia
 

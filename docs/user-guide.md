@@ -94,6 +94,18 @@ A lost neighbor, hub reset, changed attachment generation, contradictory serial 
 
 Saved names survive restart, but live bindings do not survive process death or an untrusted disconnect. Read and physically identify the instrument again, remove affected pending jobs, then use **Saved instruments → Assign this saved name**. Pairing resets the old memory-type selection; choose it again before rebuilding the plan.
 
+## Instrument colors
+
+In **Devices → Details → Instrument color**, choose one of six named colors. The selection saves immediately; you can also change a disconnected saved instrument. Names and a selection mark make the picker usable without relying on color alone.
+
+The accent appears beside the instrument name in connected/saved device lists, queued tasks and history, and on its flashing progress bar. Error and warning colors retain their usual meaning. Color editing is disabled while the app is busy or the device has a queued/running task.
+
+Choosing a color remembers the device even if its name is still the default. It survives app restarts and explicit pairing with the returning instrument. Colors are visual labels, not hardware identities; they do not enable automatic matching. Each task keeps the color from when it was queued, so changing a device later does not recolor its history.
+
+### Try colors without hardware
+
+Debug builds include a separate **FM1 Color Demo** launcher icon. Open device Details to select colors; **Jasny / ciemny** switches the theme, and **Pokaż / wyczyść zadania** shows or clears sample tasks, including fixed 47% progress. Clear sample tasks before editing colors again. Demo colors survive a restart in separate local preferences. The demo never connects to USB or changes the real fleet; it is absent from release builds.
+
 ## Tasks, stopping and failures
 
 Jobs freeze the target record/attachment, expected identity, memory selection, package key and hash. All plan packages are checked before the first write; each job is checked again before its transfer. Changing the UI's selected package cannot redirect an active job.
@@ -136,7 +148,7 @@ The app always records a bounded local operation log (daily files, seven days by
 
 In **Settings → Clear downloaded firmware**, confirm once to delete all downloaded package files and metadata, including damaged/orphan files. The selected package and single-package Undo are cleared. Favorites, catalog sources, device names, task history and recovery backups remain. Remove queued tasks first; cleanup is blocked during work and while any queued/running job owns a package. Offline installation requires downloading packages again.
 
-**Devices → Modes and flash chip** provides MIDI selection/readout, download-mode entry and chip detection in separate cards. Successful chip detection opens a result popup. Power-cycle back to MIDI afterwards. Default disconnected device entries are temporary; custom names and queued targets are retained. Delayed USB detach events for a retired stage no longer invalidate the next stage of the same update. Unrelated device/hub loss still blocks writes.
+**Devices → Modes and flash chip** provides MIDI selection/readout, download-mode entry and chip detection in separate cards. Successful chip detection opens a result popup. Power-cycle back to MIDI afterwards. Default disconnected device entries are temporary; custom names, manually chosen colors and queued targets are retained. Delayed USB detach events for a retired stage no longer invalidate the next stage of the same update. Unrelated device/hub loss still blocks writes.
 
 ## Building and testing
 

@@ -10,6 +10,8 @@ Browse, save and install firmware for your **M-VAVE FM-1** from an Android phone
 
 **Version 0.10.0** — preparation for Google Play. [Available APKs](https://github.com/ekim-pl/android-fm1-flasher/releases) · [Build and verification](publication/qa/0.10.0.txt).
 
+Current developer build: **0.10.0-experimental.36** — persistent FM1 colors and a hardware-free debug demo. [Preview notes](publication/github-release-0.10.0-experimental.36.txt).
+
 ## Project manifesto
 
 FM-1 Flasher is an independent initiative and will always remain independent, open source, transparent and free of charge. Its source code and development decisions will remain open to public review, and the application will remain free to use.
@@ -20,6 +22,7 @@ FM-1 Flasher is an independent initiative and will always remain independent, op
 - **Local library database:** saved catalog information, favorites and download records remain available between sessions. Previously downloaded packages can be installed without internet access.
 - **Offline mode:** pause catalog checks and downloads while continuing to use your saved library. New releases and newly withdrawn firmware cannot be discovered offline.
 - **Several FM-1s, one queue:** connect through an OTG hub, name each instrument and assign its own firmware. Installation runs **one instrument at a time**, with individual results. Multiple-device updates require manual pairing after restarts; automatic matching is disabled pending hardware tests.
+- **Instrument colors:** choose one of six accents in device Details, including for disconnected saved instruments. Colors persist across restarts and manual pairing, and identify devices in lists, tasks and progress bars.
 - **Your interface:** English, Polish and Simplified Chinese, with light, dark or system appearance.
 
 ## Getting started

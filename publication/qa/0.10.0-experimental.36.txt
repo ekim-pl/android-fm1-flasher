@@ -1,0 +1,19 @@
+FM-1 Flasher 0.10.0-experimental.36 — build preparation
+versionCode: 36; package: pl.ekim.fm1_flasher; minimum Android: 14 / API 34.
+
+Feature verification before version bump:
+- 177 app JVM tests and 107 shared Android/JVM tests passed.
+- All four FleetUiTest cases passed on Android 16 / API 36.
+- Emulator review covered selection, saved demo colors after restart, light/dark themes and task progress accents.
+- Resource synchronization and whitespace checks passed.
+- shared:allTests encountered the existing iOS FlashSession.kt:35 @Throws/AutoCloseable compiler mismatch. Android shared tests passed.
+- No physical USB flashing or native iOS runtime acceptance.
+
+Build 36 local validation:
+- shared:jvmTest, app:testDebugUnitTest, app:lintDebug and app:assembleDebug passed.
+- Website build/check passed (48 HTML pages).
+
+The signed preview will be prepared by android-debug.yml using the existing
+developer signing key and test Firebase configuration. Build results, checksum
+and certificate identity are supplied with the downloaded artifact in dist/.
+No public GitHub release or Play upload is part of this build preparation.

@@ -1,0 +1,1 @@
+Choose persistent FM1 colors for device lists, tasks and flashing progress. Includes a debug-only hardware-free color demo and updated guides.

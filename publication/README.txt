@@ -1,3 +1,9 @@
+CURRENT DEVELOPER PRERELEASE: 0.10.0-experimental.36 (versionCode 36)
+Persistent instrument colors and a debug-only FM1 Color Demo.
+Notes: github-release-0.10.0-experimental.36.txt.
+Verification: qa/0.10.0-experimental.36.txt.
+This preview is separate from the milestone-1 materials below.
+
 FM-1 Flasher 0.10.0 — milestone 1: Google Play preparation
 Android versionCode: 31. Application ID: pl.ekim.fm1_flasher.
 Publisher: Ekim (ekim-pl), ekim.pl@gmail.com.

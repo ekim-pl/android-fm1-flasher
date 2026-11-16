@@ -12,6 +12,8 @@ Nie odłączaj zasilania ani USB do końca weryfikacji. Firmware może zmienić 
 
 ## Kilka instrumentów
 
+W **Urządzenia → Szczegóły → Kolor instrumentu** wybierz jeden z sześciu kolorów, także dla odłączonego FM1. Akcent oznacza urządzenie na listach, w zadaniach i na pasku postępu. Wybór koloru zapamiętuje wpis; restart i ręczne parowanie zachowują kolor. Zadania zachowują pierwotny kolor w historii. Edycja jest zablokowana podczas zajętości aplikacji lub oczekującego/aktywnego zadania urządzenia. Kolor nie potwierdza tożsamości sprzętu.
+
 Po planowanym restarcie sparuj powracający instrument na jego karcie zadania. Pozostałe połączenia muszą pozostać aktywne. Niejednoznaczność lub utrata połączenia zatrzymuje dalszy zapis. Nazwy i adresy USB nie potwierdzają fizycznej tożsamości. Wynik pomyślny potwierdza tożsamość firmware po powrocie, a nie pełny odczyt pamięci flash.
 
 ## Źródła i narzędzia

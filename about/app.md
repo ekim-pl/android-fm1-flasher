@@ -12,6 +12,8 @@ Keep power and USB connected until verification finishes. Firmware may change se
 
 ## Multiple instruments
 
+In **Devices → Details → Instrument color**, choose one of six colors, including for saved disconnected instruments. The accent identifies devices in lists, tasks and progress bars. Choosing a color remembers the device; restart and manual pairing preserve it. Queued tasks keep their original color in history. Editing is disabled while busy or while the device has a queued/running task. Colors do not prove hardware identity.
+
 After a planned restart, pair the returning instrument on its task card. Other connections must remain continuous. Ambiguous devices or a lost connection stop further writing. Names and USB addresses do not prove physical identity. A successful result checks the returned firmware identity, not a complete flash-memory readback.
 
 ## Sources and tools
