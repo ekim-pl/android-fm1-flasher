@@ -56,7 +56,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     private var pendingUsb: UsbRequest? = null
     private val usbRequests = java.util.ArrayDeque<UsbRequest>()
     private var automaticPermission: Endpoint? = null
-    private var pendingOAuthCallback: Uri? = null
+    private val pendingOAuthCallback by lazy { PendingOAuthCallback(SourceCredentialStore(this)) }
     private var exportOperationLogUri: Uri? = null
     private var exportBackupId: String? = null
     private var exportBackupUri: Uri? = null
@@ -136,18 +136,14 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         bound = bindService(Intent(this, FlasherService::class.java), binding, BIND_AUTO_CREATE)
     }
     private fun captureOAuthCallback(incoming: Intent?) {
-        incoming?.data?.takeIf { it.scheme == "pl.ekim.fm1-flasher" }?.let {
-            pendingOAuthCallback = it
-            incoming.data = null
-        }
+        runCatching { pendingOAuthCallback.capture(incoming) }
+            .onFailure { showFailure(msg("auth_storage_error")) }
     }
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); captureOAuthCallback(intent); dispatchOAuthCallback() }
     private fun dispatchOAuthCallback() {
         val active = service ?: return
-        if (active.state.busy) return
-        val uri = pendingOAuthCallback ?: return
-        pendingOAuthCallback = null
-        active.finishOAuth(uri)
+        runCatching { pendingOAuthCallback.dispatch(active.state.busy, active::finishOAuth) }
+            .onFailure { showFailure(msg("auth_storage_error")) }
     }
     override fun onStart() { super.onStart(); visible = true; service?.onAppOpened() }
     override fun onStop() { visible = false; if (!isChangingConfigurations) service?.onAppClosed(); super.onStop() }

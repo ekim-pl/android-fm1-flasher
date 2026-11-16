@@ -1,0 +1,79 @@
+F2 — IMPLEMENTACJA I WALIDACJA
+
+Zakres: ComposeActivity, nowy PendingOAuthCallback, PendingOAuthCallbackTest.
+Bez zmian FlasherService, FleetStore, OAuthManager, workflowów i wspólnego planu.
+
+Mechanizm
+- Callback zapisuje się w istniejącym SourceCredentialStore (Android Keystore,
+  AES-GCM), przed wyczyszczeniem Intent.data. Nie trafia do savedInstanceState.
+- Przyjęcie wymaga dokładnego redirect, pojedynczego zgodnego state i ważnego
+  żądania PKCE. Błędny callback nie zastępuje poprawnego oczekującego wpisu.
+- Jeden wpis na aktualne state; pierwszy callback wygrywa, duplikat nie zmienia
+  kodu ani terminu. TTL pochodzi z pierwotnego żądania OAuth (10 minut), a nie
+  z chwili dostarczenia/redelivery. Wygasły/nieaktualny wpis usuwany przy dispatch.
+- Blokada procesu i claim state przed handoff zapobiegają powtórnemu dispatch
+  przez odtworzoną Activity lub kolejne powiadomienia Service.
+- Zaszyfrowany wpis zostaje do zużycia/wygaśnięcia state. Po utracie procesu
+  przed zużyciem state nowy proces może go odzyskać. OAuthManager pozostaje
+  ostateczną bramką PKCE/state/revision, zużywając state przed token request.
+- Błędy magazynu w Activity mają stały komunikat auth_storage_error, bez
+  logowania wyjątku, URI lub kodu. Intent jest czyszczony także po odrzuceniu
+  callbacku i po błędzie magazynu; taki błąd wymaga ponownego logowania.
+
+Mapa ryzyk -> testy (rzeczywiste klasy produkcyjne, Android instrumentation)
+1. Utrata przy busy + recreate; podwójna wymiana; sekret w Bundle/logach:
+   PendingOAuthCallbackTest.testComposeRecreateWhileBusyDispatchesThroughRealServiceOnce.
+   Uruchamia ComposeActivity, dostarcza onNewIntent przy busy, zapisuje Bundle,
+   recreate, potem prywatny production dispatch -> FlasherService.finishOAuth
+   -> libraryTask -> OAuthManager.finish. Podmieniony tylko transport tokenowy
+   OAuthManager; stan busy ustawiony przez reflection. Dodatkowy bind utrzymuje
+   Service przez recreate, tak jak aktywne zadanie. Jedna wymiana, token zapisany,
+   redelivery bez drugiej wymiany. Sprawdza Bundle i UiState.logs.
+2. Odtworzenie magazynu, szyfrowanie, duplikat ze zmienionym kodem, reentrancja,
+   prawidłowy PKCE: testBusyReconstructionEncryptionDeduplicationAndRealPkceExchange.
+   Faktyczny Keystore i OAuthManager, kontrola code_verifier względem challenge.
+3. TTL bez przedłużania, zła authority, fragment, podwójny/błędny state:
+   testOriginalStateDeadlineAndInvalidRedirectCannotOverwriteCallback.
+4. Zmieniona rewizja źródła nie może autoryzować:
+   testSourceRevisionStillCheckedByProductionManager (zero token requests).
+5. Zimny proces: testColdProcessRecovery, dodatkowo osobne uruchomienia runnera
+   z callbackColdPhase=seed, potem callbackColdPhase=recover. Pierwszy proces
+   zapisuje przy busy, drugi odtwarza magazyn, wykonuje jedną wymianę i usuwa
+   wykorzystany wpis. To test magazynu + OAuthManager, nie pełnego cold start UI.
+6. Istniejące SourceAuthenticationTest: 7 testów, m.in. state/replay/refresh,
+   źródłowe AAD, rewizje credential store, PKCE RFC7636, równoległe refresh,
+   zgodność redirect i ochrona sekretów przy zmianie origin.
+
+Wyniki wykonane 2026-11-16, bez Firebase (-Pfm1Analytics=false)
+- :app:testDebugUnitTest + :app:assembleDebugAndroidTest: BUILD SUCCESSFUL.
+  157 testów JVM, 0 failures/errors/skips. Nowe testy wymagają Android Keystore
+  i lifecycle; są instrumentalne, nie imitują Android Uri/Service w JVM.
+- :app:connectedDebugAndroidTest z filtrem PendingOAuthCallbackTest,
+  SourceAuthenticationTest: 12 testów API36, 0 failures/errors/skips.
+  Pierwszy przebieg: 11/12; fixture rotacji nie utrzymywał Service przez unbind.
+  Po poprawce dodatkowego bind: 12/12. Kod produkcyjny bez zmiany z tego powodu.
+- Oddzielne runner seed/recover: oba OK (1 test), kolejne procesy instrumentation.
+- :app:lintDebug: BUILD SUCCESSFUL, 0 errors, 50 warnings.
+- git diff --check: OK.
+
+Odtworzenie
+./gradlew --no-daemon -Pfm1Analytics=false :app:testDebugUnitTest :app:assembleDebugAndroidTest
+./gradlew --no-daemon -Pfm1Analytics=false :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=pl.ekim.fm1_flasher.PendingOAuthCallbackTest,pl.ekim.fm1_flasher.SourceAuthenticationTest
+Po connected Gradle usuwa APK. Dla osobnych procesów ponownie zainstalować
+app-debug.apk i app-debug-androidTest.apk, następnie dla phase=seed i recover:
+adb -s emulator-5554 shell am instrument -w -e class pl.ekim.fm1_flasher.PendingOAuthCallbackTest#testColdProcessRecovery -e callbackColdPhase <phase> pl.ekim.fm1_flasher.test/android.test.InstrumentationTestRunner
+
+Ograniczenia
+- Dokładnie jedna wymiana w sprawdzonych ścieżkach lifecycle; brak ponownej
+  wymiany po zużyciu state. Nagłe zabicie procesu między zużyciem state a
+  ukończeniem token request wymaga nowego logowania. Nie ma transakcji obejmującej
+  serwer OAuth i lokalny storage, więc gwarancja zakończonej wymiany exactly-once
+  przy dowolnej awarii procesu/sieci nie jest możliwa. Nie dodano auto-retry.
+- Brak API34, rzeczywistego dostawcy OAuth, fizycznego telefonu i wymuszonej
+  awarii dysku/Keystore. Testy logów sprawdzają UiState.logs, nie cały logcat.
+- TTL jest sprawdzany przy użyciu magazynu; nie uruchamia osobnego timera,
+  gdy aplikacja nie działa. Nieaktywny wygasły ciphertext może pozostać na dysku
+  do następnego uruchomienia. Kopie zapasowe aplikacji są wyłączone w manifeście.
+- Szyfrowany zapis jest synchroniczny (mały, pojedynczy callback); bez nowego
+  job systemu, zależności i zmian kontraktu Service. Pozostaje istniejąca
+  semantyka odmowy zadania przy offline/błędzie inicjalizacji biblioteki.
