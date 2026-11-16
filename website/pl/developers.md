@@ -39,7 +39,7 @@ Zastąp poniższe wartości rzeczywistymi danymi. `sha256` to suma całego pliku
 
 Suma w przykładzie jest fikcyjna. Identyfikatory muszą być unikalne i stałe. Wydawca odpowiada za poprawne informacje o zgodności i warunkach licencji. Sama suma wykrywa zmianę bajtów, ale nie uwierzytelnia wydawcy kontrolującego zarówno katalog, jak i sumę.
 
-Użytkownik wybiera **Ustawienia → Źródła firmware**, dodaje typ i adres źródła, ustawia autoryzację, zapisuje, wybiera **Sprawdź teraz** i włącza źródło. Dla JSON musi zatwierdzić wymagane zakresy adresów pakietów i grafik. Dla GitHub i bezpośredniego pakietu po sprawdzeniu wybiera **Edytuj → Zgodność pakietów** i potwierdza zgodność dla każdej sumy. Nieznana zgodność blokuje instalację. Odstęp sprawdzania wynosi 24–168 godzin; zmiana danych uwierzytelniających lub autoryzacja OAuth umożliwia ponowne sprawdzenie.
+Użytkownik wybiera **Ustawienia → Źródła firmware**, dodaje typ i adres źródła, ustawia autoryzację, zapisuje, wybiera **Sprawdź teraz** i włącza źródło. Dla JSON musi zatwierdzić wymagane zakresy adresów pakietów i grafik. Dla GitHub i bezpośredniego pakietu po sprawdzeniu wybiera **Edytuj → Zgodność pakietów** i potwierdza zgodność dla każdej sumy. Nieznana zgodność blokuje instalację. Interwał źródła można ustawić od 1 do 168 godzin; domyślnie build release używa 8 godzin, a debug 1 godziny. W trybie eksperymentalnym jawne sprawdzenie może pominąć interwał źródeł innych niż Hub, z zachowaniem limitów ponawiania serwera i minimum 24 godzin dla Hub. Zmiana danych uwierzytelniających lub autoryzacja OAuth umożliwia ponowne sprawdzenie.
 
 ## Prywatne repozytorium GitHub
 

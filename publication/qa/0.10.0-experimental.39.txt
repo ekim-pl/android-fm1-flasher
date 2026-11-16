@@ -1,0 +1,12 @@
+FM-1 Flasher 0.10.0-experimental.39 — prerelease build record
+versionCode: 39; package: pl.ekim.fm1_flasher; minimum Android: 14 / API 34.
+
+Change: configurable catalog refresh intervals and an experimental manual refresh option.
+Release default: 8 hours; debug default: 1 hour; source configuration range: 1–168 hours.
+The Firmware Hub retains its 24-hour minimum. Experimental manual checks may bypass
+source intervals for other providers, while server retry delays remain in force.
+
+This record is part of the source build. The signed artifact, checksum, signing
+certificate, exact-commit provenance and successful Android CI/debug build results
+are recorded in the GitHub prerelease after its build completes.
+Physical USB flashing and iOS runtime acceptance are not covered by this build.

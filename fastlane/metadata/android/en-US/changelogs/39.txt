@@ -1,0 +1,1 @@
+Configure catalog refresh intervals, with 8-hour release and 1-hour debug defaults. Experimental manual checks can refresh non-Hub sources sooner.

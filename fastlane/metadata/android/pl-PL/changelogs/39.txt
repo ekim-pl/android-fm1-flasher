@@ -1,0 +1,1 @@
+Ustaw interwały odświeżania katalogów: domyślnie 8 godz. w release i 1 godz. w debug. W trybie eksperymentalnym ręcznie odświeżysz wcześniej źródła inne niż Hub.

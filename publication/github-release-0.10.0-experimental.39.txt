@@ -1,0 +1,16 @@
+FM-1 Flasher 0.10.0 experimental — build 39
+
+Android 14+ developer prerelease build. Not a Google Play production release.
+
+Changes since build 38:
+- Allow source check intervals from 1 to 168 hours; existing source settings are preserved.
+- Set build defaults to 8 hours for release builds and 1 hour for debug builds.
+- In experimental mode, let manual checks bypass the interval for sources other than The Firmware Hub, while honoring server retry delays.
+- Keep The Firmware Hub's 24-hour minimum in every mode.
+- Refresh English, Polish and Simplified Chinese guides and privacy documentation.
+
+The CI developer APK uses the TEST Firebase project and the existing developer signing key.
+Usage statistics are enabled by default unless previously disabled; Settings → Usage statistics allows opt-out.
+No physical USB flashing is performed as part of this release validation.
+
+Validation and artifact identity are recorded in publication/qa/0.10.0-experimental.39.txt.

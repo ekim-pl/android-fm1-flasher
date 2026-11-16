@@ -39,7 +39,7 @@ For example, replace every placeholder below with actual package information. Th
 
 The example hash is a placeholder, not a usable firmware checksum. Keep IDs unique and stable. The publisher must supply accurate compatibility and license terms. A hash detects mismatched bytes but does not authenticate a publisher who controls both catalog and hash.
 
-Tell users to open **Settings → Firmware sources**, add the appropriate source and URL, configure authentication if needed, save, select **Check now**, and enable it. Approve the required package and artwork URL scopes for JSON sources. For GitHub and direct package sources, use **Edit → Package compatibility** after checking to confirm compatibility for each package hash. Unknown compatibility blocks installation. The check interval is 24–168 hours; replacing credentials or authorizing OAuth permits another check.
+Tell users to open **Settings → Firmware sources**, add the appropriate source and URL, configure authentication if needed, save, select **Check now**, and enable it. Approve the required package and artwork URL scopes for JSON sources. For GitHub and direct package sources, use **Edit → Package compatibility** after checking to confirm compatibility for each package hash. Unknown compatibility blocks installation. Source intervals can be set from 1 to 168 hours; release builds default to 8 hours and debug builds to 1 hour. In experimental mode, a manual check can bypass the interval for non-Hub sources while server retry delays remain in force and The Firmware Hub keeps a 24-hour minimum. Replacing credentials or authorizing OAuth permits another check.
 
 ## Private GitHub repository
 

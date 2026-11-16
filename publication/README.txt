@@ -1,7 +1,7 @@
-CURRENT DEVELOPER PRERELEASE: 0.10.0-experimental.38 (versionCode 38)
-Persistent instrument colors and a debug-only FM1 Color Demo.
-Notes: github-release-0.10.0-experimental.38.txt.
-Verification: qa/0.10.0-experimental.38.txt.
+CURRENT DEVELOPER PRERELEASE: 0.10.0-experimental.39 (versionCode 39)
+Configurable catalog refresh intervals; experimental manual checks can bypass the interval for non-Hub sources while respecting server retry delays.
+Notes: github-release-0.10.0-experimental.39.txt.
+Verification: qa/0.10.0-experimental.39.txt.
 This preview is separate from the milestone-1 materials below.
 
 FM-1 Flasher 0.10.0 — milestone 1: Google Play preparation
