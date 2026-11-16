@@ -1,6 +1,6 @@
-# Implementation and verification — 0.9.2 / 23
+# Implementation and verification — 0.10.0 / 31
 
-Architecture of the complete Android release **0.9.2** on `main`. A future iOS port is planned; the Apple sources described here are development groundwork, not a released application. This document describes the existing code, not a roadmap or a guarantee of hardware support. For operation instructions see the [user guide](docs/user-guide.md); for recorded build results see [build-23 QA](publication/qa/0.9.2.txt).
+Current architecture of the Android 0.10.0 source tree. Apple sources are development groundwork, not a released application. For operation instructions see the [user guide](docs/user-guide.md). Build results describe a particular commit/artifact, not every later change with the same version number: see the [publication audit](docs/reviews/2026-11-16-publication-audit.txt) and [repair plan](docs/reviews/2026-11-16-publication-repair-plan.txt). Historical reports under `publication/qa` remain unchanged.
 
 ## Modules and entry points
 
@@ -70,7 +70,17 @@ adb -s DEVICE_SERIAL shell am instrument -w -e class pl.ekim.fm1_flasher.FleetUi
 
 Run the explicit classes separately: `ExperimentalFeaturesTest`, `CatalogDatabaseTest`, `BackgroundCatalogTest`, `FirmwareSelectionTest`, `UsbPermissionIntentTest`, `MainActivityLaunchTest`, `ComposeCatalogUpdatesTest`, `FleetUiTest`, `OperationLogServiceTest`, `SettingsUiTest`, `SourceAuthenticationTest` (all in `pl.ekim.fm1_flasher`). This avoids the legacy runner's unbounded discovery startup timeout and isolates service/preferences fixtures. The test runner's exit alone is insufficient: inspect the reported OK/failure result.
 
-Build 23 passed 62 shared JVM tests and 129 Android JVM tests (four external-fixture cases skipped), plus 44 Android instrumentation tests. Debug APK/test APK, lint, generated resources and iOS Kotlin metadata compilation passed. The [current report](publication/qa/0.9.2.txt) records the artifact. Historical build reports remain unchanged.
+Ordinary JVM tests use synthetic firmware and do not require manufacturer downloads. Production integration is a separate gate using pinned V15/V16 bytes:
+
+```sh
+python3 scripts/release_fixtures.py prepare
+./gradlew --no-daemon -Pfm1Analytics=false :app:firmwareIntegrationTest
+python3 scripts/release_fixtures.py verify
+python3 scripts/release_fixtures.py verify-integration
+FM1_BUNDLE_INTEGRATION=1 python3 -m unittest discover -s scripts -p 'test_*.py'
+```
+
+The last command includes real locally signed AAB fixtures and needs Java 17 and the Android SDK. It never uploads an artifact. Test counts and hardware results belong in the report for the tested commit; a passing simulation does not establish physical acceptance.
 
 ## iOS build boundary
 
@@ -92,19 +102,29 @@ Choose scheme `FM1Flasher`; configure a signing team for a physical device. The 
 ./gradlew :shared:iosSimulatorArm64Test
 ```
 
-Linux metadata compilation does not compile Swift, link/sign an iOS application or produce an IPA. No Xcode/native iOS result is available for build 23.
+Linux metadata compilation does not compile Swift, link/sign an iOS application or produce an IPA. Native iOS validation must be recorded separately from Android and Linux metadata results.
 
 ## Release boundaries
 
-0.9.2/23 is a prepared experimental test artifact with regenerated documentation; preparing it does not publish a GitHub Release or deploy Pages. Debug signature continuity with build 18 was checked. A future rebuild after document changes has different APK bytes and needs a new checksum and packaging verification. Do not replace the historical report's checksum with one from a different build.
+All current Android workflows target `pl.ekim.fm1_flasher`. Building an artifact is separate from publishing it:
 
-Android CI tests/builds every branch. Pages builds every branch; deployment is allowed only from the default branch. The inherited Google Play release and production workflows still target the original package; the F-Droid recipe and older store material also concern the original application. See [publication notes](publication/README.txt). None of these artifacts establishes a store release of this fork.
+- `android-debug.yml` builds a signed debug APK.
+- `fdroid.yml` validates an unsigned SDK-free release APK; `fdroid-release.yml` builds the signed distribution APK.
+- `google-play.yml` builds a signed AAB with production Firebase; it does not upload.
+- `android-release.yml` resolves a stable tag once, builds the three distributions, then invokes APK publication.
+- `android-publish.yml` publishes existing APKs; `google-play-upload.yml` uploads an existing AAB to internal testing; `promote-production.yml` promotes the selected tested version.
+
+Publish/upload/promote run from the default branch and use its trusted tooling. They require successful Android CI API34/36 results for the exact resolved source SHA, including matching workflow contents. A failed or missing latest trusted run blocks publication; a changed workflow can require a new candidate. Producer success, artifact hash, certificate provenance and pinned V15/V16 integration evidence remain separate checks. AAB validation uses a SHA-256-pinned bundletool to validate structure and compare the base manifest package/version/SDK with the source. Older AABs lacking this evidence require rebuilding.
+
+Android CI and Pages build every branch; Pages deployment is limited to the default branch. The F-Droid submission recipe under `publication/fdroid` is explicitly archival and still needs replacement/validation before submission. A signed SDK-free APK alone is not evidence of F-Droid acceptance. See [publication notes](publication/README.txt).
+
+Every rebuilt binary needs its own checksum and signing verification. Do not replace a historical report’s checksum with that of a new build.
 
 Physical acceptance requires multiple FM-1 units, the intended powered/passive hubs and real phones; test mode descriptors, serial behavior, grant denial, missed/out-of-order events, safe reconnect faults, interruption and recovery separately. Emulator assertions establish software behavior, not electrical stability or hardware flash success.
 
-## Operation diagnostics and cleanup (0.9.2 / 23)
+## Operation diagnostics and cleanup
 
-`OperationLog` stores bounded JSON Lines in `diagnostics/operations.jsonl` (256 KiB, atomic replacement, complete oldest records pruned first). Callers serialize I/O: Android uses a dedicated executor, portable uses a coroutine dispatcher limited to one task. Diagnostic write failures never abort a transfer. Events use epoch-millisecond timestamps, level, stable event keys and bounded messages; URL queries/fragments are removed. Android records service lifecycle, dispatched actions (excluding high-frequency logger polling), USB/MIDI topology changes, status/transfer phases and caught failures. Portable records actions, statuses and task failures. This is an operational trace, not raw MIDI capture or an OS crash dump.
+`OperationLog` stores daily JSON Lines files under `diagnostics/`, rotated by the local calendar day. Default retention is seven days (configurable to 7/14/30), with a 10 MiB total ceiling and a 256 KiB per-day bound; complete oldest records/files are pruned first. Maintenance runs when logs are written or accessed, so an unused app cleans up on its next activity. The legacy single log migrates by event date; exported copies are unaffected by retention. Callers serialize I/O: Android uses a dedicated executor, portable uses a coroutine dispatcher limited to one task. Diagnostic write failures never abort a transfer. Events use epoch-millisecond timestamps, level, stable event keys and bounded messages; URL queries/fragments are removed. Android records service lifecycle, dispatched actions (excluding high-frequency logger polling), USB/MIDI topology changes, status/transfer phases and caught failures. Portable records actions, statuses and task failures. This is an operational trace, not raw MIDI capture or an OS crash dump.
 
 Experimental settings expose export through the native document picker/share UI and clearing with confirmation. Both Android service methods independently enforce experimental mode and idle state. Clear removes the stored log and recent in-memory display; new activity resumes logging. Exported copies are independent.
 
@@ -113,7 +133,7 @@ Android bulk cleanup clears SQLite download rows/selection and private library p
 The owner confirmed successful physical-device testing of build 20. This does not replace acceptance of the new diagnostics/cleanup paths or of ROM recovery on each supported chip.
 
 
-## Full-screen settings and source adapters (0.9.2)
+## Full-screen settings and source adapters
 
 `SettingsScreen` and `SettingsPage` present settings, source editing, per-package compatibility and the settings privacy policy as full pages with hierarchical Back handling. Draft nonsecret fields and the previous workspace tab survive Activity recreation. Secret input fields are deliberately excluded from saved instance state. Destructive confirmations and the chip-detection result remain dialogs.
 
