@@ -1,0 +1,119 @@
+ZADANIE A — F1 + F6, implementacja
+
+Zakres: FlasherService, FleetStore, FlashJournal, FlashPersistence,
+FlasherWorker i testy JVM. Bez ComposeActivity, SettingsScreen, workflowów,
+OperationLog, zmian wspólnego planu, push ani publikacji.
+
+TRWAŁOŚĆ I TRANSFER
+- Przed otwarciem połączenia sesji zapisujemy atomowo RUNNING w flocie,
+  następnie obowiązkowy znacznik dziennika z unikalnym ID zadania.
+  Niepowodzenie dowolnego z tych zapisów uniemożliwia wysłanie komendy.
+- Postęp i rebind podczas sesji aktualizują wyłącznie pamięć. Zero zapisów
+  pliku/fsync w callbackach postępu i reconnectu, bez czekania na storage.
+  Z tego powodu awaria dysku pojawiająca się w trakcie transferu jest
+  wykrywana najpóźniej przy końcowym zapisie; nie przerywa transmisji.
+- Potwierdzenie instrumentu i trwałe potwierdzenie historii są oddzielne.
+  Dopiero atomowy zapis floty ustawia CONFIRMED oraz confirmedJobId.
+  Nowy dziennik nie wymaga drugiego zapisu końcowego: jego ID musi być
+  zgodne z trwałym confirmedJobId. Stary format dziennika nadal działa.
+- Błąd trwałości jest zatrzaskiwany dla próby, zatrzymuje następne zadania,
+  pokazuje fleet_storage_error i nie może później zmienić wyniku na sukces.
+  Ponowna awaria zapisu UNCONFIRMED nie zastępuje błędu transportu;
+  pamięć pokazuje niepewny wynik, zapisany RUNNING po restarcie również.
+  Zwolnienie MIDI/wakelock następuje w finally przed końcowym ostrzeżeniem.
+- confirmedJobId jest małym trwałym potwierdzeniem niezależnym od listy
+  historii. Retencja i clearHistory nie kasują ani tego potwierdzenia,
+  ani pliku znacznika nierozstrzygniętej sesji.
+
+API DO INTEGRACJI USTAWIEŃ
+FlasherService:
+  val historyRetentionMillis: Long?
+  fun setHistoryRetention(retentionMillis: Long?)
+  fun clearHistory()
+Mutacje są asynchroniczne przez libraryTask, z istniejącą blokadą busy;
+UI powinno używać ich po inicjalizacji i gdy !state.busy. Po zakończeniu
+publikowana jest flota, a błąd pojawia się w statusie. Odczyt property
+przed inicjalizacją zwraca domyślne 30 dni. null oznacza bez limitu.
+
+FleetStore:
+  DEFAULT_HISTORY_RETENTION_MILLIS = 30 dni
+  val historyRetentionMillis: Long?
+  fun setHistoryRetention(retentionMillis: Long?, now: Long = czas systemowy)
+  fun pruneHistory(retentionMillis: Long?, now: Long = czas systemowy)
+  fun clearHistory()
+setHistoryRetention zapisuje ustawienie i od razu stosuje je atomowo.
+pruneHistory stosuje podany okres jednorazowo, nie zmienia ustawienia.
+Wartości ujemne są odrzucane. 0 usuwa wpisy starsze od now; dokładna granica
+wieku pozostaje. Czyszczenie ręczne usuwa wszystkie nieaktywne wpisy.
+QUEUED/RUNNING zawsze pozostają w tej samej kolejności, z zachowaniem
+przypięcia urządzenia/paczki. Backupy i dziennik nie są dotykane.
+Retencja działa przy ładowaniu i trwałej zmianie wyniku. Ładowanie najpierw
+chroni RUNNING przed retencją, potem oznacza je jako przerwane. Nieudane
+sprzątanie zachowuje odczytaną kolejkę i oryginalny plik oraz sygnalizuje
+loadFailed. Nieudany zapis ustawień/czyszczenia przywraca stan zatwierdzony.
+
+WĄTKI
+Ładowanie floty i wszystkie mutacje Service są na pojedynczym FlasherWorker,
+współdzieląc dotychczasową blokadę CatalogOperations. UI nie oczekuje na fsync.
+refreshDevices aktualizuje obserwację ciągłości od razu, ale attach wykonuje
+na workerze, z ponownym sprawdzeniem flashing i bieżących endpointów.
+Operacje UI zachowują busy gate; kolejka nie wystartuje w trakcie edycji.
+
+MAPA NOWYCH TESTÓW DO RYZYK
+FlashPersistenceTest:
+- eitherRequiredWriteFailingPreventsAllDeviceCommands:
+  błąd floty lub znacznika przed startem, zero komend, cleanup.
+- unavailableDiskDuringTransferDoesNotInterruptSessionAndStopsNextJob:
+  rzeczywisty FlashSession z symulowanym MIDI, oba reconnecty i finalna
+  tożsamość; brak I/O postępu, awaria wyniku i ponowna awaria catch,
+  brak następnego zadania, niepotwierdzony restart.
+- successfulResultIsAtomicAndHistoryClearDoesNotReopenResolvedMarker:
+  udany wynik, 1000 callbacków, restart, czyszczenie historii i receipt.
+- transportFailureAndRepeatedResultWriteFailurePreserveOriginalExceptionAndCleanup:
+  pierwotny wyjątek transportu nie ginie, finally działa; odzyskany dysk
+  nie umożliwia późniejszego fałszywego potwierdzenia tej próby.
+- restartBeforeFinalCommitStaysUnconfirmedEvenAfterVolatileHundredPercent:
+  100% w pamięci nie jest trwałym sukcesem, clear nie kasuje znacznika.
+- singleFinalWriteFailureCannotBeReclassifiedAsSuccessBySuccessfulErrorWrite:
+  jednorazowa awaria końcowa, skuteczny zapis błędu nadal UNCONFIRMED.
+- warningFailureDoesNotMaskStorageFailureOrPreventErrorRecording:
+  awaria callbacku ostrzeżenia nie maskuje pierwotnego błędu storage.
+
+FleetRetentionTest:
+- defaultThirtyDaysPrunesLargeLegacyHistoryWithoutLosingQueuedOrInterruptedJobs:
+  migracja domyślnego okresu, 10 000 starych wpisów, trwałe zmniejszenie
+  pliku, zachowanie oczekujących i przerwanych oraz pinningu.
+- configurableBoundaryUnlimitedAndManualClearPreserveActiveOrderAndPins:
+  granica 7 dni, trwałe ustawienie, bez limitu, ręczne czyszczenie,
+  kolejność, token planu, pinning, odrzucenie ujemnego okresu.
+- failedClearAndPolicyWriteRollBackHistorySettingAndConfirmation:
+  rollback listy, ustawienia i receipt przy awarii dysku.
+- failedAutomaticPruningKeepsDecodedQueueAndOriginalFile:
+  nieudana retencja startowa nie gubi odczytanych zadań ani pliku.
+- retentionNeverTouchesBackupsOrUnresolvedJournal:
+  retencja 0 i clear nie kasują backupu ani nierozstrzygniętego znacznika.
+
+FlasherWorkerTest:
+- slowFleetWritesLeaveCallerFreeAndQueuedEditsKeepOrderAndPinning:
+  latch blokuje zapis; wątek wywołujący nadal odczytuje snapshot i zleca
+  pracę; zapis odbywa się na innym wątku, attach/configure/enqueue zachowują
+  kolejność, edycja przypiętego urządzenia jest odrzucana.
+
+OGRANICZENIA
+Testy JVM używają realnych plików atomowych i symulowanego MIDI, nie telefonu
+ani fizycznego FM-1. Test workera nie jest pomiarem ANR Android Service/UI.
+Nie weryfikowano fizycznego zaniku zasilania; zachowano istniejący atomicWrite
+(fsync pliku + atomic move). Retencja ogranicza wiek, nie liczbę wpisów
+w ostatnich 30 dniach; bez limitu historia może rosnąć. Stary duży JSON nadal
+trzeba raz sparsować na workerze. Postęp po restarcie celowo jest niepewny,
+a nie odtwarzany procentowo. UI ustawień i rotację logów integruje agent
+nadrzędny. Nie wykonano builda z Firebase ani testów platformowych/hardware.
+
+WYKONANA WALIDACJA
+./gradlew --no-daemon -Pfm1Analytics=false :app:testDebugUnitTest
+  :shared:jvmTest :app:lintRelease
+BUILD SUCCESSFUL. Raporty: app 170 testów (13 nowych), shared 101;
+0 failures/errors/skipped. Lint: 0 błędów, 49 ostrzeżeń.
+Końcowe uruchomienie: 164 zadania, 14 wykonanych, 150 up-to-date;
+poprzednie pełniejsze uruchomienie również udane (112 wykonanych).
+Nie jest to clean-room rebuild. git diff --check: OK.

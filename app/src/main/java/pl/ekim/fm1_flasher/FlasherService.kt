@@ -13,9 +13,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.*
 import java.io.File
-import kotlin.concurrent.withLock
 import java.util.concurrent.CopyOnWriteArraySet
-import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
@@ -55,7 +53,7 @@ class FlasherService : Service() {
     private val analytics get() = AndroidAnalytics.get(this)
     private val binder = LocalBinder()
     private val main = Handler(Looper.getMainLooper())
-    private val worker = Executors.newSingleThreadExecutor()
+    private val worker = FlasherWorker()
     private lateinit var operationLogger: AndroidOperationLogger
     fun recordEvent(event: String, message: String = "", level: String = "INFO") {
         if (::operationLogger.isInitialized) operationLogger.record(event, message, level)
@@ -147,16 +145,16 @@ class FlasherService : Service() {
         repository = CatalogRepository(database)
         recoveryStore = RecoveryStore(File(filesDir, "recovery"))
         library = LocalLibrary(File(filesDir, "library"), database)
-        fleet = FleetStore(File(filesDir, "fleet.json"))
         registerReceiver(usbEvents, IntentFilter().apply { addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED); addAction(UsbManager.ACTION_USB_DEVICE_DETACHED) }, RECEIVER_NOT_EXPORTED)
         journal = FlashJournal(File(filesDir, "flash-session.json"))
         manager?.registerDeviceCallback(MidiManager.TRANSPORT_MIDI_BYTE_STREAM, mainExecutor, callback)
         getSystemService(NotificationManager::class.java).createNotificationChannel(
             NotificationChannel("flash", AppLanguage.wrap(this).s(R.string.notification_channel), NotificationManager.IMPORTANCE_LOW))
-        refreshDevices()
         startService(Intent(this, FlasherService::class.java).setAction("LIBRARY"))
         execute {
             try {
+                fleet = FleetStore(File(filesDir, "fleet.json"))
+                refreshDevices()
                 database.migrate(filesDir)
                 libraryReady = true
                 CatalogSyncWorker.schedule(this, database.setting("background") == "true" && !database.settings().offline)
@@ -169,7 +167,7 @@ class FlasherService : Service() {
                     status(msg(R.string.library_ready))
                 } else status(msg(R.string.catalog_missing))
                 restoreSelection()
-                if (journal.unresolved() || fleet.jobs.any { it.outcome == JobOutcome.UNCONFIRMED }) status(msg(R.string.flash_interrupted))
+                if (journal.unresolved(fleet.confirmedJobId) || fleet.jobs.any { it.outcome == JobOutcome.UNCONFIRMED }) status(msg(R.string.flash_interrupted))
                 if (fleet.loadFailed) status(msg("fleet_storage_error"))
             } catch (failure: Exception) { status(failureText(failure, R.string.library_read_error)) }
             finally { finishLibraryTask() }
@@ -202,32 +200,44 @@ class FlasherService : Service() {
         recordFailure(failure)
         return failure.appMessage(fallback)
     }
-    private fun execute(action: () -> Unit) = worker.execute { CatalogOperations.lock.withLock(action) }
+    private fun execute(action: () -> Unit) = worker.execute(action)
 
     fun refreshDevices() {
         val devices = midi.devices()
         if (state.devices.map { it.endpoint } != devices.map { it.endpoint }) recordEvent("MIDI_PORTS_CHANGED", devices.joinToString { it.endpoint.toString() })
         synchronized(continuityLock) { activeGate?.observe(devices.map { it.endpoint }); activeGate?.observeUsb(getSystemService(UsbManager::class.java).deviceList.keys) }
         // Keep transition candidates out of the registry until explicitly bound by the session.
-        if (!state.flashing) runCatching { fleet.attach(devices.map { it.endpoint }) }.onFailure { status(failureText(it, R.string.library_read_error)) }
-        update { it.copy(devices = devices, fleet = fleet.devices, jobs = fleet.jobs) }
+        update { it.copy(devices = devices) }
+        if (!state.flashing) execute {
+            if (::fleet.isInitialized && !state.flashing) {
+                runCatching { fleet.attach(midi.devices().map { it.endpoint }) }
+                    .onFailure { status(failureText(it, R.string.library_read_error)) }
+                publishFleet()
+            }
+        }
     }
     private fun publishFleet() { update { it.copy(fleet = fleet.devices, jobs = fleet.jobs) } }
     fun configureDevice(id: String, alias: String? = null, chip: FlashChip? = null) {
         if (state.busy) return
-        fleet.configure(id, alias, chip); publishFleet()
+        libraryTask { fleet.configure(id, alias, chip); publishFleet() }
     }
     fun pairDevice(oldId: String, liveId: String) {
         if (state.busy) return
-        fleet.pair(oldId, liveId); publishFleet()
+        libraryTask { fleet.pair(oldId, liveId); publishFleet() }
     }
     fun enqueue(id: String, packageKey: String, forceUnknown: Boolean = false, confirmedHash: String = "") {
         if (state.busy) return
         val entry = state.downloads.singleOrNull { it.entry.key == packageKey }?.entry ?: return
         check(!forceUnknown || entry.sha256 == confirmedHash) { failed(msg("local_package_changed")) }
-        fleet.enqueue(id, entry, forceUnknown); publishFleet()
+        libraryTask { fleet.enqueue(id, entry, forceUnknown); publishFleet() }
     }
-    fun cancelJob(id: String) { if (!state.queueRunning) { fleet.cancel(id); publishFleet() } }
+    fun cancelJob(id: String) { if (!state.queueRunning) libraryTask { fleet.cancel(id); publishFleet() } }
+    val historyRetentionMillis: Long?
+        get() = if (::fleet.isInitialized) fleet.historyRetentionMillis else FleetStore.DEFAULT_HISTORY_RETENTION_MILLIS
+    fun setHistoryRetention(retentionMillis: Long?) = libraryTask {
+        fleet.setHistoryRetention(retentionMillis); publishFleet()
+    }
+    fun clearHistory() = libraryTask { fleet.clearHistory(); publishFleet() }
     fun stopQueue() { stopQueue = true; update { it.copy(queueStopping = true) } }
 
 
@@ -616,7 +626,8 @@ class FlasherService : Service() {
                         runJob(job)
                     })
                 } catch (failure: Exception) {
-                    status(msg(R.string.flash_unconfirmed, failureText(failure, R.string.flash_result_unknown)))
+                    status(if (state.status == msg("fleet_storage_error")) state.status
+                        else msg(R.string.flash_unconfirmed, failureText(failure, R.string.flash_result_unknown)))
                 } finally {
                     activeJob = null
                     synchronized(continuityLock) { activeGate = null }
@@ -639,21 +650,25 @@ class FlasherService : Service() {
         var analyticsPhase = AnalyticsStage.PREPARING
         val wake = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "fm1:flash")
         var ownsMidi = false
+        val persistence = FlashPersistence(fleet, journal, job) { error ->
+            stopQueue()
+            recordFailure(error)
+            status(msg("fleet_storage_error"))
+        }
         try {
             val target = midi.devices().singleOrNull { it.endpoint == job.endpoint } ?: failed(msg("fleet_plan_changed"))
             check(getSystemService(UsbManager::class.java).hasPermission(target.usb)) { failed(msg("reconnect_permission")) }
             MidiSessionGuard.acquire(); ownsMidi = true; wake.acquire(16 * 60_000L)
             val (saved, firmware) = library.load(job.packageKey, repository.cached())
             check(saved.entry.sha256 == job.hash && job.chip.allows(saved.entry, job.forceUnknown)) { failed(msg("local_package_changed")) }
-            fleet.result(job.id, JobOutcome.RUNNING, "flash_preparing"); activeJob = job.id; publishFleet()
+            persistence.begin(); activeJob = job.id; publishFleet()
             update { it.copy(target = target, identity = job.expected, chip = job.chip, progress = -1) }
-            journal.record(job.hash, job.deviceId, "preparing")
             val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(FlashSession.MAX_SESSION_MS)
             synchronized(continuityLock) { activeGate = ReconnectGate(target.endpoint, midi.devices().map { it.endpoint }, getSystemService(UsbManager::class.java).deviceList.keys) }
             val sessionPaths = mutableSetOf(target.endpoint.usbPath)
             val originalSerial = fleet.devices.single { it.id == job.deviceId }.serial
             val session = FlashSession(reconnect = { _, loader ->
-                fleet.result(job.id, JobOutcome.RUNNING, if (loader) "reconnect_loader" else "reconnect_final"); publishFleet()
+                persistence.progress(if (loader) "reconnect_loader" else "reconnect_final"); publishFleet()
                 analyticsPhase = AnalyticsStage.RECONNECTING
                 val chosen = awaitReconnect(checkNotNull(activeGate), loader, deadline)
                 val serial = runCatching { chosen.usb.serialNumber }.getOrNull()
@@ -664,14 +679,13 @@ class FlasherService : Service() {
                     sessionPaths += chosen.endpoint.usbPath
                     activeGate = ReconnectGate(chosen.endpoint, midi.devices().map { it.endpoint }, getSystemService(UsbManager::class.java).deviceList.keys, sessionPaths.toSet())
                 }
-                fleet.rebind(job.deviceId, chosen.endpoint); publishFleet()
+                persistence.rebind(chosen.endpoint); publishFleet()
                 update { it.copy(target = chosen, identity = null) }
                 midi.open(chosen)
             }, report = { text, progress ->
                 analyticsStage(text)?.let { analyticsPhase = it }
                 val phase = (text as? AppText.Resource)?.key ?: "flash_preparing"
-                fleet.result(job.id, JobOutcome.RUNNING, phase, progress); publishFleet()
-                journal.record(job.hash, job.deviceId, phase)
+                persistence.progress(phase, progress); publishFleet()
                 status(text, progress)
             }, validate = { endpoint ->
                 synchronized(continuityLock) {
@@ -681,21 +695,23 @@ class FlasherService : Service() {
                 }
             })
             val installed = session.flash(firmware, midi.open(target), job.expected)
-            journal.record(job.hash, job.deviceId, "finished", "confirmed")
-            fleet.rebind(job.deviceId, checkNotNull(state.target).endpoint, installed)
-            fleet.result(job.id, JobOutcome.CONFIRMED, "fleet_confirmed", 100); publishFleet()
+            persistence.rebind(checkNotNull(state.target).endpoint, installed)
+            val durable = persistence.confirmed()
+            publishFleet()
+            if (!durable) status(msg("fleet_storage_error"))
             update { it.copy(identity = installed) }
             measurement.complete()
         } catch (failure: Exception) {
             measurement.complete(false, analyticsError(failure), analyticsPhase)
             val reason = (failureText(failure, R.string.flash_result_unknown) as? AppText.Resource)?.takeIf { it.arguments.isEmpty() }?.key ?: "fleet_unconfirmed"
-            fleet.result(job.id, JobOutcome.UNCONFIRMED, reason); publishFleet()
+            persistence.unconfirmed(reason); publishFleet()
             throw failure
         } finally {
             activeJob = null
             synchronized(continuityLock) { activeGate = null }
             if (ownsMidi) MidiSessionGuard.release()
             if (wake.isHeld) wake.release()
+            if (persistence.failure != null) status(msg("fleet_storage_error"))
         }
     }
 
