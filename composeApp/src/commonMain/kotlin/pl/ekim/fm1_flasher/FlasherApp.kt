@@ -259,9 +259,9 @@ fun FlasherApp(backend: AppBackend) {
         }
         dialog?.let { (heading, message) -> AppDialog(heading, { dialog = null }, text("close")) { Text(resolveCoreText(message, language)) } }
         confirmation?.let { (action, message) -> AlertDialog(onDismissRequest = { confirmation = null },
-            title = { Text(text(if (action.kind == AppActionKind.FLASH) "flash_confirm_title" else if (action.kind == AppActionKind.REMOVE) "remove_confirm_title" else if (action.kind == AppActionKind.CLEAR_DOWNLOADS) "downloads_clear" else if (action.kind == AppActionKind.LOG_CLEAR) "operation_log_clear" else "recovery_title")) },
+            title = { Text(text(if (action.kind == AppActionKind.FLASH) "flash_confirm_title" else if (action.kind == AppActionKind.REMOVE) "remove_confirm_title" else if (action.kind == AppActionKind.CLEAR_DOWNLOADS) "downloads_clear" else if (action.kind == AppActionKind.HISTORY_CLEAR) "history_clear" else if (action.kind == AppActionKind.LOG_CLEAR) "operation_log_clear" else "recovery_title")) },
             text = { Column(Modifier.verticalScroll(rememberScrollState())) { Text(resolveCoreText(message, language)) } },
-            confirmButton = { TextButton({ confirmation = null; backend.perform(action) }, enabled = !state.busy) { Text(text(when(action.kind) { AppActionKind.FLASH -> "install_this_device"; AppActionKind.REMOVE -> "remove_package"; AppActionKind.CLEAR_DOWNLOADS -> "downloads_clear"; AppActionKind.LOG_CLEAR -> "operation_log_clear"; AppActionKind.RECOVERY_ENTER -> "recovery_enter"; else -> "recovery_write" })) } },
+            confirmButton = { TextButton({ confirmation = null; backend.perform(action) }, enabled = !state.busy) { Text(text(when(action.kind) { AppActionKind.FLASH -> "install_this_device"; AppActionKind.REMOVE -> "remove_package"; AppActionKind.CLEAR_DOWNLOADS -> "downloads_clear"; AppActionKind.LOG_CLEAR -> "operation_log_clear"; AppActionKind.HISTORY_CLEAR -> "history_clear"; AppActionKind.RECOVERY_ENTER -> "recovery_enter"; else -> "recovery_write" })) } },
             dismissButton = { TextButton({ confirmation = null }) { Text(text("cancel")) } }) }
     }
 }

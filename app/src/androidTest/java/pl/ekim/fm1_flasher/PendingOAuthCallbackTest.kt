@@ -59,6 +59,25 @@ class PendingOAuthCallbackTest : InstrumentationTestCase() {
         assertNull(store.readOpaque("_oauth_callback"))
     }
 
+    fun testLateCompletionCannotInvalidateNewLogin() = fixture { store, _ ->
+        val source = source()
+        store.write(source.id, HttpCredentials(HttpAuthMethod.OAUTH2, oauth = config))
+        var calls = 0
+        val manager = OAuthManager(store, { _, _, _ -> calls++; response() })
+        val queue = PendingOAuthCallback(store)
+        val old = callback(manager.begin(source))
+        queue.capture(Intent(Intent.ACTION_VIEW, old))
+        queue.dispatch(false) { } // Asynchronous service has not consumed the state yet.
+        val fresh = callback(manager.begin(source))
+        queue.capture(Intent(Intent.ACTION_VIEW, fresh))
+        assertFalse(queue.complete(old))
+        assertNotNull(store.readOpaque("_oauth_pending"))
+        queue.dispatch(false) { manager.finish(it) { source }; assertFalse(queue.complete(it)) }
+        queue.dispatch(false) { fail("Duplicate token exchange") }
+        assertEquals(1, calls)
+        assertNull(store.readOpaque("_oauth_callback"))
+    }
+
     fun testOriginalStateDeadlineAndInvalidRedirectCannotOverwriteCallback() = fixture { store, _ ->
         var time = 100L
         val source = source()
@@ -192,6 +211,74 @@ class PendingOAuthCallbackTest : InstrumentationTestCase() {
             waitUntil { !service.state.busy && calls.get() == 1 }
             instrumentation.runOnMainSync { instrumentation.callActivityOnNewIntent(activity, Intent(Intent.ACTION_VIEW, uri)) }
             assertEquals(1, calls.get())
+            assertEquals("private-token", store.read(source.id)!!.secret)
+            assertFalse(service.state.logs.toString().contains("private-callback-code"))
+            assertFalse(service.state.logs.toString().contains("private-token"))
+        } finally {
+            instrumentation.runOnMainSync {
+                if (service != null) {
+                    stateField.set(service, service.state.copy(busy = false))
+                    if (original != null) oauthField.set(service, original)
+                }
+                activity.finish()
+            }
+            context.unbindService(connection)
+            instrumentation.removeMonitor(monitor)
+            store.remove(source.id); store.remove("_oauth_pending"); store.remove("_oauth_callback")
+            database.writableDatabase.delete("sources", "id=?", arrayOf(source.id))
+        }
+    }
+    fun testOfflineHandoffTerminatesWithoutRetryAndFreshLoginWorks() {
+        val context = instrumentation.targetContext
+        val store = SourceCredentialStore(context)
+        val source = source()
+        val database = CatalogDatabase.get(context)
+        val calls = java.util.concurrent.atomic.AtomicInteger()
+        val manager = OAuthManager(store, { _, _, _ -> calls.incrementAndGet(); response() })
+        database.putSource(source)
+        store.write(source.id, HttpCredentials(HttpAuthMethod.OAUTH2, oauth = config))
+        val monitor = instrumentation.addMonitor(ComposeActivity::class.java.name, null, false)
+        var activity = instrumentation.startActivitySync(Intent(context, ComposeActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as ComposeActivity
+        val serviceField = ComposeActivity::class.java.getDeclaredField("service").apply { isAccessible = true }
+        val stateField = FlasherService::class.java.getDeclaredField("state").apply { isAccessible = true }
+        val oauthField = FlasherService::class.java.getDeclaredField("oauth").apply { isAccessible = true }
+        // Retain Service as a real running library task would while Activity unbinds on rotation.
+        val connection = object : android.content.ServiceConnection {
+            override fun onServiceConnected(name: android.content.ComponentName, binder: android.os.IBinder) = Unit
+            override fun onServiceDisconnected(name: android.content.ComponentName) = Unit
+        }
+        assertTrue(context.bindService(Intent(context, FlasherService::class.java), connection, android.content.Context.BIND_AUTO_CREATE))
+        var service: FlasherService? = null
+        var original: Any? = null
+        fun waitUntil(check: () -> Boolean) {
+            val deadline = android.os.SystemClock.uptimeMillis() + 15_000
+            while (!check() && android.os.SystemClock.uptimeMillis() < deadline) Thread.sleep(50)
+            assertTrue("Timed out waiting for lifecycle/service", check())
+        }
+        try {
+            waitUntil { (serviceField.get(activity) as? FlasherService)?.state?.busy == false }
+            service = serviceField.get(activity) as FlasherService
+            original = oauthField.get(service)
+            oauthField.set(service, manager)
+            val uri = callback(manager.begin(source))
+            instrumentation.runOnMainSync {
+                stateField.set(service, service.state.copy(busy = false, offline = true))
+                instrumentation.callActivityOnNewIntent(activity, Intent(Intent.ACTION_VIEW, uri))
+            }
+            waitUntil { !service.state.busy && store.readOpaque("_oauth_callback") == null }
+            assertNull(store.readOpaque("_oauth_pending"))
+            assertEquals(0, calls.get())
+            instrumentation.runOnMainSync {
+                stateField.set(service, service.state.copy(offline = false))
+                repeat(3) {
+                    ComposeActivity::class.java.getDeclaredMethod("dispatchOAuthCallback").apply { isAccessible = true }.invoke(activity)
+                    instrumentation.callActivityOnNewIntent(activity, Intent(Intent.ACTION_VIEW, uri))
+                }
+            }
+            assertEquals(0, calls.get())
+            val fresh = callback(manager.begin(source))
+            instrumentation.runOnMainSync { instrumentation.callActivityOnNewIntent(activity, Intent(Intent.ACTION_VIEW, fresh)) }
+            waitUntil { !service.state.busy && calls.get() == 1 }
             assertEquals("private-token", store.read(source.id)!!.secret)
             assertFalse(service.state.logs.toString().contains("private-callback-code"))
             assertFalse(service.state.logs.toString().contains("private-token"))

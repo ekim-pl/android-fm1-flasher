@@ -51,6 +51,17 @@ internal class PendingOAuthCallback(
         // Once OAuthManager consumes state, an interrupted exchange requires a fresh login, never replay.
     }
 
+    // Terminal handoff: pre-consumption failures require a fresh login, never observer-driven retry.
+    fun complete(uri: Uri) = synchronized(LOCK) {
+        val state = uri.getQueryParameter("state") ?: return@synchronized false
+        val abandoned = matchingRequest(uri) != null
+        if (abandoned) store.remove("_oauth_pending")
+        val saved = store.readOpaque(RECORD)?.let(::JSONObject)
+        if (saved?.optString("state") == state) store.remove(RECORD)
+        if (dispatchedState == state) dispatchedState = null
+        abandoned
+    }
+
     private fun matchingRequest(uri: Uri): JSONObject? {
         if (uri.toString().length > 16384 || uri.isOpaque || uri.fragment != null ||
             uri.buildUpon().clearQuery().fragment(null).build().toString() != OAuthManager.REDIRECT) return null

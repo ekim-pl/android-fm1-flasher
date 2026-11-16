@@ -511,11 +511,14 @@ class FlasherService : Service() {
             } else { address = oauth.begin(source); status(msg("oauth_waiting")) }
         }
     }
-    fun finishOAuth(uri: android.net.Uri) = libraryTask {
-        recordEvent("OAUTH_CALLBACK_RECEIVED")
-        check(!state.offline && hasNetwork()) { failed(msg(R.string.no_network_preserved)) }
-        val id = oauth.finish(uri, database::source)
-        database.authenticationChanged(id); publishLibrary(); status(msg("oauth_authorized"))
+    fun finishOAuth(uri: android.net.Uri, completion: () -> Unit = {}) {
+        if (!libraryReady || state.busy) { completion(); return }
+        libraryTask(completion = completion) {
+            recordEvent("OAUTH_CALLBACK_RECEIVED")
+            check(!state.offline && hasNetwork()) { failed(msg(R.string.no_network_preserved)) }
+            val id = oauth.finish(uri, database::source)
+            database.authenticationChanged(id); publishLibrary(); status(msg("oauth_authorized"))
+        }
     }
 
     fun toggleFavorite(id: String) = libraryTask {

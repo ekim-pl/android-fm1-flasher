@@ -140,7 +140,7 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
                     state.update { it.copy(logs = emptyList(), status = msg("operation_log_cleared")) }
                 }.onFailure { report(it.appMessage("library_change_error")) }
             }
-            AppActionKind.UNDO_REMOVE, AppActionKind.DEVICE_ALIAS, AppActionKind.DEVICE_CHIP, AppActionKind.DEVICE_PAIR, AppActionKind.QUEUE_ADD, AppActionKind.QUEUE_REMOVE, AppActionKind.QUEUE_START, AppActionKind.QUEUE_STOP -> report(msg("ios_platform_limits"))
+            AppActionKind.HISTORY_RETENTION, AppActionKind.HISTORY_CLEAR, AppActionKind.UNDO_REMOVE, AppActionKind.DEVICE_ALIAS, AppActionKind.DEVICE_CHIP, AppActionKind.DEVICE_PAIR, AppActionKind.QUEUE_ADD, AppActionKind.QUEUE_REMOVE, AppActionKind.QUEUE_START, AppActionKind.QUEUE_STOP -> report(msg("ios_platform_limits"))
             AppActionKind.RECONNECT -> { if (state.value.awaitingPort && state.value.candidates.any { it.id == action.id }) requestedPort.value = action.id }
             AppActionKind.OPEN_LINK -> if (action.id.startsWith("https://") || action.id.startsWith("mailto:")) host.openLink(action.id)
             AppActionKind.LOGGER_REFRESH -> runCatching { refreshLogger() }.onFailure { report(it.appMessage("connect_error")) }

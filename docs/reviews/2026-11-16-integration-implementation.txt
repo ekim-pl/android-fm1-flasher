@@ -1,0 +1,133 @@
+INTEGRATION IMPLEMENTATION — 2026-11-16
+Base: 71fd265b15d60f2d04d4abd8a9bc1d9ea66049f2
+Local implementation only; no push, publication, emulator, physical hardware,
+or live OAuth provider. No agents delegated. Read ponytail SKILL.md; no AGENTS.md
+exists in this checkout or its filesystem ancestors. Reviewed task A/B/C reports,
+publication audit/repair plan, fixtures review and merged repair review.
+
+CHANGES
+- AppSnapshot exposes nullable historyRetentionMillis (default 30 days).
+  AppAction supports HISTORY_RETENTION/HISTORY_CLEAR. Android Activity observes
+  the service policy and dispatches validated 7/30/90/unlimited settings and
+  clear requests through existing asynchronous, busy-gated service APIs.
+- Settings shows history only for fleet-capable Android, independently of
+  experimental logging. Clear requires the shared FlasherApp confirmation;
+  confirmation and settings mutations are disabled while busy. Copy explicitly
+  protects queued/running jobs, backups and unresolved recovery records.
+  English/Polish/Simplified Chinese XML and generated resources synchronized.
+- Portable backend explicitly rejects these unsupported actions using the
+  existing platform-limits status. Existing log controls remain intact.
+- Verified OAuth defect: libraryTask can finish before OAuthManager consumes
+  state (offline/network unavailable), leaving dispatchedState permanently set.
+  Service now calls a completion hook even for rejected handoff. Activity uses
+  it to terminate that attempt: remove the matching unconsumed PKCE request and
+  encrypted callback, release its process claim, and request a fresh login.
+  A newer login is not invalidated by an older completion. Successful exchange
+  still consumes state before requesting tokens. No automatic retry loop or
+  second token exchange; cold-process recovery before completion still exists.
+  This intentionally chooses fresh authorization after a failed handoff rather
+  than replaying a potentially ambiguous asynchronous authorization attempt.
+- Corrected an existing PortableAppBackendTest assertion: non-localized
+  IllegalArgumentException produces AppText.Plain through appMessage(), not the
+  fallback library_change_error resource. The old assertion timed out. The test
+  now waits for the error report and verifies the policy stays at 14 days and
+  survives reconstruction. No production logging behavior changed for this fix.
+
+RISK -> TEST COVERAGE (executed unless explicitly marked compilation only)
+1. History retention deletes active work, pins, backups or journal:
+   Existing FleetRetentionTest (5) covers 10,000-row migration/default 30 days,
+   exact cutoff, unlimited, ordered queued/running preservation, pinning,
+   invalid periods, failed writes/rollback, preserved backups/unresolved journal.
+   Existing FlashPersistenceTest covers confirmation receipt surviving clear,
+   pre-write failures, failures during/final transfer, restart uncertainty,
+   error preservation and no progress persistence. FlasherWorkerTest checks
+   queued storage work and caller responsiveness with blocked writes.
+2. Android UI sends incorrect policy, clears without confirmation, or permits
+   confirmation during busy:
+   Extended SettingsUiTest.testFullScreenSettingsSourceEditorAndBackInAllLanguages
+   verifies unlimited/7-day actions, no clear before confirmation, cancel, busy
+   disabled confirm and confirmed action in en/pl/zh. Compilation ONLY here.
+   HistoryServiceTest.testActivityActionsPersistAndBusyServiceRejectsMutations
+   routes all four policy choices through actual ComposeActivity/FlasherService,
+   reads persisted FleetStore and observed snapshot, rejects direct and Activity
+   mutations while busy, clears seeded completed history and preserves queued
+   work. Uses an isolated real file/FleetStore injected into the real service,
+   restoring its original store afterward. Compilation ONLY here.
+   Existing OperationLogServiceTest and ExperimentalFeaturesTest remain in CI.
+3. Portable backend exposes unsupported history or silently accepts actions:
+   New PortableAppBackendTest.historyActionsReportUnsupportedWithoutChangingPortableState
+   verifies fleet capability is false, unsupported status and unchanged policy.
+   UI visibility is also statically guarded by fleetAvailable; no iOS runtime
+   or screenshot validation performed.
+4. OAuth failed handoff sticks forever or retries exchanges:
+   New PendingOAuthCallbackTest.testOfflineHandoffTerminatesWithoutRetryAndFreshLoginWorks
+   exercises Activity -> real service/libraryTask offline failure, cleared state,
+   repeated observer dispatch and callback redelivery with zero token requests,
+   then one exchange for fresh authorization (only token transport substituted).
+   New testLateCompletionCannotInvalidateNewLogin covers old completion versus
+   newer pending state/callback and one successful exchange. Compilation ONLY.
+   Existing PendingOAuthCallbackTest retains busy/recreation, encrypted store,
+   duplicate/reentrant dispatch, TTL, invalid redirect/state, revision and cold
+   process tests. SourceAuthenticationTest retains PKCE/replay/refresh coverage.
+   These platform tests need Android Keystore/lifecycle and have NOT run here.
+5. Logging regressions: merged shared OperationLogTest and app portable tests
+   run alongside new history tests; day rotation, byte cap, retention, restart,
+   export, migration and storage failure tests preserved. UI log settings kept.
+6. Publication trust regressions: all 34 Python release tests run, including
+   FM1_BUNDLE_INTEGRATION=1 real bundletool/aapt2/jarsigner fixtures; mismatched
+   AAB manifest and corrupt AAB rejection, checksum/signature/provenance and
+   mocked API34/API36 exact-SHA policy checks. No real release API mutation.
+
+CI PLATFORM LIST
+.github/workflows/android-ci.yml explicitly includes new HistoryServiceTest.
+SettingsUiTest and PendingOAuthCallbackTest were already listed; their new
+methods run through the existing class entries. Cold seed/recover entries
+remain unchanged. Parent must run platform suites/API36 independently.
+
+EXACT VALIDATION
+1. ./gradlew --no-daemon -Pfm1Analytics=false :shared:jvmTest
+   :shared:testDebugUnitTest :app:testDebugUnitTest :composeApp:testDebugUnitTest
+   :app:lintRelease :app:assembleRelease :app:assembleDebugAndroidTest
+   :composeApp:compileCommonMainKotlinMetadata :composeApp:compileIosMainKotlinMetadata
+   Final result BUILD SUCCESSFUL, 54s, 270 tasks (38 executed, 232 up-to-date).
+   app JVM: 172 tests; shared JVM: 108; shared Android JVM: 107.
+   All zero failures/errors/skips. composeApp:testDebugUnitTest is NO-SOURCE;
+   Compose/backend behavior is tested from app JVM/platform suites, not a
+   separate Compose unit suite. Release lint: 0 errors, 51 warnings.
+   First run failed only on the old log-retention error-type assertion described
+   above; corrected before the successful full run. Synthetic fixture verify
+   initially saw that failed report while rerun was pending; final verify passes.
+2. ./gradlew --no-daemon -Pfm1Analytics=false :app:assembleDebugAndroidTest
+   Final compilation after the last OAuth race test: BUILD SUCCESSFUL, 8s,
+   96 tasks (2 executed, 94 up-to-date).
+3. FM1_BUNDLE_INTEGRATION=1 python3 -m unittest discover -s scripts -p 'test_*.py' -v
+   34 tests, OK, 0 skipped, 10.047s. Ephemeral fixture signing only.
+4. go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7 -shellcheck= .github/workflows/*.yml
+   PASS.
+5. python3 tools/sync-resources.py --check
+   PASS (after regeneration with python3 tools/sync-resources.py).
+6. /home/mike/.t3/projects/android-fm1-flasher/.venv-pages/bin/python scripts/build_site.py
+   /home/mike/.t3/projects/android-fm1-flasher/.venv-pages/bin/python scripts/check_site.py
+   PASS: 52 HTML pages; links, anchors, translations and language switching.
+7. python3 scripts/release_fixtures.py verify
+   PASS: synthetic test gate. No V15/V16 firmwareIntegrationTest rerun here.
+8. git diff --check
+   PASS.
+
+LIMITATIONS / HANDOFF
+No emulator or connected instrumentation execution per task instruction. Newly
+compiled UI/service/OAuth tests still need the parent's platform run. No physical
+FM-1, power-loss experiment, live token endpoint, publication, signing with a
+production key, optional Firebase variant or Xcode/Swift/CoreMIDI runtime build.
+iOS metadata compilation checks Kotlin declarations, not native linking/host
+behavior. Release build is the no-Firebase local variant and is not a release
+approval; lint warnings and Gradle deprecations remain. Gradle reused outputs;
+this is not a clean-room/reproducibility audit. Unlimited history can grow
+without an age bound. Existing tests cover logical persistence failure handling,
+not every filesystem/Keystore power-loss interleaving. No coverage percentage
+is claimed. Fresh login is required after a terminal failed OAuth handoff.
+
+Local logs: /tmp/fm1-integration-gradle.log (first failed run),
+/tmp/fm1-integration-gradle-final.log, /tmp/fm1-integration-platform-compile.log,
+/tmp/fm1-integration-python.log. Standard XML/HTML results under app/build and
+shared/build. Logs/build outputs are not committed or required by the patch.

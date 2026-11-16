@@ -51,6 +51,20 @@ class PortableAppBackendTest {
         override fun openLink(url: String) = Unit
         override fun exportText(name: String, text: String) = Unit
     }
+    @Test fun historyActionsReportUnsupportedWithoutChangingPortableState() = runBlocking {
+        val storage = Storage(); val midi = Midi()
+        val http = object : HttpClient { override fun get(url: String, limit: Int, artworkOnly: Boolean): ByteArray = error("No network") }
+        FirmwareRepository(storage, http, ::epochMillis).saveSettings(LibrarySettings(offline = true))
+        val backend = PortableAppBackend(midi, midi, storage, http, Host())
+        withTimeout(5000) { backend.state.first { it.initialized && !it.busy } }
+        assertFalse(backend.state.value.fleetAvailable)
+        for (action in listOf(AppAction(AppActionKind.HISTORY_RETENTION, "7"), AppAction(AppActionKind.HISTORY_CLEAR))) {
+            backend.perform(action)
+            assertEquals(msg("ios_platform_limits"), backend.state.value.status)
+            assertEquals(30L * 86_400_000, backend.state.value.historyRetentionMillis)
+        }
+    }
+
     @Test fun logRetentionPersistsAndRejectsInvalidPeriods() = runBlocking {
         val storage = Storage(); val midi = Midi()
         val http = object : HttpClient { override fun get(url: String, limit: Int, artworkOnly: Boolean): ByteArray = error("No network") }
@@ -65,8 +79,10 @@ class PortableAppBackendTest {
         backend.perform(AppAction(AppActionKind.LOG_RETENTION, "14"))
         withTimeout(5000) { backend.state.first { it.operationLogDays == 14 } }
         assertEquals(14, OperationLog(storage, ::epochMillis).retentionDays())
+        val beforeInvalid = backend.state.value.logs.size
         backend.perform(AppAction(AppActionKind.LOG_RETENTION, "0"))
-        withTimeout(5000) { backend.state.first { (it.status as? AppText.Resource)?.key == "library_change_error" } }
+        withTimeout(5000) { backend.state.first { it.logs.size > beforeInvalid } }
+        assertTrue(backend.state.value.status is AppText.Plain)
         assertEquals(14, backend.state.value.operationLogDays)
         val restored = PortableAppBackend(midi, midi, storage, http, Host())
         withTimeout(5000) { restored.state.first { it.initialized && !it.busy } }

@@ -54,6 +54,24 @@ class SettingsUiTest : InstrumentationTestCase() {
                 val context = instrumentation.targetContext.createConfigurationContext(config)
                 fun t(key: String) = context.getString(context.resources.getIdentifier(key, "string", context.packageName))
                 click(t("settings")); assertPage()
+                click(t("history_unlimited")); assertEquals(AppAction(AppActionKind.HISTORY_RETENTION, "unlimited"), actions.last())
+                click(context.getString(context.resources.getIdentifier("retention_days", "string", context.packageName), 7))
+                assertEquals(AppAction(AppActionKind.HISTORY_RETENTION, "7"), actions.last())
+                val beforeClear = actions.size
+                click(t("history_clear"))
+                assertEquals(beforeClear, actions.size)
+                click(t("cancel")); assertEquals(beforeClear, actions.size)
+                click(t("history_clear"))
+                instrumentation.runOnMainSync { backend.state.value = backend.state.value.copy(busy = true) }
+                instrumentation.waitForIdleSync(); Thread.sleep(120)
+                instrumentation.runOnMainSync {
+                    val clear = nodes().last { it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == t("history_clear") } == true && it.config.getOrNull(SemanticsActions.OnClick) != null }
+                    assertTrue(clear.config.contains(SemanticsProperties.Disabled))
+                    backend.state.value = backend.state.value.copy(busy = false)
+                }
+                click(t("history_clear")); assertEquals(AppAction(AppActionKind.HISTORY_CLEAR), actions.last())
+                // Return to the top of the settings scroll before testing earlier controls.
+                instrumentation.runOnMainSync { nodes().firstOrNull { it.config.getOrNull(SemanticsActions.ScrollBy) != null }?.config?.getOrNull(SemanticsActions.ScrollBy)?.action?.invoke(0f, -10000f) }
                 click(t("theme_dark")); assertEquals(AppAction(AppActionKind.APPEARANCE, "DARK"), actions.last()); assertPage()
                 click(t("catalog_sources")); assertPage()
                 click(t("source_add")); assertPage()

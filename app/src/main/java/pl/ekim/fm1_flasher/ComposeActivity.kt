@@ -67,7 +67,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     override fun attachBaseContext(base: Context) { super.attachBaseContext(AppLanguage.wrap(base)) }
     private val observer: (UiState) -> Unit = { next ->
         state.value = state.value.copy(sourceColors = next.sourceColors, analyticsAvailable = AndroidAnalytics.get(this).available, analyticsPreference = AndroidAnalytics.get(this).preference, undoAvailable = next.undoAvailable, fleetAvailable = true, fleet = next.fleet, jobs = next.jobs,
-            queueRunning = next.queueRunning, queueStopping = next.queueStopping, catalog = next.catalog, downloads = next.downloads, favorites = next.favorites,
+            historyRetentionMillis = service?.historyRetentionMillis, queueRunning = next.queueRunning, queueStopping = next.queueStopping, catalog = next.catalog, downloads = next.downloads, favorites = next.favorites,
             offline = next.offline, backgroundSync = next.backgroundSync, backgroundAvailable = true, busy = next.busy, flashing = next.flashing, experimental = next.experimental,
             ports = next.devices.map(::port), target = next.target?.let(::port), identity = next.identity, chip = next.chip, chipDetection = next.chipDetection,
             ready = next.ready, awaitingPort = next.awaitingPort, candidates = next.reconnectCandidates.map(::port),
@@ -146,7 +146,12 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); captureOAuthCallback(intent); dispatchOAuthCallback() }
     private fun dispatchOAuthCallback() {
         val active = service ?: return
-        runCatching { pendingOAuthCallback.dispatch(active.state.busy, active::finishOAuth) }
+        runCatching { pendingOAuthCallback.dispatch(active.state.busy) { uri ->
+            active.finishOAuth(uri) {
+                runCatching { if (pendingOAuthCallback.complete(uri)) showFailure(AppText.Joined(listOf(active.state.status, msg("auth_login_required")), "\n")) }
+                    .onFailure { showFailure(msg("auth_storage_error")) }
+            }
+        } }
             .onFailure { showFailure(msg("auth_storage_error")) }
     }
     override fun onStart() { super.onStart(); visible = true; service?.onAppOpened() }
@@ -195,6 +200,11 @@ class ComposeActivity : ComponentActivity(), AppBackend {
                     if (result.isFailure) showFailure(msg("library_change_error"))
                 }
             }
+            AppActionKind.HISTORY_RETENTION -> if (!next.busy) {
+                require(action.id in listOf("7", "30", "90", "unlimited"))
+                active.setHistoryRetention(if (action.id == "unlimited") null else action.id.toLong() * 86_400_000)
+            }
+            AppActionKind.HISTORY_CLEAR -> if (!next.busy) active.clearHistory()
             AppActionKind.LOG_CLEAR -> active.clearOperationLog()
             AppActionKind.LOG_EXPORT -> if (next.experimental && !next.busy) startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/plain").putExtra(Intent.EXTRA_TITLE, "fm1-operations-${System.currentTimeMillis()}.jsonl"), 62)
             AppActionKind.ANALYTICS_PREFERENCE -> Unit

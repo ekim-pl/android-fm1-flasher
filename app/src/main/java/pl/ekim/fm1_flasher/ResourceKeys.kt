@@ -533,5 +533,11 @@ internal val androidResourceKeys = mapOf(
     R.string.log_retention to "log_retention",
     R.string.retention_days to "retention_days",
     R.string.log_retention_help to "log_retention_help",
+    R.string.history_title to "history_title",
+    R.string.history_retention to "history_retention",
+    R.string.history_unlimited to "history_unlimited",
+    R.string.history_help to "history_help",
+    R.string.history_clear to "history_clear",
+    R.string.history_clear_confirm to "history_clear_confirm",
 )
 internal val androidResourceIds = androidResourceKeys.entries.associate { it.value to it.key }

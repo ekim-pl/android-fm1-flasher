@@ -61,6 +61,15 @@ import androidx.compose.ui.unit.dp
                 modifier = Modifier.fillMaxWidth(), enabled = !state.busy && !pinned) { Text(t("downloads_clear")) }
             if (pinned) Text(t("fleet_package_pinned"), style = MaterialTheme.typography.bodySmall)
         }
+        if (state.fleetAvailable) SettingsCard(t("history_title")) {
+            SettingOptions(t("history_retention"), state.historyRetentionMillis?.div(86_400_000)?.toString() ?: "unlimited",
+                listOf(7, 30, 90).map { it.toString() to t("retention_days", it) } + ("unlimited" to t("history_unlimited")), !state.busy) {
+                send(AppAction(AppActionKind.HISTORY_RETENTION, it))
+            }
+            Text(t("history_help"), style = MaterialTheme.typography.bodySmall)
+            OutlinedButton({ confirm(AppAction(AppActionKind.HISTORY_CLEAR), msg("history_clear_confirm")) },
+                modifier = Modifier.fillMaxWidth(), enabled = !state.busy) { Text(t("history_clear")) }
+        }
         SettingsCard(t("experimental_features")) {
             SettingSwitch(t("experimental_features"), state.experimental, !state.busy) { send(AppAction(AppActionKind.EXPERIMENTAL, it.toString())) }
             Text(t("experimental_help"), style = MaterialTheme.typography.bodySmall)

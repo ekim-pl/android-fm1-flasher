@@ -349,4 +349,10 @@
     <string name="log_retention">Keep diagnostic logs</string>
     <string name="retention_days">%1$d days</string>
     <string name="log_retention_help">Logs rotate by local calendar day. Old files are removed when logging or accessing logs. Up to 256 KiB per day and 10 MiB total. Exported copies are not deleted.</string>
+    <string name="history_title">Flash history</string>
+    <string name="history_retention">Keep history for</string>
+    <string name="history_unlimited">Unlimited</string>
+    <string name="history_help">Retention and clearing preserve queued and running jobs, backups, and unresolved recovery records.</string>
+    <string name="history_clear">Clear flash history</string>
+    <string name="history_clear_confirm">Clear completed and interrupted flash history? Queued and running jobs, backups, and unresolved recovery records will be kept.</string>
 </resources>
