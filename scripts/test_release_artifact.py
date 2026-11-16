@@ -76,6 +76,24 @@ class ArtifactTest(unittest.TestCase):
         self.save()
         self.assertEqual(verify(self.directory, 'debug', self.tag, self.commit, '123'), self.manifest)
 
+    def test_preview_is_debug_only_and_must_match_embedded_version(self):
+        self.tag = 'v0.10.0-experimental.31'
+        old = self.directory / self.manifest['file']
+        self.manifest.update(variant='debug', tag=self.tag, version_name=self.tag[1:],
+                             file=f'fm1-flasher-{self.tag}-debug.apk')
+        old.rename(self.directory / self.manifest['file'])
+        self.save()
+        self.assertEqual(verify(self.directory, 'debug', self.tag, self.commit, '123'), self.manifest)
+        self.manifest['version_name'] = '0.10.0'
+        self.save()
+        with self.assertRaises(ValueError):
+            verify(self.directory, 'debug', self.tag, self.commit, '123')
+        for variant in ('fdroid', 'play'):
+            self.manifest.update(variant=variant, version_name=self.tag[1:])
+            self.save()
+            with self.assertRaises(ValueError):
+                verify(self.directory, variant, self.tag, self.commit, '123')
+
     def test_play_requires_the_same_integration_gate_as_fdroid(self):
         old = self.directory / self.manifest['file']
         self.manifest.update(variant='play', file='fm1-flasher-v0.10.0-play.aab',

@@ -98,8 +98,9 @@ def verify(directory, variant, tag, commit, run_id):
     expected = dict(schema=1, variant=variant, package=PACKAGE, tag=tag, commit=commit, run_id=run_id)
     if any(manifest.get(key) != value for key, value in expected.items()):
         raise ValueError('Artifact provenance does not match requested source')
-    if not re.fullmatch(r'v\d+\.\d+\.\d+', tag) or tag != 'v' + manifest['version_name']:
-        raise ValueError('Expected stable version matching tag')
+    pattern = r'v\d+\.\d+\.\d+' + (r'(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?' if variant == 'debug' else '')
+    if not re.fullmatch(pattern, tag) or tag != 'v' + manifest['version_name']:
+        raise ValueError('Expected matching version tag (previews are debug-only)')
     if type(manifest.get('version_code')) is not int or manifest['version_code'] <= 0:
         raise ValueError('Invalid versionCode')
     if type(manifest.get('run_attempt')) is not int or manifest['run_attempt'] <= 0:
