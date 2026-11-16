@@ -42,8 +42,14 @@ class FleetUiTest : InstrumentationTestCase() {
                 instrumentation.waitForIdleSync(); Thread.sleep(80)
                 var clicked = false
                 instrumentation.runOnMainSync {
-                    find(label)?.let { node ->
+                    val node = find(label)
+                    if (node != null) {
                         assertTrue(node.config[SemanticsActions.OnClick].action!!.invoke()); clicked = true
+                    } else {
+                        roots.filter { it.view.isAttachedToWindow }
+                            .flatMap { it.semanticsOwner.getAllSemanticsNodes(mergingEnabled = true) }
+                            .firstOrNull { it.config.getOrNull(SemanticsActions.ScrollBy) != null }
+                            ?.config?.getOrNull(SemanticsActions.ScrollBy)?.action?.invoke(0f, 400f)
                     }
                 }
                 if (clicked) return
@@ -58,12 +64,13 @@ class FleetUiTest : InstrumentationTestCase() {
             instrumentation.waitForIdleSync(); Thread.sleep(100)
             instrumentation.runOnMainSync {
                 assertEquals(true, find("✓ Pink")!!.config[SemanticsProperties.Selected])
+            }
+            click("Details")
+            instrumentation.runOnMainSync {
                 backend.state.value = backend.state.value.copy(fleet = listOf(device.copy(endpoint = null, color = 3)))
             }
             instrumentation.waitForIdleSync(); Thread.sleep(100)
-            var pickerVisible = false
-            instrumentation.runOnMainSync { pickerVisible = find("Green") != null }
-            if (!pickerVisible) click("Details")
+            click("Details")
             click("Green")
             assertEquals("4", actions.last().value)
             instrumentation.runOnMainSync { backend.state.value = backend.state.value.copy(busy = true) }

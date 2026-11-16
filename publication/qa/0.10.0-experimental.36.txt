@@ -17,3 +17,7 @@ The signed preview will be prepared by android-debug.yml using the existing
 developer signing key and test Firebase configuration. Build results, checksum
 and certificate identity are supplied with the downloaded artifact in dist/.
 No public GitHub release or Play upload is part of this build preparation.
+
+CI result: signed APK build succeeded, but both platform jobs failed in the new
+color UI test (Missing Details after disconnect on smaller screens). Candidate 36
+is superseded by 37; do not treat it as a validated prerelease.

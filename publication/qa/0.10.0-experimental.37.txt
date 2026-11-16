@@ -1,0 +1,12 @@
+FM-1 Flasher 0.10.0-experimental.37 — corrected prerelease candidate
+versionCode: 37; package: pl.ekim.fm1_flasher; minimum Android: 14 / API 34.
+
+Includes the documentation and instrument colors from candidate 36, with a UI
+test fix: close online details before disconnecting and scroll to offscreen
+controls. Candidate 36 passed signed build, unit tests and lint, but failed this
+test on CI emulator sizes. The existing tags are unchanged.
+
+The signed build and exact-commit API34/API36 platform gate must both pass.
+Final artifact identity, checksum and CI links are saved with the downloaded APK.
+No public GitHub release or Play upload is part of build preparation.
+Physical USB flashing and native iOS runtime acceptance remain unverified.

@@ -1,0 +1,1 @@
+Wybieraj trwałe kolory FM1 na listach, w zadaniach i postępie flashowania. Dodano demo kolorów bez sprzętu w buildzie debug oraz zaktualizowano instrukcje.

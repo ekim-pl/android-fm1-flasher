@@ -10,7 +10,7 @@ Browse, save and install firmware for your **M-VAVE FM-1** from an Android phone
 
 **Version 0.10.0** — preparation for Google Play. [Available APKs](https://github.com/ekim-pl/android-fm1-flasher/releases) · [Build and verification](publication/qa/0.10.0.txt).
 
-Current developer build: **0.10.0-experimental.36** — persistent FM1 colors and a hardware-free debug demo. [Preview notes](publication/github-release-0.10.0-experimental.36.txt).
+Current developer build: **0.10.0-experimental.37** — persistent FM1 colors and a hardware-free debug demo. [Preview notes](publication/github-release-0.10.0-experimental.37.txt).
 
 ## Project manifesto
 
