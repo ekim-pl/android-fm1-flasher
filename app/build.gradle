@@ -4,6 +4,13 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
+def refreshHours = providers.gradleProperty('fm1RefreshHours').getOrElse('8')
+def debugRefreshHours = providers.gradleProperty('fm1DebugRefreshHours').getOrElse('1')
+[refreshHours, debugRefreshHours].each {
+    if (!(it ==~ /[0-9]+/) || it.toInteger() < 1 || it.toInteger() > 168)
+        throw new GradleException('Refresh intervals must be whole hours between 1 and 168')
+}
+
 def analyticsEnabled = providers.gradleProperty('fm1Analytics').getOrElse('false').toBoolean()
 def analyticsEnvironment = providers.gradleProperty('fm1AnalyticsEnvironment').getOrElse('')
 def analyticsConfig
@@ -29,6 +36,7 @@ android {
     useLibrary "android.test.runner"
     useLibrary "android.test.base"
     defaultConfig {
+        buildConfigField 'int', 'DEFAULT_SOURCE_REFRESH_HOURS', refreshHours
         applicationId 'pl.ekim.fm1_flasher'
         minSdk 34
         targetSdk 36
@@ -61,6 +69,7 @@ android {
         }
     }
     buildTypes {
+        debug { buildConfigField 'int', 'DEFAULT_SOURCE_REFRESH_HOURS', debugRefreshHours }
         release {
             if (uploadKeystore) {
                 signingConfig signingConfigs.release

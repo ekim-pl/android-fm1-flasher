@@ -70,3 +70,5 @@ Local Google Play test APKs use the test Firebase project. F-Droid test APKs use
 Screenshots are included in the [user guide](docs/user-guide.md#screenshots). Captured from version 0.10.0 on Android 16.
 
 [<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/01.png" width="270" alt="FM-1 Flasher firmware library">](fastlane/metadata/android/en-US/images/phoneScreenshots/01.png)
+
+Source refresh defaults are set at build time: release builds use 8 hours and debug builds use 1 hour. Override them with `-Pfm1RefreshHours=<hours>` and `-Pfm1DebugRefreshHours=<hours>` (1–168). Existing source intervals are preserved. In experimental mode, an explicit manual refresh can check a source again before its interval; server retry delays still apply. The Firmware Hub catalog retains its required 24-hour minimum in every mode.

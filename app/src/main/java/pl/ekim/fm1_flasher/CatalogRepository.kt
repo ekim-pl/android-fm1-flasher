@@ -22,12 +22,12 @@ class CatalogRepository(private val database: CatalogDatabase,
     companion object { const val DAY = 24 * CatalogSource.HOUR }
     fun cached(now: Long = System.currentTimeMillis()) = database.catalog(now)
 
-    fun load(now: Long = System.currentTimeMillis(), sourceId: String? = null): Catalog {
+    fun load(now: Long = System.currentTimeMillis(), sourceId: String? = null, manualExperimental: Boolean = false): Catalog {
         check(!database.settings().offline) { failed(msg(R.string.offline_refresh_blocked)) }
         val sources = database.sources().filter { !it.deleted && (if (sourceId == null) it.active else it.id == sourceId) }
         sources.forEach { original ->
-            if (!original.due(now)) return@forEach
-            val attempted = original.copy(attemptedAt = now, nextAttemptAt = now + original.intervalHours * CatalogSource.HOUR)
+            if (!original.due(now, manualExperimental)) return@forEach
+            val attempted = original.copy(attemptedAt = now, nextAttemptAt = now + original.effectiveIntervalHours * CatalogSource.HOUR)
             database.putSource(attempted)
             try {
                 event("PROVIDER_CHECK", "${original.id} · ${original.provider.id}")
@@ -38,7 +38,8 @@ class CatalogRepository(private val database: CatalogDatabase,
                 if (response.code !in listOf(200, 304)) {
                     val current = database.source(original.id)
                     if (current.revision == original.revision) database.putSource(current.copy(
-                        nextAttemptAt = maxOf(attempted.nextAttemptAt, CatalogSync.retryAt(response.retryAfter, now))))
+                        nextAttemptAt = maxOf(attempted.nextAttemptAt, CatalogSync.retryAt(response.retryAfter, now)),
+                        serverRetryAt = maxOf(current.serverRetryAt, CatalogSync.retryAt(response.retryAfter, now))))
                 }
                 val snapshot = CatalogProviders.get(attempted).decode(attempted, response, cached(now).knownEntries.filter { it.sourceId == original.id }) { address, headers ->
                     check(System.nanoTime() < deadline) { failed(msg(R.string.network_deadline)) }
@@ -47,7 +48,7 @@ class CatalogRepository(private val database: CatalogDatabase,
                     }).also { extra ->
                         if (extra.code !in listOf(200, 206, 304)) {
                             val current = database.source(attempted.id)
-                            if (current.revision == attempted.revision) database.putSource(current.copy(nextAttemptAt = maxOf(current.nextAttemptAt, CatalogSync.retryAt(extra.retryAfter, now))))
+                            if (current.revision == attempted.revision) database.putSource(current.copy(nextAttemptAt = maxOf(current.nextAttemptAt, CatalogSync.retryAt(extra.retryAfter, now)), serverRetryAt = maxOf(current.serverRetryAt, CatalogSync.retryAt(extra.retryAfter, now))))
                         }
                     }
                 }

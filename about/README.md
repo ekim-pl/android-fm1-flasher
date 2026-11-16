@@ -24,7 +24,7 @@ Saved names require explicit pairing after a lost connection or app-process rest
 
 **Library** combines search, favorites and downloads. **Filters & sort** reveals category, order and source choices. Saved firmware can be used offline. A task pins its package against deletion/replacement. Removing an ordinary valid package offers Undo during the current app session.
 
-In **Settings → Firmware sources**, Firmware Hub starts enabled and Awesome FM-1 disabled. Custom HTTPS catalogs use the supported JSON format, approved package/image URL scopes and a 24–168 hour interval. Save configuration first; **Check now** is separate. Checks respect the interval even after failure; a failed source retains its previous cache. An explicit check is possible on a disabled source, while automatic requests are not.
+In **Settings → Firmware sources**, Firmware Hub starts enabled and Awesome FM-1 disabled. Custom HTTPS catalogs use the supported JSON format, approved package/image URL scopes and a 1–168 hour interval. Save configuration first; **Check now** is separate. Checks respect the interval even after failure; a failed source retains its previous cache. An explicit check is possible on a disabled source, while automatic requests are not.
 
 Background catalog checks are optional and initially off. They do not download or install firmware. Offline mode stops network fetching and background checks; it cannot discover withdrawals that have not reached the local catalog. Catalog hashes do not independently authenticate publishers.
 

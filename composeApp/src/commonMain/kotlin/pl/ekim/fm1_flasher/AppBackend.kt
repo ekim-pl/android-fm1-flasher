@@ -7,6 +7,7 @@ data class LogRow(val id: Long, val source: String, val channel: Int?, val type:
 data class BackupRow(val id: String, val label: String)
 data class RecoveryView(val token: String, val confirmation: AppText)
 data class AppSnapshot(
+    val defaultSourceRefreshHours: Int = 8,
     val sourceColors: Map<String, SourceColor> = emptyMap(), val sourceManagementAvailable: Boolean = true,
     val analyticsAvailable: Boolean = false, val analyticsPreference: AnalyticsPreference = AnalyticsPreference.DEFAULT,
     val undoAvailable: Boolean = false, val fleetAvailable: Boolean = false, val fleet: List<FleetDevice> = emptyList(),

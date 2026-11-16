@@ -99,7 +99,7 @@ class SourceManagerDialog(private val activity: Activity, private val service: (
         val name = field(R.string.source_name, source?.name.orEmpty(), InputType.TYPE_CLASS_TEXT)
         val url = field(R.string.source_url, source?.url.orEmpty(), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
         name.isEnabled = source?.builtin != true; url.isEnabled = source?.builtin != true
-        val hours = field(R.string.source_hours, (source?.intervalHours ?: 24).toString(), InputType.TYPE_CLASS_NUMBER)
+        val hours = field(R.string.source_hours, (source?.intervalHours ?: BuildConfig.DEFAULT_SOURCE_REFRESH_HOURS).toString(), InputType.TYPE_CLASS_NUMBER)
         form.addView(ui.text(s(R.string.source_review), 13, Ui.MUTED))
         val referenced = state.catalog?.knownEntries.orEmpty().filter { it.sourceId == source?.id }
             .flatMap { listOfNotNull(it.directUrl, it.cardUrl) }.mapNotNull { runCatching { java.net.URI(it).host }.getOrNull() }
@@ -122,7 +122,7 @@ class SourceManagerDialog(private val activity: Activity, private val service: (
                 fun scopes(edit: EditText) = edit.text.toString().lines().map { it.trim() }.filter { it.isNotEmpty() }.toSet()
                 try {
                     UrlScope.canonical(url.text.toString()); (scopes(packages) + scopes(artwork)).forEach(UrlScope::canonical)
-                    require(interval != null && interval in 24..168 && name.text.isNotBlank())
+                    require(interval != null && interval in 1..168 && name.text.isNotBlank())
                 } catch (_: Exception) { error.text = s(R.string.source_invalid_config); return }
                 editor.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
                 editor.getButton(AlertDialog.BUTTON_NEUTRAL).isEnabled = false

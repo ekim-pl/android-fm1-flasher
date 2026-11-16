@@ -311,14 +311,14 @@ class FlasherService : Service() {
         execute { loadCatalog() }
     }
 
-    private fun trackedCatalog(initiator: AnalyticsInitiator = AnalyticsInitiator.MANUAL, sourceId: String? = null): Catalog {
+    private fun trackedCatalog(initiator: AnalyticsInitiator = AnalyticsInitiator.MANUAL, sourceId: String? = null, manualRefresh: Boolean = false): Catalog {
         val measurement = analytics.begin(AnalyticsOperation.CATALOG, initiator)
-        try { return repository.load(sourceId = sourceId).also { measurement.complete(it.fresh, if (it.fresh) AnalyticsError.NONE else AnalyticsError.OTHER) } }
+        try { return repository.load(sourceId = sourceId, manualExperimental = manualRefresh && state.experimental).also { measurement.complete(it.fresh, if (it.fresh) AnalyticsError.NONE else AnalyticsError.OTHER) } }
         catch (failure: Exception) { measurement.complete(false, analyticsError(failure)); throw failure }
     }
     private fun loadCatalog() {
         try {
-            val catalog = trackedCatalog()
+            val catalog = trackedCatalog(manualRefresh = true)
             update { it.copy(catalog = catalog) }
             restoreSelection()
             val updates = CatalogBrowser.updates(catalog, state.downloads).size
@@ -443,7 +443,7 @@ class FlasherService : Service() {
     fun checkSource(id: String) = libraryTask(msg(R.string.checking_catalog)) {
         check(!library.settings().offline) { failed(msg(R.string.offline_refresh_blocked)) }
         check(hasNetwork()) { failed(msg(R.string.no_network_preserved)) }
-        trackedCatalog(sourceId = id)
+        trackedCatalog(sourceId = id, manualRefresh = true)
         publishLibrary(); restoreSelection()
         sourceResult(id)
     }
@@ -579,7 +579,7 @@ class FlasherService : Service() {
 
     fun updateDownloads() = libraryTask(msg(R.string.checking_package_updates)) {
         check(!state.offline) { failed(msg(R.string.update_offline_blocked)) }
-        val catalog = trackedCatalog()
+        val catalog = trackedCatalog(manualRefresh = true)
         update { it.copy(catalog = catalog) }
         restoreSelection()
         val updates = CatalogBrowser.updates(catalog, library.list())

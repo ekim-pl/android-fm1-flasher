@@ -68,7 +68,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     private val observer: (UiState) -> Unit = { next ->
         state.value = state.value.copy(sourceColors = next.sourceColors, analyticsAvailable = AndroidAnalytics.get(this).available, analyticsPreference = AndroidAnalytics.get(this).preference, undoAvailable = next.undoAvailable, fleetAvailable = true, fleet = next.fleet, jobs = next.jobs,
             historyRetentionMillis = service?.historyRetentionMillis, queueRunning = next.queueRunning, queueStopping = next.queueStopping, catalog = next.catalog, downloads = next.downloads, favorites = next.favorites,
-            offline = next.offline, backgroundSync = next.backgroundSync, backgroundAvailable = true, busy = next.busy, flashing = next.flashing, experimental = next.experimental,
+            defaultSourceRefreshHours = BuildConfig.DEFAULT_SOURCE_REFRESH_HOURS, offline = next.offline, backgroundSync = next.backgroundSync, backgroundAvailable = true, busy = next.busy, flashing = next.flashing, experimental = next.experimental,
             ports = next.devices.map(::port), target = next.target?.let(::port), identity = next.identity, chip = next.chip, chipDetection = next.chipDetection,
             ready = next.ready, awaitingPort = next.awaitingPort, candidates = next.reconnectCandidates.map(::port),
             progress = next.progress, status = next.status, logs = next.logs, usbRecovery = true,

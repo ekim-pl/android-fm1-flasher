@@ -3,7 +3,7 @@
     <string name="catalog_sources">Firmware sources</string>
     <string name="sources_help">Firmware Hub is enabled by default. Other sources are opt-in. Disabled sources make no automatic requests; downloaded packages remain available.</string>
     <string name="source_invalid_url">Use a public HTTPS URL without credentials, query or fragment.</string>
-    <string name="source_invalid_config">Enter a name, valid HTTPS URLs and an interval from 24 to 168 hours.</string>
+    <string name="source_invalid_config">Enter a name, valid HTTPS URLs and an interval from 1 to 168 hours.</string>
     <string name="source_builtin_locked">The built-in source address cannot be replaced.</string>
     <string name="source_duplicate">This catalog is already configured.</string>
     <string name="source_changed">Source settings changed; discard the previous response.</string>
@@ -31,7 +31,7 @@
     <string name="source_remove_help">Downloaded files, favorites and known withdrawals will be retained.</string>
     <string name="source_name">Name</string>
     <string name="source_url">Catalog JSON URL</string>
-    <string name="source_hours">Check interval in hours (24–168)</string>
+    <string name="source_hours">Check interval in hours (1–168; Hub minimum 24)</string>
     <string name="source_scopes_help">Enter one approved HTTPS URL per line. A trailing / allows that directory. GitHub releases are checked against their declared repository and asset. Save first, then use Check now to inspect the catalog.</string>
     <string name="source_package_scopes">Allowed package URLs or directories</string>
     <string name="source_artwork_scopes">Allowed artwork URLs or directories</string>

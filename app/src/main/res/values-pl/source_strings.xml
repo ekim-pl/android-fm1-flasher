@@ -3,7 +3,7 @@
     <string name="catalog_sources">Źródła firmware</string>
     <string name="sources_help">Firmware Hub jest domyślnie włączony. Pozostałe źródła wymagają włączenia. Wyłączone źródła nie wykonują automatycznych żądań; pobrane paczki pozostają dostępne.</string>
     <string name="source_invalid_url">Podaj publiczny adres HTTPS bez danych logowania, zapytania i fragmentu.</string>
-    <string name="source_invalid_config">Podaj nazwę, poprawne adresy HTTPS i odstęp od 24 do 168 godzin.</string>
+    <string name="source_invalid_config">Podaj nazwę, poprawne adresy HTTPS i odstęp od 1 do 168 godzin.</string>
     <string name="source_builtin_locked">Nie można podmienić adresu wbudowanego źródła.</string>
     <string name="source_duplicate">Ten katalog jest już skonfigurowany.</string>
     <string name="source_changed">Zmieniono ustawienia źródła; poprzednia odpowiedź została odrzucona.</string>
@@ -31,7 +31,7 @@
     <string name="source_remove_help">Pobrane pliki, ulubione i znane wycofania zostaną zachowane.</string>
     <string name="source_name">Nazwa</string>
     <string name="source_url">Adres JSON katalogu</string>
-    <string name="source_hours">Odstęp sprawdzania w godzinach (24–168)</string>
+    <string name="source_hours">Odstęp sprawdzania w godzinach (1–168; Hub co najmniej 24)</string>
     <string name="source_scopes_help">Podaj po jednym zatwierdzonym adresie HTTPS w wierszu. Końcowy / dopuszcza cały katalog. Wydania GitHub są sprawdzane względem wskazanego repozytorium i pliku. Zapisz, a potem użyj Sprawdź teraz, aby sprawdzić katalog.</string>
     <string name="source_package_scopes">Dozwolone adresy lub katalogi paczek</string>
     <string name="source_artwork_scopes">Dozwolone adresy lub katalogi grafik</string>

@@ -3,7 +3,7 @@
     <string name="catalog_sources">固件来源</string>
     <string name="sources_help">默认启用 Firmware Hub。其他来源需手动启用。禁用的来源不会自动请求，已下载的软件包仍可使用。</string>
     <string name="source_invalid_url">请输入公共 HTTPS 地址，不含凭据、查询参数或片段。</string>
-    <string name="source_invalid_config">请输入名称、有效的 HTTPS 地址及 24 至 168 小时的间隔。</string>
+    <string name="source_invalid_config">请输入名称、有效的 HTTPS 地址及 1 至 168 小时的间隔。</string>
     <string name="source_builtin_locked">无法更改内置来源的地址。</string>
     <string name="source_duplicate">此目录已配置。</string>
     <string name="source_changed">来源设置已更改，已丢弃旧响应。</string>
@@ -31,7 +31,7 @@
     <string name="source_remove_help">已下载文件、收藏及已知撤回记录将保留。</string>
     <string name="source_name">名称</string>
     <string name="source_url">目录 JSON 地址</string>
-    <string name="source_hours">检查间隔（24–168 小时）</string>
+    <string name="source_hours">检查间隔（1–168 小时；Hub 最少 24 小时）</string>
     <string name="source_scopes_help">每行输入一个允许的 HTTPS 地址。末尾 / 允许该目录。GitHub 发布会根据指定的仓库及附件验证。先保存，再选择立即检查以查看目录。</string>
     <string name="source_package_scopes">允许的软件包地址或目录</string>
     <string name="source_artwork_scopes">允许的图片地址或目录</string>

@@ -24,7 +24,7 @@ Po utracie połączenia lub restarcie procesu zapisane nazwy wymagają jawnego p
 
 **Biblioteka** łączy wyszukiwanie, ulubione i pobrania. **Filtry i sortowanie** rozwijają kategorię, kolejność i źródło. Zapisane firmware działa offline. Zadanie chroni swoją paczkę przed usunięciem lub zastąpieniem. Zwykłe usunięcie poprawnej paczki można cofnąć w bieżącej sesji aplikacji.
 
-W **Ustawieniach → Źródłach katalogu firmware** Hub jest domyślnie włączony, a Awesome FM-1 wyłączony. Własny katalog HTTPS używa obsługiwanego JSON, zatwierdzonych zakresów adresów paczek/grafik i interwału 24–168 godzin. Najpierw zapisz konfigurację; **Sprawdź teraz** to osobna akcja. Interwał obowiązuje także po błędzie, który zachowuje wcześniejszy katalog. Jawne sprawdzenie wyłączonego źródła jest możliwe, automatyczne żądania nie.
+W **Ustawieniach → Źródłach katalogu firmware** Hub jest domyślnie włączony, a Awesome FM-1 wyłączony. Własny katalog HTTPS używa obsługiwanego JSON, zatwierdzonych zakresów adresów paczek/grafik i interwału 1–168 godzin. Najpierw zapisz konfigurację; **Sprawdź teraz** to osobna akcja. Interwał obowiązuje także po błędzie, który zachowuje wcześniejszy katalog. Jawne sprawdzenie wyłączonego źródła jest możliwe, automatyczne żądania nie.
 
 Sprawdzanie katalogów w tle jest opcjonalne i początkowo wyłączone; nie pobiera ani nie instaluje firmware. Offline zatrzymuje pobieranie sieciowe i sprawdzanie w tle, ale nie wykryje wycofań nieznanych lokalnemu katalogowi. Sumy z katalogu same nie uwierzytelniają wydawców.
 

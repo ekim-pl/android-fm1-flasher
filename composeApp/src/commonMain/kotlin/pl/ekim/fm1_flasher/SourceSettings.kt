@@ -70,7 +70,7 @@ internal fun SourceSettings(state: AppSnapshot, language: String, backend: AppBa
     fun text(key: String) = resolveCoreText(msg(key), language)
     var name by rememberSaveable { mutableStateOf(source?.name.orEmpty()) }
     var url by rememberSaveable { mutableStateOf(source?.url.orEmpty()) }
-    var hours by rememberSaveable { mutableStateOf((source?.intervalHours ?: 24).toString()) }
+    var hours by rememberSaveable { mutableStateOf((source?.intervalHours ?: state.defaultSourceRefreshHours).toString()) }
     var packages by rememberSaveable { mutableStateOf(source?.packageScopes?.joinToString("\n").orEmpty()) }
     var artwork by rememberSaveable { mutableStateOf(source?.artworkScopes?.joinToString("\n").orEmpty()) }
     var submitted by rememberSaveable { mutableStateOf(false) }

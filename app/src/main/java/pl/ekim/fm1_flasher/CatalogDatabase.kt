@@ -22,7 +22,7 @@ class CatalogDatabase(internal val context: Context, name: String = "firmware-li
         db.execSQL("CREATE TABLE favorites (entry_key TEXT PRIMARY KEY)")
         db.execSQL("CREATE TABLE app_settings (name TEXT PRIMARY KEY, value TEXT NOT NULL)")
         db.execSQL("CREATE INDEX package_hash ON downloaded_packages(sha256)")
-        listOf(CatalogSource.hub, CatalogSource.awesome).forEach { putSource(db, it) }
+        listOf(CatalogSource.hub, CatalogSource.awesome.copy(intervalHours = BuildConfig.DEFAULT_SOURCE_REFRESH_HOURS)).forEach { putSource(db, it) }
     }
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         check(oldVersion == 1 && newVersion == 2) { "Unsupported database migration $oldVersion → $newVersion" }
@@ -61,7 +61,7 @@ class CatalogDatabase(internal val context: Context, name: String = "firmware-li
         val canonical = if (kind == CatalogProviderType.REPO_URL) "https://github.com/${RepositoryUrlProvider.repository(url)}" else UrlScope.canonical(url)
         require(previous?.builtin == true || kind !in listOf(CatalogProviderType.THE_FIRMWARE_HUB, CatalogProviderType.AWESOME_FM1)) { invalid(msg(R.string.source_builtin_locked)) }
         require(previous?.builtin != true || kind == previous.provider) { invalid(msg(R.string.source_builtin_locked)) }
-        require(name.isNotBlank() && name.length <= 100 && hours in 24..168) { invalid(msg(R.string.source_invalid_config)) }
+        require(name.isNotBlank() && name.length <= 100 && hours in 1..168) { invalid(msg(R.string.source_invalid_config)) }
         val packageScopes = packages.map(UrlScope::canonical).toSet()
         val artworkScopes = artwork.map(UrlScope::canonical).toSet()
         require(previous?.builtin != true || previous.url == canonical && previous.name == name) { invalid(msg(R.string.source_builtin_locked)) }
@@ -106,7 +106,7 @@ class CatalogDatabase(internal val context: Context, name: String = "firmware-li
 
     fun authenticationChanged(id: String) {
         val s = source(id)
-        putSource(s.copy(checkedAt = 0, attemptedAt = 0, nextAttemptAt = 0, etag = null, modified = null, error = null, revision = s.revision + 1, authRevision = s.authRevision + 1))
+        putSource(s.copy(checkedAt = 0, attemptedAt = if (s.isFirmwareHub) s.attemptedAt else 0, nextAttemptAt = if (s.isFirmwareHub) s.nextAttemptAt else 0, serverRetryAt = s.serverRetryAt, etag = null, modified = null, error = null, revision = s.revision + 1, authRevision = s.authRevision + 1))
     }
     fun setEnabled(id: String, enabled: Boolean) = transaction {
         val s = source(id); check(!s.deleted)
@@ -117,7 +117,7 @@ class CatalogDatabase(internal val context: Context, name: String = "firmware-li
         putSource(s.copy(enabled = false, deleted = true, revision = s.revision + 1))
     }
     fun restoreDefaults() = transaction {
-        listOf(CatalogSource.hub, CatalogSource.awesome).forEach { default ->
+        listOf(CatalogSource.hub, CatalogSource.awesome.copy(intervalHours = BuildConfig.DEFAULT_SOURCE_REFRESH_HOURS)).forEach { default ->
             val s = source(default.id)
             putSource(s.copy(enabled = default.enabled, intervalHours = default.intervalHours,
                 packageScopes = default.packageScopes, artworkScopes = default.artworkScopes, authMethod = HttpAuthMethod.NONE,
@@ -256,7 +256,7 @@ class CatalogDatabase(internal val context: Context, name: String = "firmware-li
             put("id", s.id); put("name", s.name); put("url", s.url); put("enabled", s.enabled); put("builtin", s.builtin); put("deleted", s.deleted)
             put("hours", s.intervalHours); put("packages", JSONArray(s.packageScopes.toList())); put("artwork", JSONArray(s.artworkScopes.toList()))
             put("revision", s.revision); put("attempted", s.attemptedAt); put("checked", s.checkedAt); put("next", s.nextAttemptAt)
-            put("snapshot", s.snapshot); put("updated", s.updated); put("etag", s.etag); put("modified", s.modified); put("error", s.error)
+            put("serverRetryAt", s.serverRetryAt); put("snapshot", s.snapshot); put("updated", s.updated); put("etag", s.etag); put("modified", s.modified); put("error", s.error)
             put("license", s.license); put("count", s.entryCount)
             put("provider", s.provider.name); put("authMethod", s.authMethod.name)
             put("authUsername", s.authUsername); put("authHeader", s.authHeader); put("oauth", oauthToJson(s.oauth)); put("packageChips", JSONObject(s.packageChips)); put("authRevision", s.authRevision)
@@ -270,7 +270,7 @@ class CatalogDatabase(internal val context: Context, name: String = "firmware-li
                 j.getString("updated"), optional("etag"), optional("modified"), optional("error"), j.optString("license"), j.optInt("count"),
                 j.optString("provider").takeIf(String::isNotBlank)?.let(CatalogProviderType::valueOf) ?: CatalogProviderType.legacy(j.getString("id")),
                 HttpAuthMethod.valueOf(j.optString("authMethod", "NONE")),
-                j.optString("authUsername"), j.optString("authHeader", "X-API-Key"), oauthFromJson(j.optJSONObject("oauth")), j.optJSONObject("packageChips")?.let { o -> o.keys().asSequence().associateWith { o.getString(it) } }.orEmpty(), j.optLong("authRevision"))
+                j.optString("authUsername"), j.optString("authHeader", "X-API-Key"), oauthFromJson(j.optJSONObject("oauth")), j.optJSONObject("packageChips")?.let { o -> o.keys().asSequence().associateWith { o.getString(it) } }.orEmpty(), j.optLong("authRevision"), j.optLong("serverRetryAt"))
         }
     }
 }
