@@ -59,9 +59,9 @@ class FleetStore(private val file: File, private val write: (File, ByteArray) ->
             confirmedJobId = root.optString("confirmedJobId").takeIf(String::isNotBlank)
             val rows = root.getJSONArray("devices")
             devices = (0 until rows.length()).map { i -> rows.getJSONObject(i).let {
-                FleetDevice(it.getString("id"), it.getString("alias"), it.optInt("color"),
+                FleetDevice(it.getString("id"), it.getString("alias"), DeviceColor.fromIndex(it.optInt("color")).ordinal,
                     identity = it.optJSONObject("identity")?.identity(), chip = FlashChip.valueOf(it.getString("chip")),
-                    serial = it.optString("serial").takeIf(String::isNotBlank))
+                    serial = it.optString("serial").takeIf(String::isNotBlank), remembered = it.optBoolean("remembered", false))
             } }
             val queue = root.getJSONArray("jobs")
             val loadedJobs = (0 until queue.length()).map { i -> queue.getJSONObject(i).let {
@@ -70,7 +70,8 @@ class FleetStore(private val file: File, private val write: (File, ByteArray) ->
                     it.getString("package"), it.getString("hash"), it.getString("title"), it.getString("version"),
                     it.getJSONObject("expected").identity(), FlashChip.valueOf(it.getString("chip")),
                     JobOutcome.valueOf(it.getString("outcome")), it.getString("phase"), it.getInt("progress"), it.getLong("time"),
-                    it.optJSONArray("events")?.let { events -> (0 until events.length()).map { n -> events.getJSONObject(n).let { e -> JobEvent(e.getString("phase"), e.getLong("time")) } } } ?: emptyList(), it.optBoolean("forceUnknown", false))
+                    it.optJSONArray("events")?.let { events -> (0 until events.length()).map { n -> events.getJSONObject(n).let { e -> JobEvent(e.getString("phase"), e.getLong("time")) } } } ?: emptyList(), it.optBoolean("forceUnknown", false),
+                    color = DeviceColor.fromIndex(it.optInt("color", devices.singleOrNull { d -> d.id == it.getString("device") }?.color ?: 0)).ordinal)
             } }
             jobs = loadedJobs
             committedDevices = devices; committedJobs = jobs; committedConfirmation = confirmedJobId; committedRetention = historyRetentionMillis
@@ -85,28 +86,30 @@ class FleetStore(private val file: File, private val write: (File, ByteArray) ->
         if (loadFailed) return
         var next = devices.map { if (it.endpoint != null && it.endpoint !in current) it.copy(endpoint = null) else it }
         // Default names are temporary attachments; history keeps its own name and target.
-        next = next.filter { device -> device.endpoint != null ||
+        next = next.filter { device -> device.endpoint != null || device.remembered ||
             !device.alias.matches(Regex("FM-1 [0-9]+")) ||
             jobs.any { it.deviceId == device.id && it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) } }
         current.filter { endpoint -> next.none { it.endpoint == endpoint } }.forEach { endpoint ->
             val number = generateSequence(1) { it + 1 }.first { n -> next.none { it.alias == "FM-1 $n" } }
-            next = next + FleetDevice(UUID.randomUUID().toString(), "FM-1 $number", (number - 1) % 6, endpoint)
+            next = next + FleetDevice(UUID.randomUUID().toString(), "FM-1 $number", (number - 1) % DeviceColor.entries.size, endpoint)
         }
         if (next != devices) { devices = next; persist() }
     }
     @Synchronized fun identify(endpoint: Endpoint, identity: FirmwareIdentity, serial: String?) {
         devices = devices.map { if (it.endpoint == endpoint) it.copy(identity = identity, serial = serial) else it }; persist()
     }
-    @Synchronized fun configure(id: String, alias: String? = null, chip: FlashChip? = null) {
+    @Synchronized fun configure(id: String, alias: String? = null, chip: FlashChip? = null, color: Int? = null) {
+        require(color == null || color in DeviceColor.entries.indices)
+        require(devices.any { it.id == id })
         check(jobs.none { it.deviceId == id && it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) }) { failed(msg("fleet_device_pinned")) }
-        devices = devices.map { if (it.id == id) it.copy(alias = alias?.trim()?.take(48)?.takeIf(String::isNotBlank) ?: it.alias, chip = chip ?: it.chip) else it }; persist()
+        devices = devices.map { if (it.id == id) it.copy(alias = alias?.trim()?.take(48)?.takeIf(String::isNotBlank) ?: it.alias, chip = chip ?: it.chip, color = color ?: it.color, remembered = it.remembered || color != null) else it }; persist()
     }
     @Synchronized fun pair(oldId: String, liveId: String) {
         val old = devices.single { it.id == oldId }; val live = devices.single { it.id == liveId }
         check(old.endpoint == null && live.endpoint != null && live.identity != null)
         check(jobs.none { it.deviceId in listOf(oldId, liveId) && it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) })
         // Pairing never restores chip evidence from an earlier physical connection.
-        devices = devices.filter { it.id != liveId }.map { if (it.id == oldId) live.copy(id = old.id, alias = old.alias, color = old.color, chip = FlashChip.UNKNOWN) else it }; persist()
+        devices = devices.filter { it.id != liveId }.map { if (it.id == oldId) live.copy(id = old.id, alias = old.alias, color = old.color, remembered = old.remembered, chip = FlashChip.UNKNOWN) else it }; persist()
     }
     @Synchronized fun rebind(id: String, endpoint: Endpoint, identity: FirmwareIdentity? = null, durable: Boolean = true) {
         devices = devices.filter { it.id == id || it.endpoint != endpoint }.map {
@@ -119,7 +122,7 @@ class FleetStore(private val file: File, private val write: (File, ByteArray) ->
         check(device.endpoint != null && device.identity != null && device.chip.allows(entry, forceUnknown)) { failed(msg("flash_missing_requirements")) }
         check(jobs.none { it.deviceId == deviceId && it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) }) { failed(msg("fleet_device_pinned")) }
         jobs = jobs + FlashJob(UUID.randomUUID().toString(), device.id, device.alias, checkNotNull(device.endpoint),
-            entry.key, entry.sha256, entry.name, entry.version, checkNotNull(device.identity), device.chip, updatedAt = System.currentTimeMillis(), forceUnknown = forceUnknown && device.chip.canForce(entry)); persist()
+            entry.key, entry.sha256, entry.name, entry.version, checkNotNull(device.identity), device.chip, updatedAt = System.currentTimeMillis(), forceUnknown = forceUnknown && device.chip.canForce(entry), color = device.color); persist()
     }
     @Synchronized fun result(id: String, outcome: JobOutcome, phase: String, progress: Int = -1, durable: Boolean = true) {
         require(jobs.any { it.id == id })
@@ -136,9 +139,9 @@ class FleetStore(private val file: File, private val write: (File, ByteArray) ->
     private fun persist() {
         try {
             check(!loadFailed) { failed(msg("fleet_storage_error")) }
-            val ds = JSONArray(); devices.forEach { ds.put(JSONObject().put("id", it.id).put("alias", it.alias).put("color", it.color)
+            val ds = JSONArray(); devices.forEach { ds.put(JSONObject().put("id", it.id).put("alias", it.alias).put("color", it.color).put("remembered", it.remembered)
                 .put("identity", it.identity?.json()).put("chip", it.chip.name).put("serial", it.serial.orEmpty())) }
-            val js = JSONArray(); jobs.forEach { js.put(JSONObject().put("id", it.id).put("device", it.deviceId).put("alias", it.alias)
+            val js = JSONArray(); jobs.forEach { js.put(JSONObject().put("id", it.id).put("device", it.deviceId).put("alias", it.alias).put("color", it.color)
                 .put("midi", it.endpoint.id).put("path", it.endpoint.usbPath).put("generation", it.endpoint.generation)
                 .put("package", it.packageKey).put("hash", it.hash).put("title", it.title).put("version", it.version)
                 .put("expected", it.expected.json()).put("chip", it.chip.name).put("outcome", it.outcome.name)

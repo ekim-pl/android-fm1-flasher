@@ -1,6 +1,7 @@
 package pl.ekim.fm1_flasher
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,7 +15,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 
-private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2, 0xFF8FCB87, 0xFF70BCE1)
+@Composable private fun DeviceDot(index: Int) {
+    Box(Modifier.size(12.dp).background(Color(DeviceColor.fromIndex(index).argb), CircleShape)
+        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape))
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable private fun DeviceColorPicker(device: FleetDevice, language: String, enabled: Boolean, send: (AppAction) -> Unit) {
+    Text(resolveCoreText(msg("device_color"), language), style = MaterialTheme.typography.titleSmall)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        DeviceColor.entries.forEach { color ->
+            val selected = device.color == color.ordinal
+            FilterChip(selected = selected, onClick = { send(AppAction(AppActionKind.DEVICE_COLOR, device.id, color.ordinal.toString())) },
+                enabled = enabled, modifier = Modifier.heightIn(min = 48.dp),
+                label = { Text((if (selected) "✓ " else "") + resolveCoreText(msg(color.labelKey), language)) },
+                leadingIcon = { DeviceDot(color.ordinal) })
+        }
+    }
+}
 
 @Composable internal fun FleetScreen(state: AppSnapshot, language: String, send: (AppAction) -> Unit, library: () -> Unit, tasks: () -> Unit, tools: () -> Unit) {
     fun t(key: String, vararg args: Any) = resolveCoreText(msg(key, *args), language)
@@ -50,7 +68,7 @@ private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2
             val portId = "${endpoint.id}:${endpoint.usbPath}:${endpoint.generation}"
             ElevatedCard(Modifier.fillMaxWidth()) { Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Box(Modifier.padding(top = 6.dp).size(12.dp).background(Color(deviceColors[device.color % deviceColors.size]), CircleShape))
+                    DeviceDot(device.color)
                     Column(Modifier.weight(1f)) {
                         Text(device.alias, style = MaterialTheme.typography.titleLarge)
                         Text(device.identity?.let { "${it.model} · ${it.version}" } ?: t("fleet_unidentified"), style = MaterialTheme.typography.bodySmall)
@@ -58,6 +76,7 @@ private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2
                     TextButton({ expanded = !expanded }) { Text(t("fleet_details")) }
                 }
                 if (expanded) {
+                    DeviceColorPicker(device, language, !state.busy && !pinned, send)
                     OutlinedTextField(alias, { alias = it.take(48) }, label = { Text(t("fleet_alias")) }, singleLine = true, enabled = !state.busy && !pinned, modifier = Modifier.fillMaxWidth())
                     TextButton({ send(AppAction(AppActionKind.DEVICE_ALIAS, device.id, alias)) }, enabled = !state.busy && !pinned && alias.isNotBlank() && alias != device.alias) { Text(t("fleet_save_alias")) }
                     Text(t("fleet_attachment", endpoint.usbPath), style = MaterialTheme.typography.bodySmall)
@@ -93,7 +112,15 @@ private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2
         if (offline.isNotEmpty()) item { Text(t("fleet_saved_devices"), style = MaterialTheme.typography.titleMedium); Text(t("fleet_pair_help"), style = MaterialTheme.typography.bodySmall) }
         items(offline, key = { it.id }) { old ->
             OutlinedCard(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp)) {
-                Text(old.alias, style = MaterialTheme.typography.titleMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    DeviceDot(old.color)
+                    Text(old.alias, style = MaterialTheme.typography.titleMedium)
+                }
+                var expanded by rememberSaveable(old.id) { mutableStateOf(false) }
+                TextButton({ expanded = !expanded }) { Text(t("fleet_details")) }
+                if (expanded) DeviceColorPicker(old, language, !state.busy && state.jobs.none {
+                    it.deviceId == old.id && it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING)
+                }, send)
                 Text(t("fleet_disconnected"), style = MaterialTheme.typography.bodySmall)
                 val available = online.filter { it.identity != null && state.jobs.none { j -> j.deviceId in listOf(it.id, old.id) && j.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) } }
                 if (available.isNotEmpty()) Choice(t("fleet_pair"), t("fleet_choose_physical"), available.map { it.id to it.alias }, { send(AppAction(AppActionKind.DEVICE_PAIR, old.id, it)) }, enabled = !state.busy)
@@ -147,7 +174,10 @@ private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2
     fun t(key: String) = resolveCoreText(msg(key), language)
     var details by rememberSaveable(job.id) { mutableStateOf(false) }
     OutlinedCard(Modifier.fillMaxWidth()) { Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(job.alias, style = MaterialTheme.typography.titleMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            DeviceDot(job.color)
+            Text(job.alias, style = MaterialTheme.typography.titleMedium)
+        }
         Text("${job.title} · ${job.version}")
         if (job.forceUnknown) Text(t("force_unknown"), color = MaterialTheme.colorScheme.error)
         Text("SHA-256 ${job.hash.take(16)}…", style = MaterialTheme.typography.labelSmall)
@@ -170,7 +200,7 @@ private val deviceColors = listOf(0xFF38BDB0, 0xFF829BEE, 0xFFE6B36A, 0xFFD88CB2
             }
         }
         if (job.outcome == JobOutcome.RUNNING) {
-            if (job.progress < 0) LinearProgressIndicator(Modifier.fillMaxWidth()) else LinearProgressIndicator(progress = { job.progress / 100f }, modifier = Modifier.fillMaxWidth())
+            if (job.progress < 0) LinearProgressIndicator(Modifier.fillMaxWidth(), color = Color(DeviceColor.fromIndex(job.color).argb)) else LinearProgressIndicator(progress = { job.progress / 100f }, modifier = Modifier.fillMaxWidth(), color = Color(DeviceColor.fromIndex(job.color).argb))
         }
         if (editable && job.outcome == JobOutcome.QUEUED) TextButton(remove) { Text(t("fleet_remove_job")) }
     } }

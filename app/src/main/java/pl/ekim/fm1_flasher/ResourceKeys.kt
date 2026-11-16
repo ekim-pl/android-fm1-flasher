@@ -539,5 +539,12 @@ internal val androidResourceKeys = mapOf(
     R.string.history_help to "history_help",
     R.string.history_clear to "history_clear",
     R.string.history_clear_confirm to "history_clear_confirm",
+    R.string.device_color to "device_color",
+    R.string.device_color_teal to "device_color_teal",
+    R.string.device_color_blue to "device_color_blue",
+    R.string.device_color_amber to "device_color_amber",
+    R.string.device_color_pink to "device_color_pink",
+    R.string.device_color_green to "device_color_green",
+    R.string.device_color_sky to "device_color_sky",
 )
 internal val androidResourceIds = androidResourceKeys.entries.associate { it.value to it.key }

@@ -210,6 +210,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             AppActionKind.ANALYTICS_PREFERENCE -> Unit
             AppActionKind.CLEAR_DOWNLOADS -> active.clearDownloads()
             AppActionKind.UNDO_REMOVE -> active.undoRemove()
+            AppActionKind.DEVICE_COLOR -> active.configureDevice(action.id, color = action.value.toInt())
             AppActionKind.DEVICE_ALIAS -> active.configureDevice(action.id, alias = action.value)
             AppActionKind.DEVICE_CHIP -> active.configureDevice(action.id, chip = FlashChip.valueOf(action.value))
             AppActionKind.DEVICE_PAIR -> active.pairDevice(action.id, action.value)

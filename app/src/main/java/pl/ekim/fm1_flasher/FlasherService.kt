@@ -217,9 +217,9 @@ class FlasherService : Service() {
         }
     }
     private fun publishFleet() { update { it.copy(fleet = fleet.devices, jobs = fleet.jobs) } }
-    fun configureDevice(id: String, alias: String? = null, chip: FlashChip? = null) {
+    fun configureDevice(id: String, alias: String? = null, chip: FlashChip? = null, color: Int? = null) {
         if (state.busy) return
-        libraryTask { fleet.configure(id, alias, chip); publishFleet() }
+        libraryTask { fleet.configure(id, alias, chip, color); publishFleet() }
     }
     fun pairDevice(oldId: String, liveId: String) {
         if (state.busy) return

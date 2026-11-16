@@ -12,6 +12,70 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 @Suppress("DEPRECATION")
 class FleetUiTest : InstrumentationTestCase() {
+    fun testDeviceColorSelectionOnlineOfflineAndBusy() {
+        val device = FleetDevice("color-device", "Color instrument", color = 0,
+            endpoint = Endpoint(1, "test/1", 1), identity = FirmwareIdentity("FM-1", "015"))
+        val actions = mutableListOf<AppAction>()
+        val backend = object : AppBackend {
+            override val state = MutableStateFlow(AppSnapshot(initialized = true, busy = false,
+                fleetAvailable = true, fleet = listOf(device), language = "en"))
+            override fun perform(action: AppAction) {
+                actions += action
+                if (action.kind == AppActionKind.DEVICE_COLOR) state.value = state.value.copy(
+                    fleet = state.value.fleet.map { it.copy(color = action.value.toInt()) })
+            }
+            override fun saveBrowse(filters: BrowseFilters) = Unit
+            override fun document(name: String) = ""
+            override suspend fun artwork(entry: CatalogEntry): androidx.compose.ui.graphics.ImageBitmap? = null
+        }
+        val roots = mutableListOf<ViewRootForTest>()
+        val previous = ViewRootForTest.onViewCreatedCallback
+        instrumentation.runOnMainSync { ViewRootForTest.onViewCreatedCallback = { roots += it } }
+        val activity = instrumentation.startActivitySync(Intent(instrumentation.targetContext, ComposeActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as ComposeActivity
+        fun find(label: String) = roots.filter { it.view.isAttachedToWindow }
+            .flatMap { it.semanticsOwner.getAllSemanticsNodes(mergingEnabled = true) }
+            .firstOrNull { it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == label } == true &&
+                it.config.getOrNull(SemanticsActions.OnClick) != null }
+        fun click(label: String) {
+            repeat(20) {
+                instrumentation.waitForIdleSync(); Thread.sleep(80)
+                var clicked = false
+                instrumentation.runOnMainSync {
+                    find(label)?.let { node ->
+                        assertTrue(node.config[SemanticsActions.OnClick].action!!.invoke()); clicked = true
+                    }
+                }
+                if (clicked) return
+            }
+            error("Missing $label")
+        }
+        try {
+            instrumentation.runOnMainSync { activity.setContent { FlasherApp(backend) } }
+            click("Details")
+            click("Pink")
+            assertEquals(AppAction(AppActionKind.DEVICE_COLOR, device.id, "3"), actions.last())
+            instrumentation.waitForIdleSync(); Thread.sleep(100)
+            instrumentation.runOnMainSync {
+                assertEquals(true, find("✓ Pink")!!.config[SemanticsProperties.Selected])
+                backend.state.value = backend.state.value.copy(fleet = listOf(device.copy(endpoint = null, color = 3)))
+            }
+            instrumentation.waitForIdleSync(); Thread.sleep(100)
+            var pickerVisible = false
+            instrumentation.runOnMainSync { pickerVisible = find("Green") != null }
+            if (!pickerVisible) click("Details")
+            click("Green")
+            assertEquals("4", actions.last().value)
+            instrumentation.runOnMainSync { backend.state.value = backend.state.value.copy(busy = true) }
+            instrumentation.waitForIdleSync(); Thread.sleep(100)
+            instrumentation.runOnMainSync {
+                assertTrue(find("✓ Green")!!.config.contains(SemanticsProperties.Disabled))
+            }
+        } finally {
+            instrumentation.runOnMainSync { activity.finish(); ViewRootForTest.onViewCreatedCallback = previous }
+        }
+    }
+
     fun testOnePlanApprovalInAllLanguagesAndChangedAttachmentBlocksStart() {
         val entry = localEntry()
         val devices = (1..2).map { FleetDevice("device-$it", "Instrument $it", endpoint = Endpoint(it, "usb/$it", it.toLong()), identity = FirmwareIdentity("FM-1", "015"), chip = FlashChip.OLD) }

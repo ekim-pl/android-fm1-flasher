@@ -5,6 +5,7 @@ data class FleetDevice(
     val id: String, val alias: String, val color: Int = 0,
     val endpoint: Endpoint? = null, val identity: FirmwareIdentity? = null,
     val chip: FlashChip = FlashChip.UNKNOWN, val serial: String? = null,
+    val remembered: Boolean = false,
 )
 enum class JobOutcome { QUEUED, RUNNING, CONFIRMED, UNCONFIRMED, CANCELLED }
 data class JobEvent(val phase: String, val time: Long)
@@ -14,6 +15,7 @@ data class FlashJob(
     val expected: FirmwareIdentity, val chip: FlashChip,
     val outcome: JobOutcome = JobOutcome.QUEUED, val phase: String = "fleet_queued",
     val progress: Int = -1, val updatedAt: Long = 0, val events: List<JobEvent> = emptyList(), val forceUnknown: Boolean = false,
+    val color: Int = 0,
 )
 object FleetPolicy {
     fun runPlan(jobs: List<FlashJob>, stopped: () -> Boolean, prepare: (FlashJob) -> Unit, run: (FlashJob) -> Unit) {

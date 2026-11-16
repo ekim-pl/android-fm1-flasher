@@ -171,4 +171,66 @@ class FleetStoreTest {
         assertThrows(IllegalStateException::class.java) { store.enqueue(id, localEntry()) }
         assertTrue(store.jobs.isEmpty())
     }
+    @Test fun colorRemembersDefaultNameAndSurvivesRestartAndPairing() = fixture { store, file ->
+        val endpoint = Endpoint(1, "usb/1", 1)
+        store.attach(listOf(endpoint))
+        val id = store.devices.single().id
+        store.configure(id, color = 4)
+        store.attach(emptyList())
+        val restored = FleetStore(file)
+        restored.attach(emptyList())
+        assertEquals(4, restored.devices.single().color)
+        assertTrue(restored.devices.single().remembered)
+        val next = Endpoint(2, "usb/2", 2)
+        restored.attach(listOf(next))
+        restored.identify(next, FirmwareIdentity("FM-1", "015"), null)
+        restored.pair(id, restored.devices.single { it.endpoint != null }.id)
+        assertEquals(id, restored.devices.single().id)
+        assertEquals(4, restored.devices.single().color)
+        restored.attach(emptyList())
+        assertEquals(id, restored.devices.single().id)
+    }
+    @Test fun jobFreezesColorAndBlocksChangesUntilFinished() = fixture { store, file ->
+        val device = ready(store)
+        store.configure(device.id, color = 3)
+        store.enqueue(device.id, localEntry())
+        val job = store.jobs.single()
+        assertThrows(IllegalStateException::class.java) { store.configure(device.id, color = 1) }
+        store.result(job.id, JobOutcome.RUNNING, "flash_stage_write", 30)
+        assertThrows(IllegalStateException::class.java) { store.configure(device.id, color = 1) }
+        store.result(job.id, JobOutcome.CONFIRMED, "fleet_confirmed")
+        store.configure(device.id, color = 1)
+        val restored = FleetStore(file)
+        assertEquals(1, restored.devices.single().color)
+        assertEquals(3, restored.jobs.single().color)
+    }
+    @Test fun legacyAndInvalidColorsLoadWithoutDiscardingFleet() = fixture { store, file ->
+        val device = ready(store)
+        store.configure(device.id, color = 5)
+        store.enqueue(device.id, localEntry())
+        val root = org.json.JSONObject(file.readText())
+        root.getJSONArray("jobs").getJSONObject(0).remove("color")
+        root.getJSONArray("devices").getJSONObject(0).remove("remembered")
+        file.writeText(root.toString())
+        assertEquals(5, FleetStore(file).jobs.single().color)
+        root.getJSONArray("devices").getJSONObject(0).put("color", -1)
+        root.getJSONArray("jobs").getJSONObject(0).put("color", Int.MAX_VALUE)
+        file.writeText(root.toString())
+        val restored = FleetStore(file)
+        assertFalse(restored.loadFailed)
+        assertEquals(0, restored.devices.single().color)
+        assertEquals(0, restored.jobs.single().color)
+    }
+    @Test fun invalidOrFailedColorWriteKeepsCommittedState() = fixture { store, file ->
+        val device = ready(store)
+        assertThrows(IllegalArgumentException::class.java) { store.configure(device.id, color = -1) }
+        assertThrows(IllegalArgumentException::class.java) { store.configure(device.id, color = 6) }
+        val before = file.readText()
+        val failing = FleetStore(file) { _, _ -> throw java.io.IOException("disk full") }
+        val original = failing.devices
+        assertThrows(java.io.IOException::class.java) { failing.configure(device.id, color = 2) }
+        assertEquals(original, failing.devices)
+        assertEquals(before, file.readText())
+    }
+
 }

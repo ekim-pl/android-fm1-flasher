@@ -355,4 +355,11 @@
     <string name="history_help">Retencja i czyszczenie zachowują zadania oczekujące i aktywne, kopie zapasowe oraz nierozstrzygnięte zapisy odzyskiwania.</string>
     <string name="history_clear">Wyczyść historię flashowania</string>
     <string name="history_clear_confirm">Usunąć historię zakończonych i przerwanych zadań? Zadania oczekujące i aktywne, kopie zapasowe oraz nierozstrzygnięte zapisy odzyskiwania zostaną zachowane.</string>
+    <string name="device_color">Kolor instrumentu</string>
+    <string name="device_color_teal">Turkusowy</string>
+    <string name="device_color_blue">Niebieski</string>
+    <string name="device_color_amber">Bursztynowy</string>
+    <string name="device_color_pink">Różowy</string>
+    <string name="device_color_green">Zielony</string>
+    <string name="device_color_sky">Błękitny</string>
 </resources>
