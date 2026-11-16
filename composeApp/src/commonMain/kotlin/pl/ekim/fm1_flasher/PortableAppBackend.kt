@@ -76,9 +76,13 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
         try { return repository.refresh().also { measurement.complete(it.fresh, if (it.fresh) AnalyticsError.NONE else AnalyticsError.OTHER) } }
         catch (failure: Exception) { measurement.complete(false, analyticsError(failure)); throw failure }
     }
-    private fun refreshPorts() {
-        val ports = midi.devices().map { port -> AppPort(port.id.toString(), port.label) }
+    private fun ProbePort.appPort() = AppPort("$id:$generation", label)
+    private fun ProbePort.continuityEndpoint() = Endpoint(id, "probe:$id", generation)
+    private fun refreshPorts(): List<ProbePort> {
+        val current = midi.devices()
+        val ports = current.map { it.appPort() }
         state.update { if (it.target != null && ports.none { p -> p.id == it.target.id }) it.copy(ports = ports, target = null, identity = null, chip = FlashChip.UNKNOWN) else it.copy(ports = ports) }
+        return current
     }
     private fun publishLibrary() {
         val prefs = repository.settings()
@@ -175,13 +179,17 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
                 restoreSelection(); report(AppText.Joined(listOf(msg("packages_updated", count, updates.size)) + errors, "\n"))
             }
             AppActionKind.CONNECT -> analytics.measure(AnalyticsOperation.CONNECT) {
-                monitor.stopMonitor(); refreshPorts(); val port = state.value.ports.singleOrNull { it.id == action.id } ?: failed(msg("usb_port_gone"))
+                monitor.stopMonitor(); val port = refreshPorts().singleOrNull { it.appPort().id == action.id } ?: failed(msg("usb_port_gone"))
                 state.update { it.copy(target = null, identity = null, chip = FlashChip.UNKNOWN) }
-                val identity = midi.open(action.id.toInt()).use { FlashSession({ _, _ -> error("Identity never reconnects") }, { _, _ -> }).identify(it) }
+                val identity = midi.open(port).use { FlashSession({ _, _ -> error("Identity never reconnects") }, { _, _ -> }).identify(it) }
                 check(identity.baseModel == "FM-1") { failed(msg("wrong_device_identity", identity)) }
-                state.update { it.copy(target = port, identity = identity) }; report(msg("connected_only", port.label, identity))
+                check(port in refreshPorts()) { failed(msg("usb_port_gone")) }
+                state.update { it.copy(target = port.appPort(), identity = identity) }; report(msg("connected_only", port.label, identity))
             }
-            AppActionKind.CHIP -> if (state.value.target != null && state.value.identity != null) state.update { it.copy(chip = FlashChip.valueOf(action.id)) }
+            AppActionKind.CHIP -> {
+                refreshPorts()
+                if (state.value.target != null && state.value.identity != null) state.update { it.copy(chip = FlashChip.valueOf(action.id)) }
+            }
             AppActionKind.FLASH -> flash(action)
             AppActionKind.EXPERIMENTAL -> { val enabled = action.id.toBooleanStrict(); if (!enabled) monitor.stopMonitor(); state.update { it.copy(experimental = enabled) }; saveConfiguration(); refreshLogger() }
             AppActionKind.LOGGER_PORT -> {
@@ -207,44 +215,49 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
         storage.write("flash-session.json", buildJsonObject { put("sha256", hash); put("port", port); put("outcome", outcome) }.toString().encodeToByteArray())
     }
     private fun flash(action: AppAction) {
+        monitor.stopMonitor(); val ports = refreshPorts()
         val snapshot = state.value; val target = snapshot.target ?: failed(msg("flash_missing_requirements"))
         val selected = snapshot.ready ?: failed(msg("flash_missing_requirements")); val identity = snapshot.identity ?: failed(msg("flash_missing_requirements"))
         check(target.id == action.id && selected.sha256 == action.value) { failed(msg("local_package_changed")) }
-        monitor.stopMonitor(); refreshPorts(); check(state.value.ports.any { it.id == target.id }) { failed(msg("usb_port_gone")) }
+        val initialPort = ports.singleOrNull { it.appPort().id == target.id } ?: failed(msg("usb_port_gone"))
         val (saved, image) = repository.load(selected.id)
         check(saved.entry.sha256 == action.value && snapshot.chip.allows(saved.entry, action.forceUnknown)) { failed(msg("local_chip_unsupported")) }
         state.update { it.copy(flashing = true) }; host.setFlashing(true)
         val measurement = analytics.begin(AnalyticsOperation.FLASH)
         var analyticsPhase = AnalyticsStage.PREPARING
         val deadline = monotonicTimeMillis() + FlashSession.MAX_SESSION_MS
-        var before = midi.devices().map { it.id }.toSet()
+        var before = ports
         try {
             journal(image.sha256, target.id, "preparing")
             val session = FlashSession({ previous, loader ->
+                val gate = ReconnectGate(Endpoint(previous.id, "probe:${previous.id}", previous.generation), before.map { it.continuityEndpoint() })
                 requestedPort.value = null
-                state.update { it.copy(awaitingPort = true, candidates = emptyList(), identity = null) }
+                state.update { it.copy(target = null, awaitingPort = true, candidates = emptyList(), identity = null, chip = FlashChip.UNKNOWN) }
                 analyticsPhase = AnalyticsStage.RECONNECTING
                 report(msg("ios_reconnect"))
                 val reconnectDeadline = minOf(deadline, monotonicTimeMillis() + 180000)
                 var chosen: ProbePort? = null
                 while (monotonicTimeMillis() < reconnectDeadline && chosen == null) {
                     val current = midi.devices()
-                    val candidates = if (current.any { it.id == previous.id }) emptyList() else current.filter { it.id !in before && it.id != previous.id }
-                    state.update { it.copy(candidates = candidates.map { p -> AppPort(p.id.toString(), p.label) }) }
+                    val eligible = gate.candidates(current.map { it.continuityEndpoint() })
+                    val candidates = current.filter { it.continuityEndpoint() in eligible }
+                    state.update { it.copy(candidates = candidates.map { it.appPort() }) }
                     val requested = requestedPort.value
-                    chosen = candidates.singleOrNull { it.id.toString() == requested }
+                    chosen = candidates.singleOrNull { it.appPort().id == requested }
+                    if (requested != null && chosen == null) requestedPort.compareAndSet(requested, null)
                     if (chosen == null) blockingPause(200)
                 }
                 val port = chosen ?: failed(msg("reconnect_timeout"))
-                before = midi.devices().map { it.id }.toSet()
-                state.update { it.copy(target = AppPort(port.id.toString(), port.label), awaitingPort = false, candidates = emptyList()) }
-                midi.open(port.id)
+                before = midi.devices()
+                check(port in before && port.continuityEndpoint() in gate.candidates(before.map { it.continuityEndpoint() })) { failed(msg("usb_port_gone")) }
+                state.update { it.copy(target = port.appPort(), awaitingPort = false, candidates = emptyList()) }
+                midi.open(port)
             }, { text, progress ->
                 analyticsStage(text)?.let { analyticsPhase = it }
                 if (text == msg("flash_stage_verify") || text == msg("flash_stage_write")) journal(image.sha256, target.id, if (text == msg("flash_stage_write")) "writing" else "verification")
                 report(text, progress)
             })
-            val installed = session.flash(image, midi.open(target.id.toInt()), identity)
+            val installed = session.flash(image, midi.open(initialPort), identity)
             journal(image.sha256, target.id, "confirmed"); state.update { it.copy(identity = installed) }
             measurement.complete()
         } catch (failure: Exception) { measurement.complete(false, analyticsError(failure), analyticsPhase); report(msg("flash_unconfirmed", failure.appMessage("flash_result_unknown"))) }

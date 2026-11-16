@@ -1,9 +1,11 @@
 package pl.ekim.fm1_flasher
 
-data class ProbePort(val id: Int, val label: String)
+/** Generation changes on native topology events, even if endpoint IDs and labels are reused. */
+data class ProbePort(val id: Int, val label: String, val generation: Long)
 interface ProbeBackend {
     @Throws(Exception::class) fun devices(): List<ProbePort>
-    @Throws(Exception::class) fun open(id: Int): MidiConnection
+    /** Reject stale selections, and reject subsequent I/O once the opened generation is lost. */
+    @Throws(Exception::class) fun open(port: ProbePort): MidiConnection
 }
 interface PassiveMidiBackend {
     val midiLog: MidiLog

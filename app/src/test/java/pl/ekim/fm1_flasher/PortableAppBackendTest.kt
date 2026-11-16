@@ -20,11 +20,12 @@ class PortableAppBackendTest {
         val sent = mutableMapOf<Int, MutableList<ByteArray>>()
         override val midiLog = MidiLog()
         override var monitorRunning = false
-        override fun devices() = listOf(ProbePort(current, "Physical FM-1 endpoint $current"))
-        override fun open(id: Int): MidiConnection {
-            check(id == current)
+        override fun devices() = listOf(ProbePort(current, "Physical FM-1 endpoint $current", 0))
+        override fun open(port: ProbePort): MidiConnection {
+            val id = port.id
+            check(port in devices())
             return object : MidiConnection {
-                override val endpoint = Endpoint(id, "native:$id")
+                override val endpoint = Endpoint(id, "native:$id", port.generation)
                 val queue = ArrayDeque<ByteArray>()
                 var closed = false
                 var upgraded = false
@@ -77,19 +78,19 @@ class PortableAppBackendTest {
         suspend fun idle() = withTimeout(5000) { backend.state.first { it.initialized && !it.busy } }
         idle(); assertEquals("pl", backend.state.value.language)
         backend.perform(AppAction(AppActionKind.USE, entry.id)); idle()
-        backend.perform(AppAction(AppActionKind.CONNECT, "1")); idle()
+        backend.perform(AppAction(AppActionKind.CONNECT, "1:0")); idle()
         if (forceUnknown) {
-            backend.perform(AppAction(AppActionKind.FLASH, "1", hash)); idle()
+            backend.perform(AppAction(AppActionKind.FLASH, "1:0", hash)); idle()
             assertEquals(msg("local_chip_unsupported"), backend.state.value.status)
             assertFalse(midi.sent.values.flatten().any { it.contentEquals(Protocol.upgrade) })
         }
-        backend.perform(AppAction(AppActionKind.FLASH, "1", hash, forceUnknown = forceUnknown))
-        withTimeout(15000) { backend.state.first { it.awaitingPort && it.candidates.any { p -> p.id == "2" } } }
+        backend.perform(AppAction(AppActionKind.FLASH, "1:0", hash, forceUnknown = forceUnknown))
+        withTimeout(15000) { backend.state.first { it.awaitingPort && it.candidates.any { p -> p.id == "2:0" } } }
         assertTrue(host.flashActive)
         assertFalse(midi.sent[2].orEmpty().any { it.contentEquals(Protocol.upgrade) })
-        backend.perform(AppAction(AppActionKind.RECONNECT, "2"))
-        withTimeout(15000) { backend.state.first { it.awaitingPort && it.candidates.any { p -> p.id == "3" } } }
-        backend.perform(AppAction(AppActionKind.RECONNECT, "3")); idle()
+        backend.perform(AppAction(AppActionKind.RECONNECT, "2:0"))
+        withTimeout(15000) { backend.state.first { it.awaitingPort && it.candidates.any { p -> p.id == "3:0" } } }
+        backend.perform(AppAction(AppActionKind.RECONNECT, "3:0")); idle()
         assertEquals(FirmwareIdentity("FM-1", "900"), backend.state.value.identity)
         assertEquals(100, backend.state.value.progress)
         assertFalse(host.flashActive); assertEquals(0, requests)

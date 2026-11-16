@@ -29,6 +29,7 @@ final class CoreMidiBackend: NSObject, ProbeBackend, PassiveMidiBackend {
         let source: MIDIEndpointRef
         let destination: MIDIEndpointRef
         let label: String
+        let generation: Int64
     }
     let midiLog = MidiLog(maxEntries: 5000, maxBytes: 4 * 1024 * 1024)
     private let monitorLock = NSLock()
@@ -43,15 +44,39 @@ final class CoreMidiBackend: NSObject, ProbeBackend, PassiveMidiBackend {
     private var lostBySource: [MIDIEndpointRef: Int64] = [:]
     private let lock = NSLock()
     private var listed: [Int32: Pair] = [:]
+    private var generation: Int64 = 0
+    private var objectGenerations: [MIDIObjectRef: Int64] = [:]
     private var client = MIDIClientRef()
     private var clientStatus: OSStatus = noErr
 
     override init() {
         super.init()
-        clientStatus = MIDIClientCreateWithBlock("FM1 Flasher" as CFString, &client) { _ in }
+        clientStatus = MIDIClientCreateWithBlock("FM1 Flasher" as CFString, &client) { [weak self] notification in
+            self?.topologyChanged(notification)
+        }
     }
     deinit { stopMonitor(); if client != 0 { MIDIClientDispose(client) } }
 
+    private func topologyChanged(_ notification: UnsafePointer<MIDINotification>) {
+        let object: MIDIObjectRef
+        switch notification.pointee.messageID {
+        case .msgObjectAdded, .msgObjectRemoved:
+            object = UnsafeRawPointer(notification).assumingMemoryBound(to: MIDIObjectAddRemoveNotification.self).pointee.child
+        case .msgPropertyChanged:
+            object = UnsafeRawPointer(notification).assumingMemoryBound(to: MIDIObjectPropertyChangeNotification.self).pointee.object
+        case .msgIOError:
+            object = UnsafeRawPointer(notification).assumingMemoryBound(to: MIDIIOErrorNotification.self).pointee.driverDevice
+        default:
+            // SetupChanged is redundant with the detailed object/property notifications.
+            return
+        }
+        lock.lock(); defer { lock.unlock() }
+        generation += 1
+        // Keep tombstones: a removed object can return with exactly the same reference and name.
+        objectGenerations[object] = generation
+    }
+
+    // Caller holds lock so endpoint enumeration and event generations form one snapshot.
     private func enumerate() -> [Int32: Pair] {
         var pairs: [Int32: Pair] = [:]
         for index in 0..<MIDIGetNumberOfDevices() {
@@ -67,7 +92,8 @@ final class CoreMidiBackend: NSObject, ProbeBackend, PassiveMidiBackend {
                 guard source != 0 && destination != 0 else { continue }
                 let id = Int32(bitPattern: destination)
                 pairs[id] = Pair(source: source, destination: destination,
-                    label: "\(midiName(device)) · \(midiName(entity))\nIN #\(source) · OUT #\(destination)")
+                    label: "\(midiName(device)) · \(midiName(entity))\nIN #\(source) · OUT #\(destination)",
+                    generation: [device, entity, source, destination].map { objectGenerations[$0] ?? 0 }.max() ?? 0)
             }
         }
         return pairs
@@ -77,12 +103,12 @@ final class CoreMidiBackend: NSObject, ProbeBackend, PassiveMidiBackend {
         try midiCheck(clientStatus, "Create MIDI client")
         lock.lock(); defer { lock.unlock() }
         listed = enumerate()
-        return listed.sorted { $0.key < $1.key }.map { ProbePort(id: $0.key, label: $0.value.label) }
+        return listed.sorted { $0.key < $1.key }.map { ProbePort(id: $0.key, label: $0.value.label, generation: $0.value.generation) }
     }
 
     func monitorPorts() throws -> [ProbePort] {
         try midiCheck(clientStatus, "Create MIDI client")
-        return monitorSources().sorted { $0.key < $1.key }.map { ProbePort(id: $0.key, label: "\(midiName($0.value)) · #\($0.value)") }
+        return monitorSources().sorted { $0.key < $1.key }.map { ProbePort(id: $0.key, label: "\(midiName($0.value)) · #\($0.value)", generation: 0) }
     }
     private func monitorSources() -> [Int32: MIDIEndpointRef] {
         var sources: [Int32: MIDIEndpointRef] = [:]
@@ -173,17 +199,23 @@ final class CoreMidiBackend: NSObject, ProbeBackend, PassiveMidiBackend {
         // Decoding runs off Core MIDI callbacks and lifecycle threads; FIFO drains before restart data.
     }
 
-    func open(id: Int32) throws -> any MidiConnection {
+    func open(port: ProbePort) throws -> any MidiConnection {
         try midiCheck(clientStatus, "Create MIDI client")
-        lock.lock(); defer { lock.unlock() }
-        guard let pair = listed[id], enumerate()[id] == pair else {
+        let id = port.id
+        lock.lock()
+        guard let pair = listed[id], pair.generation == port.generation, pair.label == port.label, enumerate()[id] == pair else {
+            lock.unlock()
             throw NSError(domain: "FM1.CoreMIDI", code: 1, userInfo: [NSLocalizedDescriptionKey: "MIDI port changed. Refresh and select it again."])
         }
-        return try CoreMidiConnection(client: client, id: id, source: pair.source, destination: pair.destination) { [weak self] in
+        lock.unlock()
+        let connection = try CoreMidiConnection(client: client, id: id, source: pair.source, destination: pair.destination, generation: pair.generation) { [weak self] in
             guard let self else { return false }
             self.lock.lock(); defer { self.lock.unlock() }
             return self.enumerate()[id] == pair
         }
+        do { try connection.checkContinuity() }
+        catch { try? connection.close(); throw error }
+        return connection
     }
 }
 
@@ -204,11 +236,11 @@ private final class CoreMidiConnection: NSObject, MidiConnection {
         return KotlinUnit()
     }
 
-    init(client: MIDIClientRef, id: Int32, source: MIDIEndpointRef, destination: MIDIEndpointRef, alive: @escaping () -> Bool) throws {
+    init(client: MIDIClientRef, id: Int32, source: MIDIEndpointRef, destination: MIDIEndpointRef, generation: Int64, alive: @escaping () -> Bool) throws {
         self.alive = alive
         self.source = source
         self.destination = destination
-        self.endpoint = Endpoint(id: id, usbPath: "coremidi:\(source):\(destination)")
+        self.endpoint = Endpoint(id: id, usbPath: "coremidi:\(source):\(destination)", generation: generation)
         super.init()
         do {
             try midiCheck(MIDIOutputPortCreate(client, "FM1 output" as CFString, &output), "Create output")
@@ -244,10 +276,14 @@ private final class CoreMidiConnection: NSObject, MidiConnection {
         }
     }
 
+    func checkContinuity() throws {
+        guard alive() else { throw nativeError("Selected MIDI instrument disconnected") }
+    }
+
     func send(bytes: KotlinByteArray) throws {
         condition.lock(); defer { condition.unlock() }
         if let failure { throw failure }
-        guard alive() else { throw nativeError("Selected MIDI instrument disconnected") }
+        try checkContinuity()
         guard !closed else { throw NSError(domain: "FM1.CoreMIDI", code: 3, userInfo: [NSLocalizedDescriptionKey: "MIDI connection closed"]) }
         let payload = (0..<Int(bytes.size)).map { UInt8(bitPattern: bytes.get(index: Int32($0))) }
         let size = MemoryLayout<MIDIPacketList>.size + payload.count + 64
@@ -267,12 +303,12 @@ private final class CoreMidiConnection: NSObject, MidiConnection {
         condition.lock(); defer { condition.unlock() }
         let deadline = Date(timeIntervalSinceNow: Double(timeoutMs) / 1000)
         while queue.isEmpty && failure == nil && !closed {
-            guard alive() else { throw nativeError("Selected MIDI instrument disconnected") }
+            try checkContinuity()
             if Date() >= deadline { break }
             condition.wait(until: min(deadline, Date(timeIntervalSinceNow: 0.2)))
         }
         if let failure { throw failure }
-        guard alive() else { throw nativeError("Selected MIDI instrument disconnected") }
+        try checkContinuity()
         guard !closed else { throw NSError(domain: "FM1.CoreMIDI", code: 3, userInfo: [NSLocalizedDescriptionKey: "MIDI connection closed"]) }
         return queue.isEmpty ? nil : queue.removeFirst()
     }
