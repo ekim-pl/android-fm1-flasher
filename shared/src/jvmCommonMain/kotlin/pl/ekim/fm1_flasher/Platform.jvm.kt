@@ -9,3 +9,6 @@ internal actual class PlatformLock actual constructor() {
 }
 
 actual fun epochMillis(): Long = System.currentTimeMillis()
+
+internal actual fun localCalendarDay(timestamp: Long): Long =
+    java.time.Instant.ofEpochMilli(timestamp).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()

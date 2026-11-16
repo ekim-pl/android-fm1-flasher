@@ -12,3 +12,6 @@ expect fun epochMillis(): Long
 fun blockingPause(milliseconds: Long) = platformPause(milliseconds)
 
 fun monotonicTimeMillis(): Long = monotonicMillis()
+
+/** Calendar-day ordinal in the current local time zone, independent of DST day length. */
+internal expect fun localCalendarDay(timestamp: Long): Long

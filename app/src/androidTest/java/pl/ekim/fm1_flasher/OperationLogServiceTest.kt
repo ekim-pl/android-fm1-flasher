@@ -30,20 +30,21 @@ class OperationLogServiceTest : InstrumentationTestCase() {
             waitUntil { !service!!.state.busy }
             val active = service!!; previous = active.state.experimental
             instrumentation.runOnMainSync { active.setExperimental(true); active.recordEvent("PERSISTENCE_TEST", "USB ready") }
-            val file = File(context.filesDir, OperationLog.PATH)
-            waitUntil { file.exists() && file.readText().contains("PERSISTENCE_TEST") }
+            fun logText() = File(context.filesDir, "diagnostics").listFiles().orEmpty()
+                .filter { it.name.startsWith("operations-") && it.extension == "jsonl" }.joinToString("\n") { it.readText() }
+            waitUntil { logText().contains("PERSISTENCE_TEST") }
             instrumentation.runOnMainSync { active.setExperimental(false); active.exportOperationLog(Uri.fromFile(output)); active.clearOperationLog() }
             Thread.sleep(150)
-            assertFalse(output.exists()); assertTrue(file.readText().contains("PERSISTENCE_TEST"))
+            assertFalse(output.exists()); assertTrue(logText().contains("PERSISTENCE_TEST"))
             instrumentation.runOnMainSync { active.setExperimental(true); active.exportOperationLog(Uri.fromFile(output)) }
             waitUntil { output.exists() && output.readText().contains("PERSISTENCE_TEST") && (active.state.status as? AppText.Resource)?.key == "operation_log_saved" }
             instrumentation.runOnMainSync { active.clearOperationLog() }
             waitUntil { (active.state.status as? AppText.Resource)?.key == "operation_log_cleared" }
-            assertFalse(file.exists())
+            assertFalse(logText().contains("PERSISTENCE_TEST"))
             assertTrue(output.readText().contains("PERSISTENCE_TEST"))
             active.recordEvent("AFTER_CLEAR")
-            waitUntil { file.exists() && file.readText().contains("AFTER_CLEAR") }
-            assertFalse(file.readText().contains("PERSISTENCE_TEST"))
+            waitUntil { logText().contains("AFTER_CLEAR") }
+            assertFalse(logText().contains("PERSISTENCE_TEST"))
         } finally {
             instrumentation.runOnMainSync { service?.setExperimental(previous) }
             context.unbindService(connection); output.delete()

@@ -7,6 +7,8 @@ import platform.Foundation.NSProcessInfo
 import platform.Foundation.NSRecursiveLock
 import platform.Foundation.NSThread
 import platform.Foundation.timeIntervalSince1970
+import platform.Foundation.dateWithTimeIntervalSince1970
+import platform.Foundation.localTimeZone
 
 internal actual fun platformSha256(bytes: ByteArray): String {
     val result = UByteArray(32)
@@ -27,3 +29,9 @@ internal actual class PlatformLock actual constructor() {
 }
 
 actual fun epochMillis(): Long = (platform.Foundation.NSDate().timeIntervalSince1970 * 1000).toLong()
+
+internal actual fun localCalendarDay(timestamp: Long): Long {
+    val date = platform.Foundation.NSDate.dateWithTimeIntervalSince1970(timestamp / 1000.0)
+    val offset = platform.Foundation.NSTimeZone.localTimeZone.secondsFromGMTForDate(date)
+    return kotlin.math.floor((timestamp / 1000.0 + offset) / 86400.0).toLong()
+}
