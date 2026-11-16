@@ -158,13 +158,13 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
             AppActionKind.OFFLINE -> { repository.saveSettings(repository.settings().copy(offline = action.id.toBooleanStrict())); publishLibrary(); report(msg(if (state.value.offline) "offline_enabled" else "online_enabled")) }
             AppActionKind.FAVORITE -> { val prefs = repository.settings(); val favorites = prefs.favorites.map { if (it.startsWith("firmwarehub/")) it else CatalogSource.key(CatalogSource.HUB, it) }.toSet(); repository.saveSettings(prefs.copy(favorites = if (action.id in favorites) favorites - action.id else favorites + action.id)) }
             AppActionKind.USE -> {
-                val entry = repository.load(action.id).first.entry; repository.saveSettings(repository.settings().copy(selectedId = action.id))
+                val entry = repository.load(action.id).first.entry; repository.saveSettings(repository.settings().copy(selectedId = entry.key))
                 state.update { it.copy(ready = entry) }; report(msg("package_selected", entry.name, entry.version))
             }
-            AppActionKind.REMOVE -> { repository.remove(action.id); if (state.value.ready?.key == action.id) state.update { it.copy(ready = null) }; report(msg("package_removed")) }
+            AppActionKind.REMOVE -> { repository.remove(action.id); if (state.value.ready?.let { it.id == action.id || it.key == action.id } == true) state.update { it.copy(ready = null) }; report(msg("package_removed")) }
             AppActionKind.DOWNLOAD -> analytics.measure(AnalyticsOperation.DOWNLOAD) {
                 check(!state.value.offline) { failed(msg("download_offline_blocked")) }
-                val entry = state.value.catalog?.entries?.singleOrNull { it.key == action.id } ?: failed(msg("download_stale"))
+                val entry = state.value.catalog?.entries?.singleOrNull { it.id == action.id || it.key == action.id } ?: failed(msg("download_stale"))
                 report(msg("downloading_package", entry.name, entry.version)); repository.download(entry); restoreSelection(); report(msg("package_downloaded", entry.name, entry.version))
             }
             AppActionKind.UPDATE_ALL -> {

@@ -136,7 +136,8 @@ class FirmwareRepository(private val storage: AppStorage, private val http: Http
     fun saveSettings(settings: LibrarySettings) = writeText("library/settings.json", buildJsonObject {
         put("favorites", JsonArray(settings.favorites.sorted().map(::JsonPrimitive))); put("offline", settings.offline); put("selectedId", settings.selectedId)
     }.toString())
-    private fun recordPath(id: String) = "library/records/${platformSha256(id.removePrefix("firmwarehub/").encodeToByteArray())}.json"
+    private fun localId(id: String) = id.removePrefix("${CatalogSource.HUB}/")
+    private fun recordPath(id: String) = "library/records/${platformSha256(localId(id).encodeToByteArray())}.json"
     private fun packagePath(hash: String): String {
         require(hash.matches(Regex("[a-f0-9]{64}")))
         return "library/packages/$hash.fwsc"
@@ -160,7 +161,7 @@ class FirmwareRepository(private val storage: AppStorage, private val http: Http
     }
     fun load(id: String, catalog: Catalog? = cached()): Pair<LocalPackage, FirmwarePackage> {
         val saved = record(recordPath(id)); check(saved.entry.id == id || saved.entry.key == id)
-        val latest = catalog?.entries?.singleOrNull { it.id == id }
+        val latest = catalog?.entries?.singleOrNull { it.key == saved.entry.key }
         check(catalog == null || latest != null) { failed(msg("firmware_removed")) }
         val effective = if (latest?.sha256 == saved.entry.sha256) latest else saved.entry
         check(catalog?.conflicting(effective) != true) { failed(msg("source_conflict")) }
@@ -177,9 +178,12 @@ class FirmwareRepository(private val storage: AppStorage, private val http: Http
         prune()
     }
     fun remove(id: String) {
-        storage.remove(recordPath(id)); val prefs = settings()
-        if (prefs.selectedId == id) saveSettings(prefs.copy(selectedId = null))
+        storage.remove(recordPath(id)); clearSelection(id)
         prune()
+    }
+    private fun clearSelection(id: String) {
+        val prefs = settings()
+        if (prefs.selectedId?.let(::localId) == localId(id)) saveSettings(prefs.copy(selectedId = null))
     }
     fun clearDownloads() {
         for (directory in listOf("library/records", "library/packages"))
@@ -210,7 +214,6 @@ class FirmwareRepository(private val storage: AppStorage, private val http: Http
     }
     fun download(entry: CatalogEntry) {
         save(entry, downloadBytes(entry))
-        val prefs = settings()
-        if (prefs.selectedId == entry.id) saveSettings(prefs.copy(selectedId = null))
+        clearSelection(entry.id)
     }
 }
