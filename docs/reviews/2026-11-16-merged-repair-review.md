@@ -56,8 +56,40 @@ Nie jest to deklaracja walidacji natywnego mostu iOS na Xcode.
 
 ## Walidacja po review
 
-Review statyczne i ponowny przegląd drobnej korekty zakończono przed uruchomieniem
-wspólnych testów. Wyniki zostaną uzupełnione po zakończeniu ich wykonania.
+Review statyczne i ponowny przegląd drobnej korekty zakończono w commicie
+`f4376a2`, przed uruchomieniem wspólnych testów. Wszystkie poniższe kontrole
+wykonano następnie na scalonym kodzie.
+
+```bash
+./gradlew --no-daemon -Pfm1Analytics=false :shared:jvmTest :shared:testDebugUnitTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
+```
+
+Wynik: `BUILD SUCCESSFUL`. Shared JVM: 101 testów; shared Android JVM: 101;
+aplikacja Android JVM: 157. W każdym zestawie zero błędów, porażek i pominięć.
+Obejmuje to testy konfliktów, kluczy, selekcji, ciągłości i istniejące testy
+pełnego przebiegu flashowania na symulowanym MIDI. Lint i build debug oraz
+kompilacja testowego APK zakończyły się powodzeniem. Gradle nadal zgłasza
+ostrzeżenia o przestarzałych API i przyszłej niezgodności z Gradle 9.
+
+Dodatkowe kontrole:
+
+```bash
+python3 -m unittest discover -s scripts -p 'test_*.py'
+python3 tools/sync-resources.py --check
+python3 scripts/release_fixtures.py verify
+go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7 -shellcheck= .github/workflows/*.yml
+git diff --check
+```
+
+17 testów Python przeszło. Kontrole zasobów, syntetycznych raportów i workflowów
+przeszły. Nie uruchamiano ponownie natywnych testów UI ani integracji V15/V16;
+zmiany obejmują repozytorium i przenośny MIDI, a regresję recovery sprawdzają
+zwykłe syntetyczne testy. Pełne logi końcowego uruchomienia są w
+[build/reports/merged-repair-review](/home/mike/.t3/projects/android-fm1-flasher/build/reports/merged-repair-review).
+
+Wynik końcowy: trzy poprawki złożone, problem podpisu mocka wykryty w review
+usunięty, testy po review przechodzą. Kod pozostaje w lokalnej gałęzi
+`review/repair-base`; bez pushowania i publikacji.
 
 ## Ograniczenia
 

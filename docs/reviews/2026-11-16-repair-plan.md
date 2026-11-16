@@ -70,3 +70,11 @@ backendu, jeżeli dotyczą zmian w wywołaniach.
   indywidualnych zadań. Zabezpieczenia recovery i rozdział syntetycznych fixture’ów
   od integracji V15/V16 pozostają wymaganiami regresji.
 - Integracja w lokalnej gałęzi naprawczej; push, sklepy i tagi poza tym zadaniem.
+
+## Wynik wykonania
+
+Wszystkie trzy zadania wykonano w osobnych worktrees i scalono do lokalnej
+gałęzi `review/repair-base`. Następnie wykonano code review scalonej całości,
+poprawiono znalezioną niespójność interfejsu w mocku testowym i dopiero potem
+uruchomiono wspólny zestaw testów. Szczegóły:
+[review po scaleniu i wyniki testów](2026-11-16-merged-repair-review.md).

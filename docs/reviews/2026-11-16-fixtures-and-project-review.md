@@ -1,5 +1,10 @@
 # Przegląd projektu i zmiana fixture’ów — 2026-11-16
 
+Aktualizacja po naprawach: trzy poniższe ustalenia otrzymały poprawki w lokalnej
+gałęzi `review/repair-base`. Wyniki review po scaleniu oraz testów zawiera
+[raport końcowy](2026-11-16-merged-repair-review.md). Poniższy opis zachowuje
+stan i dowody z pierwotnego przeglądu; walidacja natywnego iOS nadal wymaga Xcode.
+
 Przegląd obejmuje kod Androida, wspólną logikę Kotlin, interfejs Compose, host iOS,
 konfigurację buildów, workflowy publikacji, skrypty i dokumentację. Priorytetem były
 granice zaufania: wybór urządzenia, kompatybilność firmware’u, recovery, pobieranie
