@@ -1,0 +1,121 @@
+KOŃCOWY REVIEW NAPRAW I AUDYT POKRYCIA TESTAMI — 2026-11-16
+Gałąź: repair/publication-audit-2026-11-16
+Baza audytu: a64ee492fa55c6c66c435cd02eeeefc8dfc68ffd
+Scalona implementacja: b7879fda36d09b241f8af79cc1ef93f2b99ef894
+
+WYNIK
+Zamknięto implementacyjnie F1–F6 z publication-audit.txt. Wszystkie zadania
+agentów scalono lokalnie z osobnych worktree. Dodatkowa integracja zamknęła
+ustawienia historii i znaleziony podczas review błąd blokady callbacku OAuth
+po nieudanym przekazaniu do Service (np. offline). Brak nowych blokujących
+ustaleń w końcowym review. Nie oznacza to akceptacji sprzętowej wydania:
+pozostają testy fizycznego FM-1, API34 i rzeczywistych integracji opisane niżej.
+Nie wykonano push, PR, publikacji GitHub ani operacji Google Play.
+
+SCALENIA
+33a4b24 — agent C: F3/F4, walidacja manifestu AAB i zaufanego CI API34/36.
+3cd37ce — agent B: F2, szyfrowany odroczony callback OAuth.
+71fd265 — agent A: F1/F6, trwałość flashowania i retencja historii.
+b7879fd — integracja: ustawienia historii, potwierdzenie czyszczenia,
+          terminalna obsługa nieudanego handoff OAuth i testy platformowe.
+76701d0/f55ca17 — dzienne logi, ustawienia, testy i dokumentacja.
+0590e36 — aktualizacja architektury i procesu publikacji.
+Końcowe doprecyzowanie MIGRATION opisuje brak I/O w callbackach transferu,
+trwały receipt, retencję historii oraz semantykę odzyskania callbacku OAuth.
+
+USTAWIENIA I ZACHOWANIE
+Historia: domyślnie 30 dni; wybór 7/30/90 dni lub bez limitu. Ręczne
+czyszczenie wymaga potwierdzenia. QUEUED/RUNNING, backupy i nierozstrzygnięty
+znacznik pozostają; receipt potwierdzenia również nie zależy od historii.
+Retencja działa przy ładowaniu i trwałym zapisie wyniku. Nie ogranicza liczby
+niedawnych zadań; opcja bez limitu pozwala historii rosnąć bez ograniczenia.
+Logi: plik na lokalny dzień, domyślnie 7 dni, wybór 7/14/30, limit 10 MiB
+łącznie i zachowany limit 256 KiB na dzień. Czyszczenie przy zapisie/odczycie;
+nie ma timera działającego w nieużywanej aplikacji. Eksportowane kopie są
+poza retencją aplikacji. Surowy bufor MIDI jest osobny. UI logów pozostaje
+w funkcjach eksperymentalnych; historia jest w zwykłych ustawieniach Android.
+
+RYZYKO -> DOWÓD / OGRANICZENIE
+F1: FlashPersistenceTest sprawdza błąd każdego obowiązkowego zapisu przed
+transferem (zero komend), awarię dysku podczas realnego FlashSession z fake
+MIDI, brak I/O w postępie/reconnect, końcowy błąd i powtórny błąd zapisu,
+stop następnego zadania, restart niepewnego wyniku, zachowanie pierwotnego
+wyjątku i cleanup. FlasherWorkerTest blokuje zapis i sprawdza kolejność oraz
+brak blokowania wywołującego. Nie jest to test pełnego runJob z fizycznym USB,
+wake lock i zanikiem zasilania. Sukces analityczny FLASH oznacza potwierdzenie
+instrumentu; przy awarii trwałego wyniku historia/UI nadal są niepotwierdzone.
+F2: PendingOAuthCallbackTest na API36 sprawdza szyfrowanie, busy/recreation,
+deduplikację, TTL, błędny redirect/state, rewizję źródła, rzeczywistą ścieżkę
+Activity -> Service -> OAuthManager, offline bez ponowienia wymiany i nowe
+logowanie, oraz spóźnione zakończenie starej próby. Dwa osobne procesy seed /
+recover potwierdzają zimne odzyskanie przed zużyciem state. Token transport
+jest podstawiony. Po zużyciu state i przerwaniu wymiany wymagane nowe logowanie.
+F3: 34 testy Python obejmują rzeczywiste podpisane fixture AAB, bundletool
+validate/dump manifest, niezgodne package/version/SDK, uszkodzone archiwum,
+provenance/podpis/checksum. To testowe klucze, nie produkcyjny upload.
+F4: Testy API GitHub są mockowane: dokładny SHA, zaufany workflow/default
+branch, pełna macierz, odrzucenia, reruny i zmiana run w trakcie odczytu.
+Workflow CI jawnie wykonuje wszystkie 13 obecnych klas instrumentation oraz
+cold seed/recover. Lokalne API36 nie zastępuje wymaganego zdalnego CI dla
+ostatecznego SHA na gałęzi domyślnej. Stare artefakty wymagają przebudowy.
+F5: MIGRATION/README i bieżące teksty prywatności/użytkowe/publikacyjne
+zaktualizowane; synchronizacja en/pl/zh oraz 52 strony, linki i kotwice OK.
+Historyczne raporty i screenshoty nie są dowodem nowego wykonania testów;
+nowe kontrolki retencji nie mają jeszcze osobnego zestawu zdjęć sklepowych.
+F6: FleetRetentionTest obejmuje 10 000 wpisów, domyślne 30 dni, granicę wieku,
+bez limitu, rollback po awarii, pinning/kolejność oraz ochronę backupów/journal.
+HistoryServiceTest na API36 przechodzi przez faktyczne akcje Activity i Service,
+zapis/odczyt FleetStore i odmowę zmian podczas busy. SettingsUiTest sprawdza
+trzy języki, wybór, anulowanie, potwierdzenie oraz blokadę podczas busy.
+Logi: DailyOperationLogTest/OperationLogTest obejmują północ, restart,
+retencję, łączny limit, cofnięcie zegara, migrację/retry bez duplikacji,
+czyszczenie, eksport i błędy storage; LocalCalendarDayTest sprawdza dni DST
+Europe/Warsaw. OperationLogServiceTest/FleetUiTest na API36 sprawdzają
+integrację serwisu i akcje UI. Rzeczywisty runtime iOS nie był uruchomiony.
+
+WYKONANE PO SCALENIU PRZEZ AGENTA NADRZĘDNEGO
+- Gradle: :app:assembleDebug :app:assembleDebugAndroidTest
+  :app:testDebugUnitTest :shared:jvmTest :shared:testDebugUnitTest :app:lintRelease
+  z -Pfm1Analytics=false. BUILD SUCCESSFUL, 1m25s.
+  app JVM 172, shared JVM 108, shared Android JVM 107 = 387 wykonań;
+  zero failures/errors/skipped. Wspólne testy na obu targetach nie są
+  niezależnymi przypadkami; suma nie jest procentem pokrycia.
+  Lint: 0 błędów, 51 ostrzeżeń. Nie ukrywano ostrzeżeń baseline'em.
+- :app:firmwareIntegrationTest: 18/18, świeże wykonanie, fixture V15/V16,
+  symulowany transport/recovery. BUILD SUCCESSFUL.
+- API36 (Android16 emulator-5554): zbudowane tutaj APK zainstalowane ponownie.
+  13 klas zgodnych z CI, 55/55 testów, osobno cold seed i recover 2/2.
+  Każde uruchomienie sprawdzone przez wynik OK, nie sam kod wyjścia adb.
+- FM1_BUNDLE_INTEGRATION=1 python3 -m unittest discover -s scripts -p 'test_*.py':
+  34/34, bez pominięć, w tym realne AAB.
+- tools/sync-resources.py --check, build_site.py, check_site.py: OK, 52 strony.
+- git diff --check: OK.
+Logi: /tmp/fm1-final-gradle.log, /tmp/fm1-final-firmware.log,
+/tmp/fm1-final-release-tests.log; raporty API36 pod
+build/reports/publication-audit/api36/. XML JVM i lint w standardowych build/.
+
+DODATKOWA WALIDACJA AGENTA INTEGRACJI
+Dla kodu scalonego bez zmian funkcjonalnych: assembleRelease, iOS/common
+Kotlin metadata, actionlint oraz synthetic fixture gate przeszły. Szczegóły
+w 2026-11-16-integration-implementation.txt. To build bez Firebase i kompilacja
+metadanych, nie natywne linkowanie iOS. Buildy korzystały z cache.
+Końcowy niezależny review tylko do odczytu nie wykazał blokujących błędów
+F1/F6 i OAuth; wskazane przez niego testy API36 zostały wykonane przez rodzica.
+
+POZOSTAŁA AKCEPTACJA PRZED PUBLIKACJĄ
+1. Zaufane zdalne CI API34 i API36 dla dokładnego finalnego SHA po integracji
+   na default branch; lokalnie wykonano tylko API36. Bramka wydania wymusza CI.
+2. Fizyczny FM-1: USB/OEM permission, oba reconnecty, instalacja/recovery,
+   przerwanie procesu/zasilania i zachowawcza prezentacja wyniku. Symulator
+   protokołu nie zastępuje sprzętu; szeroka publikacja nadal wymaga akceptacji.
+3. Rzeczywisty issuer OAuth, OEM Keystore oraz produkcyjny wariant Firebase,
+   podpis i polityki sklepu — poza wykonanymi testami.
+4. iOS: Xcode/Swift/CoreMIDI i urządzenie; Android OAuth/provider parity nie
+   jest obiecana przez kompilację wspólnych metadanych.
+5. Osobny backlog: 51 ostrzeżeń lint/deprecations, odświeżenie zdjęć ustawień,
+   dalsze odchudzanie dużego FlasherService. Nie dodawano szerokiego refaktoru
+   do naprawy bezpieczeństwa transferu. Metrykę FLASH interpretować jako
+   wynik instrumentu, a nie dowód trwałego zapisu lokalnej historii.
+Nie podajemy coverage % bez instrumentowanego pomiaru. Mapa powyżej rozróżnia
+sprawdzone zachowania, mocki i luki; zielone testy nie dowodzą wszystkich
+przeplotów wątków, uszkodzeń storage ani awarii sprzętowych.
