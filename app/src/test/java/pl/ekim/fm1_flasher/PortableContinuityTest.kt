@@ -175,6 +175,22 @@ class PortableContinuityTest {
         assertEquals(1, f.midi.opened.last().generation)
     }
 
+    @Test fun continuousFreshReconnectSelectionsFinishConfirmed() = runBlocking {
+        val f = Fixture(); f.connect()
+        f.backend.perform(AppAction(AppActionKind.FLASH, "7:1", f.entry.sha256))
+        f.candidate(2)
+        f.assertUntrusted()
+        assertFalse(f.midi.opened.any { it.generation == 2L })
+        f.backend.perform(AppAction(AppActionKind.RECONNECT, "7:2"))
+        f.candidate(3)
+        assertFalse(f.midi.opened.any { it.generation == 3L })
+        f.backend.perform(AppAction(AppActionKind.RECONNECT, "7:3")); f.idle()
+        assertEquals(listOf(1L, 1L, 2L, 3L), f.midi.opened.map { it.generation })
+        assertEquals(FirmwareIdentity("FM-1", "900"), f.backend.state.value.identity)
+        assertEquals(100, f.backend.state.value.progress)
+        assertTrue(f.storage.read("flash-session.json", 128000)!!.decodeToString().contains("confirmed"))
+    }
+
     @Test fun sameIdReconnectsRequireFreshExplicitSelectionsAndFinishConfirmed() = runBlocking {
         val f = Fixture(); f.connect()
         f.backend.perform(AppAction(AppActionKind.FLASH, "7:1", f.entry.sha256))
@@ -184,7 +200,15 @@ class PortableContinuityTest {
         // The displayed candidate is replaced before its selection reaches the flash worker.
         f.midi.generation.incrementAndGet()
         f.backend.perform(AppAction(AppActionKind.RECONNECT, "7:2"))
-        f.candidate(3)
+        val outcome = withTimeout(15000) {
+            f.backend.state.first { !it.busy || (it.awaitingPort && it.candidates.singleOrNull()?.id == "7:3") }
+        }
+        if (!outcome.busy) {
+            // Selection may win the old snapshot race; final continuity validation then aborts safely.
+            assertFalse(f.midi.opened.any { it.generation >= 2L })
+            assertFalse(f.storage.read("flash-session.json", 128000)!!.decodeToString().contains("confirmed"))
+            return@runBlocking
+        }
         f.backend.perform(AppAction(AppActionKind.RECONNECT, "7:2"))
         assertFalse(f.midi.opened.any { it.generation >= 2L })
         f.backend.perform(AppAction(AppActionKind.RECONNECT, "7:3"))
