@@ -12,11 +12,13 @@ WORKFLOWS
 android-debug.yml — Developer debug APK (test Firebase)
   Optional stable/preview tag matching versionName; empty uses the selected workflow
   commit. Environment android-debug. Preview tags may use v0.10.1-preview.1.
-  Runs tests/lint, builds with test Firebase and a persistent developer signing key.
+  Runs synthetic tests/lint without downloading firmware, builds with test Firebase
+  and a persistent developer signing key.
   Artifact android-debug-<tag>, or android-debug-dev. No publication.
 
 fdroid-release.yml — F-Droid signed APK
-  Required stable tag. Environment fdroid-release. Tests/lints without analytics,
+  Required stable tag. Environment fdroid-release. Requires official V15/V16
+  integration tests on simulated flash, then tests/lints without analytics,
   rejects Firebase/Google Play services dependencies, inspects DEX, verifies APK
   identity and pinned signing certificate. Artifact android-fdroid-<tag>.
 
@@ -29,7 +31,8 @@ google-play.yml — Google Play production AAB build
   Optional stable tag; empty uses the selected workflow commit. Environment
   google-play. Builds production Firebase AAB, checks its signature against
   PLAY_UPLOAD_CERT_SHA256. Artifact android-play-<tag>, or android-play-dev.
-  Does not upload. A branch build without a tag is for validation only.
+  Tagged builds require official V15/V16 integration tests.
+  Does not upload. A branch build without a tag uses synthetic tests for validation.
 
 android-publish.yml — Publish existing Android APKs
   Inputs: tag, fdroid_run_id, optional debug_run_id. Leaving debug_run_id empty
@@ -51,7 +54,8 @@ google-play-upload.yml — Google Play upload existing AAB (internal)
   uploads. First-time app creation/initial manual upload may be required by Play.
 
 promote-production.yml — Google Play production
-  Input: version_code already tested on the internal track. Environment
+  Inputs: version_code already tested on internal, tag and source build run_id.
+  Verifies the existing bundle and its integration provenance before promotion. Environment
   google-play-production. Promotes existing bundle, with no build or re-upload.
 
 android-release.yml — Android release (debug, F-Droid, Google Play)
@@ -107,7 +111,7 @@ Each distribution artifact contains exactly the build file, manifest.json and
 SHA256SUMS. Manifest records package, versionName, versionCode, source commit,
 tag, variant, source run ID/attempt, certificate SHA-256 and binary SHA-256.
 Tooling is checked out from the workflow's commit separately from application
-source. Historical tags need not contain the new release scripts.
+source. Production source tags must include the firmwareIntegrationTest task and fixture manifest.
 Source tags must be kept immutable. If a tag moves, publication/upload rejects
 artifacts from the old commit. Branch-only builds cannot be published as stable
 releases. Allocate monotonically increasing versionCodes for distribution updates.
@@ -122,10 +126,32 @@ Same-tag publication is serialized; Play mutations share a separate group.
 GitHub's default concurrency queue is not a durable FIFO: repeated pending requests
 can replace older pending requests. Monitor dispatch results and retry as needed.
 
-RELEASE FIXTURES AND CI
-Repository variables FM1_FIXTURE_ARCHIVE_URL and FM1_FIXTURE_ARCHIVE_SHA256 must
-point to a permitted pinned archive with v15.fwsc, v16.fwsc and catalog.json.
-Skipped/missing fixture tests fail release builds; no bypass is provided.
+TEST FIXTURES AND CI
+Ordinary CI, developer debug builds (including GitHub prereleases) and unsigned
+F-Droid validation use deterministic synthetic packages/catalogs. They require no
+firmware downloads and no FM1_FIXTURE_ARCHIVE_URL/SHA256 repository variables.
+
+Tagged Google Play and signed F-Droid builds additionally require official V15/V16:
+  python3 scripts/release_fixtures.py prepare
+  ./gradlew --no-daemon -Pfm1Analytics=false :app:firmwareIntegrationTest
+  python3 scripts/release_fixtures.py verify-integration
+The task is excluded from ordinary testDebugUnitTest/testReleaseUnitTest runs.
+Missing, changed or unavailable packages fail explicitly. The versioned manifest
+scripts/firmware-fixtures.json pins product identities, HTTPS sources and SHA-256.
+V15 is fetched at a fixed m-vave/fm1_open commit. The vendor V16 URL can change;
+if it does, inspect the replacement and review a manifest update rather than
+accepting the new bytes automatically. No firmware binaries are committed or
+redistributed in the application or release artifacts.
+
+Integration exercises both real package parsers, V15 recovery on simulated flash
+for both supported chip IDs, protected data preservation and refusal of V16 by
+V15-only recovery. It does not validate physical USB transport or instrument boot.
+Production artifact manifests embed the tested commit and both package hashes;
+publication, Play upload and promotion reject missing or mismatched evidence.
+Preserve the corresponding source Actions artifact for later production promotion.
+
+Synthetic verification still rejects missing/empty suites, failures and skips:
+  python3 scripts/release_fixtures.py verify
 android-ci.yml validates release tooling with unit tests and actionlint without
 signing secrets, alongside existing Android tests and compilation checks.
 

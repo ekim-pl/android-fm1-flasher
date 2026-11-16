@@ -1,7 +1,6 @@
 package pl.ekim.fm1_flasher
 
 import org.junit.Assert.*
-import org.junit.Assume.assumeTrue
 import org.junit.Test
 import java.io.File
 
@@ -64,12 +63,13 @@ class CatalogTest {
         assertFalse(FlashChip.UNKNOWN.allows(entry.copy(chip = "unknown", stock = true)))
     }
 
-    @Test fun parsesLiveCatalogFixtureWhenProvided() {
-        val path = System.getenv("FM1_TEST_CATALOG")
-        assumeTrue(path != null)
-        val catalog = CatalogParser.parse(File(path!!).readText()).first
-        assertTrue(catalog.size > 10)
-        assertTrue(catalog.any { it.stock })
-        assertTrue(catalog.any { it.downloadable && it.chip == "new" })
+    @Test fun parsesSyntheticStockAndCommunityCatalog() {
+        val stock = """"stock":{"source":"https://github.com/m-vave/fm1_open/blob/${"a".repeat(40)}/sdk/firmware/FM-1_015.fwsc",
+            "sha256":"${Recovery.V15_PACKAGE}","product":"FM-1_015"}"""
+        val catalog = CatalogParser.parse(source.dropLast(1) + "," + stock + "}").first
+        assertEquals(2, catalog.size)
+        assertEquals(1, catalog.count { it.stock })
+        assertTrue(catalog.all { it.downloadable })
+        assertEquals(setOf("demo", "mvave-stock"), catalog.map { it.id }.toSet())
     }
 }

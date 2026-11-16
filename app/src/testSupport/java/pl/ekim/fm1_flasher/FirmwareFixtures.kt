@@ -1,15 +1,15 @@
 package pl.ekim.fm1_flasher
 
 // Synthetic UFW fixture; contains no manufacturer firmware.
-internal fun testPackage(): ByteArray {
-    val logical = ByteArray(0x4404)
+internal fun testPackage(product: String = "FM-1_900", flash: ByteArray = ByteArray(0x4000) { (it * 31).toByte() }): ByteArray {
+    require(flash.size >= 0x4000)
+    val logical = ByteArray(0x400 + flash.size + 4)
     fun put(offset: Int, value: Long, length: Int) = Protocol.little(value, length).copyInto(logical, offset)
     put(4, logical.size.toLong(), 4); put(8, 3, 2)
     "AC791N".toByteArray().copyInto(logical, 16)
-    val flash = ByteArray(0x4000) { (it * 31).toByte() }
     flash.copyInto(logical, 0x400)
     val loader = byteArrayOf(1, 2, 3, 4)
-    loader.copyInto(logical, 0x4400)
+    loader.copyInto(logical, (0x400 + flash.size))
     fun entry(index: Int, type: Int, name: String, offset: Int, content: ByteArray) {
         val base = 64 + index * 80
         put(base, type.toLong(), 2); put(base + 2, index.toLong(), 2)
@@ -19,8 +19,8 @@ internal fun testPackage(): ByteArray {
         scramble(logical, base, 80)
     }
     entry(0, 0, "flash.bin", 0x400, flash)
-    entry(1, 2, "info.log", 0x4400, byteArrayOf())
-    entry(2, 100, "ota.bin", 0x4400, loader)
+    entry(1, 2, "info.log", (0x400 + flash.size), byteArrayOf())
+    entry(2, 100, "ota.bin", (0x400 + flash.size), loader)
     // Community packages can declare alignment padding without including it after the last file.
     scramble(logical, 224, 80)
     put(224 + 16, 32, 4)
@@ -28,7 +28,6 @@ internal fun testPackage(): ByteArray {
     Protocol.little(FirmwarePackage.crc16(logical, 64, 304).toLong(), 2).copyInto(logical, 2)
     Protocol.little(FirmwarePackage.crc16(logical, 2, 64).toLong(), 2).copyInto(logical, 0)
     scramble(logical, 0, 64)
-    val product = "FM-1_900"
     val raw = ByteArray(logical.size + 20)
     repeat(20) { i ->
         logical.copyInto(raw, i * 48, i * 47, i * 47 + 47)

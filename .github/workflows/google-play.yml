@@ -64,10 +64,8 @@ jobs:
         with:
           packages: 'platforms;android-36 build-tools;35.0.0'
           log-accepted-android-sdk-licenses: false
-      - name: Prepare release fixtures
-        env:
-          FM1_FIXTURE_ARCHIVE_URL: ${{ vars.FM1_FIXTURE_ARCHIVE_URL }}
-          FM1_FIXTURE_ARCHIVE_SHA256: ${{ vars.FM1_FIXTURE_ARCHIVE_SHA256 }}
+      - name: Prepare pinned official V15 and V16 packages
+        if: env.FM1_RELEASE_TAG != ''
         run: python3 .release-tools/scripts/release_fixtures.py prepare
       - name: Check resources and shared tests
         run: |
@@ -77,6 +75,11 @@ jobs:
         run: |
           ./gradlew --no-daemon -Pfm1Analytics=false :app:testDebugUnitTest
           python3 .release-tools/scripts/release_fixtures.py verify
+      - name: Require official firmware integration tests
+        if: env.FM1_RELEASE_TAG != ''
+        run: |
+          ./gradlew --no-daemon -Pfm1Analytics=false :app:firmwareIntegrationTest
+          python3 .release-tools/scripts/release_fixtures.py verify-integration
       - name: Prepare production Firebase configuration
         env:
           FIREBASE_CONFIG: ${{ secrets.FIREBASE_PRODUCTION_ANDROID_JSON }}

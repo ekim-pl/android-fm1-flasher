@@ -114,3 +114,27 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.json:json:20260719'
 }
+
+// Official firmware is exercised only by an explicit production integration task.
+tasks.withType(Test).configureEach {
+    if (name != 'firmwareIntegrationTest') exclude '**/FirmwareIntegrationTest.class'
+}
+// Production Firebase disables debug variants; integration runs separately without analytics.
+if (!(analyticsEnabled && analyticsEnvironment == 'production')) {
+    tasks.register('firmwareIntegrationTest', Test) {
+        description = 'Verify pinned official V15/V16 packages and V15 recovery on simulated flash'
+        group = 'verification'
+        def unitTests = tasks.named('testDebugUnitTest')
+        dependsOn(unitTests)
+        testClassesDirs = files(unitTests.map { it.testClassesDirs })
+        classpath = files(unitTests.map { it.classpath })
+        include '**/FirmwareIntegrationTest.class'
+        systemProperty 'fm1.fixtureDir', rootProject.file('build/firmware-fixtures').absolutePath
+        systemProperty 'fm1.fixtureManifest', rootProject.file('scripts/firmware-fixtures.json').absolutePath
+        inputs.file(rootProject.file('scripts/firmware-fixtures.json'))
+        inputs.dir(rootProject.file('build/firmware-fixtures'))
+        // A production build must obtain a fresh report, never a cached success.
+        outputs.upToDateWhen { false }
+        outputs.cacheIf { false }
+    }
+}

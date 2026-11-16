@@ -1,7 +1,6 @@
 package pl.ekim.fm1_flasher
 
 import org.junit.Assert.*
-import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -9,10 +8,10 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.zip.ZipInputStream
 
-class RecoveryTest {
+internal open class RecoveryTest {
     @get:Rule val temp = TemporaryFolder()
     private val silent: (AppText, Int) -> Unit = { _, _ -> }
-    private class Flash(val bytes: ByteArray = ByteArray(Recovery.FLASH_SIZE) { (it * 17).toByte() }) : RecoveryFlash {
+    protected class Flash(val bytes: ByteArray = ByteArray(Recovery.FLASH_SIZE) { (it * 17).toByte() }) : RecoveryFlash {
         override var flashId = 0x856014L
         override var chipKey = 0x980F
         val erased = mutableListOf<Int>()
@@ -37,11 +36,12 @@ class RecoveryTest {
         }
     }
     private fun store() = RecoveryStore(temp.newFolder())
-    private fun v15(): FirmwarePackage {
-        val path = System.getenv("FM1_RECOVERY_V15")
-        assumeTrue("Set FM1_RECOVERY_V15 to the official V15 package", path != null)
-        return FirmwarePackage.parse(File(path!!).readBytes(), Recovery.V15_PACKAGE, "FM-1_015")
-    }
+    private val syntheticFlash = ByteArray(Recovery.END) { (it * 31 + 7).toByte() }
+    protected open fun v15(): FirmwarePackage = FirmwarePackage.inspect(testPackage("FM-1_015", syntheticFlash))
+    protected open fun operations(image: FirmwarePackage) = RecoveryOperations(
+        image.sha256, FirmwarePackage.sha256(image.flashImage.copyOfRange(Recovery.START, Recovery.END)),
+        image.identity, setOf(FirmwarePackage.sha256(image.flashImage.copyOfRange(0, Recovery.START))))
+
     @Test fun refusesEveryProtectedAndUnalignedAddress() {
         for (address in listOf(Int.MIN_VALUE, -4096, 0, 0x3000, 0x4001, 0x93000, 0xFF000, Int.MAX_VALUE))
             assertThrows(IllegalArgumentException::class.java) { Recovery.checkSector(address) }
@@ -130,32 +130,57 @@ class RecoveryTest {
         assertArrayEquals(ByteArray(0x4000) { (it * 31).toByte() }, parsed.flashImage)
         assertThrows(IllegalArgumentException::class.java) { Recovery.region(parsed) }
     }
-    @Test fun realV15RecoveryRevalidatesBackupAndPreservesDeviceDataOnBothChips() {
+    @Test fun recoveryRevalidatesBackupAndPreservesDeviceDataOnBothChips() {
         val image = v15()
-        assertEquals(Recovery.V15_REGION, FirmwarePackage.sha256(Recovery.region(image)))
+        val operations = operations(image)
         for (id in listOf(0x856014L, 0xB36014L)) {
             val flash = Flash().apply { flashId = id }
             image.flashImage.copyInto(flash.bytes, 0, 0, Recovery.END)
             flash.bytes[Recovery.START + 18] = (flash.bytes[Recovery.START + 18].toInt() xor 1).toByte()
             val before = flash.bytes.copyOf(); val store = store()
             val backup = Recovery.backup(flash, store, silent)
-            val plan = Recovery.plan(backup, store, image, "/dev/usb/1", 1, "mvave-stock")
+            val plan = operations(image).plan(backup, store, image, "/dev/usb/1", 1, "mvave-stock")
             assertEquals(1, plan.changedSectors)
-            Recovery.restore(flash, store, plan, image, silent)
+            operations(image).restore(flash, store, plan, image, silent)
             assertEquals(listOf(Recovery.START), flash.erased)
-            assertArrayEquals(Recovery.region(image), flash.bytes.copyOfRange(Recovery.START, Recovery.END))
+            assertArrayEquals(operations.region(image), flash.bytes.copyOfRange(Recovery.START, Recovery.END))
             assertArrayEquals(before.copyOfRange(Recovery.END, before.size), flash.bytes.copyOfRange(Recovery.END, before.size))
         }
+    }
+    @Test fun productionRecoveryRejectsSyntheticFirmware() {
+        val raw = testPackage("FM-1_015", syntheticFlash)
+        assertThrows(IllegalArgumentException::class.java) { Recovery.region(FirmwarePackage.inspect(raw)) }
+    }
+    @Test fun wrongPackageOrChangedPlanStopsBeforeErasing() {
+        val image = v15(); val operations = operations(image)
+        val flash = Flash(); image.flashImage.copyInto(flash.bytes, 0, 0, Recovery.END)
+        flash.bytes[Recovery.START] = (flash.bytes[Recovery.START].toInt() xor 1).toByte()
+        val store = store(); val backup = Recovery.backup(flash, store, silent)
+        val plan = operations.plan(backup, store, image, "usb", 1, "stock")
+        assertThrows(IllegalStateException::class.java) {
+            operations.restore(flash, store, plan.copy(packageHash = "0".repeat(64)), image, silent)
+        }
+        assertThrows(IllegalStateException::class.java) {
+            operations.restore(flash, store, plan.copy(changedSectors = plan.changedSectors + 1), image, silent)
+        }
+        flash.flashId = 0xB36014L
+        assertThrows(IllegalStateException::class.java) { operations.restore(flash, store, plan, image, silent) }
+        assertTrue(flash.erased.isEmpty())
+    }
+    @Test fun modifiedFirmwareRegionIsRefused() {
+        val image = v15(); val operations = operations(image)
+        image.flashImage[Recovery.START] = (image.flashImage[Recovery.START].toInt() xor 1).toByte()
+        assertThrows(IllegalArgumentException::class.java) { operations.region(image) }
     }
     @Test fun changedDeviceAndUnknownBootBlockRecovery() {
         val image = v15(); val flash = Flash(); val store = store()
         val unknown = Recovery.backup(flash, store, silent)
-        assertThrows(IllegalStateException::class.java) { Recovery.plan(unknown, store, image, "usb", 1, "stock") }
+        assertThrows(IllegalStateException::class.java) { operations(image).plan(unknown, store, image, "usb", 1, "stock") }
         image.flashImage.copyInto(flash.bytes, 0, 0, Recovery.END)
         val backup = Recovery.backup(flash, store, silent)
-        val plan = Recovery.plan(backup, store, image, "usb", 1, "stock")
+        val plan = operations(image).plan(backup, store, image, "usb", 1, "stock")
         flash.bytes[0xFF123] = (flash.bytes[0xFF123].toInt() xor 1).toByte()
-        assertThrows(IllegalStateException::class.java) { Recovery.restore(flash, store, plan, image, silent) }
+        assertThrows(IllegalStateException::class.java) { operations(image).restore(flash, store, plan, image, silent) }
         assertTrue(flash.erased.isEmpty())
     }
 }

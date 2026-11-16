@@ -74,8 +74,10 @@ zapasowej.
 Przed uruchomieniem `.github/workflows/android-release.yml`:
 
 1. Porównaj fingerprint sekretu `FDROID_APP_CERT_SHA256` z wynikiem `keytool`.
-2. Sprawdź, czy zmienne repozytorium `FM1_FIXTURE_ARCHIVE_URL` i
-   `FM1_FIXTURE_ARCHIVE_SHA256` są skonfigurowane dla kontroli wydania.
+2. Sprawdź manifest `scripts/firmware-fixtures.json`. Produkcyjny build pobierze
+   przypięte SHA-256 paczki V15/V16 i uruchomi `:app:firmwareIntegrationTest`.
+   Brak paczek lub błąd testu blokuje wydanie. Debug i prerelease używają
+   wyłącznie syntetycznych fixture’ów; zmienne archiwum nie są potrzebne.
 3. Uruchom workflow z tagiem stabilnym, który odpowiada `versionName` w
    `app/build.gradle`. Tag musi zawierać skrypt weryfikacji APK i kod potrzebny
    do budowania wydania.

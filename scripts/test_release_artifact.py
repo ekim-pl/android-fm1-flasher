@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from release_artifact import fetch, fingerprint, verify
+from release_fixtures import fixtures
 from publish_android_release import publish
 
 
@@ -21,7 +22,8 @@ class ArtifactTest(unittest.TestCase):
                              tag=self.tag, commit=self.commit, run_id='123', run_attempt=1,
                              version_name='0.10.0', version_code=31,
                              certificate_sha256='A' * 64,
-                             file='fm1-flasher-v0.10.0-fdroid.apk')
+                             file='fm1-flasher-v0.10.0-fdroid.apk',
+                             integration=dict(commit=self.commit, fixtures={k: v['sha256'] for k, v in fixtures().items()}))
         apk = self.directory / self.manifest['file']
         apk.write_bytes(b'validated apk')
         self.manifest['sha256'] = hashlib.sha256(apk.read_bytes()).hexdigest()
@@ -52,6 +54,37 @@ class ArtifactTest(unittest.TestCase):
         (self.directory / self.manifest['file']).write_bytes(b'modified')
         with self.assertRaises(ValueError):
             self.check()
+
+    def test_production_requires_integration_from_same_commit_and_pinned_packages(self):
+        original = self.manifest['integration']
+        for value in ({}, dict(original, commit='b' * 40), dict(original, fixtures={'v15': '0' * 64})):
+            self.manifest['integration'] = value
+            self.save()
+            with self.assertRaises(ValueError):
+                self.check()
+        del self.manifest['integration']
+        self.save()
+        with self.assertRaises(ValueError):
+            self.check()
+
+    def test_debug_does_not_require_official_firmware_evidence(self):
+        old = self.directory / self.manifest['file']
+        self.manifest.update(variant='debug', file='fm1-flasher-v0.10.0-debug.apk')
+        old.rename(self.directory / self.manifest['file'])
+        del self.manifest['integration']
+        self.save()
+        self.assertEqual(verify(self.directory, 'debug', self.tag, self.commit, '123'), self.manifest)
+
+    def test_play_requires_the_same_integration_gate_as_fdroid(self):
+        old = self.directory / self.manifest['file']
+        self.manifest.update(variant='play', file='fm1-flasher-v0.10.0-play.aab')
+        old.rename(self.directory / self.manifest['file'])
+        self.save()
+        self.assertEqual(verify(self.directory, 'play', self.tag, self.commit, '123'), self.manifest)
+        del self.manifest['integration']
+        self.save()
+        with self.assertRaises(ValueError):
+            verify(self.directory, 'play', self.tag, self.commit, '123')
 
     def test_missing_binary_is_rejected(self):
         (self.directory / self.manifest['file']).unlink()

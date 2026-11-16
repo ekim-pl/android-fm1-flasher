@@ -64,11 +64,6 @@ jobs:
         with:
           packages: 'platforms;android-36 build-tools;35.0.0'
           log-accepted-android-sdk-licenses: false
-      - name: Prepare release fixtures
-        env:
-          FM1_FIXTURE_ARCHIVE_URL: ${{ vars.FM1_FIXTURE_ARCHIVE_URL }}
-          FM1_FIXTURE_ARCHIVE_SHA256: ${{ vars.FM1_FIXTURE_ARCHIVE_SHA256 }}
-        run: python3 .release-tools/scripts/release_fixtures.py prepare
       - name: Check resources and shared tests
         run: |
           python3 tools/sync-resources.py --check

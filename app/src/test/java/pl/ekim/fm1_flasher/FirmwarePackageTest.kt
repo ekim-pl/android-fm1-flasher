@@ -1,9 +1,7 @@
 package pl.ekim.fm1_flasher
 
 import org.junit.Assert.*
-import org.junit.Assume.assumeTrue
 import org.junit.Test
-import java.io.File
 
 class FirmwarePackageTest {
     @Test fun standardCrcVector() = assertEquals(0x31C3, FirmwarePackage.crc16("123456789".toByteArray()))
@@ -27,15 +25,13 @@ class FirmwarePackageTest {
         assertThrows(IllegalArgumentException::class.java) { FirmwarePackage.parse(raw, FirmwarePackage.sha256(raw), "FM-1_900") }
     }
 
-    @Test fun validatesRealOfficialPackagesWhenProvided() {
-        val paths = System.getenv("FM1_TEST_PACKAGES")?.split(File.pathSeparator).orEmpty()
-        assumeTrue("Set FM1_TEST_PACKAGES to external .fwsc files", paths.isNotEmpty())
-        paths.forEach { path ->
-            val raw = File(path).readBytes()
-            val product = buildString {
-                repeat(20) { i -> val m = raw[i * 48 + 47].toInt() and 255; if (m != 125) append(((m - i - 1) and 255).toChar()) }
-            }
-            assertEquals(raw.size - 20, FirmwarePackage.parse(raw, FirmwarePackage.sha256(raw), product).logical.size)
+    @Test fun validatesDifferentSyntheticPackages() {
+        for (product in listOf("FM-1_015", "FM-1_016")) {
+            val raw = testPackage(product, ByteArray(0x94000) { (it * 13).toByte() })
+            val parsed = FirmwarePackage.parse(raw, FirmwarePackage.sha256(raw), product)
+            assertEquals(product.substringAfter('_'), parsed.identity.version)
+            assertEquals(raw.size - 20, parsed.logical.size)
+            assertEquals(0x94000, parsed.flashImage.size)
         }
     }
 }

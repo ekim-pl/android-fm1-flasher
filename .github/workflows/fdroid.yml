@@ -29,16 +29,11 @@ jobs:
         with:
           packages: 'platforms;android-36 build-tools;35.0.0'
           log-accepted-android-sdk-licenses: false
-      - name: Prepare pinned release fixtures
-        env:
-          FM1_FIXTURE_ARCHIVE_URL: ${{ vars.FM1_FIXTURE_ARCHIVE_URL }}
-          FM1_FIXTURE_ARCHIVE_SHA256: ${{ vars.FM1_FIXTURE_ARCHIVE_SHA256 }}
-        run: python3 scripts/release_fixtures.py prepare
       - name: Check, test and build without Firebase
         run: |
           python3 tools/sync-resources.py --check
           ./gradlew --no-daemon -Pfm1Analytics=false :shared:jvmTest :app:testDebugUnitTest :app:lintRelease :app:assembleRelease
-      - name: Require all release fixture tests
+      - name: Require synthetic tests
         run: python3 scripts/release_fixtures.py verify
       - name: Verify no Firebase or Google Play services dependencies
         run: |

@@ -8,6 +8,8 @@ from pathlib import Path
 import re
 import subprocess
 
+from release_fixtures import evidence, fixtures
+
 PACKAGE = 'pl.ekim.fm1_flasher'
 PRODUCERS = {
     'debug': ('android-debug.yml', 'Build debug APK'),
@@ -75,6 +77,8 @@ def create(variant, path, directory):
                     run_id=os.environ['GITHUB_RUN_ID'], run_attempt=int(os.environ['GITHUB_RUN_ATTEMPT']),
                     file=filename, sha256=digest(target),
                     certificate_sha256=cert)
+    if variant in ('fdroid', 'play') and tag:
+        manifest['integration'] = evidence()
     (directory / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     (directory / 'SHA256SUMS').write_text(f'{manifest["sha256"]}  {filename}\n')
     print(f'Validated {filename} at {manifest["commit"]}')
@@ -93,6 +97,11 @@ def verify(directory, variant, tag, commit, run_id):
         raise ValueError('Invalid source run attempt')
     if not re.fullmatch(r'[0-9A-F]{64}', manifest.get('certificate_sha256', '')):
         raise ValueError('Invalid certificate fingerprint')
+    if variant in ('fdroid', 'play'):
+        integration = manifest.get('integration', {})
+        expected_fixtures = {name: item['sha256'] for name, item in fixtures().items()}
+        if integration.get('commit') != commit or integration.get('fixtures') != expected_fixtures:
+            raise ValueError('Missing or mismatched production integration evidence')
     extension = 'aab' if variant == 'play' else 'apk'
     filename = f'fm1-flasher-{tag}-{variant}.{extension}'
     if manifest.get('file') != filename:

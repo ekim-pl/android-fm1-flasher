@@ -3,6 +3,14 @@ name: Google Play production
 on:
   workflow_dispatch:
     inputs:
+      tag:
+        description: Stable tag of the tested production bundle
+        type: string
+        required: true
+      run_id:
+        description: Successful production AAB build run ID
+        type: string
+        required: true
       version_code:
         description: Tested versionCode currently on the internal track
         type: string
@@ -10,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: google-play-store-publish
@@ -21,12 +30,34 @@ jobs:
     timeout-minutes: 15
     environment: google-play-production
     env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ inputs.tag }}
+      SOURCE_RUN: ${{ inputs.run_id }}
+      VERSION_CODE: ${{ inputs.version_code }}
       FASTLANE_SKIP_UPDATE_CHECK: 'true'
       FASTLANE_OPT_OUT_USAGE: 'true'
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - name: Resolve tagged source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          path: .source
+          persist-credentials: false
+      - name: Verify production bundle and integration provenance
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          SOURCE_COMMIT=$(git -C .source rev-parse HEAD)
+          python3 scripts/release_artifact.py fetch play "$SOURCE_RUN" "$RELEASE_TAG" "$SOURCE_COMMIT" play
+          python3 - <<'PYVERSION'
+          import json, os
+          manifest = json.load(open('play/manifest.json'))
+          if str(manifest['version_code']) != os.environ['VERSION_CODE']:
+              raise SystemExit('version_code does not match the integration-tested bundle')
+          PYVERSION
       - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1
         with:
           ruby-version: '3.3'

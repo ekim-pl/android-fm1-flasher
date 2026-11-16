@@ -46,14 +46,8 @@ object Recovery {
             failed(msg(R.string.recovery_unknown_device))
         }
     }
-    fun region(image: FirmwarePackage): ByteArray {
-        require(image.sha256 == V15_PACKAGE && image.identity == FirmwareIdentity("FM-1", "015") && image.flashImage.size >= END) {
-            invalid(msg(R.string.recovery_v15_only))
-        }
-        val bytes = image.flashImage.copyOfRange(START, END)
-        require(FirmwarePackage.sha256(bytes) == V15_REGION) { invalid(msg(R.string.recovery_v15_only)) }
-        return bytes
-    }
+    internal val operations = RecoveryOperations(V15_PACKAGE, V15_REGION, FirmwareIdentity("FM-1", "015"), knownBoots)
+    fun region(image: FirmwarePackage) = operations.region(image)
     fun readAll(flash: RecoveryFlash, progress: (Int) -> Unit): ByteArray {
         val bytes = ByteArray(FLASH_SIZE)
         for (address in 0 until FLASH_SIZE step SECTOR_SIZE) {
@@ -78,33 +72,12 @@ object Recovery {
         }
     }
     fun plan(backup: RecoveryBackup, store: RecoveryStore, image: FirmwarePackage,
-             deviceName: String, deviceId: Int, packageId: String): RecoveryPlan {
-        check(knownBoot(backup.bootHash)) { failed(msg(R.string.recovery_unknown_boot)) }
-        val before = store.load(backup)
-        return RecoveryPlan(UUID.randomUUID().toString(), backup, deviceName, deviceId, packageId, image.sha256,
-            changedSectors(before, region(image)).size)
-    }
+             deviceName: String, deviceId: Int, packageId: String) =
+        operations.plan(backup, store, image, deviceName, deviceId, packageId)
+
     fun restore(flash: RecoveryFlash, store: RecoveryStore, plan: RecoveryPlan, image: FirmwarePackage,
-                report: (AppText, Int) -> Unit) {
-        checkDevice(flash)
-        check(flash.flashId == plan.backup.flashId && flash.chipKey == plan.backup.chipKey &&
-            image.sha256 == plan.packageHash && knownBoot(plan.backup.bootHash)) { failed(msg(R.string.recovery_changed)) }
-        val before = store.load(plan.backup)
-        val firmware = region(image)
-        val current = readAll(flash) { report(msg(R.string.recovery_recheck), it) }
-        check(current.contentEquals(before)) { failed(msg(R.string.recovery_changed)) }
-        // The plan and complete backup are revalidated before the first destructive command.
-        val sectors = changedSectors(before, firmware)
-        check(sectors.size == plan.changedSectors) { failed(msg(R.string.recovery_changed)) }
-        store.result(plan.backup, "writing", plan.packageHash)
-        try {
-            writeAndVerify(flash, before, firmware, sectors, report)
-            store.result(plan.backup, "verified; boot not checked", plan.packageHash)
-        } catch (failure: Exception) {
-            runCatching { store.result(plan.backup, "failed; write may be incomplete", plan.packageHash) }
-            throw failure
-        }
-    }
+                report: (AppText, Int) -> Unit) = operations.restore(flash, store, plan, image, report)
+
     internal fun writeAndVerify(flash: RecoveryFlash, before: ByteArray, firmware: ByteArray,
                                 sectors: List<Int>, report: (AppText, Int) -> Unit) {
         require(before.size == FLASH_SIZE && firmware.size == END - START)
@@ -120,6 +93,52 @@ object Recovery {
         val final = readAll(flash) { report(msg(R.string.recovery_verifying), it) }
         check(final.contentEquals(expected)) { failed(msg(R.string.recovery_verify_failed)) }
     }
+}
+
+/** Internal engine shared by the pinned production policy and deterministic JVM tests. */
+internal class RecoveryOperations(
+    private val packageHash: String,
+    private val regionHash: String,
+    private val identity: FirmwareIdentity,
+    private val knownBoots: Set<String>,
+) {
+    fun region(image: FirmwarePackage): ByteArray {
+        require(image.sha256 == packageHash && image.identity == identity && image.flashImage.size >= Recovery.END) {
+            invalid(msg(R.string.recovery_v15_only))
+        }
+        val bytes = image.flashImage.copyOfRange(Recovery.START, Recovery.END)
+        require(FirmwarePackage.sha256(bytes) == regionHash) { invalid(msg(R.string.recovery_v15_only)) }
+        return bytes
+    }
+    fun plan(backup: RecoveryBackup, store: RecoveryStore, image: FirmwarePackage,
+             deviceName: String, deviceId: Int, packageId: String): RecoveryPlan {
+        check(knownBoots.contains(backup.bootHash)) { failed(msg(R.string.recovery_unknown_boot)) }
+        val before = store.load(backup)
+        return RecoveryPlan(UUID.randomUUID().toString(), backup, deviceName, deviceId, packageId, image.sha256,
+            Recovery.changedSectors(before, region(image)).size)
+    }
+    fun restore(flash: RecoveryFlash, store: RecoveryStore, plan: RecoveryPlan, image: FirmwarePackage,
+                report: (AppText, Int) -> Unit) {
+        Recovery.checkDevice(flash)
+        check(flash.flashId == plan.backup.flashId && flash.chipKey == plan.backup.chipKey &&
+            image.sha256 == plan.packageHash && knownBoots.contains(plan.backup.bootHash)) { failed(msg(R.string.recovery_changed)) }
+        val before = store.load(plan.backup)
+        val firmware = region(image)
+        val current = Recovery.readAll(flash) { report(msg(R.string.recovery_recheck), it) }
+        check(current.contentEquals(before)) { failed(msg(R.string.recovery_changed)) }
+        // The plan and complete backup are revalidated before the first destructive command.
+        val sectors = Recovery.changedSectors(before, firmware)
+        check(sectors.size == plan.changedSectors) { failed(msg(R.string.recovery_changed)) }
+        store.result(plan.backup, "writing", plan.packageHash)
+        try {
+            Recovery.writeAndVerify(flash, before, firmware, sectors, report)
+            store.result(plan.backup, "verified; boot not checked", plan.packageHash)
+        } catch (failure: Exception) {
+            runCatching { store.result(plan.backup, "failed; write may be incomplete", plan.packageHash) }
+            throw failure
+        }
+    }
+
 }
 
 /** Backups survive process death; verified bytes and metadata are synced before a plan can be used. */
