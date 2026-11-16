@@ -62,7 +62,11 @@ backendu, jeżeli dotyczą zmian w wywołaniach.
 - Zadania 1 i 3 dotykają tego samego pliku, więc po ich zakończeniu nadrzędny
   agent składa zmiany, rozwiązuje ewentualny konflikt i sprawdza obie poprawki
   łącznie. Osobne pliki testów ograniczają konflikty przy integracji.
-- Po złożeniu: shared JVM, Android JVM bez Firebase, testy przenośnego backendu,
-  lint/build debug, kontrola zasobów i skryptów. Zabezpieczenia recovery i rozdział
-  syntetycznych fixture’ów od integracji V15/V16 pozostają wymaganiami regresji.
+- Po zakończeniu wszystkich trzech agentów najpierw scalić komplet poprawek
+  i rozwiązać konflikty. Dopiero wtedy wykonać code review scalonego zestawu.
+- Testy nadrzędnego agenta uruchomić dopiero po code review: shared JVM, Android
+  JVM bez Firebase, testy przenośnego backendu, lint/build debug, kontrola zasobów
+  i skryptów. Własne testy każdego agenta w jego worktree pozostają częścią
+  indywidualnych zadań. Zabezpieczenia recovery i rozdział syntetycznych fixture’ów
+  od integracji V15/V16 pozostają wymaganiami regresji.
 - Integracja w lokalnej gałęzi naprawczej; push, sklepy i tagi poza tym zadaniem.
