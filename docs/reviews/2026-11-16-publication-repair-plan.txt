@@ -50,3 +50,14 @@ jedynie istniejących. Uzupełnić kluczowe braki ujawnione przez review; nie
 podawać procentu pokrycia bez pomiaru. Raport: ustalenia, poprawki, wyniki,
 pozostałe luki i wymagania sprzętowe. Jeśli możliwy jest pomiar coverage,
 opisać zakres i ograniczenia zamiast utożsamiać go z jakością testów.
+
+DOPRECYZOWANIE UŻYTKOWNIKA
+Historia zakończonych zadań: domyślnie 30 dni, ustawienie retencji i ręczne
+czyszczenie z potwierdzeniem. Aktywne zadania i znacznik nierozstrzygniętej
+sesji nie podlegają czyszczeniu historii.
+Logi diagnostyczne: rotacja według lokalnego dnia, domyślnie 7 dni,
+maksymalnie 10 MiB łącznie; ustawienie retencji oraz ręczne czyszczenie.
+Surowy logger MIDI pozostaje osobnym ograniczonym buforem. Kopie firmware
+nie podlegają automatycznemu czyszczeniu. Implementacja logów i UI: nadrzędny.
+Testy: granica dnia, restart, retencja, limit bajtów, zmiana daty/strefy,
+czyszczenie i eksport wielu dni, migracja starego logu, błąd storage.
