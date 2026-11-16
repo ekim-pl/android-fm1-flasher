@@ -47,10 +47,22 @@ class HistoryServiceTest : InstrumentationTestCase() {
             assertEquals(2, fleet.jobs.size)
             previousFleet = fleetField.get(active)
             instrumentation.runOnMainSync { fleetField.set(active, fleet) }
+            fun performWhenIdle(action: AppAction) {
+                var submitted = false
+                waitUntil {
+                    instrumentation.runOnMainSync {
+                        if (!submitted && !active.state.busy) {
+                            activity.perform(action)
+                            submitted = true
+                        }
+                    }
+                    submitted
+                }
+            }
             for (days in listOf("7", "30", "90", "unlimited")) {
-                instrumentation.runOnMainSync { activity.perform(AppAction(AppActionKind.HISTORY_RETENTION, days)) }
+                performWhenIdle(AppAction(AppActionKind.HISTORY_RETENTION, days))
                 val expected = if (days == "unlimited") null else days.toLong() * 86_400_000
-                waitUntil { !active.state.busy && active.historyRetentionMillis == expected }
+                waitUntil { !active.state.busy && active.historyRetentionMillis == expected && activity.state.value.historyRetentionMillis == expected }
                 assertEquals(expected, FleetStore(file).historyRetentionMillis)
                 assertEquals(expected, activity.state.value.historyRetentionMillis)
             }
@@ -66,7 +78,7 @@ class HistoryServiceTest : InstrumentationTestCase() {
             }
             assertTrue(before.contentEquals(file.readBytes()))
             assertNull(active.historyRetentionMillis)
-            instrumentation.runOnMainSync { activity.perform(AppAction(AppActionKind.HISTORY_CLEAR)) }
+            performWhenIdle(AppAction(AppActionKind.HISTORY_CLEAR))
             waitUntil { !active.state.busy }
             assertEquals(1, FleetStore(file).jobs.size)
             assertTrue(FleetStore(file).jobs.all { it.outcome in listOf(JobOutcome.QUEUED, JobOutcome.RUNNING) })
