@@ -99,28 +99,25 @@ class SettingsUiTest : InstrumentationTestCase() {
                 onMain { assertTrue(nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == t("fleet_devices") } == true }) }
                 click(t("settings")); click(t("tab_about"))
                 var openedLicense = false
-                for (attempt in 0 until 15) {
+                for (attempt in 0 until 50) {
                     instrumentation.waitForIdleSync(); Thread.sleep(60)
-                    var location: androidx.compose.ui.geometry.Offset? = null
                     onMain {
-                        val link = nodes().firstOrNull {
-                            it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == "MIT" } == true
+                        val all = roots.filter { it.view.isAttachedToWindow }
+                            .flatMap { it.semanticsOwner.getAllSemanticsNodes(mergingEnabled = false) }
+                        openedLicense = all.any { it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == "MIT license body" } == true }
+                        if (!openedLicense) {
+                            val link = all.firstOrNull { it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == "MIT" } == true }
+                            fun activate(node: androidx.compose.ui.semantics.SemanticsNode): Boolean =
+                                node.config.getOrNull(SemanticsActions.OnClick)?.action?.invoke() == true || node.children.any(::activate)
+                            if (link == null || !activate(link)) {
+                                nodes().firstOrNull { it.config.getOrNull(SemanticsActions.ScrollBy) != null }
+                                    ?.config?.getOrNull(SemanticsActions.ScrollBy)?.action?.invoke(0f, 450f)
+                            }
                         }
-                        if (link != null && link.boundsInWindow.height > 0f) location = link.boundsInWindow.center
-                        else nodes().firstOrNull { it.config.getOrNull(SemanticsActions.ScrollBy) != null }
-                            ?.config?.getOrNull(SemanticsActions.ScrollBy)?.action?.invoke(0f, 450f)
-                    }
-                    location?.let { point ->
-                        val now = android.os.SystemClock.uptimeMillis()
-                        for (action in listOf(android.view.MotionEvent.ACTION_DOWN, android.view.MotionEvent.ACTION_UP)) {
-                            val event = android.view.MotionEvent.obtain(now, now + action * 50L, action, point.x, point.y, 0)
-                            instrumentation.sendPointerSync(event); event.recycle()
-                        }
-                        openedLicense = true
                     }
                     if (openedLicense) break
                 }
-                assertTrue("Missing About license link", openedLicense)
+                assertTrue("About license link must open the license document", openedLicense)
                 assertPage()
                 onMain {
                     val texts = nodes().flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty() }.map { it.text }
