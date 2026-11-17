@@ -49,4 +49,7 @@ FM-1 Flasher **0.10.1** 包含本地固件库、来源颜色、全屏设置和�
 
 ## F-Droid
 
-计划提供专用构建和 F-Droid 软件仓库。
+[![Get it on F-Droid](https://img.shields.io/badge/Get%20it%20on-F--Droid-1976D2?style=for-the-badge&logo=fdroid&logoColor=white)](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/)
+![Google Play — coming soon](https://img.shields.io/badge/Google%20Play-Coming%20soon-777777?style=for-the-badge&logo=googleplay&logoColor=cccccc)
+
+将[项目仓库](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/)添加到 F-Droid 客户端，即可安装和更新应用。APK 也可从 [GitHub 发行版](https://github.com/ekim-pl/android-fm1-flasher/releases)获取。此仓库独立于官方 F-Droid 目录；切换发行渠道需要兼容的签名证书。

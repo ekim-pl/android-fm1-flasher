@@ -13,5 +13,5 @@ promote-production.yml: promuje tę samą przetestowaną wersję na produkcję.
 Publikacja, wysyłka i promocja wymagają CI API34/36 dla dokładnego commitu tagu,
 zgodnych manifestów i podpisów oraz testów integracyjnych V15/V16. Tag jest niezmienny.
 Sekrety są przypisane do środowisk; nie trafiają do artefaktów. Podpisany APK nie
-stanowi publikacji w oficjalnym F-Droid; hosting podpisanego indeksu nie jest gotowy.
+stanowi publikacji w oficjalnym F-Droid; podpisany indeks może być publikowany na Pages (publication/fdroid/repository.md).
 Wszystkie parametry i zasady ponawiania: ../../publication/github-actions.txt.

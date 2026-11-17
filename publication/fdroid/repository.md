@@ -6,6 +6,8 @@ APK and index with the website. It selects the highest published stable version
 whose tag is reachable from the default branch; drafts and prereleases are ignored.
 The repo contains one release at a time.
 
+The project repository URL is https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/. Add it to an F-Droid client to receive the selected release. This is a project-hosted repository, separate from the official F-Droid catalog. GitHub release APKs are also available directly from the releases page. Switching between distributions requires compatible APK signing certificates.
+
 ## One-time setup
 
 1. Create a separate index signing key on a trusted computer, outside the project:

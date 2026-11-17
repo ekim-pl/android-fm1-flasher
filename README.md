@@ -2,6 +2,9 @@
 
 ![FM-1 Flasher — Your FM-1 setup. More possibilities.](https://raw.githubusercontent.com/ekim-pl/android-fm1-flasher/main/assets/readme-cover.png)
 
+[![Get it on F-Droid](https://img.shields.io/badge/Get%20it%20on-F--Droid-1976D2?style=for-the-badge&logo=fdroid&logoColor=white)](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/)
+![Google Play — coming soon](https://img.shields.io/badge/Google%20Play-Coming%20soon-777777?style=for-the-badge&logo=googleplay&logoColor=cccccc)
+
 [![Android CI](https://github.com/ekim-pl/android-fm1-flasher/actions/workflows/android-ci.yml/badge.svg?branch=main)](https://github.com/ekim-pl/android-fm1-flasher/actions/workflows/android-ci.yml)
 ![Android 14+](https://img.shields.io/badge/Android-14%2B-3DDC84?logo=android&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
@@ -10,7 +13,7 @@ Browse, save and install firmware for your **M-VAVE FM-1** from an Android phone
 
 **Version 0.10.1** — experimental flash inspection, bootloader management and backup restoration. [Available APKs](https://github.com/ekim-pl/android-fm1-flasher/releases) · [Build and verification](publication/qa/0.10.1.txt).
 
-Version 0.10.1 enables experimental bootloader installation, ROM firmware installation and same-device backup restoration, with a reviewed plan and exported backup required before writing. These operations were preview-only in **0.10.0-experimental.40**. [Build 40 preview notes](publication/github-release-0.10.0-experimental.40.txt).
+Version 0.10.1 enables experimental bootloader installation, ROM firmware installation and same-device backup restoration, with a reviewed plan and exported backup required before writing.
 
 ## Project manifesto
 
@@ -65,7 +68,7 @@ Questions, feedback or beta testing: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.co
 ## Distribution builds
 
 - **Developer/debug:** `android-debug.yml` builds a signed APK with test Firebase and the persistent developer key.
-- **F-Droid:** `fdroid-release.yml` builds the signed APK without Firebase or Google Play services; `fdroid.yml` separately validates an unsigned APK. Providing the signed APK does not mean inclusion in the official F-Droid catalog.
+- **F-Droid:** Add the [project repository](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/) to an F-Droid client for releases. `fdroid-release.yml` builds the signed APK without Firebase or Google Play services; `fdroid.yml` separately validates an unsigned APK. Providing the signed APK does not mean inclusion in the official F-Droid catalog.
 - **Google Play:** `google-play.yml` builds a signed AAB with production Firebase. `google-play-upload.yml` uploads the verified bundle to internal testing; `promote-production.yml` promotes that same version.
 
 `android-release.yml` builds all three distributions from one immutable stable tag and publishes the debug/F-Droid APKs, manifests and checksums on GitHub. The Play bundle is retained as an Actions artifact; upload and promotion remain separate steps. All distributions use the same application ID, so switching requires compatible signing certificates. [Build and publication instructions](publication/github-actions.txt).

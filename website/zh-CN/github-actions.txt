@@ -12,5 +12,5 @@ promote-production.yml：将同一已测试版本提升到生产轨道。
 
 发布、上传和提升要求标签的确切提交通过 API34/36 CI、清单与签名一致，并通过
 V15/V16 集成测试。标签不可移动。密钥按环境配置，不写入构建产物。
-已签名 APK 不表示官方 F-Droid 收录；签名索引托管尚未实现。
+已签名 APK 不表示官方 F-Droid 收录；签名索引可通过 Pages 发布（publication/fdroid/repository.md）。
 完整参数和重试规则：../../publication/github-actions.txt。

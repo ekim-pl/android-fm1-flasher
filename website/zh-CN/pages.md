@@ -54,4 +54,4 @@ CI 从 `GITHUB_SERVER_URL`、`GITHUB_REPOSITORY` 和 `GITHUB_REF_NAME` 读取源
 
 ## 与 F-Droid 仓库共同部署
 
-每个 GitHub 仓库在 Pages 上只有一个活动网站部署。如果加入 F-Droid 发布，应在上传 Pages 构建产物前，将 `fdroid/repo/` 加入 `build/site/`。网站和 APK 仓库必须一同部署：仅部署 APK 的工作流会替换网站，仅部署网站又会删除 APK 仓库。目前工作流只发布网站和文档。
+每个 GitHub 仓库在 Pages 上只有一个活动网站部署。配置后，Pages 工作流会在上传构建产物前，在 `build/site/` 中生成 `fdroid/repo/`。网站和 APK 仓库必须一同部署：仅部署 APK 的工作流会替换网站，仅部署网站又会删除 APK 仓库。配置详情见 `publication/fdroid/repository.md`。

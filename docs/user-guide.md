@@ -16,6 +16,10 @@ The Android application ID is `pl.ekim.fm1_flasher`. English, Polish and Simplif
 
 ## Getting started
 
+[![F-Droid repository](https://img.shields.io/badge/F--Droid-Repository-1976D2?logo=fdroid)](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/)
+
+Add the [project repository](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/) to an F-Droid client to install and update the app, or download an APK from [GitHub releases](https://github.com/ekim-pl/android-fm1-flasher/releases). The project repository is separate from the official F-Droid catalog. Switching distributions requires compatible signing certificates.
+
 1. Install the 0.10.1 APK on Android 14 or newer. Updating requires the same signing certificate; a Google Play build may use a different certificate from local test builds.
 2. Open **Library**, find firmware and download it from its detail screen. Downloading verifies the package; it does not start an installation.
 3. Connect instruments with data-capable cables and an OTG hub. A separately powered hub is recommended. The app cannot measure or certify hub power quality.
@@ -199,7 +203,7 @@ Completed task history is kept for 30 days by default; Settings lets you change 
 
 ## Experimental flash inspection and writing
 
-Build 40 adds **Devices → Experimental tools → Flash inspection and recovery**.
+Open **Devices → Experimental tools → Flash inspection and recovery**.
 Enable Experimental features in Settings first. Connect exactly one FM-1 in ROM
 download mode for ROM tools. **Read and back up ROM flash** reads the entire
 1 MiB twice, saves a verified backup, and displays the actual flash layout.
@@ -230,7 +234,7 @@ backup currently inspected. The bootloader artifact is hash-pinned to its releas
 Stock boot restoration includes the full configuration, not only the executable.
 
 Version 0.10.1 enables these writes on Puya `0x856014` and UCUN
-`0xB36014` with the FM-1 chip key and validated layout. Build 40 APKs remain preview-only.
+`0xB36014` with the FM-1 chip key and validated layout.
 After preparing, choose **Export the pre-write backup** and finish saving the ZIP.
 Cancellation or export failure leaves writing disabled. Review the operation and
 changed sectors, then choose **Write reviewed plan** and confirm. Preparing alone

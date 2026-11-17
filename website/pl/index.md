@@ -49,4 +49,7 @@ Już wkrótce w Google Play! Poszukuję beta testerów — [napisz do mnie](mail
 
 ## F-Droid
 
-Planowane są dedykowany build oraz repozytorium F-Droid.
+[![Get it on F-Droid](https://img.shields.io/badge/Get%20it%20on-F--Droid-1976D2?style=for-the-badge&logo=fdroid&logoColor=white)](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/)
+![Google Play — coming soon](https://img.shields.io/badge/Google%20Play-Coming%20soon-777777?style=for-the-badge&logo=googleplay&logoColor=cccccc)
+
+Dodaj [repozytorium projektu](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/) do klienta F-Droid, aby instalować i aktualizować aplikację. Pliki APK są też dostępne w [wydaniach GitHub](https://github.com/ekim-pl/android-fm1-flasher/releases). Repozytorium jest niezależne od oficjalnego katalogu F-Droid; zmiana kanału wymaga zgodnych certyfikatów podpisu.

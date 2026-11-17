@@ -49,4 +49,7 @@ Coming soon to Google Play! I'm looking for beta testers — [get in touch](mail
 
 ## F-Droid
 
-A dedicated build and an F-Droid repository are planned.
+[![Get it on F-Droid](https://img.shields.io/badge/Get%20it%20on-F--Droid-1976D2?style=for-the-badge&logo=fdroid&logoColor=white)](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/)
+![Google Play — coming soon](https://img.shields.io/badge/Google%20Play-Coming%20soon-777777?style=for-the-badge&logo=googleplay&logoColor=cccccc)
+
+Add the [project repository](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/) to an F-Droid client to install and update FM-1 Flasher. APKs are also available in [GitHub releases](https://github.com/ekim-pl/android-fm1-flasher/releases). This repository is separate from the official F-Droid catalog; switching distributions requires compatible signing certificates.
