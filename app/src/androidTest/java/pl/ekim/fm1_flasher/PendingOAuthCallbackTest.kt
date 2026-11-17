@@ -237,10 +237,12 @@ class PendingOAuthCallbackTest : InstrumentationTestCase() {
         val manager = OAuthManager(store, { _, _, _ -> calls.incrementAndGet(); response() })
         database.putSource(source)
         store.write(source.id, HttpCredentials(HttpAuthMethod.OAUTH2, oauth = config))
+        val originalOffline = database.settings().offline
+        // Persist offline mode so background library refreshes cannot overwrite the test state.
+        database.saveSettings(database.settings().copy(offline = true))
         val monitor = instrumentation.addMonitor(ComposeActivity::class.java.name, null, false)
-        var activity = instrumentation.startActivitySync(Intent(context, ComposeActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as ComposeActivity
+        val activity = instrumentation.startActivitySync(Intent(context, ComposeActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as ComposeActivity
         val serviceField = ComposeActivity::class.java.getDeclaredField("service").apply { isAccessible = true }
-        val stateField = FlasherService::class.java.getDeclaredField("state").apply { isAccessible = true }
         val oauthField = FlasherService::class.java.getDeclaredField("oauth").apply { isAccessible = true }
         // Retain Service as a real running library task would while Activity unbinds on rotation.
         val connection = object : android.content.ServiceConnection {
@@ -256,20 +258,20 @@ class PendingOAuthCallbackTest : InstrumentationTestCase() {
             assertTrue("Timed out waiting for lifecycle/service", check())
         }
         try {
-            waitUntil { (serviceField.get(activity) as? FlasherService)?.state?.busy == false }
+            waitUntil { (serviceField.get(activity) as? FlasherService)?.state?.let { !it.busy && it.offline } == true }
             service = serviceField.get(activity) as FlasherService
             original = oauthField.get(service)
             oauthField.set(service, manager)
             val uri = callback(manager.begin(source))
             instrumentation.runOnMainSync {
-                stateField.set(service, service.state.copy(busy = false, offline = true))
                 instrumentation.callActivityOnNewIntent(activity, Intent(Intent.ACTION_VIEW, uri))
             }
             waitUntil { !service.state.busy && store.readOpaque("_oauth_callback") == null }
             assertNull(store.readOpaque("_oauth_pending"))
             assertEquals(0, calls.get())
+            instrumentation.runOnMainSync { service.setOffline(false) }
+            waitUntil { !service.state.busy && !service.state.offline }
             instrumentation.runOnMainSync {
-                stateField.set(service, service.state.copy(offline = false))
                 repeat(3) {
                     ComposeActivity::class.java.getDeclaredMethod("dispatchOAuthCallback").apply { isAccessible = true }.invoke(activity)
                     instrumentation.callActivityOnNewIntent(activity, Intent(Intent.ACTION_VIEW, uri))
@@ -284,14 +286,12 @@ class PendingOAuthCallbackTest : InstrumentationTestCase() {
             assertFalse(service.state.logs.toString().contains("private-token"))
         } finally {
             instrumentation.runOnMainSync {
-                if (service != null) {
-                    stateField.set(service, service.state.copy(busy = false))
-                    if (original != null) oauthField.set(service, original)
-                }
+                if (service != null && original != null) oauthField.set(service, original)
                 activity.finish()
             }
             context.unbindService(connection)
             instrumentation.removeMonitor(monitor)
+            database.saveSettings(database.settings().copy(offline = originalOffline))
             store.remove(source.id); store.remove("_oauth_pending"); store.remove("_oauth_callback")
             database.writableDatabase.delete("sources", "id=?", arrayOf(source.id))
         }
