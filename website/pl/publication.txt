@@ -1,8 +1,16 @@
-FM-1 Flasher 0.10.0 / 31 — pierwszy etap przygotowań do Google Play.
+FM-1 Flasher 0.10.1 / 41 — materiały wydania
 
-Zaktualizowano dokumentację, O aplikacji, prywatność i licencje.
-Dwa testowe APK używają lokalnego podpisu debug: Google Play z testowym Firebase oraz F-Droid bez Firebase.
-Nie jest to publikacja w sklepie. Weryfikacja: ../../publication/qa/0.10.0.txt.
-Przed publikacją potrzebne są podpisany AAB, konfiguracja sklepu, ostateczne
-deklaracje danych i odbiór na fizycznym FM-1/hubie.
-Instrukcje budowania: ../../publication/README.txt.
+Diagnostyka i mapa pamięci, pełne kopie i import, m-bootloader 2.4, przywracanie
+fabrycznego bootloadera V15, instalacja firmware przez ROM oraz kopie tego samego
+urządzenia z bootloaderem lub bez niego. Zapis wymaga przygotowanego planu,
+eksportu kopii i potwierdzenia. Dane fabryczne pozostają chronione.
+
+Kanały: podpisany APK debug z testowym Firebase, podpisany APK F-Droid bez analityki
+oraz AAB Google Play z produkcyjnym Firebase. APK F-Droid na GitHub nie oznacza
+przyjęcia do oficjalnego katalogu F-Droid. Wysyłka AAB i promocja do produkcji są
+osobnymi operacjami. Nie ma wydania iOS. Statystyki można wyłączyć w Ustawieniach.
+
+Weryfikacja źródła: ../../publication/qa/0.10.1.txt. Manifesty i SHA256SUMS określają
+faktycznie zbudowane pliki. Nowo włączone zapisy nadal wymagają prób sprzętowych;
+weryfikacja pamięci nie potwierdza startu instrumentu. Zrzuty ekranu pochodzą z 0.10.0.
+Szczegóły: ../../publication/README.txt i ../../publication/github-actions.txt.

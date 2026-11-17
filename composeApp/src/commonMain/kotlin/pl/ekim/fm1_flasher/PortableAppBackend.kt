@@ -206,6 +206,8 @@ class PortableAppBackend(private val midi: ProbeBackend, private val monitor: Pa
             AppActionKind.LOGGER_TOGGLE -> { check(state.value.experimental); if (monitor.monitorRunning) monitor.stopMonitor() else monitor.startMonitor(state.value.monitorSelected.map(String::toInt)); refreshLogger() }
             AppActionKind.LOGGER_CLEAR -> { monitor.midiLog.clear(); refreshLogger() }
             AppActionKind.LOGGER_EXPORT -> { check(state.value.experimental); host.exportText("midi-log-${epochMillis()}.txt", monitor.midiLog.snapshot().export()) }
+            AppActionKind.TOOLS_INSPECT, AppActionKind.TOOLS_IMPORT, AppActionKind.TOOLS_READ, AppActionKind.TOOLS_PREPARE,
+            AppActionKind.TOOLS_WRITE, AppActionKind.TOOLS_MIDI_INFO, AppActionKind.TOOLS_MIDI_BACKUP,
             AppActionKind.DETECT, AppActionKind.RECOVERY_ENTER, AppActionKind.RECOVERY_BACKUP, AppActionKind.RECOVERY_PREPARE, AppActionKind.RECOVERY_WRITE, AppActionKind.RECOVERY_EXPORT -> failed(msg("not_applicable"))
             else -> Unit // Handled synchronously so reconnect selection can reach a blocked flash worker.
         }

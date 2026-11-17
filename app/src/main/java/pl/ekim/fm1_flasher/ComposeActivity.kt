@@ -60,6 +60,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     private var exportOperationLogUri: Uri? = null
     private var exportBackupId: String? = null
     private var exportBackupUri: Uri? = null
+    private var importBackupUris: List<Uri> = emptyList()
     private var logRevision = -1L
     private val prefs get() = getSharedPreferences("browse", MODE_PRIVATE)
     private val permissionAction get() = "$packageName.COMPOSE_USB_PERMISSION"
@@ -69,7 +70,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         state.value = state.value.copy(sourceColors = next.sourceColors, analyticsAvailable = AndroidAnalytics.get(this).available, analyticsPreference = AndroidAnalytics.get(this).preference, undoAvailable = next.undoAvailable, fleetAvailable = true, fleet = next.fleet, jobs = next.jobs,
             historyRetentionMillis = service?.historyRetentionMillis, queueRunning = next.queueRunning, queueStopping = next.queueStopping, catalog = next.catalog, downloads = next.downloads, favorites = next.favorites,
             defaultSourceRefreshHours = BuildConfig.DEFAULT_SOURCE_REFRESH_HOURS, offline = next.offline, backgroundSync = next.backgroundSync, backgroundAvailable = true, busy = next.busy, flashing = next.flashing, experimental = next.experimental,
-            ports = next.devices.map(::port), target = next.target?.let(::port), identity = next.identity, chip = next.chip, chipDetection = next.chipDetection,
+            ports = next.devices.map(::port), target = next.target?.let(::port), identity = next.identity, chip = next.chip, chipDetection = next.chipDetection, diagnostics = next.diagnostics, tools = next.tools,
             ready = next.ready, awaitingPort = next.awaitingPort, candidates = next.reconnectCandidates.map(::port),
             progress = next.progress, status = next.status, logs = next.logs, usbRecovery = true,
             backups = next.recoveryBackups.map { BackupRow(it.id, "${it.id} · ${getString(ChipDetector.classify(it.flashId).label)}") },
@@ -83,6 +84,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             }
         }
         dispatchBackupExport()
+        dispatchBackupImport()
         dispatchOperationLogExport()
         dispatchOAuthCallback()
     }
@@ -120,6 +122,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             runOnUiThread { state.value = state.value.copy(operationLogDays = days) }
         }
         exportOperationLogUri = savedInstanceState?.getString("exportOperationLogUri")?.let(Uri::parse)
+        importBackupUris = savedInstanceState?.getStringArrayList("importBackupUris")?.map(Uri::parse).orEmpty()
         exportBackupId = savedInstanceState?.getString("exportBackupId")
         exportBackupUri = savedInstanceState?.getString("exportBackupUri")?.let(Uri::parse)
         state.value = state.value.copy(initialized = true, language = resources.configuration.locales[0].language.let { if (it in listOf("pl", "zh")) it else "en" },
@@ -164,6 +167,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     }
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("exportOperationLogUri", exportOperationLogUri?.toString())
+        outState.putStringArrayList("importBackupUris", ArrayList(importBackupUris.map(Uri::toString)))
         outState.putString("exportBackupId", exportBackupId); outState.putString("exportBackupUri", exportBackupUri?.toString())
         super.onSaveInstanceState(outState)
     }
@@ -265,6 +269,11 @@ class ComposeActivity : ComponentActivity(), AppBackend {
                 else withPermission(target.usb) { if (!active.state.busy && active.state.experimental && !active.monitor.running) { active.monitor.selected.add(target.key); refreshLogger() } }
             }
             AppActionKind.LOGGER_EXPORT -> if (next.experimental) startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/plain").putExtra(Intent.EXTRA_TITLE, "midi-log-${System.currentTimeMillis()}.txt"), 41)
+            AppActionKind.TOOLS_INSPECT -> active.inspectTools(action.id)
+            AppActionKind.TOOLS_IMPORT -> if (next.experimental && !next.busy) startActivityForResult(
+                Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*").putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true), 63)
+            AppActionKind.TOOLS_READ, AppActionKind.TOOLS_PREPARE, AppActionKind.TOOLS_WRITE,
+            AppActionKind.TOOLS_MIDI_INFO, AppActionKind.TOOLS_MIDI_BACKUP -> startTools(action)
             AppActionKind.DETECT -> if (next.experimental && !next.busy) {
                 val devices = getSystemService(UsbManager::class.java).deviceList.values.filter(ChipDetector::supports)
                 if (devices.size != 1) showFailure(msg(R.string.detect_chip_help)) else withPermission(devices.single()) { active.detectChip(devices.single()) }
@@ -332,6 +341,26 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         }
         startForegroundService(intent)
     }
+    private fun startTools(action: AppAction) {
+        val active = service ?: return
+        if (active.state.busy || !active.state.experimental) return
+        val midiMode = action.kind in listOf(AppActionKind.TOOLS_MIDI_INFO, AppActionKind.TOOLS_MIDI_BACKUP)
+        val device = if (midiMode) active.state.target?.usb else
+            getSystemService(UsbManager::class.java).deviceList.values.filter(ChipDetector::supports).singleOrNull()
+        if (device == null) { showFailure(msg("tools_connect")); return }
+        val sourceBackup = active.state.tools?.backupId
+        withPermission(device) {
+            if (!active.state.busy && active.state.experimental) foreground(Intent(this, FlasherService::class.java).setAction(action.kind.name)
+                .putExtra("deviceName", device.deviceName).putExtra("deviceId", device.deviceId)
+                .putExtra("operation", action.value).putExtra("token", action.id).putExtra("sourceBackup", sourceBackup))
+        }
+    }
+    private fun dispatchBackupImport() {
+        val active = service ?: return
+        if (active.state.busy || importBackupUris.isEmpty()) return
+        val uris = importBackupUris; importBackupUris = emptyList()
+        if (active.state.experimental) active.importTools(uris)
+    }
     private fun startRecovery(action: AppAction) {
         val active = service ?: return
         if (active.state.busy || !active.state.experimental) return
@@ -362,6 +391,12 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     @Deprecated("Platform document picker API")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 63 && resultCode == RESULT_OK) {
+            importBackupUris = data?.clipData?.let { clip -> (0 until clip.itemCount).map { clip.getItemAt(it).uri } }
+                ?: listOfNotNull(data?.data)
+            if (importBackupUris.size !in 1..2) { importBackupUris = emptyList(); showFailure(msg("tools_import_help")) }
+            dispatchBackupImport()
+        }
         if (requestCode == 62) {
             exportOperationLogUri = if (resultCode == RESULT_OK) data?.data else null
             dispatchOperationLogExport()

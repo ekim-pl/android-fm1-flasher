@@ -1,6 +1,6 @@
 # Wiele FM-1. Jeden plan instalacji.
 
-FM-1 Flasher **0.10.0** przygotowujemy do Google Play. Wersja obejmuje lokalną bibliotekę firmware, kolory źródeł, pełnoekranowe ustawienia i sekwencyjną kolejkę instalacji. Publikacja sklepowa jest przed nami.
+FM-1 Flasher **0.10.1** obejmuje lokalną bibliotekę firmware, kolory źródeł, pełnoekranowe ustawienia i sekwencyjną kolejkę instalacji. Narzędzia eksperymentalne dodają diagnostykę pamięci, import kopii, zarządzanie bootloaderem, instalację firmware przez ROM i przywracanie kopii tego samego urządzenia.
 
 
 [Aktualna instrukcja](documentation.md) · [O aplikacji](../../about/README.pl.md) · [Historia wydań](https://github.com/ekim-pl/android-fm1-flasher/releases)
@@ -31,7 +31,7 @@ Aby dołączyć do Awesome FM-1, utwórz fork repozytorium, dodaj krótkie zgło
 - [Wiele instrumentów przez hub](documentation.md#multiple-fm1-devices-on-a-hub)
 - [Budowanie i testy](documentation.md#building-and-testing)
 - [Architektura i granice platform](../../MIGRATION.md)
-- [Raport wydania](../../publication/qa/0.10.0.txt)
+- [Raport wydania](../../publication/qa/0.10.1.txt)
 - [Stan publikacji i ograniczenia workflow](publication.txt)
 - [Budowanie witryny](pages.md)
 

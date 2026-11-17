@@ -1,7 +1,7 @@
 {
   "applicationId": "pl.ekim.fm1_flasher",
-  "versionCode": 31,
-  "versionName": "0.10.0",
+  "versionCode": 41,
+  "versionName": "0.10.1",
   "defaultListingLanguage": "en-US",
   "localizedListings": [
     "pl-PL",
@@ -16,7 +16,7 @@
   "containsAds": false,
   "accountRequired": false,
   "inAppPurchasesImplemented": false,
-  "reviewerAccess": "No login. Library/settings are available without hardware. Physical multi-device flashing requires FM-1 instruments, an OTG hub, a data-capable Android 14+ host and stable power; not verified on physical hardware for this milestone.",
+  "reviewerAccess": "No app login. Library/settings and saved backup inspection work without hardware. MIDI/ROM operations require a compatible FM-1, data-capable Android 14+ host and stable power. Newly enabled ROM writes still require physical acceptance testing.",
   "dataInventory": {
     "publisherTelemetryBackend": false,
     "advertisingOrAnalyticsSdks": true,
@@ -29,8 +29,9 @@
       "instrument UUIDs, names/colors, observed USB serials and last firmware identity",
       "memory-type selections",
       "job target/package hashes, outcomes and bounded stage history",
-      "bounded persistent operation log (256 KiB); session-only Undo for the last valid package",
-      "optional ROM recovery backups"
+      "bounded local operation log: 256 KiB per day, 10 MiB total, configurable 7/14/30-day retention; session-only package Undo",
+      "full ROM/MBOOT backups, imported backups, flash UID/chip metadata and local operation results",
+      "source credentials, OAuth tokens and pending callbacks encrypted using Android Keystore"
     ],
     "externalServers": [
       "enabled catalog origins (Firmware Hub by default; Awesome FM-1/custom sources opt-in)",
@@ -55,7 +56,7 @@
     "encryptedInTransit": true,
     "deletion": "Clear Android app data or uninstall. Individual package removal is available inside the app. There is no app account.",
     "dataSafetyForm": "Review third-party operators' actual collection and retention before final answers. Do not equate absence of publisher telemetry with absence of data received by external servers.",
-    "buildScope": "Firebase-enabled test APK; see analytics-0.10.0.json. Production uses its separate Firebase project and requires final store disclosures."
+    "buildScope": "0.10.1: debug uses test Firebase, Play uses production Firebase, F-Droid has no analytics SDK. Production store declarations must match the actual signed AAB."
   },
   "foregroundServiceType": "connectedDevice",
   "requiredManualChoices": [
@@ -67,6 +68,6 @@
     "signing/upload key",
     "applicable account and testing requirements"
   ],
-  "status": "Draft inventory for local test build; not submitted or approved",
-  "publishingBlocker": "Verify signing, store configuration and hardware acceptance before publication."
+  "status": "0.10.1 release inventory; submission/approval status is determined in Play Console.",
+  "publishingBlocker": "Store/account prerequisites and declarations must be verified; CI alone does not establish physical acceptance or Play approval."
 }

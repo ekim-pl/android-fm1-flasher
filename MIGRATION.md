@@ -1,6 +1,6 @@
-# Implementation and verification — 0.10.0 / 31
+# Implementation and verification — 0.10.1 / 41
 
-Current architecture of the Android 0.10.0 source tree. Apple sources are development groundwork, not a released application. For operation instructions see the [user guide](docs/user-guide.md). Build results describe a particular commit/artifact, not every later change with the same version number: see the [publication audit](docs/reviews/2026-11-16-publication-audit.txt) and [repair plan](docs/reviews/2026-11-16-publication-repair-plan.txt). Historical reports under `publication/qa` remain unchanged.
+Current architecture of the Android 0.10.1 source tree. Apple sources are development groundwork, not a released application. For operation instructions see the [user guide](docs/user-guide.md). Build results describe a particular commit/artifact, not every later change with the same version number: see the [publication audit](docs/reviews/2026-11-16-publication-audit.txt) and [repair plan](docs/reviews/2026-11-16-publication-repair-plan.txt). Historical reports under `publication/qa` remain unchanged.
 
 ## Modules and entry points
 
@@ -39,7 +39,7 @@ A CONFIRMED job records the expected firmware identity after return. It does not
 
 ## Catalog, packages and documents
 
-Android uses `CatalogDatabase`/`CatalogRepository`, immutable local blobs and migration from older library records. Sources use scoped identities, approved URL ranges, conditional requests and persisted 24–168 hour attempt intervals. The built-in Hub source starts enabled; Awesome FM-1 and background checking start disabled. Source configuration is saved separately from Check now. A failed source retains its previous snapshot. The worker checks catalogs only; installation always requires a user-approved plan.
+Android uses `CatalogDatabase`/`CatalogRepository`, immutable local blobs and migration from older library records. Sources use scoped identities, approved URL ranges, conditional requests and persisted 1–168 hour attempt intervals (Hub: at least 24 hours). The built-in Hub source starts enabled; Awesome FM-1 and background checking start disabled. Source configuration is saved separately from Check now. A failed source retains its previous snapshot. The worker checks catalogs only; installation always requires a user-approved plan.
 
 Package pinning is enforced in the service for removal and replacement. Undo retains the most recently removed valid package in the current service session; it is not a durable recycle bin. Known withdrawals/conflicts and compatibility are rechecked when loading packages. Offline state prevents network work but cannot reveal later withdrawals.
 
@@ -49,7 +49,7 @@ The refresh crash regression keeps busy state visible while recycling catalog no
 
 ## Experimental transports
 
-The logger is bounded and stops before connection/flash work. ROM chip detection does not bind a JEDEC result to a selected MIDI unit. Recovery remains separate, opt-in and hash-restricted to stock V15. It checks known boot/chip conditions, creates/verifies a backup and uses a tokenized prepared plan; only the allowed application sectors may be changed. There is no automatic OTA-to-ROM fallback. No physical recovery success is claimed.
+The logger is bounded and stops before connection/flash work. ROM diagnostics do not bind a JEDEC result to a selected MIDI unit. The original hash-pinned V15 application recovery remains separate. The five experimental `FlashWritePlan` operations now execute on supported Puya/UCUN devices after fresh backup/export and confirmation. The service binds plans to device/session tokens; the planner checks hardware, FM-1 evidence, input integrity and operation-specific boundaries. Restore additionally requires matching UID and factory bytes. `DeviceToolsWriter` rechecks the full source, writes only changed sectors, verifies each sector and checks the full target. No automatic OTA-to-ROM fallback, reboot or retry is added. Physical acceptance of the newly enabled writes remains outstanding.
 
 ## Android build and test commands
 

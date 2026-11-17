@@ -1,6 +1,6 @@
 # 多台 FM-1，一个安装计划。
 
-FM-1 Flasher **0.10.0** 正在为 Google Play 发布做准备，包含本地固件库、来源颜色、全屏设置和顺序安装任务。尚未在商店发布。
+FM-1 Flasher **0.10.1** 包含本地固件库、来源颜色、全屏设置和顺序安装任务。实验性工具新增闪存诊断、备份导入、引导程序管理、ROM 固件安装及同设备备份恢复。
 
 
 [当前指南](documentation.md) · [关于应用](../../about/README.zh-Hans.md) · [版本历史](https://github.com/ekim-pl/android-fm1-flasher/releases)
@@ -31,7 +31,7 @@ FM-1 Flasher **0.10.0** 正在为 Google Play 发布做准备，包含本地固�
 - [集线器上的多台乐器](documentation.md#multiple-fm1-devices-on-a-hub)
 - [构建与测试](documentation.md#building-and-testing)
 - [架构与平台边界](../../MIGRATION.md)
-- [版本验证报告](../../publication/qa/0.10.0.txt)
+- [版本验证报告](../../publication/qa/0.10.1.txt)
 - [发布状态与工作流限制](publication.txt)
 - [构建网站](pages.md)
 

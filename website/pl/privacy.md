@@ -1,10 +1,10 @@
 # Polityka prywatności — FM-1 Flasher
 
-FM-1 Flasher 0.10.0: kolory źródeł i ustawienia interfejsu pozostają na tym urządzeniu. Wersja Google Play zawiera Google Analytics for Firebase; statystyki są domyślnie włączone i można je wyłączyć w Ustawieniach. Wersja F-Droid nie zawiera Firebase ani SDK analityki.
+FM-1 Flasher 0.10.1: kolory źródeł i ustawienia interfejsu pozostają na tym urządzeniu. Wersja Google Play zawiera Google Analytics for Firebase; statystyki są domyślnie włączone i można je wyłączyć w Ustawieniach. Wersja F-Droid nie zawiera Firebase ani SDK analityki.
 
 ## Wydawca i kontakt
 
-ekim.pl@gmail.com. Data obowiązywania: 15 listopada 2026 r. Dokument opisuje sposób przetwarzania danych przez FM-1 Flasher.
+ekim.pl@gmail.com. Data obowiązywania: 17 listopada 2026 r. Dokument opisuje sposób przetwarzania danych przez FM-1 Flasher.
 
 ## Dane lokalne
 
@@ -35,3 +35,7 @@ Statystyki w wersjach z Firebase są domyślnie włączone od pierwszego uruchom
 
 
 Historia zakończonych zadań jest domyślnie przechowywana przez 30 dni. W Ustawieniach można zmienić okres lub wyczyścić zakończoną historię. Zadania oczekujące i trwające, backupy oraz zapis nierozstrzygniętej sesji są chronione. Logi diagnostyczne można przechowywać przez 7, 14 lub 30 dni. Starsze logi są usuwane przy zapisie lub odczycie; nieużywana aplikacja sprząta przy kolejnej aktywności. Ręczne czyszczenie usuwa zachowane pliki dzienne, ale nie wyeksportowane kopie.
+
+## Eksperymentalne kopie i narzędzia ROM
+
+Na Twoje żądanie narzędzia eksperymentalne odczytują diagnostykę i pełne kopie pamięci przez USB ROM lub obsługiwany MBOOT MIDI. Lokalne kopie i importy zawierają firmware, ustawienia i dane instrumentu, ID pamięci, klucz układu, pojemność oraz UID pamięci, jeśli dostępny. Plany i wyniki zapisu pozostają lokalne. Te dane i identyfikatory nie są dołączane do analityki ani automatycznie wysyłane. Eksport zapisuje obraz i metadane we wskazanym miejscu; sprawdź archiwum przed udostępnieniem. Wyeksportowane kopie pozostają poza aplikacją i nie są usuwane przy czyszczeniu jej danych. Zapis ROM wymaga sprawdzenia planu, eksportu kopii i potwierdzenia.

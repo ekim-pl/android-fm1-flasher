@@ -1,0 +1,23 @@
+FM-1 Flasher 0.10.0 experimental — build 40
+
+Android 14+ developer prerelease. Not a Google Play production release.
+
+- Show measured ROM flash ID, chip key, capacity, loader version and flash UID.
+- Inspect full backups with a 256-sector flash map, textual ranges and boot/app checks.
+- Import app ZIP backups or M-Flasher BIN + JSON sidecars; keep older backups readable.
+- Add capability-checked MBOOT MIDI diagnostics and double-read/CRC32 backups.
+- Preview m-bootloader 2.4 installation, complete stock V15 boot restoration,
+  compatible ROM firmware installation and same-device backup restoration.
+- Keep boot/factory write boundaries explicit, validate every target, and recheck
+  current flash before the tested sector writer can run.
+- Avoid misleading single-pass progress when a directly connected MBOOT loader
+  reads the firmware twice.
+
+NEW DESTRUCTIVE OPERATIONS ARE DISABLED in this build: the exact hardware/artifact
+qualification list is empty. Previews read and save backups but never erase/program.
+The existing limited V15 application recovery is unchanged. No physical FM-1 flashing
+was performed. New-chip UCUN support remains little tested upstream.
+
+The CI developer APK uses TEST Firebase and the existing developer signing key.
+Usage statistics can be disabled in Settings. No instrument UID, chip key or dump
+is sent to analytics. Artifact provenance is attached to the prerelease.

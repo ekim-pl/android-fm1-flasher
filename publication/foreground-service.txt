@@ -1,10 +1,13 @@
-connectedDevice foreground service — implemented 0.9.0 use case
+connectedDevice foreground service — 0.10.1 use cases
 Draft factual description; not a submitted store declaration or an existing video.
 
 The owner reads FM-1 instruments, assigns locally downloaded compatible firmware,
 and approves the complete plan in Tasks. FlasherService executes those immutable
 jobs sequentially, with one mode-changing session at a time. It never redirects a
-failed job's package to another instrument. ROM recovery uses a separate explicit plan.
+failed job's package to another instrument. ROM tools use a separate explicit plan with a fresh verified backup, completed
+export and write confirmation. A foreground session reads/writes flash for the
+selected bootloader, firmware or same-device restore operation; it verifies each
+sector and the whole target. No automatic retry or reboot is performed.
 
 The foreground notification reports stage/progress and returns to ComposeActivity.
 A time-limited wake lock supports the active transfer when another app is foregrounded

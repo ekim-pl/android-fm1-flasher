@@ -8,9 +8,9 @@
 
 Browse, save and install firmware for your **M-VAVE FM-1** from an Android phone. Keep a local firmware library and update one instrument or several in sequence over USB OTG.
 
-**Version 0.10.0** — preparation for Google Play. [Available APKs](https://github.com/ekim-pl/android-fm1-flasher/releases) · [Build and verification](publication/qa/0.10.0.txt).
+**Version 0.10.1** — experimental flash inspection, bootloader management and backup restoration. [Available APKs](https://github.com/ekim-pl/android-fm1-flasher/releases) · [Build and verification](publication/qa/0.10.1.txt).
 
-Current developer build: **0.10.0-experimental.39** — configurable catalog refresh intervals, with an experimental manual refresh option. [Preview notes](publication/github-release-0.10.0-experimental.39.txt).
+Version 0.10.1 enables experimental bootloader installation, ROM firmware installation and same-device backup restoration, with a reviewed plan and exported backup required before writing. These operations were preview-only in **0.10.0-experimental.40**. [Build 40 preview notes](publication/github-release-0.10.0-experimental.40.txt).
 
 ## Project manifesto
 
@@ -48,7 +48,11 @@ Extra tools are **hidden by default**. Enable **Settings → Experimental featur
 
 The experimental backup tool reads the **entire 1 MiB flash memory** of supported chips in USB ROM/download mode, compares two complete reads and stores the copy locally. You can export it as a ZIP archive. This is separate from downloading a firmware package.
 
-**Full-backup creation does not imply full-backup restoration.** Recovery currently writes only the supported stock V15 application region, preserves the bootloader and requires recognized hardware and boot conditions. Physical recovery remains unverified; these tools are intended for experienced users.
+**Flash inspection and recovery** can install the bundled m-bootloader 2.4, restore the stock V15 bootloader, install compatible downloaded firmware over ROM, and restore a verified backup to the same device with or without its bootloader. Prepare a plan, export its new pre-write backup, then choose **Write reviewed plan** and confirm. Supported chips are Puya `0x856014` and UCUN `0xB36014`; factory key/MAC data are always preserved. The separate limited V15 application recovery remains available. Write verification does not establish a successful boot; the newly enabled operations still need physical acceptance testing.
+
+## Acknowledgements
+
+Thank you to **Julius Vitkauskas** for [M-Flasher](https://github.com/jvitkauskas/m-flasher) and [m-bootloader](https://github.com/jvitkauskas/m-bootloader). Their open-source code, protocol documentation and loaders made these flash diagnostics, bootloader and recovery tools possible. Adapted code and bundled binaries retain their MIT attribution; see the [component notice](third_party/m-flasher-NOTICE.md) and [license](third_party/m-flasher-LICENSE.txt).
 
 ## Privacy and more information
 
@@ -60,10 +64,11 @@ Questions, feedback or beta testing: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.co
 
 ## Distribution builds
 
-- **Google Play:** `.github/workflows/google-play.yml` always includes Firebase with the production project and builds a signed AAB. Manual dispatch; a separate `google-play-upload.yml` uploads an existing validated AAB to internal testing.
-- **F-Droid:** `.github/workflows/fdroid.yml` explicitly disables Firebase and builds an unsigned release APK without Firebase or Google Play services dependencies. Manual dispatch; no store upload.
+- **Developer/debug:** `android-debug.yml` builds a signed APK with test Firebase and the persistent developer key.
+- **F-Droid:** `fdroid-release.yml` builds the signed APK without Firebase or Google Play services; `fdroid.yml` separately validates an unsigned APK. Providing the signed APK does not mean inclusion in the official F-Droid catalog.
+- **Google Play:** `google-play.yml` builds a signed AAB with production Firebase. `google-play-upload.yml` uploads the verified bundle to internal testing; `promote-production.yml` promotes that same version.
 
-Local Google Play test APKs use the test Firebase project. F-Droid test APKs use `-Pfm1Analytics=false`. Both use the same application ID; moving between store distributions requires compatible signing certificates. The F-Droid workflow is build preparation, not confirmation of F-Droid acceptance.
+`android-release.yml` builds all three distributions from one immutable stable tag and publishes the debug/F-Droid APKs, manifests and checksums on GitHub. The Play bundle is retained as an Actions artifact; upload and promotion remain separate steps. All distributions use the same application ID, so switching requires compatible signing certificates. [Build and publication instructions](publication/github-actions.txt).
 
 ## Screenshots
 

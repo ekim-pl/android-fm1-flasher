@@ -1,13 +1,24 @@
-0.10.0 / 31 — milestone 1 acceptance checklist
+0.10.1 / 41 — acceptance checklist
 
-Automated: resource synchronization, shared/Android unit tests, Android lint,
-APK assembly, selected emulator instrumentation tests, website build/link validation.
-Record outcomes, artifact SHA-256 and signing certificate in qa/0.10.0.txt.
+Automated: resource synchronization, shared/Android unit tests, official V15/V16
+integration, lint, debug/test APK assembly, API34/36 instrumentation, website links.
+Record outcomes in qa/0.10.1.txt; preserve signed manifests and SHA256SUMS per artifact.
+UI: all three languages, Library/Devices/Tasks/Settings/About/privacy, offline docs,
+version 0.10.1, backup inspection/import, map ranges and operation labels.
 
-UI: English Library, Devices, Tasks, Settings, About, privacy and licenses;
-one Library screenshot in Polish and Simplified Chinese. Use the actual test APK.
-Verify version 0.10.0 and offline access to bundled documents.
+Write checks: experimental opt-out, unsupported hardware/layout, bad input/hash,
+missing/wrong backup UID, different factory bytes, failed/cancelled export, stale
+plan/reconnect, explicit confirmation/cancel, busy state, no-op and preserved sectors.
+Verify erase/program/readback failures stop writing and retain backup/result evidence.
+Test m-bootloader installation, stock boot restoration, ROM firmware and both restores.
 
-Before store release: signed AAB, Play configuration, final SDK/data declarations,
-physical FM-1/hub updates, permission/reconnect behavior, interruption handling,
-and foreground-service demonstration. Emulator checks cannot establish hardware safety.
+Physical: both supported chip IDs; stock → m-bootloader → stock, cold boot, recovery
+keys, ROM re-entry, MIDI diagnostics/backup/update and recovery from interruptions.
+Fleet: permission/reconnect, unique return, hub/neighbor loss and stop-after-current.
+Simulations and emulator UI cannot establish physical write/boot success.
+
+Release: immutable v0.10.1 tag, successful trusted CI for exact source, matching code 41
+in debug/F-Droid/Play, certificate continuity, signed AAB validation and production
+Firebase configuration. Review actual Play declarations/account prerequisites; upload
+internal, verify that bundle, then promote the same version. Do not claim public
+F-Droid catalog acceptance or an iOS release from these builds.

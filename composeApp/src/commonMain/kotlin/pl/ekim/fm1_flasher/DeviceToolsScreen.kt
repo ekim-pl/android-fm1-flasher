@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
                 }
             }
         }
+        if (state.experimental && state.usbRecovery) item { MflasherTools(state, language, send, confirm) }
         item {
             OutlinedCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

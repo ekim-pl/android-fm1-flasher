@@ -120,7 +120,7 @@ jobs:
           ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
           adb install -r app/build/outputs/apk/debug/app-debug.apk
           adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-          for test in BackgroundCatalogTest CatalogDatabaseTest ComposeCatalogUpdatesTest ExperimentalFeaturesTest FirmwareSelectionTest FleetUiTest HistoryServiceTest MainActivityLaunchTest OperationLogServiceTest SettingsUiTest SourceAuthenticationTest PendingOAuthCallbackTest UsbPermissionIntentTest; do
+          for test in BackgroundCatalogTest CatalogDatabaseTest ComposeCatalogUpdatesTest DeviceToolsUiTest ExperimentalFeaturesTest FirmwareSelectionTest FleetUiTest HistoryServiceTest MainActivityLaunchTest OperationLogServiceTest SettingsUiTest SourceAuthenticationTest PendingOAuthCallbackTest UsbPermissionIntentTest; do
             timeout 180 adb shell am instrument -w -e class "pl.ekim.fm1_flasher.$test" pl.ekim.fm1_flasher.test/android.test.InstrumentationTestRunner | tee "$RUNNER_TEMP/$test.log"
             grep -Eq 'OK \([0-9]+ tests?\)' "$RUNNER_TEMP/$test.log"
           done

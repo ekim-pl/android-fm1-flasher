@@ -1,0 +1,26 @@
+FM-1 Flasher 0.10.1
+Android 14+ · versionCode 41
+
+- Inspect ROM/MBOOT diagnostics and verified backups with a sector-level flash map.
+- Import app ZIP backups or M-Flasher BIN + JSON sidecars.
+- Install the bundled m-bootloader 2.4 or restore the stock V15 bootloader.
+- Install compatible downloaded firmware over ROM.
+- Restore a verified backup to the same instrument, preserving its bootloader or
+  explicitly restoring it too. Factory key/MAC data remain protected.
+- Prepare a plan, export its pre-write backup, then confirm Write reviewed plan.
+  Device/session checks, sector verification and full-flash readback remain required.
+- Preserve the separate limited V15 recovery action and existing MIDI/fleet updates.
+
+Enable Settings → Experimental features for the device tools. Supported flash IDs:
+Puya 0x856014 and UCUN 0xB36014. Physical acceptance of the newly enabled writes is
+still outstanding; automated tests use simulated flash. Write verification does not
+confirm a successful instrument boot. Keep power and USB stable during writing.
+
+Distributions: developer/debug APK with test Firebase, F-Droid APK without analytics,
+and Google Play AAB with production Firebase. Usage statistics can be disabled in
+Settings. Signed build manifests and SHA256SUMS identify the published artifacts.
+
+Thanks to Julius Vitkauskas for M-Flasher and m-bootloader: their open-source code,
+protocol documentation and loaders underpin these device tools.
+https://github.com/jvitkauskas/m-flasher
+https://github.com/jvitkauskas/m-bootloader

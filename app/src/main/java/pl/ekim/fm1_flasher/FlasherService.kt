@@ -29,7 +29,7 @@ data class UiState(
     val devices: List<UsbMidi> = emptyList(),
     val target: UsbMidi? = null,
     val identity: FirmwareIdentity? = null,
-    val chipDetection: AppText? = null,
+    val chipDetection: AppText? = null, val diagnostics: DeviceDiagnostics? = null, val tools: ToolsView? = null,
     val chip: FlashChip = FlashChip.UNKNOWN,
     val catalog: Catalog? = null,
     val downloads: List<LocalPackage> = emptyList(),
@@ -87,6 +87,10 @@ class FlasherService : Service() {
     private lateinit var repository: CatalogRepository
     private lateinit var credentials: SourceCredentialStore
     private lateinit var oauth: OAuthManager
+    private data class ToolPlan(val token: String, val backup: RecoveryBackup, val plan: FlashWritePlan,
+        val deviceName: String, val deviceId: Int, val epoch: Long)
+    @Volatile private var toolPlan: ToolPlan? = null
+    private val exportedBackups = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     private lateinit var recoveryStore: RecoveryStore
     private lateinit var library: LocalLibrary
     private var removedPackage: Pair<CatalogEntry, ByteArray>? = null
@@ -105,6 +109,8 @@ class FlasherService : Service() {
                 synchronized(this@FlasherService) { usbEpochs[device.deviceName] = ++usbGeneration }
                 synchronized(continuityLock) { activeGate?.removedPath(device.deviceName) }
                 midi.removedPath(device.deviceName)
+                toolPlan = null
+                update { it.copy(diagnostics = null, chipDetection = null, tools = it.tools?.copy(token = null)) }
             }
             recordEvent(intent.action.orEmpty(), device.deviceName)
             refreshDevices()
@@ -264,7 +270,8 @@ class FlasherService : Service() {
         if (state.busy) return
         getSharedPreferences("features", MODE_PRIVATE).edit().putBoolean("experimental", enabled).apply()
         if (!enabled) monitor.stop()
-        update { it.copy(experimental = enabled, recoveryPlan = null) }
+        toolPlan = null
+        update { it.copy(experimental = enabled, recoveryPlan = null, tools = null, diagnostics = null) }
     }
 
     fun toggleMonitor() {
@@ -336,11 +343,14 @@ class FlasherService : Service() {
     }
 
     private fun detectChipStopped(device: android.hardware.usb.UsbDevice) = libraryTask {
-        val id = ChipDetector.detect(getSystemService(UsbManager::class.java), device, assets)
-        // ROM enumeration is not evidence that this is the selected MIDI instrument.
-        val result = msg(R.string.chip_detected_separate, device.deviceName, msg(ChipDetector.classify(id).labelKey))
-        update { it.copy(chipDetection = result) }
-        status(result)
+        val epoch = usbEpoch(device.deviceName)
+        MidiSessionGuard.acquire()
+        try {
+            val info = UsbBootConnection.open(getSystemService(UsbManager::class.java), device, assets).use { checkNotNull(it.diagnostics) }
+            check(usbEpoch(device.deviceName) == epoch)
+            val result = msg(R.string.chip_detected_separate, device.deviceName, msg(ChipDetector.classify(info.flashId).labelKey))
+            update { if (usbEpoch(device.deviceName) == epoch) it.copy(chipDetection = result, diagnostics = info) else it }; status(result)
+        } finally { MidiSessionGuard.release() }
     }
 
     fun setChip(chip: FlashChip) {
@@ -528,6 +538,8 @@ class FlasherService : Service() {
     }
 
     fun useLocal(id: String) = libraryTask(msg(R.string.checking_local_package)) {
+        toolPlan = null
+        update { it.copy(tools = it.tools?.copy(token = null)) }
         val saved = library.load(id, state.catalog).first
         library.saveSettings(library.settings().copy(selectedId = id))
         update { it.copy(ready = saved.entry) }
@@ -606,6 +618,7 @@ class FlasherService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action?.startsWith("TOOLS_") == true) return startTools(intent)
         if (intent?.action?.startsWith("RECOVERY_") == true) return startRecovery(intent)
         if (intent?.action != "QUEUE") return START_NOT_STICKY
         if (state.busy) return START_NOT_STICKY
@@ -742,10 +755,153 @@ class FlasherService : Service() {
         val backup = recoveryStore.list().single { it.id == id }
         val output = checkNotNull(contentResolver.openOutputStream(uri, "wt"))
         output.use { recoveryStore.export(backup, it) }
+        exportedBackups.add(backup.sha256)
+        update { it.copy(tools = it.tools?.let { view -> if (view.hash == backup.sha256) view.copy(exported = true) else view }) }
         status(msg(R.string.recovery_exported))
     }
 
+    fun inspectTools(id: String) = libraryTask {
+        check(state.experimental)
+        val backup = recoveryStore.list().single { it.id == id }
+        showTools(backup)
+    }
+    private fun showTools(backup: RecoveryBackup) {
+        val view = ToolsView(backup.id, backup.sha256, backup.diagnostics,
+            FlashLayout.analyze(recoveryStore.load(backup), backup.chipKey), exported = backup.sha256 in exportedBackups)
+        toolPlan = null
+        update { it.copy(tools = view, recoveryBackups = recoveryStore.list()) }
+    }
+    fun importTools(uris: List<android.net.Uri>) = libraryTask {
+        check(state.experimental && uris.size in 1..2)
+        val values = uris.map { uri -> checkNotNull(contentResolver.openInputStream(uri)).use { BackupImport.bounded(it, Recovery.FLASH_SIZE + 65536) } }
+        val image = values.single { it.size >= Recovery.FLASH_SIZE || it.take(2) == listOf(0x50.toByte(), 0x4B.toByte()) }
+        val sidecar = values.singleOrNull { it !== image }
+        showTools(BackupImport.read(image, sidecar, recoveryStore))
+        status(msg("tools_imported"))
+    }
+    private fun startTools(intent: Intent): Int {
+        if (state.busy || !state.experimental || !libraryReady) return START_NOT_STICKY
+        val action = intent.action
+        if (action !in listOf("TOOLS_READ", "TOOLS_PREPARE", "TOOLS_WRITE", "TOOLS_MIDI_INFO", "TOOLS_MIDI_BACKUP")) return START_NOT_STICKY
+        val snapshot = state
+        val pending = toolPlan
+        val usb = getSystemService(UsbManager::class.java)
+        val midiMode = action in listOf("TOOLS_MIDI_INFO", "TOOLS_MIDI_BACKUP")
+        val device = if (midiMode) snapshot.target?.usb else usb.deviceList.values.filter(ChipDetector::supports).singleOrNull()
+        if (device == null || device.deviceName != intent.getStringExtra("deviceName") || device.deviceId != intent.getIntExtra("deviceId", -1) || !usb.hasPermission(device)) {
+            status(msg("recovery_changed")); return START_NOT_STICKY
+        }
+        if (action == "TOOLS_WRITE" && (pending == null || pending.token != intent.getStringExtra("token") ||
+                pending.deviceName != device.deviceName || pending.deviceId != device.deviceId || pending.epoch != usbEpoch(device.deviceName) ||
+                pending.backup.sha256 !in exportedBackups)) {
+            status(msg("tools_write_unavailable")); return START_NOT_STICKY
+        }
+        try { monitor.stop(); startForeground(1, notification(msg("tools_reading"))) }
+        catch (failure: Exception) { status(failureText(failure, R.string.recovery_failed)); return START_NOT_STICKY }
+        val epoch = usbEpoch(device.deviceName)
+        toolPlan = null
+        update { it.copy(busy = true, flashing = true, tools = it.tools?.copy(token = null)) }
+        execute {
+            val wake = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "fm1:tools")
+            var owns = false
+            try {
+                MidiSessionGuard.acquire(); owns = true; wake.acquire(16 * 60_000L)
+                if (midiMode) {
+                    val target = checkNotNull(snapshot.target)
+                    midi.open(target).use { link ->
+                        val client = MbootClient(link)
+                        val info = client.identify()
+                        check(usbEpoch(device.deviceName) == epoch)
+                        update { if (usbEpoch(device.deviceName) == epoch) it.copy(diagnostics = info) else it }
+                        if (action == "TOOLS_MIDI_BACKUP") {
+                            val deadline = System.nanoTime() + TimeUnit.MINUTES.toNanos(12)
+                            fun read(): ByteArray {
+                                val bytes = ByteArray(info.capacity)
+                                for (at in bytes.indices step 512) {
+                                    check(System.nanoTime() < deadline && usbEpoch(device.deviceName) == epoch) { "MIDI backup expired" }
+                                    client.read(at, 512).copyInto(bytes, at)
+                                    status(msg("tools_reading"), (at + 512) * 100 / bytes.size)
+                                }
+                                return bytes
+                            }
+                            val first = read(); check(first.contentEquals(read())) { "Backup reads differ" }
+                            val crc = java.util.zip.CRC32().also { it.update(first) }.value
+                            check(client.crc32(0, first.size) == crc) { "Device checksum differs" }
+                            showTools(recoveryStore.save(first, info.flashId, info.chipKey, info))
+                        }
+                    }
+                } else {
+                    UsbBootConnection.open(usb, device, assets, if (action == "TOOLS_WRITE") pending!!.plan else null).use { flash ->
+                        val info = checkNotNull(flash.diagnostics)
+                        update { if (usbEpoch(device.deviceName) == epoch) it.copy(diagnostics = info) else it }
+                        if (action == "TOOLS_WRITE") {
+                            val job = checkNotNull(pending)
+                            check(usbEpoch(device.deviceName) == epoch)
+                            recoveryStore.result(job.backup, "writing", job.plan.inputHash)
+                            try {
+                                DeviceToolsWriter.apply(flash, info, recoveryStore.load(job.backup), job.plan,
+                                    report = { status(msg("tools_writing"), it) }, validate = {
+                                        check(usbEpoch(device.deviceName) == epoch && usb.hasPermission(device)) { "Device changed" }
+                                    })
+                                recoveryStore.result(job.backup, "verified; boot not checked", job.plan.inputHash)
+                            } catch (failure: Exception) {
+                                runCatching { recoveryStore.result(job.backup, "failed; write may be incomplete", job.plan.inputHash) }; throw failure
+                            }
+                        } else {
+                            val backup = Recovery.backup(flash, recoveryStore, ::status)
+                            check(usbEpoch(device.deviceName) == epoch)
+                            showTools(backup)
+                            if (action == "TOOLS_PREPARE") {
+                                val operation = FlashOperation.valueOf(checkNotNull(intent.getStringExtra("operation")))
+                                var savedInfo: DeviceDiagnostics? = null
+                                val input = when (operation) {
+                                    FlashOperation.MBOOT -> assets.open("fm1-uboot-2.4.boot").use { it.readBytes() }.also {
+                                        check(FirmwarePackage.sha256(it) == "677ae52a11721b1811b2688b45f6f0cfae51882810e0a4f4b409da08ce5b49e4")
+                                    }
+                                    FlashOperation.STOCK_BOOT, FlashOperation.FIRMWARE -> {
+                                        val selected = checkNotNull(snapshot.ready) { "Select a downloaded package" }
+                                        val loaded = library.load(selected.key, repository.cached())
+                                        check(ChipDetector.classify(info.flashId).allows(loaded.first.entry)) { "Package compatibility is unconfirmed" }
+                                        library.removalBackup(selected.key).second.also { check(FirmwarePackage.sha256(it) == loaded.second.sha256) }
+                                    }
+                                    FlashOperation.RESTORE, FlashOperation.RESTORE_BOOT -> {
+                                        val saved = recoveryStore.list().single { it.id == intent.getStringExtra("sourceBackup") }
+                                        check(saved.verified) { "Backup integrity metadata required" }
+                                        savedInfo = saved.diagnostics; recoveryStore.load(saved)
+                                    }
+                                }
+                                val plan = FlashWritePlan.create(operation, recoveryStore.load(backup), info, input, FirmwarePackage.sha256(input), savedInfo)
+                                val token = java.util.UUID.randomUUID().toString()
+                                synchronized(this@FlasherService) {
+                                check(usbEpoch(device.deviceName) == epoch)
+                                toolPlan = ToolPlan(token, backup, plan, device.deviceName, device.deviceId, epoch)
+                                update { it.copy(tools = checkNotNull(it.tools).copy(operation = operation, changed = plan.changedSectors,
+                                    target = FlashLayout.analyze(plan.targetImage(), info.chipKey), token = token,
+                                    layoutChanges = plan.layoutChanges)) }
+                                }
+                            }
+                        }
+                    }
+                }
+                status(msg(if (action == "TOOLS_WRITE") "tools_verified" else "tools_ready"), 100)
+            } catch (failure: Exception) { status(failureText(failure, R.string.recovery_failed)) }
+            finally {
+                if (owns) MidiSessionGuard.release()
+                if (wake.isHeld) wake.release()
+                val backups = recoveryStore.list()
+                main.post {
+                    stopForeground(STOP_FOREGROUND_REMOVE); stopSelf()
+                    update { it.copy(busy = false, flashing = false, recoveryBackups = backups) }
+                    refreshDevices(); checkDeferredRefresh()
+                }
+            }
+        }
+        return START_NOT_STICKY
+    }
+
     private fun startRecovery(intent: Intent): Int {
+        toolPlan = null
+        update { it.copy(tools = it.tools?.copy(token = null)) }
         if (!state.experimental) {
             if (!state.busy) stopSelf()
             status(msg(R.string.experimental_disabled))

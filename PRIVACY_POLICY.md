@@ -1,10 +1,10 @@
 # Privacy Policy — FM‑1 Flasher
 
-FM-1 Flasher 0.10.0: source colors and interface preferences are stored only on this device. The Google Play distribution includes Google Analytics for Firebase; usage statistics are enabled by default and can be disabled in Settings. The F-Droid distribution contains no Firebase or analytics SDK.
+FM-1 Flasher 0.10.1: source colors and interface preferences are stored only on this device. The Google Play distribution includes Google Analytics for Firebase; usage statistics are enabled by default and can be disabled in Settings. The F-Droid distribution contains no Firebase or analytics SDK.
 
 ## Publisher and contact
 
-ekim.pl@gmail.com. Effective date: November 15, 2026. This policy describes how FM-1 Flasher processes data.
+ekim.pl@gmail.com. Effective date: November 17, 2026. This policy describes how FM-1 Flasher processes data.
 
 ## Local information
 
@@ -35,3 +35,7 @@ Usage statistics in Firebase-enabled builds are on by default from the first onl
 
 
 Completed task history is kept for 30 days by default; Settings lets you change retention or clear completed history. Queued/running jobs, backups and unresolved-session evidence are protected. Diagnostic log retention is configurable to 7, 14 or 30 days. Expired logs are removed when logs are written or accessed; an unused app cleans up on its next activity. Manual log clearing removes retained daily files, not exported copies.
+
+## Experimental backups and ROM tools
+
+At your request, experimental tools read flash diagnostics and full memory backups over USB ROM or supported MBOOT MIDI. Local backups and imports contain firmware, instrument settings/data, flash ID, chip key, capacity and flash UID when available. Write plans and results remain local. These contents and identifiers are not attached to analytics or uploaded automatically. Export saves the image and metadata to the destination you choose; review the archive before sharing. Exported copies remain outside the app and are not removed by clearing app data. ROM writes require your reviewed plan, backup export and confirmation.

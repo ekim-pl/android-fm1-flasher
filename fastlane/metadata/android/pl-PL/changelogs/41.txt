@@ -1,0 +1,1 @@
+0.10.1: Diagnostyka i mapa pamięci, import kopii, instalacja m-bootloadera, przywracanie fabrycznego bootloadera, instalacja firmware przez ROM i przywracanie kopii tego samego urządzenia. Zapis eksperymentalny wymaga planu, eksportu kopii i potwierdzenia; dane fabryczne pozostają chronione.

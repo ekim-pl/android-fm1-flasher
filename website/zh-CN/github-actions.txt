@@ -1,7 +1,16 @@
-0.10.0 的两个构建工作流
+GitHub Actions — 0.10.1 / 41
 
-fdroid.yml：不含 Firebase 或 Google Play Services 的未签名 release APK。
-google-play.yml：包含生产 Firebase 的已签名 AAB，默认不上传。
-两者均需手动触发，不会自动发布到商店。
-所需变量及密钥：../../publication/github-actions.txt。
-生产发布仍使用独立的提升工作流。
+android-release.yml：从 main 为 v0.10.1 标签并行构建 debug、F-Droid 和 Google Play，
+全部成功后发布 APK。
+android-debug.yml：使用测试 Firebase 的已签名开发者 APK。
+fdroid-release.yml：不含 Firebase 或 Google Play Services 的已签名 APK。
+fdroid.yml：验证未签名 APK，不发布版本。
+google-play.yml：使用生产 Firebase 的已签名 AAB，不上传。
+android-publish.yml：将已验证的 APK、清单和校验和发布到 GitHub。
+google-play-upload.yml：将现有 AAB 上传到 internal 测试轨道，不重新构建。
+promote-production.yml：将同一已测试版本提升到生产轨道。
+
+发布、上传和提升要求标签的确切提交通过 API34/36 CI、清单与签名一致，并通过
+V15/V16 集成测试。标签不可移动。密钥按环境配置，不写入构建产物。
+已签名 APK 不表示官方 F-Droid 收录；签名索引托管尚未实现。
+完整参数和重试规则：../../publication/github-actions.txt。
