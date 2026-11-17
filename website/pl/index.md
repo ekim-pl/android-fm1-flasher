@@ -43,6 +43,10 @@ Bez konta i reklam. Wersja F-Droid nie zawiera SDK analityki; wersja Google Play
 
 Kontakt: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
 
+## Najnowszy film
+
+<iframe src="https://www.youtube-nocookie.com/embed/VHEe8KECsPo" title="Najnowszy film" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width: 100%; max-width: 720px; aspect-ratio: 16 / 9; border: 0;"></iframe>
+
 ## Google Play
 
 Już wkrótce w Google Play! Poszukuję beta testerów — [napisz do mnie](mailto:ekim.pl@gmail.com), jeśli chcesz dołączyć.

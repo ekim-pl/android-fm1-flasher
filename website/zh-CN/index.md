@@ -43,6 +43,10 @@ FM-1 Flasher **0.10.1** 包含本地固件库、来源颜色、全屏设置和�
 
 联系：[ekim.pl@gmail.com](mailto:ekim.pl@gmail.com)。
 
+## 最新视频
+
+<iframe src="https://www.youtube-nocookie.com/embed/VHEe8KECsPo" title="最新视频" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width: 100%; max-width: 720px; aspect-ratio: 16 / 9; border: 0;"></iframe>
+
 ## Google Play
 
 即将上架 Google Play！我正在招募 Beta 测试者，欢迎[联系我](mailto:ekim.pl@gmail.com)参与测试。

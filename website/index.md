@@ -43,6 +43,10 @@ No account or advertising. The F-Droid distribution has no analytics SDK; Google
 
 Contact: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.com).
 
+## Latest video
+
+<iframe src="https://www.youtube-nocookie.com/embed/VHEe8KECsPo" title="Latest video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width: 100%; max-width: 720px; aspect-ratio: 16 / 9; border: 0;"></iframe>
+
 ## Google Play
 
 Coming soon to Google Play! I'm looking for beta testers — [get in touch](mailto:ekim.pl@gmail.com) if you'd like to join.
