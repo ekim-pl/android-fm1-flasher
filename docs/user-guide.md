@@ -2,7 +2,7 @@
 
 Detailed instructions for the Android application: local firmware, offline use, firmware sources, sequential updates and experimental tools. Commands in this guide run from the repository root.
 
-FM-1 Flasher **0.10.0** is being prepared for Google Play. It includes a local firmware library, source colors, full-screen settings and sequential installation tasks. Store publication is pending.
+FM-1 Flasher **0.10.1** includes a local firmware library, source colors, full-screen settings and sequential installation tasks. Experimental tools add flash diagnostics, backup import, bootloader management, ROM firmware installation and same-device backup restoration.
 
 [Project README](../README.md) · [Polski](../website/pl/documentation.md) · [简体中文](../website/zh-CN/documentation.md) · [Privacy](../PRIVACY_POLICY.md)
 
@@ -16,7 +16,7 @@ The Android application ID is `pl.ekim.fm1_flasher`. English, Polish and Simplif
 
 ## Getting started
 
-1. Install the 0.10.0 APK on Android 14 or newer. Updating requires the same signing certificate; a Google Play build may use a different certificate from local test builds.
+1. Install the 0.10.1 APK on Android 14 or newer. Updating requires the same signing certificate; a Google Play build may use a different certificate from local test builds.
 2. Open **Library**, find firmware and download it from its detail screen. Downloading verifies the package; it does not start an installation.
 3. Connect instruments with data-capable cables and an OTG hub. A separately powered hub is recommended. The app cannot measure or certify hub power quality.
 4. In **Devices**, use **Read instrument** on each card and grant Android USB access when requested. Only a recognized FM-1 can be added to the plan.
@@ -47,11 +47,11 @@ Treat all firmware sources, including built-in catalogs, as **untrusted third-pa
 Open **Settings → Firmware sources**:
 
 - **[The Firmware Hub](https://thefirmwarehub.com)** starts enabled; **Awesome FM-1** starts disabled. [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) is a community directory linking to firmware projects and their publishers.
-- A custom source needs an HTTPS catalog in the supported Hub-style JSON format, a name, a 1–168 hour interval and approved package/artwork URL scopes. **Save** records the configuration; **Check now** is a separate action. Newly configured sources start disabled.
+- A custom source can use a supported HTTPS catalog, GitHub releases repository or direct FWSC URL, with a name, a 1–168 hour interval and the applicable package/artwork URL scopes. **Save** records the configuration; **Check now** is a separate action. Newly configured sources start disabled.
 - Scheduled refreshes follow the source interval, including after failed attempts. Release builds default to 8 hours and debug builds to 1 hour; each source keeps its configured interval. Manual checks in experimental mode can bypass the interval for sources other than The Firmware Hub, while server retry delays still apply. The Firmware Hub always keeps a 24-hour minimum. The source screen shows errors and the next allowed check.
 - Disabled sources make no automatic requests. An explicit Check now may check a disabled source. A failed source retains its cached snapshot; other sources can still update.
 - Removing a custom subscription preserves packages, favorites, provenance and known withdrawals. Restoring defaults enables Hub and disables Awesome FM-1 without removing custom subscriptions.
-- Optional background catalog checking starts off. It checks enabled catalogs when network conditions allow; it neither downloads packages nor installs firmware.
+- Optional background catalog checking starts off. It checks enabled catalogs when network conditions allow; some providers fetch firmware bytes for identification, but saving offline packages and installing firmware require explicit actions.
 
 Offline mode suppresses catalog, package and artwork network requests and pauses background checking. Saved packages can be flashed without a network request. Offline use cannot discover a withdrawal that has not yet reached the local catalog. Catalog declarations and hashes do not by themselves establish publisher authenticity.
 
@@ -126,7 +126,7 @@ To access the backup tools, enable **Settings → Experimental features**, open 
 
 The tool reads the entire **1 MiB flash memory twice** and saves a backup only if both reads match. It stores the image (`full-flash-before.bin`), a checksum and device metadata locally. Use the backup export action to save a ZIP archive through Android's file picker; the archive includes the full image, metadata and any recorded recovery result.
 
-**There is no general-purpose full-backup import or restore workflow.** Current recovery writes only the hash-pinned stock V15 application region, requires recognized boot and chip conditions, and preserves the bootloader and data outside that region. Preparing recovery creates a backup first; writing requires a separate approved plan. It is not an automatic fallback after an interrupted MIDI update.
+**Import backup** accepts app ZIP exports or a 1 MiB BIN with its JSON sidecar. A verified backup can be restored to the same device when UID, chip identity and factory data match. Missing identity or integrity metadata permits inspection only. See [experimental flash writing](#experimental-flash-inspection-and-writing) for the preparation, export and confirmation steps. The separate stock V15 recovery action retains its limited application-only range.
 
 The backup and recovery logic has unit tests with simulated flash memory. Physical recovery remains unverified; a saved backup does not guarantee that the app can restore an instrument to its previous state.
 
@@ -136,7 +136,7 @@ Settings contains language/theme, offline mode, sources, About and privacy. **Ex
 
 The receive-only MIDI logger has bounded buffers and selected inputs. It stops automatically when connecting/flashing; simultaneous logging and flashing are not promised.
 
-JEDEC detection uses a separate USB ROM/download-mode device. The result is never automatically assigned to a MIDI instrument. ROM recovery is a separate, explicitly approved operation with backup/export and a prepared write plan. It is restricted to the hash-pinned stock V15 application region and recognized boot/chip conditions, and does not write the bootloader. It is not a general-purpose unbricking tool or an automatic fallback after OTA failure. Physical recovery remains unverified.
+JEDEC detection uses a separate USB ROM/download-mode device. Its result is never automatically assigned to a MIDI instrument. The experimental flash tools support bootloader, firmware and same-device backup writes with a prepared plan, exported backup and explicit confirmation. They never start automatically after a failed MIDI update. The older limited V15 application recovery remains a separate action.
 
 ## Full-screen settings
 
@@ -229,7 +229,7 @@ backup. Firmware operations use the package selected in Library; restore uses th
 backup currently inspected. The bootloader artifact is hash-pinned to its release.
 Stock boot restoration includes the full configuration, not only the executable.
 
-The current development source enables these writes on Puya `0x856014` and UCUN
+Version 0.10.1 enables these writes on Puya `0x856014` and UCUN
 `0xB36014` with the FM-1 chip key and validated layout. Build 40 APKs remain preview-only.
 After preparing, choose **Export the pre-write backup** and finish saving the ZIP.
 Cancellation or export failure leaves writing disabled. Review the operation and

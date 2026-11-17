@@ -1,4 +1,4 @@
-# FM-1 Flasher
+# FM-1 Flasher 0.10.1
 
 An independent firmware manager for **M-VAVE FM-1**. Android organizes several instruments connected through an OTG hub into **Devices · Library · Tasks**, with one firmware write at a time.
 
@@ -24,9 +24,9 @@ Saved names require explicit pairing after a lost connection or app-process rest
 
 **Library** combines search, favorites and downloads. **Filters & sort** reveals category, order and source choices. Saved firmware can be used offline. A task pins its package against deletion/replacement. Removing an ordinary valid package offers Undo during the current app session.
 
-In **Settings → Firmware sources**, Firmware Hub starts enabled and Awesome FM-1 disabled. Custom HTTPS catalogs use the supported JSON format, approved package/image URL scopes and a 1–168 hour interval. Save configuration first; **Check now** is separate. Checks respect the interval even after failure; a failed source retains its previous cache. An explicit check is possible on a disabled source, while automatic requests are not.
+In **Settings → Firmware sources**, Firmware Hub starts enabled and Awesome FM-1 disabled. Custom HTTPS catalogs use the supported JSON format, approved package/image URL scopes and a 1–168 hour interval. Save configuration first; **Check now** is separate. Checks respect the interval even after failure (release default: 8 hours; debug: 1 hour). Experimental manual checks may bypass it except for Firmware Hub, which retains a 24-hour minimum; server retry delays still apply; a failed source retains its previous cache. An explicit check is possible on a disabled source, while automatic requests are not.
 
-Background catalog checks are optional and initially off. They do not download or install firmware. Offline mode stops network fetching and background checks; it cannot discover withdrawals that have not reached the local catalog. Catalog hashes do not independently authenticate publishers.
+Background catalog checks are optional and initially off. Some providers fetch firmware bytes for identification; saving an offline library copy and installing it remain explicit actions. Offline mode stops network fetching and background checks; it cannot discover withdrawals that have not reached the local catalog. Catalog hashes do not independently authenticate publishers.
 
 ## Awesome FM-1
 
@@ -36,7 +36,9 @@ Background catalog checks are optional and initially off. They do not download o
 
 Settings provides English, Polish and Simplified Chinese, light/dark/system themes, offline mode, About and privacy. Experimental features start off. Enabling them exposes MIDI Logger and recovery tools. The receive-only logger pauses for connection/flashing.
 
-Chip detection concerns a separate ROM/download-mode device and is never automatically assigned to a MIDI instrument. ROM recovery is a separate approved backup/write workflow restricted to the recognized stock V15 application region; it does not write the bootloader or automatically follow a failed OTA update. Physical recovery is unverified.
+Enable **Settings → Experimental features** for flash diagnostics, a sector map, full backups, backup import and MIDI logging. ROM operations require exactly one supported FM-1 in download mode. MBOOT diagnostics and backups require a selected MIDI device with a supported bootloader.
+
+The five write operations install m-bootloader 2.4, restore the stock V15 bootloader, install compatible downloaded firmware over ROM, or restore a same-device backup with or without its bootloader. Choose the operation, **Prepare write plan**, **Export the pre-write backup**, then **Write reviewed plan** and confirm. Preparation alone never writes. Factory key/MAC data stay protected; a restored backup must match the device identity. The app verifies sectors and the complete flash, but does not verify boot. Newly enabled writes still need physical acceptance testing; a failed bootloader write may require hardware recovery.
 
 Android requires **14+**, USB Host/OTG, MIDI, a data cable and stable power. A powered hub is recommended. A port to iOS is planned for the future. There is no iOS release or announced release date.
 
@@ -65,3 +67,7 @@ Android catalog sources use thefirmwarehub, awesome-fm1, GitHub releases (repo-u
 
 
 Completed task history is kept for 30 days by default; Settings lets you change retention or clear completed history. Queued/running jobs, backups and unresolved-session evidence are protected. Diagnostic log retention is configurable to 7, 14 or 30 days. Expired logs are removed when logs are written or accessed; an unused app cleans up on its next activity. Manual log clearing removes retained daily files, not exported copies.
+
+## Acknowledgements
+
+Thank you to **Julius Vitkauskas** for [M-Flasher](https://github.com/jvitkauskas/m-flasher) and [m-bootloader](https://github.com/jvitkauskas/m-bootloader). Their open-source code, protocol documentation and loaders made these flash diagnostics, bootloader and recovery tools possible. Adapted code and bundled binaries retain their MIT attribution; see the [component notice](../third_party/m-flasher-NOTICE.md) and [license](../third_party/m-flasher-LICENSE.txt).

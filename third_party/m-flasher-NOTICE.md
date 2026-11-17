@@ -11,7 +11,7 @@ before returning to MIDI firmware updates. Unknown IDs retain conservative
 firmware compatibility rules. Hardware validation is still required.
 
 UsbBootConnection additionally implements READ_KEY (FC09), READ_FLASH (FD05),
-ERASE_SECTOR (FB01), and WRITE_FLASH (FB04). Recovery only writes the verified
+ERASE_SECTOR (FB01), and WRITE_FLASH (FB04). The separate limited Recovery action only writes the verified
 V15 application region; the chip-detection operation remains read-only for flash.
 Loader assets are SHA-256 checked before upload. Recovery policy and known stock
 hashes were cross-checked against Quixotic7/MvaveFM1Unbricker (MIT):
@@ -30,6 +30,13 @@ Verified against the release SHA256SUMS. The existing v2.3 RAM loaders remain
 unchanged. MIDI read extensions and the READ_KEY reference vector follow
 m-bootloader docs/SPEC.md at 3ac7651a019fa44daba061b05654278496477b64.
 
-New bootloader, generic ROM firmware and backup-restore writes are disabled
-pending physical validation of the exact chip/artifact combination. Previewing
-an operation reads and saves a backup but never sends erase/program commands.
+In FM-1 Flasher 0.10.1 the five experimental bootloader, ROM firmware and same-device
+backup-restore operations are enabled through validated plans. Preparing a plan only
+reads flash. Writing requires an exported pre-write backup and explicit confirmation,
+then verifies each changed sector and the complete image. Factory key/MAC is protected.
+Physical acceptance of newly enabled writes is still outstanding.
+
+Thanks to Julius Vitkauskas for M-Flasher and m-bootloader, their open-source code,
+loaders and protocol documentation:
+https://github.com/jvitkauskas/m-flasher
+https://github.com/jvitkauskas/m-bootloader

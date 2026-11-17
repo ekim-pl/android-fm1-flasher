@@ -1,4 +1,4 @@
-# FM-1 Flasher 0.10.0
+# FM-1 Flasher 0.10.1
 
 An independent firmware manager for **M-VAVE FM-1**. Requires Android 14 or newer, USB Host/OTG, MIDI, a data cable and stable power. A powered hub is recommended.
 
@@ -20,7 +20,9 @@ After a planned restart, pair the returning instrument on its task card. Other c
 
 Firmware Hub is enabled by default; other sources can be configured in [Settings → Firmware sources](app://settings/sources). Offline mode uses saved packages and cannot discover new withdrawals. Hashes alone do not establish publisher authenticity. Optional source credentials are stored encrypted on the device.
 
-Experimental features include a MIDI logger and separate recovery tools. Physical ROM recovery remains unverified; it is not an automatic fallback for an unsuccessful update.
+Enable **Settings → Experimental features** for flash diagnostics, a sector map, full backups, backup import and MIDI logging. ROM operations require exactly one supported FM-1 in download mode. MBOOT diagnostics and backups require a selected MIDI device with a supported bootloader.
+
+The five write operations install m-bootloader 2.4, restore the stock V15 bootloader, install compatible downloaded firmware over ROM, or restore a same-device backup with or without its bootloader. Choose the operation, **Prepare write plan**, **Export the pre-write backup**, then **Write reviewed plan** and confirm. Preparation alone never writes. Factory key/MAC data stay protected; a restored backup must match the device identity. The app verifies sectors and the complete flash, but does not verify boot. Newly enabled writes still need physical acceptance testing; a failed bootloader write may require hardware recovery.
 
 In **Settings → Firmware sources → Source color**, choose one of eight colors or Automatic for each source. The dot beside the source name marks its firmware in the library, downloaded packages and package details. Colors are stored on this device and can be changed offline.
 
@@ -33,3 +35,7 @@ Optional analytics SDK terms: [Firebase notices](../third_party/firebase-analyti
 Publisher: **Ekim** · [Contact](mailto:ekim.pl@gmail.com) · [Third-party licenses](../third_party/README.md). Free and open source.
 
 [CommonMark (BSD-2-Clause)](../third_party/commonmark-LICENSE.txt) · [Android (Apache 2.0)](../third_party/Apache-2.0.txt) · [m-flasher (MIT)](../third_party/m-flasher-LICENSE.txt)
+
+## Acknowledgements
+
+Thank you to **Julius Vitkauskas** for [M-Flasher](https://github.com/jvitkauskas/m-flasher) and [m-bootloader](https://github.com/jvitkauskas/m-bootloader). Their open-source code, protocol documentation and loaders made these flash diagnostics, bootloader and recovery tools possible. Adapted code and bundled binaries retain their MIT attribution; see the [component notice](../third_party/m-flasher-NOTICE.md) and [license](../third_party/m-flasher-LICENSE.txt).

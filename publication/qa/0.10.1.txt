@@ -1,0 +1,27 @@
+FM-1 Flasher 0.10.1 — release preparation
+Date: 2026-11-17. Android versionCode 41; Android 14+.
+
+Local validation of the release source:
+- 113 shared JVM tests, 186 Android JVM tests and 20 official V15/V16 integration
+  tests passed with no failures or skips.
+- All five device-tools operations exercised on simulated Puya and UCUN flash;
+  factory preservation, boot preservation, stale device/input rejection, revoked
+  session, no-op plans and erase/program/readback failures covered.
+- Android lint: no errors (56 warnings); debug and instrumentation APKs built.
+- EN/PL/zh-Hans documentation, About and privacy refreshed; generated resources synchronized.
+- API36 DeviceToolsUiTest passed for export/confirmation, busy and stale plans,
+  cancellation and experimental opt-out. All 48 generated website pages passed
+  link, anchor, translation and language-switching checks.
+- Both SettingsUiTest cases passed on API36, including About/license navigation.
+  Packaged About (all three languages), privacy and third-party credits were
+  compared byte-for-byte against the refreshed source documents.
+
+The owner reports that the previously available features work. The newly enabled
+write operations were formerly preview-only: no new physical FM-1 write or boot
+acceptance is claimed by this report. No iOS build or hardware test was performed.
+
+Release jobs must build signed debug (test Firebase), F-Droid (no analytics) and
+Google Play (production Firebase) artifacts from the same immutable v0.10.1 tag.
+CI on API34/36 and signed artifact verification remain publication requirements.
+Generated manifests, SHA256SUMS and Actions reports provide artifact provenance;
+this preparation record does not claim that publication/upload has completed.

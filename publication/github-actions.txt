@@ -1,11 +1,11 @@
-GitHub Actions — 0.10.0 milestone 2
+GitHub Actions — 0.10.1 / versionCode 41
 
 OPERATION
 Workflows support manual dispatch. Build and publication workflows also support
 workflow_call, so the orchestrator uses exactly the same implementations.
 After merging, choose Actions -> workflow -> Run workflow. For release operations,
 select main as the workflow branch and enter the existing stable tag separately.
-Tag creation alone does not trigger a release. No workflow in this milestone
+Tag creation alone does not trigger a release. No workflow in this workflow set
 publishes the application to Google Play production automatically.
 
 WORKFLOWS
@@ -67,19 +67,19 @@ android-release.yml — Android release (debug, F-Droid, Google Play)
 
 EXAMPLES
 Complete release:
-  gh workflow run android-release.yml --ref main -f tag=v0.10.0
+  gh workflow run android-release.yml --ref main -f tag=v0.10.1
 Standalone builds:
-  gh workflow run android-debug.yml --ref main -f tag=v0.10.0
-  gh workflow run fdroid-release.yml --ref main -f tag=v0.10.0
-  gh workflow run google-play.yml --ref main -f tag=v0.10.0
+  gh workflow run android-debug.yml --ref main -f tag=v0.10.1
+  gh workflow run fdroid-release.yml --ref main -f tag=v0.10.1
+  gh workflow run google-play.yml --ref main -f tag=v0.10.1
 Independent F-Droid hotfix (use its actual build run ID):
   gh workflow run android-publish.yml --ref main -f tag=v0.10.1 -f fdroid_run_id=456
 Experimental debug from a development branch (no public release):
   gh workflow run android-debug.yml --ref preview-branch
 Publish standalone or recover failed publication (use actual run IDs):
-  gh workflow run android-publish.yml --ref main -f tag=v0.10.0 -f debug_run_id=123 -f fdroid_run_id=456
+  gh workflow run android-publish.yml --ref main -f tag=v0.10.1 -f debug_run_id=123 -f fdroid_run_id=456
 Upload existing AAB (use actual run ID):
-  gh workflow run google-play-upload.yml --ref main -f tag=v0.10.0 -f run_id=789
+  gh workflow run google-play-upload.yml --ref main -f tag=v0.10.1 -f run_id=789
 Find run IDs via Actions or gh run list. Individual reusable jobs inside a combined
 release share the parent's run ID. Re-run failed jobs can preserve successful
 builds; a fresh invocation of the orchestrator rebuilds all variants.

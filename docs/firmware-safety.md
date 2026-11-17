@@ -15,7 +15,7 @@ The app checks package integrity, product information and available compatibilit
 - Back up important instrument data using tools supported by that firmware. Downloading an installation package is not a backup of your FM-1, and a normal update does not create one automatically.
 - Keep power and USB connections stable throughout the update.
 
-The experimental full-flash backup tool can save and export a copy of supported flash memory, but the app does not offer general-purpose restoration of arbitrary full backups. See [backup and recovery limitations](user-guide.md#full-flash-backups).
+The experimental tools save and export full-flash backups and can restore a verified backup to the same instrument. UID, chip identity and factory data must match; arbitrary cross-device restoration is not supported. See [backup and recovery limitations](user-guide.md#full-flash-backups).
 
 ## Offline copies
 
@@ -23,12 +23,16 @@ A local copy remains third-party content. Offline mode cannot discover newly rep
 
 [User guide](user-guide.md) · [Project README](../README.md)
 
-### Device-tools preview build
+### Experimental flash writes in 0.10.1
 
-Build 40's new bootloader, generic ROM firmware and backup-restore operations are
-preview-only pending physical chip/artifact qualification. Previewing reads flash
-and saves a verified backup; it does not erase or program. The original limited V15
-application recovery retains its existing restrictions. Unknown/invalid layouts do
-not grant write permission, and factory key/MAC remains protected in every new plan.
-Read-only MBOOT commands require a validated capability handshake before flash reads.
-Imported hashes establish integrity against supplied metadata, not authenticity.
+Bootloader installation/restoration, compatible ROM firmware installation and
+same-device backup restoration are enabled on the supported Puya/UCUN chips.
+Prepare a plan, export its pre-write backup, then explicitly confirm writing.
+Preparation reads and saves a verified backup without erasing or programming.
+Device changes invalidate the plan; unknown hardware or invalid source layouts
+cannot authorize writes. Factory key/MAC bytes remain protected. Each written sector
+and the entire result are read back. A verified write does not prove successful boot.
+Newly enabled operations still require physical acceptance testing. Bootloader write
+failure may require hardware recovery; a backup does not guarantee recoverability.
+Read-only MBOOT commands require a validated capability handshake. Imported hashes
+establish integrity against supplied metadata, not publisher authenticity.

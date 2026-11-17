@@ -1,4 +1,4 @@
-# FM-1 Flasher
+# FM-1 Flasher 0.10.1
 
 Niezależny menedżer firmware dla **M-VAVE FM-1**. Android organizuje instrumenty podłączone przez hub OTG w **Urządzenia · Bibliotekę · Zadania**, zapisując firmware na jednym instrumencie naraz.
 
@@ -24,9 +24,9 @@ Po utracie połączenia lub restarcie procesu zapisane nazwy wymagają jawnego p
 
 **Biblioteka** łączy wyszukiwanie, ulubione i pobrania. **Filtry i sortowanie** rozwijają kategorię, kolejność i źródło. Zapisane firmware działa offline. Zadanie chroni swoją paczkę przed usunięciem lub zastąpieniem. Zwykłe usunięcie poprawnej paczki można cofnąć w bieżącej sesji aplikacji.
 
-W **Ustawieniach → Źródłach katalogu firmware** Hub jest domyślnie włączony, a Awesome FM-1 wyłączony. Własny katalog HTTPS używa obsługiwanego JSON, zatwierdzonych zakresów adresów paczek/grafik i interwału 1–168 godzin. Najpierw zapisz konfigurację; **Sprawdź teraz** to osobna akcja. Interwał obowiązuje także po błędzie, który zachowuje wcześniejszy katalog. Jawne sprawdzenie wyłączonego źródła jest możliwe, automatyczne żądania nie.
+W **Ustawieniach → Źródłach katalogu firmware** Hub jest domyślnie włączony, a Awesome FM-1 wyłączony. Własny katalog HTTPS używa obsługiwanego JSON, zatwierdzonych zakresów adresów paczek/grafik i interwału 1–168 godzin. Najpierw zapisz konfigurację; **Sprawdź teraz** to osobna akcja. Interwał obowiązuje także po błędzie (domyślnie 8 godzin w release i 1 w debug). Jawne sprawdzenie eksperymentalne może go pominąć poza Hub, który zachowuje minimum 24 godzin; opóźnienia serwera nadal obowiązują. Błąd zachowuje wcześniejszy katalog. Jawne sprawdzenie wyłączonego źródła jest możliwe, automatyczne żądania nie.
 
-Sprawdzanie katalogów w tle jest opcjonalne i początkowo wyłączone; nie pobiera ani nie instaluje firmware. Offline zatrzymuje pobieranie sieciowe i sprawdzanie w tle, ale nie wykryje wycofań nieznanych lokalnemu katalogowi. Sumy z katalogu same nie uwierzytelniają wydawców.
+Sprawdzanie katalogów w tle jest opcjonalne i początkowo wyłączone; nie zapisuje automatycznie paczek do biblioteki ani nie instaluje firmware; niektóre źródła pobierają bajty firmware w celu identyfikacji. Offline zatrzymuje pobieranie sieciowe i sprawdzanie w tle, ale nie wykryje wycofań nieznanych lokalnemu katalogowi. Sumy z katalogu same nie uwierzytelniają wydawców.
 
 ## Awesome FM-1
 
@@ -36,7 +36,9 @@ Sprawdzanie katalogów w tle jest opcjonalne i początkowo wyłączone; nie pobi
 
 Ustawienia udostępniają polski, angielski i chiński uproszczony, motyw jasny/ciemny/systemowy, offline, O aplikacji i prywatność. Funkcje eksperymentalne są domyślnie wyłączone. Ich włączenie pokazuje Logger MIDI i narzędzia recovery. Pasywny logger zatrzymuje się na czas łączenia/zapisu.
 
-Wykrywanie kości dotyczy osobnego urządzenia ROM/download i nie przypisuje się automatycznie do instrumentu MIDI. Recovery ROM wymaga osobnego zatwierdzenia kopii/planu zapisu i ogranicza się do rozpoznanego obszaru aplikacji stock V15. Nie zapisuje bootloadera ani nie uruchamia się samo po błędzie OTA. Recovery nie zweryfikowano fizycznie.
+Włącz **Ustawienia → Funkcje eksperymentalne**, aby korzystać z diagnostyki, mapy sektorów, pełnych kopii, importu kopii i Loggera MIDI. Operacje ROM wymagają dokładnie jednego obsługiwanego FM-1 w trybie pobierania. Diagnostyka i kopie MBOOT wymagają wybranego urządzenia MIDI z obsługiwanym bootloaderem.
+
+Pięć operacji zapisu pozwala instalować m-bootloader 2.4, przywracać fabryczny bootloader V15, instalować zgodne pobrane firmware przez ROM oraz przywracać kopię tego samego urządzenia z bootloaderem lub bez niego. Wybierz operację, **Przygotuj plan zapisu**, **Eksportuj kopię sprzed zapisu**, następnie **Zapisz sprawdzony plan** i potwierdź. Samo przygotowanie niczego nie zapisuje. Klucz fabryczny i MAC są chronione; kopia musi odpowiadać tożsamości urządzenia. Aplikacja weryfikuje sektory i całą pamięć, ale nie sprawdza uruchomienia. Nowo włączone operacje wymagają jeszcze prób sprzętowych; błąd zapisu bootloadera może wymagać sprzętowego odzyskiwania.
 
 Android wymaga **14+**, USB Host/OTG, MIDI, przewodu danych i stabilnego zasilania. Zalecany jest zasilany hub. Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani ogłoszonego terminu.
 
@@ -65,3 +67,7 @@ Aplikacja stale zapisuje lokalny log operacji (pliki dzienne, domyślnie siedem 
 
 
 Historia zakończonych zadań jest domyślnie przechowywana przez 30 dni. W Ustawieniach można zmienić okres lub wyczyścić zakończoną historię. Zadania oczekujące i trwające, backupy oraz zapis nierozstrzygniętej sesji są chronione. Logi diagnostyczne można przechowywać przez 7, 14 lub 30 dni. Starsze logi są usuwane przy zapisie lub odczycie; nieużywana aplikacja sprząta przy kolejnej aktywności. Ręczne czyszczenie usuwa zachowane pliki dzienne, ale nie wyeksportowane kopie.
+
+## Podziękowania
+
+Dziękujemy **Juliusowi Vitkauskasowi** za [M-Flasher](https://github.com/jvitkauskas/m-flasher) i [m-bootloader](https://github.com/jvitkauskas/m-bootloader). Ich otwarty kod, dokumentacja protokołu i loadery umożliwiły powstanie tych narzędzi diagnostyki, zarządzania bootloaderem i odzyskiwania pamięci. Adaptowany kod i dołączone pliki zachowują informacje o autorze i licencję MIT; zobacz [informacje o komponencie](../third_party/m-flasher-NOTICE.md) i [licencję](../third_party/m-flasher-LICENSE.txt).

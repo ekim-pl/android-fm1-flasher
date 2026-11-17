@@ -1,4 +1,4 @@
-# FM-1 Flasher 0.10.0
+# FM-1 Flasher 0.10.1
 
 独立的 **M-VAVE FM-1** 固件管理器。需要 Android 14 或更高版本、USB Host/OTG、MIDI、数据线和稳定电源。建议使用独立供电的集线器。
 
@@ -20,7 +20,9 @@
 
 Firmware Hub 默认启用；可在[设置 → 固件来源](app://settings/sources)中配置其他来源。离线模式使用已保存的软件包，无法发现新的撤回信息。哈希值本身不能证明发布者身份。可选的来源凭据在设备上加密保存。
 
-实验性功能包括 MIDI 记录器和独立的恢复工具。实体 ROM 恢复尚未验证，也不是更新失败后的自动补救方式。
+启用**设置 → 实验功能**可使用闪存诊断、扇区图、完整备份、备份导入和 MIDI 日志。ROM 操作要求仅连接一台处于下载模式的受支持 FM-1。MBOOT 诊断和备份要求选择运行受支持引导程序的 MIDI 设备。
+
+五种写入操作包括安装 m-bootloader 2.4、恢复原厂 V15 引导程序、通过 ROM 安装兼容的已下载固件，以及保留或同时恢复引导程序的同设备备份恢复。选择操作后，依次使用**准备写入计划**、**导出写入前备份**、**写入已审阅计划**并确认。仅准备计划不会写入。出厂密钥和 MAC 始终受保护，备份必须与设备身份匹配。应用会验证每个扇区和完整闪存，但不会验证启动。新启用的写入仍需实机验收；引导程序写入失败可能需要硬件恢复。
 
 在**设置 → 固件来源 → 来源颜色**中，为每个来源选择八种颜色之一或“自动”。来源名称旁的圆点标记固件库、已下载固件包及详情中的固件。颜色保存在本设备，可离线更改。
 
@@ -33,3 +35,7 @@ Firmware Hub 默认启用；可在[设置 → 固件来源](app://settings/sourc
 发布者：**Ekim** · [联系](mailto:ekim.pl@gmail.com) · [第三方许可证](../third_party/README.md)。免费且开源。
 
 [CommonMark (BSD-2-Clause)](../third_party/commonmark-LICENSE.txt) · [Android (Apache 2.0)](../third_party/Apache-2.0.txt) · [m-flasher (MIT)](../third_party/m-flasher-LICENSE.txt)
+
+## 致谢
+
+感谢 **Julius Vitkauskas** 开发的 [M-Flasher](https://github.com/jvitkauskas/m-flasher) 和 [m-bootloader](https://github.com/jvitkauskas/m-bootloader)。这些项目的开放源代码、协议文档及加载程序为本应用的闪存诊断、引导程序管理和恢复工具提供了基础。移植代码和内置二进制保留 MIT 署名；参阅[组件声明](../third_party/m-flasher-NOTICE.md)与[许可证](../third_party/m-flasher-LICENSE.txt)。

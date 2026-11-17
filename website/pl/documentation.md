@@ -1,6 +1,6 @@
 # FM-1 Flasher — instrukcja
 
-FM-1 Flasher **0.10.0** przygotowujemy do Google Play. Wersja obejmuje lokalną bibliotekę firmware, kolory źródeł, pełnoekranowe ustawienia i sekwencyjną kolejkę instalacji. Publikacja sklepowa jest przed nami.
+FM-1 Flasher **0.10.1** obejmuje lokalną bibliotekę firmware, kolory źródeł, pełnoekranowe ustawienia i sekwencyjną kolejkę instalacji. Narzędzia eksperymentalne dodają diagnostykę pamięci, import kopii, zarządzanie bootloaderem, instalację firmware przez ROM i przywracanie kopii tego samego urządzenia.
 
 Niezależny menedżer firmware dla **M-VAVE FM-1** na Androida. Android obsługuje wiele instrumentów przez hub OTG, zapisując firmware **kolejno, na jednym instrumencie naraz**.
 
@@ -28,7 +28,7 @@ Build debug zawiera osobną ikonę **FM1 Color Demo**. W szczegółach urządzen
 
 ## Pierwsza instalacja i plan aktualizacji
 
-1. Zainstaluj APK 0.10.0 na Androidzie 14 lub nowszym. Aktualizacja wymaga tego samego certyfikatu podpisu; wersja Google Play może używać innego certyfikatu niż lokalny build testowy.
+1. Zainstaluj APK 0.10.1 na Androidzie 14 lub nowszym. Aktualizacja wymaga tego samego certyfikatu podpisu; wersja Google Play może używać innego certyfikatu niż lokalny build testowy.
 2. W **Bibliotece** znajdź firmware i pobierz paczkę z jej szczegółów. Pobranie sprawdza integralność, ale nie rozpoczyna instalacji.
 3. Podłącz instrumenty przewodami do transmisji danych przez hub OTG. Zalecany jest hub z osobnym zasilaniem. Aplikacja nie mierzy jakości zasilania.
 4. W **Urządzeniach** wybierz **Odczytaj instrument** na każdej karcie. Udziel systemowej zgody USB, gdy będzie potrzebna. Do planu można dodać rozpoznany FM-1.
@@ -47,11 +47,11 @@ Szczegóły paczki pokazują wersję, autora/źródło, zgodność i SHA-256. Wy
 Otwórz **Ustawienia → Źródła katalogu firmware**:
 
 - **The Firmware Hub** jest domyślnie włączony, a **Awesome FM-1** wyłączony. [Awesome FM-1](https://github.com/ekim-pl/awesome-fm1) jest społecznościowym katalogiem projektów i odnośników do ich wydawców.
-- Własne źródło wymaga katalogu HTTPS w obsługiwanym formacie JSON Hub, nazwy, interwału 1–168 godzin i zatwierdzonych zakresów adresów paczek/grafik. **Zapisz** zapisuje konfigurację, a **Sprawdź teraz** jest osobnym działaniem. Nowe źródło jest początkowo wyłączone.
+- Własne źródło może korzystać z katalogu HTTPS, wydań repozytorium GitHub lub adresu FWSC; wymaga nazwy, interwału 1–168 godzin i odpowiednich zakresów adresów paczek/grafik. **Zapisz** zapisuje konfigurację, a **Sprawdź teraz** jest osobnym działaniem. Nowe źródło jest początkowo wyłączone.
 - Zaplanowane odświeżanie uwzględnia interwał także po błędzie. Buildy release domyślnie sprawdzają źródła co 8 godzin, a debug co godzinę; każde źródło zachowuje własne ustawienie. W trybie eksperymentalnym jawne sprawdzenie może pominąć interwał dla źródeł innych niż Firmware Hub, z zachowaniem opóźnień ponawiania narzuconych przez serwer. Firmware Hub zawsze zachowuje minimum 24 godzin. Ekran źródeł pokazuje błędy i termin kolejnego sprawdzenia.
 - Wyłączone źródło nie wysyła automatycznych żądań. Można świadomie użyć Sprawdź teraz również dla wyłączonego źródła. Błąd zachowuje jego poprzednią kopię katalogu i nie blokuje pozostałych źródeł.
 - Usunięcie własnej subskrypcji zachowuje paczki, ulubione, pochodzenie i poznane wycofania. Przywrócenie ustawień domyślnych włącza Hub i wyłącza Awesome FM-1 bez usuwania własnych subskrypcji.
-- Sprawdzanie katalogów w tle jest opcjonalne i początkowo wyłączone. Sprawdza włączone katalogi przy odpowiednich warunkach sieciowych; nie pobiera ani nie instaluje firmware.
+- Sprawdzanie katalogów w tle jest opcjonalne i początkowo wyłączone. Sprawdza włączone katalogi przy odpowiednich warunkach sieciowych; nie zapisuje automatycznie paczek do biblioteki ani nie instaluje firmware; niektóre źródła pobierają bajty firmware w celu identyfikacji.
 
 Tryb offline wyłącza sieciowe pobieranie katalogów, paczek i grafik oraz wstrzymuje sprawdzanie w tle. Zapisane firmware można instalować bez żądania sieciowego. Offline nie wykryje wycofania, którego lokalny katalog jeszcze nie zna. Deklaracje katalogu i sumy kontrolne same w sobie nie potwierdzają autentyczności wydawcy.
 
@@ -88,7 +88,9 @@ Ustawienia obejmują język/motyw, offline, źródła, O aplikacji i prywatnoś�
 
 Pasywny logger MIDI ma ograniczone bufory i wybrane wejścia. Zatrzymuje się automatycznie przy łączeniu/zapisie; jednoczesne logowanie i flashowanie nie jest gwarantowane.
 
-Wykrywanie JEDEC dotyczy osobnego urządzenia USB w trybie ROM/download. Wynik nie przypisuje się automatycznie do instrumentu MIDI. Recovery ROM wymaga osobnej świadomej akcji, kopii/eksportu i przygotowanego planu zapisu. Ogranicza się do przypiętego hashem obszaru aplikacji stock V15 oraz rozpoznanych warunków boot/kości; nie zapisuje bootloadera. Nie jest uniwersalnym narzędziem naprawczym ani automatycznym zastępstwem nieudanego OTA. Brakuje fizycznej weryfikacji recovery.
+Włącz **Ustawienia → Funkcje eksperymentalne**, aby korzystać z diagnostyki, mapy sektorów, pełnych kopii, importu kopii i Loggera MIDI. Operacje ROM wymagają dokładnie jednego obsługiwanego FM-1 w trybie pobierania. Diagnostyka i kopie MBOOT wymagają wybranego urządzenia MIDI z obsługiwanym bootloaderem.
+
+Pięć operacji zapisu pozwala instalować m-bootloader 2.4, przywracać fabryczny bootloader V15, instalować zgodne pobrane firmware przez ROM oraz przywracać kopię tego samego urządzenia z bootloaderem lub bez niego. Wybierz operację, **Przygotuj plan zapisu**, **Eksportuj kopię sprzed zapisu**, następnie **Zapisz sprawdzony plan** i potwierdź. Samo przygotowanie niczego nie zapisuje. Klucz fabryczny i MAC są chronione; kopia musi odpowiadać tożsamości urządzenia. Aplikacja weryfikuje sektory i całą pamięć, ale nie sprawdza uruchomienia. Nowo włączone operacje wymagają jeszcze prób sprzętowych; błąd zapisu bootloadera może wymagać sprzętowego odzyskiwania.
 
 <a id="building-and-testing"></a>
 ## Budowanie i testy
@@ -114,7 +116,7 @@ Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani og
 
 W buildzie 23 zaliczono **191 testów jednostkowych (62 shared + 129 Android JVM)**; cztery testy zewnętrznych fixture’ów pominięto. Zaliczone są **44 testy instrumentacyjne Androida**, w tym eksport/czyszczenie logu, czyszczenie biblioteki i potwierdzenia w trzech językach. Przeszły debug, lint i kompilacja metadanych iOS. Właściciel potwierdził działanie buildu 20 na fizycznych FM-1; nowych funkcji i wszystkich kombinacji sprzętu nie zweryfikowano fizycznie.
 
-Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.10.0.txt) zawiera identyfikację pliku i zakres prób.
+Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.10.1.txt) zawiera identyfikację pliku i zakres prób.
 
 ## Prywatność i autorstwo
 
@@ -176,3 +178,14 @@ Odnośniki do licencji w O aplikacji otwierają pełnoekranowy widok **Licencja*
 
 
 Historia zakończonych zadań jest domyślnie przechowywana przez 30 dni. W Ustawieniach można zmienić okres lub wyczyścić zakończoną historię. Zadania oczekujące i trwające, backupy oraz zapis nierozstrzygniętej sesji są chronione. Logi diagnostyczne można przechowywać przez 7, 14 lub 30 dni. Starsze logi są usuwane przy zapisie lub odczycie; nieużywana aplikacja sprząta przy kolejnej aktywności. Ręczne czyszczenie usuwa zachowane pliki dzienne, ale nie wyeksportowane kopie.
+
+
+## Kopie i plan zapisu w 0.10.1
+
+Narzędzia ROM odczytują pełne 1 MiB dwukrotnie i zapisują kopię tylko przy zgodności odczytów. MBOOT MIDI dodatkowo sprawdza CRC32 urządzenia. Diagnostyka pokazuje ID pamięci, klucz układu, pojemność, wersję loadera i UID, jeśli dostępny. Klucz układu nie jest numerem seryjnym. Mapa przedstawia 256 sektorów po 4 KiB; nieznane miejsce nie oznacza wolnego obszaru.
+
+Importuj ZIP aplikacji lub wybierz razem BIN 1 MiB i jego plik JSON. Brak tożsamości lub metadanych integralności pozwala tylko na analizę. Instalacja firmware i fabrycznego bootloadera używa paczki wybranej w Bibliotece; przywracanie używa aktualnie analizowanej kopii. Bootloader 2.4 jest dołączony i sprawdzany hashem. Przywracanie fabrycznego bootloadera wymaga zatwierdzonej paczki V15 i obejmuje pełną konfigurację.
+
+Obsługiwane ID pamięci to Puya `0x856014` i UCUN `0xB36014`, przy kluczu FM-1 i poprawnym układzie danych. Po przygotowaniu wyeksportuj nową kopię; anulowanie lub błąd eksportu nie odblokuje zapisu. Ponowne podłączenie lub zmiana wybranej paczki wymaga nowego planu. Przed kasowaniem aplikacja ponownie porównuje całą pamięć z kopią. Zapisuje wyłącznie zmienione sektory i zatrzymuje się po błędzie bez automatycznej próby ponowienia ani restartu. Wynik i kopia pozostają lokalnie.
+
+Przywracanie kopii wymaga zgodnego UID, kości, klucza i danych fabrycznych. Opcja zachowania bootloadera go nie zmienia; drugi wariant jawnie go przywraca. Zwykła instalacja ROM zachowuje bootloader. Ograniczone recovery V15 pozostaje osobną akcją. Zmiana układu danych lub downgrade może utracić brzmienia i presety; sam powrót do starszego firmware ich nie odtwarza.

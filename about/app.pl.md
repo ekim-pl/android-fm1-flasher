@@ -1,4 +1,4 @@
-# FM-1 Flasher 0.10.0
+# FM-1 Flasher 0.10.1
 
 Niezależny menedżer oprogramowania sprzętowego dla **M-VAVE FM-1**. Wymaga Androida 14 lub nowszego, USB Host/OTG, MIDI, kabla do transmisji danych i stabilnego zasilania. Zalecany jest zasilany hub.
 
@@ -20,7 +20,9 @@ Po planowanym restarcie sparuj powracający instrument na jego karcie zadania. P
 
 Firmware Hub jest domyślnie włączony; inne źródła skonfigurujesz w [Ustawieniach → Źródła firmware](app://settings/sources). Tryb offline używa zapisanych pakietów i nie wykryje nowych wycofań. Same skróty nie potwierdzają autentyczności wydawcy. Opcjonalne dane uwierzytelniające są szyfrowane na urządzeniu.
 
-Funkcje eksperymentalne obejmują rejestrator MIDI i oddzielne narzędzia odzyskiwania. Fizyczne odzyskiwanie ROM nie zostało zweryfikowane i nie jest automatyczną metodą po nieudanej aktualizacji.
+Włącz **Ustawienia → Funkcje eksperymentalne**, aby korzystać z diagnostyki, mapy sektorów, pełnych kopii, importu kopii i Loggera MIDI. Operacje ROM wymagają dokładnie jednego obsługiwanego FM-1 w trybie pobierania. Diagnostyka i kopie MBOOT wymagają wybranego urządzenia MIDI z obsługiwanym bootloaderem.
+
+Pięć operacji zapisu pozwala instalować m-bootloader 2.4, przywracać fabryczny bootloader V15, instalować zgodne pobrane firmware przez ROM oraz przywracać kopię tego samego urządzenia z bootloaderem lub bez niego. Wybierz operację, **Przygotuj plan zapisu**, **Eksportuj kopię sprzed zapisu**, następnie **Zapisz sprawdzony plan** i potwierdź. Samo przygotowanie niczego nie zapisuje. Klucz fabryczny i MAC są chronione; kopia musi odpowiadać tożsamości urządzenia. Aplikacja weryfikuje sektory i całą pamięć, ale nie sprawdza uruchomienia. Nowo włączone operacje wymagają jeszcze prób sprzętowych; błąd zapisu bootloadera może wymagać sprzętowego odzyskiwania.
 
 W **Ustawienia → Źródła firmware → Kolor źródła** wybierz jeden z ośmiu kolorów lub Automatyczny dla każdego źródła. Kropka przy nazwie źródła oznacza jego firmware w bibliotece, pobranych paczkach i szczegółach. Kolory są zapisywane na tym urządzeniu i można je zmieniać offline.
 
@@ -33,3 +35,7 @@ Warunki opcjonalnego SDK analityki: [informacje Firebase](../third_party/firebas
 Wydawca: **Ekim** · [Kontakt](mailto:ekim.pl@gmail.com) · [Licencje zależności](../third_party/README.md). Aplikacja bezpłatna i otwartoźródłowa.
 
 [CommonMark (BSD-2-Clause)](../third_party/commonmark-LICENSE.txt) · [Android (Apache 2.0)](../third_party/Apache-2.0.txt) · [m-flasher (MIT)](../third_party/m-flasher-LICENSE.txt)
+
+## Podziękowania
+
+Dziękujemy **Juliusowi Vitkauskasowi** za [M-Flasher](https://github.com/jvitkauskas/m-flasher) i [m-bootloader](https://github.com/jvitkauskas/m-bootloader). Ich otwarty kod, dokumentacja protokołu i loadery umożliwiły powstanie tych narzędzi diagnostyki, zarządzania bootloaderem i odzyskiwania pamięci. Adaptowany kod i dołączone pliki zachowują informacje o autorze i licencję MIT; zobacz [informacje o komponencie](../third_party/m-flasher-NOTICE.md) i [licencję](../third_party/m-flasher-LICENSE.txt).

@@ -13,11 +13,11 @@ Reconnection
 Multiple instruments require inline pairing of the unique returning unit with uninterrupted neighbors. A lost neighbor, hub reset or ambiguous ports blocks further writes. USB addresses are not physical socket numbers; serials are not validated cross-mode hardware identities. Conservative automatic reconnect is limited to a single eligible USB/MIDI device. Android may request USB permission again after re-enumeration.
 
 Settings and experimental tools
-English, Polish and Simplified Chinese; light, dark and system themes; About/privacy available offline. Background catalog checking is optional and off by default; it never downloads or installs firmware. Opt-in MIDI Logger pauses during connection/flashing. Separate chip detection and restricted stock V15 ROM recovery are experimental, not an automatic fallback or general-purpose repair tool.
+English, Polish and Simplified Chinese; light, dark and system themes; About/privacy available offline. Optional background checks refresh catalog information; some sources fetch firmware bytes to identify packages, but offline-library downloads and installations remain explicit. Experimental tools include MIDI logging, diagnostics, flash maps, backup import, m-bootloader installation, stock boot restoration, ROM firmware installation and same-device backup restoration. Writes require a reviewed plan, exported backup and confirmation; factory data stay protected.
 
 Requirements and status
 Android 14+, USB Host/OTG and MIDI, FM-1 instruments, data cables and stable power. A powered hub is recommended; the app cannot measure its power quality. Firmware descriptions remain in their authors’ language. Physical FM-1/hub acceptance for this release is pending. Use firmware-specific backup tools where available; OTA does not automatically back up data. The Android fleet queue is not ported to the unverified iOS host.
 
 Independent MIT-licensed project, not an official M-VAVE app. Firmware remains with its publishers. The Firmware Hub catalog: CC BY 4.0. The app requires no account and contains no advertising. The F-Droid distribution contains no analytics SDK. Google Play builds with Google Analytics for Firebase collect usage statistics by default from the first online launch. You can turn statistics off at any time in Settings → Usage statistics. Names, observed serials and task history stay locally; external download/catalog services receive connection metadata. Contact: ekim.pl@gmail.com.
 
-Listing draft for FM-1 Flasher 0.10.0; Google Play publication is pending.
+Listing draft for FM-1 Flasher 0.10.1; Google Play publication is pending.

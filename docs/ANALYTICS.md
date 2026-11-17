@@ -1,6 +1,6 @@
-# Firebase Analytics — 0.10.0
+# Firebase Analytics — 0.10.1
 
-Android version 0.10.0 uses versionCode 31.
+Android version 0.10.1 uses versionCode 41.
 The normal Android build and base iOS project contain no Firebase SDK and show no analytics prompt.
 
 ## Architecture and behavior
@@ -129,7 +129,7 @@ These are account/device actions; code changes do not perform them:
 3. Verify the SDK's actual automatic data (including identifiers, device/app metadata and any
    derived approximate location). Complete Google Play Data safety and Apple App Privacy based
    on the chosen binary and enabled console features; this is not a declaration of no collection.
-   `publication/analytics-0.10.0.json` is a draft inventory, not a submitted store form.
+   `publication/analytics-0.10.1.json` is a draft inventory, not a submitted store form.
 4. Verify default-on startup, persistent disable, re-enable, restart, offline, in-flight operations and SDK
    buffering/network behavior with real test configs on Android and iOS.
 5. Use Firebase DebugView in TEST to validate event names, parameters, deduplication and outcomes.

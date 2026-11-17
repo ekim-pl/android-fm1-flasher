@@ -1,6 +1,14 @@
-FM-1 Flasher 0.10.0 / 31 — Google Play 发布准备的第一阶段。
+FM-1 Flasher 0.10.1 / 41 — 发布材料
 
-已更新文档、关于、隐私和许可证。两个测试 APK 均使用本地调试签名：Google Play 包含测试 Firebase，F-Droid 不含 Firebase。
-尚未提交商店。验证记录：../../publication/qa/0.10.0.txt。
-发布前需要签名 AAB、商店配置、最终数据声明和实体 FM-1/集线器验收。
-构建说明：../../publication/README.txt。
+新增闪存诊断与映射、完整备份和导入、m-bootloader 2.4 安装、原厂 V15 引导程序
+恢复、ROM 固件安装及保留或同时恢复引导程序的同设备备份恢复。写入要求准备计划、
+导出备份并确认，出厂数据始终受保护。
+
+分发包括使用测试 Firebase 的已签名 debug APK、不含分析 SDK 的已签名 F-Droid APK，
+以及使用生产 Firebase 的 Google Play AAB。在 GitHub 提供 APK 不表示已被官方
+F-Droid 目录收录。AAB 上传与生产提升是独立操作。目前没有 iOS 发布版本。
+使用统计可在设置中关闭。
+
+源代码验证：../../publication/qa/0.10.1.txt。实际构建文件由清单及 SHA256SUMS 标识。
+新启用的写入仍需实机验收；闪存验证不代表设备启动成功。现有截图来自 0.10.0。
+详情：../../publication/README.txt 与 ../../publication/github-actions.txt。
