@@ -11,10 +11,38 @@ import subprocess
 import tempfile
 
 
+def latest_stable_release():
+    releases = []
+    page = 1
+    while True:
+        batch = json.loads(subprocess.check_output(
+            ['gh', 'api', f"repos/{os.environ['GITHUB_REPOSITORY']}/releases?per_page=100&page={page}"],
+            text=True))
+        releases.extend(batch)
+        if len(batch) < 100:
+            break
+        page += 1
+    candidates = []
+    for release in releases:
+        match = re.fullmatch(r'v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)',
+                             release['tag_name'])
+        if release['draft'] or release['prerelease'] or not match:
+            continue
+        tag = release['tag_name']
+        result = subprocess.run(['git', 'merge-base', '--is-ancestor', f'refs/tags/{tag}', 'HEAD'],
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if result.returncode == 0:
+            candidates.append((tuple(map(int, match.groups())), tag))
+        elif result.returncode != 1:
+            raise ValueError(f'Cannot verify release tag {tag} against the default branch')
+    if not candidates:
+        raise ValueError('No published stable release on the default branch')
+    return max(candidates)[1]
+
+
 def main():
-    tag = os.environ['FDROID_RELEASE_TAG']
-    if not re.fullmatch(r'v\d+\.\d+\.\d+', tag):
-        raise ValueError('FDROID_RELEASE_TAG must be a stable version tag')
+    tag = latest_stable_release()
+    print(f'Selected latest stable mainline release: {tag}', flush=True)
     expected_cert = os.environ['FDROID_APP_CERT_SHA256'].replace(':', '').strip().lower()
     if not re.fullmatch(r'[0-9a-f]{64}', expected_cert):
         raise ValueError('FDROID_APP_CERT_SHA256 must be a SHA-256 fingerprint')

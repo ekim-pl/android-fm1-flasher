@@ -2,7 +2,9 @@
 
 The Pages workflow can download a published F-Droid APK and its manifest, verify
 their SHA-256 and APK signing certificate, generate a signed index, and deploy the
-APK and index with the website. It uses one selected stable release at a time.
+APK and index with the website. It selects the highest published stable version
+whose tag is reachable from the default branch; drafts and prereleases are ignored.
+The repo contains one release at a time.
 
 ## One-time setup
 
@@ -24,7 +26,6 @@ APK and index with the website. It uses one selected stable release at a time.
    and `FDROID_INDEX_KEY_PASSWORD`.
 3. Add repository variables:
    - `FDROID_REPO_ENABLED`: `true` (set this last).
-   - `FDROID_RELEASE_TAG`: published stable tag, for example `v0.10.1`.
    - `FDROID_REPO_URL`: `https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo` (or your actual Pages URL).
    - `FDROID_APP_CERT_SHA256`: the trusted APK signing certificate fingerprint,
      the same value as the existing `fdroid-release` environment secret.
@@ -32,13 +33,14 @@ APK and index with the website. It uses one selected stable release at a time.
    client and check the app and the index signing fingerprint. Obtain that
    fingerprint with `keytool -list -v -keystore ~/.local/share/fm1-signing/fm1-index.p12 -alias fm1-index`.
 
-For each release, publish the signed APK using the existing release workflow,
-change `FDROID_RELEASE_TAG`, and manually run GitHub Pages on the default branch.
-The selected release must contain `fm1-flasher-<tag>-fdroid.apk` and
+Publishing a release with the existing Android publication workflows automatically
+starts Pages after the publication workflow succeeds. Releases published outside
+Actions also trigger Pages. The selected release must contain `fm1-flasher-<tag>-fdroid.apk` and
 `fdroid-manifest.json`. Failed verification blocks Pages deployment. The repo
 contains only the selected version; keep release assets available on GitHub.
 
-When enabled, every default-branch Pages deployment regenerates the repo. Removing
+When enabled, every default-branch Pages deployment regenerates the repo. A failed
+publication or a missing/invalid APK leaves the previous Pages deployment in place. Removing
 or disabling `FDROID_REPO_ENABLED` causes the next deployment to omit the repo.
 The workflow stores the index signing key in GitHub Actions secrets and uses it
 on the runner. Anyone able to modify trusted default-branch workflow code can
