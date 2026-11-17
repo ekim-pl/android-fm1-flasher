@@ -10,7 +10,7 @@ Browse, save and install firmware for your **M-VAVE FM-1** from an Android phone
 
 **Version 0.10.0** — preparation for Google Play. [Available APKs](https://github.com/ekim-pl/android-fm1-flasher/releases) · [Build and verification](publication/qa/0.10.0.txt).
 
-Current developer build: **0.10.0-experimental.40** — experimental flash diagnostics, backup inspection/import, flash maps and guarded operation previews. New destructive actions remain disabled pending physical validation. [Preview notes](publication/github-release-0.10.0-experimental.40.txt).
+The current development source enables experimental bootloader installation, ROM firmware installation and same-device backup restoration, with a reviewed plan and exported backup required before writing. These operations were preview-only in **0.10.0-experimental.40**. [Build 40 preview notes](publication/github-release-0.10.0-experimental.40.txt).
 
 ## Project manifesto
 
@@ -48,7 +48,7 @@ Extra tools are **hidden by default**. Enable **Settings → Experimental featur
 
 The experimental backup tool reads the **entire 1 MiB flash memory** of supported chips in USB ROM/download mode, compares two complete reads and stores the copy locally. You can export it as a ZIP archive. This is separate from downloading a firmware package.
 
-**Full-backup creation does not imply full-backup restoration.** Recovery currently writes only the supported stock V15 application region, preserves the bootloader and requires recognized hardware and boot conditions. Physical recovery remains unverified; these tools are intended for experienced users.
+**Flash inspection and recovery** can install the bundled m-bootloader 2.4, restore the stock V15 bootloader, install compatible downloaded firmware over ROM, and restore a verified backup to the same device with or without its bootloader. Prepare a plan, export its new pre-write backup, then choose **Write reviewed plan** and confirm. Supported chips are Puya `0x856014` and UCUN `0xB36014`; factory key/MAC data are always preserved. The separate limited V15 application recovery remains available. Write verification does not establish a successful boot; the newly enabled operations still need physical acceptance testing.
 
 ## Privacy and more information
 

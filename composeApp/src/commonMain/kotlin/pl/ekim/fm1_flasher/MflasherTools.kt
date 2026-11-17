@@ -70,10 +70,10 @@ import androidx.compose.ui.unit.dp
                 Text(t("tools_preview", t("tools_op_${op.name.lowercase()}"), view.changed.size))
                 Text(view.changed.joinToString { FlashLayout.hex(it.toLong()) }.ifEmpty { t("tools_no_changes") })
                 if (view.layoutChanges) Text(t("tools_layout_warning"))
-                Text(t("tools_write_gated"))
+                Text(t(if (view.token == null) "tools_write_unavailable" else if (!view.exported) "tools_export_required" else "tools_write_ready"))
                 TextButton({ send(AppAction(AppActionKind.RECOVERY_EXPORT, view.backupId)) }, enabled = !state.busy) { Text(t("tools_export_before")) }
                 Button({ confirm(AppAction(AppActionKind.TOOLS_WRITE, view.token.orEmpty()), msg("tools_confirm")) },
-                    enabled = !state.busy && view.qualified && view.exported && view.token != null) { Text(t("tools_write")) }
+                    enabled = !state.busy && view.exported && view.token != null) { Text(t("tools_write")) }
             }
         }
         Choice(t("tools_operation"), t("tools_op_${operation.name.lowercase()}"), FlashOperation.entries.map { it.name to t("tools_op_${it.name.lowercase()}") },

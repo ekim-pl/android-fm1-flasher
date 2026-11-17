@@ -20,12 +20,14 @@
     <string name="tools_preview">Preview: %1$s · %2$d changed sectors</string>
     <string name="tools_no_changes">No changed sectors</string>
     <string name="tools_layout_warning">Data layouts differ. Starting the new firmware may change settings or sounds. A firmware downgrade does not restore lost presets.</string>
-    <string name="tools_write_gated">Preview only in this build. New write operations are disabled until the chip and artifact pass physical hardware validation. New UCUN flash support is little tested.</string>
+    <string name="tools_write_unavailable">This plan is no longer available. Prepare a new plan and export its backup before writing.</string>
+    <string name="tools_export_required">Export the pre-write backup to enable writing.</string>
+    <string name="tools_write_ready">Backup exported. Review the changed sectors, then choose Write reviewed plan to confirm.</string>
     <string name="tools_export_before">Export the pre-write backup</string>
     <string name="tools_confirm">Write the reviewed plan to this instrument? Keep power and USB connected. A failed bootloader write may require a hardware recovery tool.</string>
     <string name="tools_operation">Operation</string>
     <string name="tools_preview_help">Preparing reads a new full backup and never writes. Firmware operations use the downloaded package selected in Library. Restore uses the backup currently inspected.</string>
-    <string name="tools_prepare">Prepare read-only preview</string>
+    <string name="tools_prepare">Prepare write plan</string>
     <string name="tools_transport">Transport</string>
     <string name="tools_flash_id">Flash ID</string>
     <string name="tools_chip_key">Chip key (not a serial number)</string>

@@ -1,11 +1,13 @@
 # Plan: M-Flasher features in FM-1 Flasher
 
-Status: implemented for experimental build 40 with hardware-gated writes.
-Diagnostics, layout analysis, backup inspection/import, MIDI read support, operation
-planners and the bounded executor are implemented. New write qualification is empty;
-all new destructive actions remain disabled. Existing V15 recovery is unchanged.
-Automated fixture/failure tests do not replace outstanding physical acceptance.
-The milestones below retain the requirements and hardware gates for rollout.
+Status: write operations enabled in the current development source at the owner's
+request after their report that the available features work. Build 40 shipped the
+read-only previews; its empty qualification allowlist has now been removed.
+All five validated plans use the existing bounded executor on supported Puya/UCUN
+chips. Experimental opt-in, backup export, explicit confirmation, session checks,
+protected sectors and full readback remain required. This enables physical testing;
+it does not claim physical acceptance of previously disabled writes.
+The milestones below record the original rollout plan and acceptance checklist.
 Date: 2026-11-16.
 Branch: `feature/mflasher-device-tools`, based on `main` at `8087258`.
 

@@ -20,12 +20,14 @@
     <string name="tools_preview">预览：%1$s · %2$d 个扇区变化</string>
     <string name="tools_no_changes">没有扇区变化</string>
     <string name="tools_layout_warning">数据布局不同。启动新固件可能改变设置或音色。降级固件不会恢复丢失的预设。</string>
-    <string name="tools_write_gated">此版本仅支持预览。新的写入操作在芯片和文件通过实机验证前保持禁用。新 UCUN 闪存支持测试有限。</string>
+    <string name="tools_write_unavailable">此计划已失效。请准备新计划并导出其备份后再写入。</string>
+    <string name="tools_export_required">导出写入前备份以启用写入。</string>
+    <string name="tools_write_ready">备份已导出。请检查变化的扇区，然后选择“写入已审阅计划”进行确认。</string>
     <string name="tools_export_before">导出写入前备份</string>
     <string name="tools_confirm">将已审阅计划写入此设备？请保持供电和 USB 连接。引导程序写入失败可能需要硬件恢复工具。</string>
     <string name="tools_operation">操作</string>
     <string name="tools_preview_help">准备操作会读取新的完整备份，不会写入设备。固件操作使用在库中选择的已下载文件。恢复使用当前检查的备份。</string>
-    <string name="tools_prepare">准备只读预览</string>
+    <string name="tools_prepare">准备写入计划</string>
     <string name="tools_transport">传输方式</string>
     <string name="tools_flash_id">闪存 ID</string>
     <string name="tools_chip_key">芯片密钥（非序列号）</string>

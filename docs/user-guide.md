@@ -197,7 +197,7 @@ License links in About open a full-screen **License** page. The header and syste
 
 Completed task history is kept for 30 days by default; Settings lets you change retention or clear completed history. Queued/running jobs, backups and unresolved-session evidence are protected. Diagnostic log retention is configurable to 7, 14 or 30 days. Expired logs are removed when logs are written or accessed; an unused app cleans up on its next activity. Manual log clearing removes retained daily files, not exported copies.
 
-## Experimental flash inspection and previews
+## Experimental flash inspection and writing
 
 Build 40 adds **Devices → Experimental tools → Flash inspection and recovery**.
 Enable Experimental features in Settings first. Connect exactly one FM-1 in ROM
@@ -222,19 +222,31 @@ both together). Missing identity/checksum metadata permits inspection, not resto
 New backups retain flash UID and acquisition provenance; older backups still load.
 Importing or inspecting a backup never writes to the instrument.
 
-**Prepare read-only preview** first creates a new full backup and can show the
+**Prepare write plan** first creates a new full backup and can show the
 changed sectors for installing m-bootloader 2.4, restoring stock V15 bootloader,
 installing the selected downloaded firmware over ROM, or restoring a same-device
 backup. Firmware operations use the package selected in Library; restore uses the
 backup currently inspected. The bootloader artifact is hash-pinned to its release.
 Stock boot restoration includes the full configuration, not only the executable.
 
-**New destructive actions are disabled in build 40.** Their validated planners and
-bounded writer are tested against fixtures and simulated flash, but no chip/artifact
-combination is physically qualified. The write button stays disabled; there is no
-force switch. Existing limited V15 application recovery remains a separate action.
-New UCUN flash support is still described upstream as little tested. A future enabled
-bootloader operation will require a successful external export of its pre-write backup.
+The current development source enables these writes on Puya `0x856014` and UCUN
+`0xB36014` with the FM-1 chip key and validated layout. Build 40 APKs remain preview-only.
+After preparing, choose **Export the pre-write backup** and finish saving the ZIP.
+Cancellation or export failure leaves writing disabled. Review the operation and
+changed sectors, then choose **Write reviewed plan** and confirm. Preparing alone
+never writes. Reconnection or a changed package invalidates the plan; prepare again.
+
+Before erasing, the app checks that the connected device and its full flash still
+match the plan. It writes only changed sectors, verifies each one and checks the
+entire resulting flash. Factory key/MAC bytes are always protected. Backup restoration
+requires matching device UID, chip identity and factory bytes. Firmware installation
+preserves the installed bootloader; restoring a backup preserves it unless you select
+**Restore backup including bootloader**. Failures stop the operation without automatic
+retry or reboot and retain the backup and result locally. Success reports
+**Write verified; boot not checked**. The separate limited V15 recovery is unchanged.
+
+The newly enabled writes still need physical acceptance testing; automated flash
+simulations do not establish hardware compatibility or successful boot.
 Neither a backup nor m-bootloader guarantees recovery after a failed bootloader write.
 Official firmware updates may reinstall the stock bootloader; a V16-to-V15 downgrade
 does not restore sounds/presets already overwritten by firmware.

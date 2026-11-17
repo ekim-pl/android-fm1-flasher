@@ -1,6 +1,6 @@
 package pl.ekim.fm1_flasher
 
-/** Called only with a session-bound, hardware-qualified plan by FlasherService. */
+/** Called only with a session-bound, validated plan by FlasherService. */
 internal object DeviceToolsWriter {
     fun apply(flash: RecoveryFlash, info: DeviceDiagnostics, before: ByteArray, plan: FlashWritePlan,
               report: (Int) -> Unit = {}, validate: () -> Unit = {}) {

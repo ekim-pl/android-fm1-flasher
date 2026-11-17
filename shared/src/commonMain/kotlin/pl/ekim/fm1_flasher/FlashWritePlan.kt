@@ -67,9 +67,3 @@ class FlashWritePlan private constructor(
         }
     }
 }
-
-/** No new destructive operation is hardware-qualified yet. Not a user-overridable preference. */
-object DeviceToolsHardware {
-    fun qualified(plan: FlashWritePlan): Boolean = qualifiedBuilds.contains(Triple(plan.diagnostics.flashId, plan.operation, plan.inputHash))
-    private val qualifiedBuilds = emptySet<Triple<Long, FlashOperation, String>>()
-}

@@ -20,7 +20,6 @@ class UsbBootConnection private constructor(
 
     companion object {
         fun open(manager: UsbManager, device: UsbDevice, assets: AssetManager, plan: FlashWritePlan? = null): UsbBootConnection {
-            if (plan != null) check(DeviceToolsHardware.qualified(plan)) { "Hardware qualification required" }
             require(ChipDetector.supports(device))
             val iface = (0 until device.interfaceCount).map(device::getInterface).single {
                 it.interfaceClass == 8 && it.interfaceSubclass == 6 && it.interfaceProtocol == 80

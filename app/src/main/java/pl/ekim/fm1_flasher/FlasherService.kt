@@ -793,8 +793,8 @@ class FlasherService : Service() {
         }
         if (action == "TOOLS_WRITE" && (pending == null || pending.token != intent.getStringExtra("token") ||
                 pending.deviceName != device.deviceName || pending.deviceId != device.deviceId || pending.epoch != usbEpoch(device.deviceName) ||
-                pending.backup.sha256 !in exportedBackups || !DeviceToolsHardware.qualified(pending.plan))) {
-            status(msg("tools_write_gated")); return START_NOT_STICKY
+                pending.backup.sha256 !in exportedBackups)) {
+            status(msg("tools_write_unavailable")); return START_NOT_STICKY
         }
         try { monitor.stop(); startForeground(1, notification(msg("tools_reading"))) }
         catch (failure: Exception) { status(failureText(failure, R.string.recovery_failed)); return START_NOT_STICKY }
@@ -877,7 +877,7 @@ class FlasherService : Service() {
                                 toolPlan = ToolPlan(token, backup, plan, device.deviceName, device.deviceId, epoch)
                                 update { it.copy(tools = checkNotNull(it.tools).copy(operation = operation, changed = plan.changedSectors,
                                     target = FlashLayout.analyze(plan.targetImage(), info.chipKey), token = token,
-                                    qualified = DeviceToolsHardware.qualified(plan), layoutChanges = plan.layoutChanges)) }
+                                    layoutChanges = plan.layoutChanges)) }
                                 }
                             }
                         }

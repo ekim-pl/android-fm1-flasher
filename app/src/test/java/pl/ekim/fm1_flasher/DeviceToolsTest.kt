@@ -79,7 +79,6 @@ internal class DeviceToolsTest {
         assertEquals("2.4-test", FlashLayout.bootIdentity(FlashLayout.storedBoot(target))!!.second)
         assertArrayEquals(before.copyOfRange(0x3900, 0x3922), target.copyOfRange(0x3FA0, 0x3FC2))
         assertArrayEquals(before.copyOfRange(0x4000, before.size), target.copyOfRange(0x4000, target.size))
-        assertFalse(DeviceToolsHardware.qualified(plan))
         for (address in listOf(-4096, 1, 0x4000, 0xFF000)) assertThrows(IllegalArgumentException::class.java) { plan.checkSector(address) }
         target[0] = 0
         assertEquals(plan.targetHash, FirmwarePackage.sha256(plan.targetImage()))
@@ -112,6 +111,34 @@ internal class DeviceToolsTest {
         assertThrows(IllegalArgumentException::class.java) { plan.checkSector(0) }
         saved[0xFF000] = 9
         assertThrows(IllegalArgumentException::class.java) { restore(info) }
+    }
+    @Test fun unsupportedHardwareAndChangedInputCannotPrepareWrites() {
+        val before = image(); val input = boot(true)
+        for (device in listOf(info.copy(flashId = 0x123456), info.copy(chipKey = 0), info.copy(capacity = FlashLayout.SIZE * 2))) {
+            assertThrows(IllegalArgumentException::class.java) {
+                FlashWritePlan.create(FlashOperation.MBOOT, before, device, input, FirmwarePackage.sha256(input))
+            }
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            FlashWritePlan.create(FlashOperation.MBOOT, before, info, input, "0".repeat(64))
+        }
+    }
+    @Test fun revokedSessionNeverErasesAndNoOpNeverPrograms() {
+        val before = image(); val plan = plan(before); val flash = Flash(before.copyOf())
+        var validations = 0
+        assertThrows(IllegalStateException::class.java) {
+            DeviceToolsWriter.apply(flash, info, before, plan, validate = {
+                if (++validations == 2) error("USB permission revoked after recheck")
+            })
+        }
+        assertTrue(flash.erased.isEmpty())
+        assertFalse(flash.programmed)
+        val installed = plan.targetImage()
+        val noOp = plan(installed); val unchanged = Flash(installed.copyOf())
+        DeviceToolsWriter.apply(unchanged, info, installed, noOp)
+        assertTrue(unchanged.erased.isEmpty())
+        assertFalse(unchanged.programmed)
+        assertArrayEquals(installed, unchanged.bytes)
     }
     @Test fun backupRoundTripAndHostileImports() {
         val root = java.nio.file.Files.createTempDirectory("tools-backup").toFile()

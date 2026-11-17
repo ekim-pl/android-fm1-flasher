@@ -7,7 +7,7 @@ data class LogRow(val id: Long, val source: String, val channel: Int?, val type:
 data class BackupRow(val id: String, val label: String)
 data class ToolsView(val backupId: String, val hash: String, val info: DeviceDiagnostics, val analysis: FlashLayout.Analysis,
     val operation: FlashOperation? = null, val changed: List<Int> = emptyList(), val target: FlashLayout.Analysis? = null,
-    val token: String? = null, val qualified: Boolean = false, val exported: Boolean = false, val layoutChanges: Boolean = false)
+    val token: String? = null, val exported: Boolean = false, val layoutChanges: Boolean = false)
 data class RecoveryView(val token: String, val confirmation: AppText)
 data class AppSnapshot(
     val defaultSourceRefreshHours: Int = 8,

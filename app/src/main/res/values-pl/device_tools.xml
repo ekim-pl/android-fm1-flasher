@@ -20,12 +20,14 @@
     <string name="tools_preview">Podgląd: %1$s · zmienione sektory: %2$d</string>
     <string name="tools_no_changes">Brak zmienionych sektorów</string>
     <string name="tools_layout_warning">Układy danych są różne. Nowe firmware może zmienić ustawienia lub brzmienia. Starsza wersja firmware nie odtwarza utraconych presetów.</string>
-    <string name="tools_write_gated">W tej wersji dostępny jest tylko podgląd. Nowy zapis jest zablokowany do czasu testów fizycznej kości i obrazu. Obsługa nowej pamięci UCUN jest słabo przetestowana.</string>
+    <string name="tools_write_unavailable">Ten plan nie jest już dostępny. Przygotuj nowy plan i wyeksportuj jego kopię przed zapisem.</string>
+    <string name="tools_export_required">Wyeksportuj kopię sprzed zapisu, aby odblokować zapis.</string>
+    <string name="tools_write_ready">Kopia wyeksportowana. Sprawdź zmienione sektory, a następnie wybierz Zapisz sprawdzony plan, aby potwierdzić.</string>
     <string name="tools_export_before">Eksportuj kopię sprzed zapisu</string>
     <string name="tools_confirm">Zapisać sprawdzony plan w tym instrumencie? Nie odłączaj zasilania ani USB. Błąd zapisu bootloadera może wymagać sprzętowego narzędzia odzyskiwania.</string>
     <string name="tools_operation">Operacja</string>
     <string name="tools_preview_help">Przygotowanie odczytuje nową pełną kopię i niczego nie zapisuje w instrumencie. Operacje firmware używają pobranej paczki wybranej w Bibliotece. Przywracanie używa analizowanej kopii.</string>
-    <string name="tools_prepare">Przygotuj podgląd bez zapisu</string>
+    <string name="tools_prepare">Przygotuj plan zapisu</string>
     <string name="tools_transport">Połączenie</string>
     <string name="tools_flash_id">Identyfikator pamięci</string>
     <string name="tools_chip_key">Klucz układu (nie numer seryjny)</string>
