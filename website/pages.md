@@ -54,4 +54,4 @@ Repository documentation is in English. App About documents, app resources and s
 
 ## Sharing deployment with an F-Droid repository
 
-GitHub Pages has one active site deployment per repository. If F-Droid publishing is added, include `fdroid/repo/` in `build/site/` before uploading the Pages artifact. The website and APK repository must deploy together: an APK-only workflow would replace the website, and a website-only deployment would remove the APK repository. The current workflow publishes the website and documentation.
+GitHub Pages has one active site deployment per repository. If F-Droid publishing is added, include `fdroid/repo/` in `build/site/` before uploading the Pages artifact. The website and APK repository must deploy together: an APK-only workflow would replace the website, and a website-only deployment would remove the APK repository. The Pages workflow can include the signed repository when configured; see the repository setup guide in publication/fdroid/repository.md.

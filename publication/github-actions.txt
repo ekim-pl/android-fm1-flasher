@@ -156,7 +156,5 @@ android-ci.yml validates release tooling with unit tests and actionlint without
 signing secrets, alongside existing Android tests and compilation checks.
 
 PAGES AND F-DROID REPOSITORY
-pages.yml still builds/validates documentation and deploys from main. Signed
-F-Droid index generation and merging fdroid/repo into the Pages artifact remain
-a separate implementation step. No repository URL/fingerprint is advertised as
-ready by these workflows. Existing archival metadata are not current repo config.
+The Pages workflow can include a signed F-Droid index and APK alongside the site.
+See fdroid/repository.md for setup, signing key backup and release updates.

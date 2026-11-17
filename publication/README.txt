@@ -14,7 +14,7 @@ DISTRIBUTIONS
 - Debug: signed developer APK, test Firebase and persistent developer certificate.
 - F-Droid: signed release APK without Firebase/Google Play services. The APK is
   published on GitHub; this does not mean inclusion in the official F-Droid catalog.
-  Signed repository/index hosting remains unimplemented.
+  Pages can publish a signed index when configured; see fdroid/repository.md.
 - Google Play: signed AAB with production Firebase; upload to internal testing and
   promotion to production use separate workflows and existing bundle provenance.
 Firebase-enabled builds default to usage statistics on, with a Settings opt-out.
