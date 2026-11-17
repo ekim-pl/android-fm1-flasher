@@ -49,6 +49,7 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/google-play.yml
+    secrets: inherit
     with:
       tag: ${{ inputs.tag }}
       commit: ${{ needs.validate.outputs.commit }}
@@ -58,6 +59,7 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/android-debug.yml
+    secrets: inherit
     with:
       tag: ${{ inputs.tag }}
       commit: ${{ needs.validate.outputs.commit }}
@@ -67,6 +69,7 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/fdroid-release.yml
+    secrets: inherit
     with:
       tag: ${{ inputs.tag }}
       commit: ${{ needs.validate.outputs.commit }}
