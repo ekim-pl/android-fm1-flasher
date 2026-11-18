@@ -260,6 +260,13 @@
     <string name="no_downloaded_firmware">Brak pobranego firmware</string>
     <string name="reconnect_automatic">Automatycznie połączono z jedynym urządzeniem USB: %1$s</string>
     <string name="tab_about">O aplikacji</string>
+    <string name="about_build_kind">Rodzaj buildu: %1$s</string>
+    <string name="about_build_date">Data kompilacji (UTC): %1$s</string>
+    <string name="about_build_debug">Debug</string>
+    <string name="about_build_nightly">Nightly</string>
+    <string name="about_build_release">Release</string>
+    <string name="about_build_fdroid">F-Droid</string>
+    <string name="about_build_play">Google Play</string>
     <string name="about_version">Wersja %1$s</string>
     <string name="about_document_unavailable">Ten dokument jest dostępny w repozytorium projektu, ale nie jest dołączony do aplikacji.</string>
     <string name="about_document">about/app.pl.md</string>
@@ -362,4 +369,16 @@
     <string name="device_color_pink">Różowy</string>
     <string name="device_color_green">Zielony</string>
     <string name="device_color_sky">Błękitny</string>
+    <string name="app_update_fdroid">Źródło aktualizacji: F-Droid</string>
+    <string name="app_update_nightly">Źródło aktualizacji: GitHub nightly</string>
+    <string name="app_update_check">Sprawdź aktualizacje</string>
+    <string name="app_update_checking">Sprawdzanie aktualizacji aplikacji…</string>
+    <string name="app_update_current">Masz aktualną wersję aplikacji.</string>
+    <string name="app_update_available">Dostępna aktualizacja aplikacji: %1$s</string>
+    <string name="app_update_unavailable">Nie udało się sprawdzić aktualizacji aplikacji.</string>
+    <string name="app_update_incompatible">Dostępna aktualizacja ma inny podpis niż zainstalowana aplikacja.</string>
+    <string name="app_update_offline">Sprawdzanie aktualizacji jest wstrzymane w trybie offline.</string>
+    <string name="app_update_open_fdroid">Otwórz w F-Droid</string>
+    <string name="app_update_open_nightly">Otwórz nightly na GitHubie</string>
+    <string name="app_update_add_repo">Dodaj repozytorium F-Droid</string>
 </resources>

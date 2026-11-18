@@ -14,6 +14,13 @@ Aplikacja nie wymaga konta i nie zawiera reklam. Wersja F-Droid nie zawiera SDK 
 
 W trybie online aplikacja sprawdza włączone źródła katalogów i może pobierać ich dozwolone grafiki. Firmware Hub jest domyślnie włączony; awesome-fm1 na raw.githubusercontent.com i własne źródła wymagają włączenia przez użytkownika. Wyłączone źródła nie wykonują automatycznych żądań; Sprawdź teraz oznacza jawne jednorazowe żądanie także dla źródła wyłączonego. Sprawdzanie włączonych źródeł łączy się z GitHub lub zatwierdzonymi autorami. Providery repozytorium i adresu paczki mogą pobierać nagłówki firmware lub całe pliki FWSC w celu identyfikacji i obliczenia sumy, także przy opcjonalnym sprawdzaniu w tle. Wybranie Pobierz zapisuje zweryfikowaną kopię offline w bibliotece. Sprawdzanie według harmonogramu zachowuje interwał źródła 1–168 godzin, także po błędzie. Buildy release domyślnie używają 8 godzin, a debug 1 godziny. W trybie eksperymentalnym jawne sprawdzenie może pominąć interwał dla źródeł innych niż Hub, z zachowaniem opóźnień serwera; Hub zachowuje minimum 24 godzin. Jawna zmiana sekretu lub udana autoryzacja OAuth pozwala na nowe sprawdzenie. Opcjonalne sprawdzanie katalogów w tle używa WorkManager i jest domyślnie wyłączone; tryb offline je wstrzymuje. Wszystkie żądania korzystają z HTTPS. Firmware nigdy nie jest instalowane automatycznie.
 
+Wydania F-Droid i buildy debug Androida sprawdzają także aktualizacje aplikacji,
+korzystając z publicznych metadanych odpowiednio na GitHub Pages i GitHub
+Releases. Wydanie F-Droid sprawdza przy otwarciu aplikacji, najwyżej raz na
+24 godziny. Build debug sprawdza cyklicznie przy otwartej aplikacji, domyślnie
+co 15 minut. Tryb offline wstrzymuje oba sprawdzenia. Aplikacja porównuje
+wersję i podpis lokalnie.
+
 ## Dane widoczne dla serwisów zewnętrznych
 
 Operatorzy serwerów otrzymują adres żądanego zasobu, adres IP połączenia i standardowe dane techniczne HTTPS. Aplikacja wysyła ogólny techniczny nagłówek User-Agent, który nie identyfikuje konkretnej osoby ani urządzenia. Poza uwierzytelnianiem jawnie skonfigurowanym dla źródła nie dołącza do żądań ulubionych, ustawień, zawartości pamięci instrumentu, tożsamości MIDI ani identyfikatora konta. Operatorzy przetwarzają logi według własnych polityk prywatności; wydawca aplikacji nie kontroluje ich przechowywania ani przetwarzania.

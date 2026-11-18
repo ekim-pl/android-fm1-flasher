@@ -13,9 +13,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.lifecycleScope
 import android.view.WindowInsetsController
 import kotlin.concurrent.withLock
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import java.io.File
 
 /** Compose is the application UI; Android owns USB grants, document pickers and service lifetime. */
@@ -63,6 +68,19 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     private var importBackupUris: List<Uri> = emptyList()
     private var logRevision = -1L
     private val prefs get() = getSharedPreferences("browse", MODE_PRIVATE)
+    private val updateChannel = when (BuildConfig.UPDATE_CHANNEL) {
+        "fdroid" -> AppUpdateChannel.FDROID
+        "nightly" -> AppUpdateChannel.NIGHTLY
+        else -> null
+    }
+    private val updatePrefs by lazy { getSharedPreferences("app-updates-${updateChannel?.name}", MODE_PRIVATE) }
+    private val updateHandler = Handler(Looper.getMainLooper())
+    private val scheduledUpdateCheck = Runnable { checkAppUpdate() }
+    private val installedPackage by lazy { packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES) }
+    private val installedSigners by lazy {
+        installedPackage.signingInfo?.apkContentsSigners.orEmpty().map { FirmwarePackage.sha256(it.toByteArray()) }.toSet()
+    }
+    private var appRelease: AppUpdateFeed.Release? = null
     private val permissionAction get() = "$packageName.COMPOSE_USB_PERMISSION"
     private fun port(device: UsbMidi) = AppPort("${device.info.id}:${device.usb.deviceName}:${device.generation}", device.label)
     override fun attachBaseContext(base: Context) { super.attachBaseContext(AppLanguage.wrap(base)) }
@@ -87,6 +105,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         dispatchBackupImport()
         dispatchOperationLogExport()
         dispatchOAuthCallback()
+        if (visible) checkAppUpdate()
     }
     private val binding = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
@@ -125,7 +144,16 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         importBackupUris = savedInstanceState?.getStringArrayList("importBackupUris")?.map(Uri::parse).orEmpty()
         exportBackupId = savedInstanceState?.getString("exportBackupId")
         exportBackupUri = savedInstanceState?.getString("exportBackupUri")?.let(Uri::parse)
+        val appUpdate = updateChannel?.let { channel ->
+            appRelease = updatePrefs.getString("release", null)?.let { raw ->
+                runCatching { AppUpdateFeed.parse(raw, channel, packageName) }.getOrNull()
+            }
+            if (updatePrefs.getBoolean("failed", false)) AppUpdate(channel, AppUpdateStatus.UNAVAILABLE)
+            else appRelease?.view(channel, installedPackage.longVersionCode, installedSigners) ?: AppUpdate(channel)
+        }
         state.value = state.value.copy(initialized = true, language = resources.configuration.locales[0].language.let { if (it in listOf("pl", "zh")) it else "en" },
+            appBuild = AppBuildInfo(installedPackage.versionName ?: BuildConfig.VERSION_NAME, BuildConfig.APP_BUILD_KIND, BuildConfig.APP_BUILD_DATE),
+            appUpdate = appUpdate,
             appearance = prefs.getString("appearance", "SYSTEM") ?: "SYSTEM", browse = BrowseFilters(
                 prefs.getString("query", "").orEmpty(), runCatching { FirmwareCategory.valueOf(prefs.getString("category", "ALL")!!) }.getOrDefault(FirmwareCategory.ALL),
                 runCatching { FirmwareSort.valueOf(prefs.getString("sort", "NAME")!!) }.getOrDefault(FirmwareSort.NAME), prefs.all["downloaded"].toString().toBoolean(), prefs.all["favorites"].toString().toBoolean(), prefs.getString("source", null)?.takeIf { it.isNotBlank() }))
@@ -157,8 +185,13 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         } }
             .onFailure { showFailure(msg("auth_storage_error")) }
     }
-    override fun onStart() { super.onStart(); visible = true; service?.onAppOpened() }
-    override fun onStop() { visible = false; if (!isChangingConfigurations) service?.onAppClosed(); super.onStop() }
+    override fun onStart() { super.onStart(); visible = true; service?.onAppOpened(); checkAppUpdate() }
+    override fun onStop() {
+        visible = false
+        updateHandler.removeCallbacks(scheduledUpdateCheck)
+        if (!isChangingConfigurations) service?.onAppClosed()
+        super.onStop()
+    }
     override fun onDestroy() {
         service?.unobserve(observer)
         if (bound) unbindService(binding)
@@ -183,6 +216,14 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     }
     override fun screen(screen: AnalyticsScreen) { AndroidAnalytics.get(this).screen(screen) }
     override fun perform(action: AppAction) {
+        when (action.kind) {
+            AppActionKind.APP_UPDATE_CHECK -> { checkAppUpdate(manual = true); return }
+            AppActionKind.APP_UPDATE_OPEN, AppActionKind.APP_UPDATE_ADD_REPO -> {
+                openAppUpdate(addRepo = action.kind == AppActionKind.APP_UPDATE_ADD_REPO)
+                return
+            }
+            else -> Unit
+        }
         if (action.kind == AppActionKind.ANALYTICS_PREFERENCE) {
             runCatching { AndroidAnalytics.get(this).setPreference(AnalyticsPreference.valueOf(action.id)) }
                 .onFailure { showFailure(msg("analytics_save_failed")) }
@@ -191,11 +232,78 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         }
         try { dispatch(action) } catch (failure: Exception) { service?.recordFailure(failure); showFailure(failure.appMessage(R.string.library_change_error)) }
     }
+
+    private fun checkAppUpdate(manual: Boolean = false) {
+        val previous = state.value.appUpdate ?: return
+        if (!visible || previous.status == AppUpdateStatus.CHECKING || !canOpenAppUpdate()) return
+        val interval = BuildConfig.APP_UPDATE_INTERVAL_MINUTES * 60_000L
+        val sinceLastCheck = System.currentTimeMillis() - updatePrefs.getLong("last_check", 0)
+        updateHandler.removeCallbacks(scheduledUpdateCheck)
+        if (!manual && sinceLastCheck in 0 until interval) {
+            if (previous.channel == AppUpdateChannel.NIGHTLY) {
+                updateHandler.postDelayed(scheduledUpdateCheck, interval - sinceLastCheck)
+            }
+            return
+        }
+        state.value = state.value.copy(appUpdate = previous.copy(status = AppUpdateStatus.CHECKING))
+        lifecycleScope.launch {
+            val fetched = try {
+                runInterruptible(Dispatchers.IO) {
+                    AppUpdateFeed.fetch(previous.channel, packageName) { !state.value.offline }
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
+            }
+            if (state.value.offline) {
+                state.value = state.value.copy(appUpdate = previous)
+                return@launch
+            }
+            val saved = updatePrefs.edit().putLong("last_check", System.currentTimeMillis()).putBoolean("failed", fetched == null)
+            val result = fetched?.let { (raw, release) ->
+                appRelease = release
+                saved.putString("release", raw)
+                release.view(previous.channel, installedPackage.longVersionCode, installedSigners)
+            } ?: AppUpdate(previous.channel, AppUpdateStatus.UNAVAILABLE)
+            saved.apply()
+            state.value = state.value.copy(appUpdate = result)
+            if (previous.channel == AppUpdateChannel.NIGHTLY) checkAppUpdate()
+        }
+    }
+
+    private fun canOpenAppUpdate(): Boolean {
+        val active = service?.state ?: return false
+        return !active.offline && !active.busy && !active.flashing && !active.queueRunning
+    }
+
+    private fun openAppUpdate(addRepo: Boolean) {
+        val update = state.value.appUpdate ?: return
+        if (!canOpenAppUpdate() || (!addRepo && update.status != AppUpdateStatus.AVAILABLE)) return
+        fun launch(uri: String, target: String? = null): Boolean = try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(uri)).setPackage(target))
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        }
+        when (update.channel) {
+            AppUpdateChannel.NIGHTLY -> if (!addRepo) appRelease?.let { launch(it.nightlyPage) }
+            AppUpdateChannel.FDROID -> {
+                if (!addRepo && launch("market://details?id=$packageName", "org.fdroid.fdroid")) return
+                val repoUri = appRelease?.repoFingerprint?.let {
+                    Uri.parse(AppUpdateFeed.FDROID_REPO).buildUpon().scheme("fdroidrepos")
+                        .appendQueryParameter("fingerprint", it).build().toString()
+                }
+                if (repoUri == null || !launch(repoUri)) launch(AppUpdateFeed.FDROID_HELP)
+            }
+        }
+    }
     private fun dispatch(action: AppAction) {
         val active = service ?: return
         val next = active.state
         active.recordAction(action)
         when (action.kind) {
+            AppActionKind.APP_UPDATE_CHECK, AppActionKind.APP_UPDATE_OPEN, AppActionKind.APP_UPDATE_ADD_REPO -> Unit
             AppActionKind.LOG_RETENTION -> if (next.experimental && !next.busy) AndroidOperationLogger.get(this).execute { log ->
                 val result = runCatching { log.setRetentionDays(action.id.toInt()) }
                 val days = log.retentionDays()

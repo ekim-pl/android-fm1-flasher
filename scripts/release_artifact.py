@@ -59,6 +59,12 @@ def create(variant, path, directory):
     tag = os.environ.get('FM1_RELEASE_TAG', '')
     if tag and tag != f'v{name}':
         raise ValueError('Tag does not match versionName')
+    nightly_code = os.environ.get('FM1_NIGHTLY_CODE')
+    if nightly_code:
+        code = int(nightly_code)
+        if variant != 'debug' or tag or not 1000001 <= code <= 2100000000:
+            raise ValueError('Invalid nightly build identity')
+        name += f'-nightly.{code - 1000000}'
     cert = certificate(path, variant)
     expected = os.environ['EXPECTED_CERT_SHA256'].replace(':', '').strip().upper()
     if cert != expected:

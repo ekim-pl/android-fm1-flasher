@@ -27,6 +27,9 @@ targets:
       path: Info.plist
       properties:
         CFBundleDisplayName: FM-1 Flasher
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        FM1BuildConfiguration: $(CONFIGURATION)
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         CADisableMinimumFrameDurationOnPhone: true
@@ -40,6 +43,14 @@ targets:
         script: |
           cd "$SRCROOT/.."
           ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
+        basedOnDependencyAnalysis: false
+    postBuildScripts:
+      - name: Write app build date
+        script: |
+          mkdir -p "$(dirname "$SCRIPT_OUTPUT_FILE_0")" &&
+          date -u +%Y-%m-%d > "$SCRIPT_OUTPUT_FILE_0"
+        outputFiles:
+          - $(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/FM1BuildDate.txt
         basedOnDependencyAnalysis: false
     dependencies:
       - sdk: CoreMIDI.framework

@@ -58,6 +58,7 @@ class FleetUiTest : InstrumentationTestCase() {
         }
         try {
             instrumentation.runOnMainSync { activity.setContent { FlasherApp(backend) } }
+            click("Devices")
             click("Details")
             click("Pink")
             assertEquals(AppAction(AppActionKind.DEVICE_COLOR, device.id, "3"), actions.last())

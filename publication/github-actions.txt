@@ -8,6 +8,11 @@ select main as the workflow branch and enter the existing stable tag separately.
 Tag creation alone does not trigger a release. No workflow in this workflow set
 publishes the application to Google Play production automatically.
 
+About shows the version from the installed package, the distribution or build
+type and the build date in UTC. Gradle sets the metadata for local and CI
+builds. F-Droid uses -Pfm1FdroidUpdates=true and Play uses
+-Pfm1GooglePlayBuild=true. Nightly builds are identified by -Pfm1NightlyCode.
+
 WORKFLOWS
 android-debug.yml — Developer debug APK (test Firebase)
   Optional stable/preview tag matching versionName; empty uses the selected workflow
@@ -15,6 +20,16 @@ android-debug.yml — Developer debug APK (test Firebase)
   Runs synthetic tests/lint without downloading firmware, builds with test Firebase
   and a persistent developer signing key.
   Artifact android-debug-<tag>, or android-debug-dev. No publication.
+
+android-nightly.yml — Public GitHub nightly prerelease
+  Runs nightly or by manual dispatch on the default branch. Reuses android-debug
+  and its signing environment. Publishes the verified APK, debug-manifest.json
+  and SHA256SUMS under a separate nightly-<versionCode> tag for each release.
+  versionCode is 1000000 plus the nightly build number. The scheduled workflow
+  starts at build number 3, after the initial previews. Only nightlies use
+  this range. Debug builds offer the update when the signing key matches.
+  Debug builds check every 15 minutes while open by default. Override at build
+  time, for example with -Pfm1DebugAppUpdateMinutes=30 on :app:assembleDebug.
 
 fdroid-release.yml — F-Droid signed APK
   Required stable tag. Environment fdroid-release. Requires official V15/V16
@@ -115,8 +130,8 @@ source. Production source tags must include the firmwareIntegrationTest task and
 Source tags must be kept immutable. If a tag moves, publication/upload rejects
 artifacts from the old commit. Branch-only builds cannot be published as stable
 releases. Allocate monotonically increasing versionCodes for distribution updates.
-F-Droid and Play may publish different versions on independent schedules. Preview
-debug builds remain Actions artifacts and are not automatically GitHub prereleases.
+F-Droid and Play may publish different versions on independent schedules. Manual
+preview debug builds remain Actions artifacts.
 Manifests and checksums supplement the successful trusted build job;
 they are not a replacement for APK/AAB signing or a signed F-Droid index.
 Artifacts are retained for 90 days; reports for 14. Recovery without rebuilding

@@ -260,6 +260,13 @@
     <string name="no_downloaded_firmware">No downloaded firmware</string>
     <string name="reconnect_automatic">Automatically reconnected to the only USB device: %1$s</string>
     <string name="tab_about">About</string>
+    <string name="about_build_kind">Build type: %1$s</string>
+    <string name="about_build_date">Build date (UTC): %1$s</string>
+    <string name="about_build_debug">Debug</string>
+    <string name="about_build_nightly">Nightly</string>
+    <string name="about_build_release">Release</string>
+    <string name="about_build_fdroid">F-Droid</string>
+    <string name="about_build_play">Google Play</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_document_unavailable">This document is available in the project repository; it is not bundled with the app.</string>
     <string name="about_document">about/app.md</string>
@@ -362,4 +369,16 @@
     <string name="device_color_pink">Pink</string>
     <string name="device_color_green">Green</string>
     <string name="device_color_sky">Sky blue</string>
+    <string name="app_update_fdroid">Update source: F-Droid</string>
+    <string name="app_update_nightly">Update source: GitHub nightly</string>
+    <string name="app_update_check">Check for updates</string>
+    <string name="app_update_checking">Checking for app updates…</string>
+    <string name="app_update_current">The app is up to date.</string>
+    <string name="app_update_available">App update available: %1$s</string>
+    <string name="app_update_unavailable">Could not check for app updates.</string>
+    <string name="app_update_incompatible">This build has a different signature from the available update.</string>
+    <string name="app_update_offline">Update checks are paused in offline mode.</string>
+    <string name="app_update_open_fdroid">Open in F-Droid</string>
+    <string name="app_update_open_nightly">Open GitHub nightly</string>
+    <string name="app_update_add_repo">Add F-Droid repository</string>
 </resources>

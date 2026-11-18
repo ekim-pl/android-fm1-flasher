@@ -1,0 +1,90 @@
+name: Android nightly
+
+on:
+  schedule:
+    - cron: '29 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-nightly
+  cancel-in-progress: false
+
+jobs:
+  version:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    outputs:
+      number: ${{ steps.version.outputs.number }}
+    steps:
+      - id: version
+        name: Check for an unpublished commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          published=$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" --jq '
+            .[] | select(.prerelease and (.draft | not) and (.tag_name | test("^nightly-[0-9]+$")))
+            | .target_commitish
+          ')
+          if grep -Fxq "$GITHUB_SHA" <<< "$published"; then
+            echo "Nightly is already published for $GITHUB_SHA"
+          else
+            # Reserve build numbers 1 and 2 for the initial preview builds.
+            echo "number=$((GITHUB_RUN_NUMBER + 2))" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: version
+    if: needs.version.outputs.number != ''
+    uses: ./.github/workflows/android-debug.yml
+    with:
+      tag: ''
+      nightly_run_number: ${{ fromJSON(needs.version.outputs.number) }}
+    secrets: inherit
+
+  publish-nightly:
+    needs: [version, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: write
+      contents: write
+    steps:
+      - name: Publish the verified nightly APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NIGHTLY_NUMBER: ${{ needs.version.outputs.number }}
+        run: |
+          gh run download "$GITHUB_RUN_ID" --name android-debug-dev --dir dist
+          code=$((1000000 + NIGHTLY_NUMBER))
+          tag="nightly-$code"
+          jq -e --arg commit "$GITHUB_SHA" --argjson code "$code" '
+            .variant == "debug" and .version_code == $code and .commit == $commit
+            and .tag == "" and (.file | test("^fm1-flasher-[0-9]+[.][0-9]+[.][0-9]+-nightly[.][0-9]+-debug[.]apk$"))
+          ' dist/manifest.json > /dev/null
+          apk=$(jq -r .file dist/manifest.json)
+          (cd dist && sha256sum --check --strict SHA256SUMS)
+          mv dist/manifest.json dist/debug-manifest.json
+          assets=("dist/$apk" dist/debug-manifest.json dist/SHA256SUMS)
+          if existing=$(gh release view "$tag" --json isDraft,isPrerelease,targetCommitish); then
+            jq -e --arg commit "$GITHUB_SHA" '.isPrerelease and .targetCommitish == $commit' <<< "$existing" > /dev/null
+            draft=$(jq -r .isDraft <<< "$existing")
+          else
+            gh release create "$tag" --target "$GITHUB_SHA" --draft --prerelease --latest=false \
+              --title "FM-1 Flasher nightly $NIGHTLY_NUMBER" --notes "Developer APK from $GITHUB_SHA."
+            draft=true
+          fi
+          if [[ "$draft" == true ]]; then
+            gh release upload "$tag" "${assets[@]}" --clobber
+            gh release edit "$tag" --draft=false --latest=false
+          fi
+      - name: Publish the F-Droid nightly channel on Pages
+        if: vars.FDROID_NIGHTLY_REPO_ENABLED == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run pages.yml --ref "$GITHUB_REF_NAME"
