@@ -66,8 +66,8 @@ android {
             resValue 'string', 'project_id', analyticsConfig.project.project_id
             resValue 'string', 'gcm_defaultSenderId', analyticsConfig.project.project_number
         }
-        versionCode 42
-        versionName '0.10.2'
+        versionCode 43
+        versionName '0.11.0'
     }
     signingConfigs {
         if (debugKeystore) {
