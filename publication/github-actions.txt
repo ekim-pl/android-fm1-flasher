@@ -22,6 +22,8 @@ android-nightly.yml — Public GitHub nightly prerelease
   and SHA256SUMS under a separate nightly-<versionCode> tag for each release.
   versionCode is 1000000 plus the nightly workflow run number. Only nightlies
   use this range. Debug builds offer the update when the signing key matches.
+  Debug builds check every 15 minutes while open by default. Override at build
+  time, for example with -Pfm1DebugAppUpdateMinutes=30 on :app:assembleDebug.
 
 fdroid-release.yml — F-Droid signed APK
   Required stable tag. Environment fdroid-release. Requires official V15/V16

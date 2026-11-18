@@ -16,9 +16,10 @@ W trybie online aplikacja sprawdza włączone źródła katalogów i może pobie
 
 Wydania F-Droid i buildy debug Androida sprawdzają także aktualizacje aplikacji,
 korzystając z publicznych metadanych odpowiednio na GitHub Pages i GitHub
-Releases. Automatyczne sprawdzanie zaczyna się przy otwartej aplikacji najwyżej
-raz na 24 godziny. Tryb offline je wstrzymuje. Aplikacja porównuje wersję
-i podpis lokalnie.
+Releases. Wydanie F-Droid sprawdza przy otwarciu aplikacji, najwyżej raz na
+24 godziny. Build debug sprawdza cyklicznie przy otwartej aplikacji, domyślnie
+co 15 minut. Tryb offline wstrzymuje oba sprawdzenia. Aplikacja porównuje
+wersję i podpis lokalnie.
 
 ## Dane widoczne dla serwisów zewnętrznych
 

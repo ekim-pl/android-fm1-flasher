@@ -74,6 +74,8 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         else -> null
     }
     private val updatePrefs by lazy { getSharedPreferences("app-updates-${updateChannel?.name}", MODE_PRIVATE) }
+    private val updateHandler = Handler(Looper.getMainLooper())
+    private val scheduledUpdateCheck = Runnable { checkAppUpdate() }
     private val installedPackage by lazy { packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES) }
     private val installedSigners by lazy {
         installedPackage.signingInfo?.apkContentsSigners.orEmpty().map { FirmwarePackage.sha256(it.toByteArray()) }.toSet()
@@ -183,7 +185,12 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             .onFailure { showFailure(msg("auth_storage_error")) }
     }
     override fun onStart() { super.onStart(); visible = true; service?.onAppOpened(); checkAppUpdate() }
-    override fun onStop() { visible = false; if (!isChangingConfigurations) service?.onAppClosed(); super.onStop() }
+    override fun onStop() {
+        visible = false
+        updateHandler.removeCallbacks(scheduledUpdateCheck)
+        if (!isChangingConfigurations) service?.onAppClosed()
+        super.onStop()
+    }
     override fun onDestroy() {
         service?.unobserve(observer)
         if (bound) unbindService(binding)
@@ -227,9 +234,16 @@ class ComposeActivity : ComponentActivity(), AppBackend {
 
     private fun checkAppUpdate(manual: Boolean = false) {
         val previous = state.value.appUpdate ?: return
-        if (previous.status == AppUpdateStatus.CHECKING || !canOpenAppUpdate()) return
+        if (!visible || previous.status == AppUpdateStatus.CHECKING || !canOpenAppUpdate()) return
+        val interval = BuildConfig.APP_UPDATE_INTERVAL_MINUTES * 60_000L
         val sinceLastCheck = System.currentTimeMillis() - updatePrefs.getLong("last_check", 0)
-        if (!manual && sinceLastCheck in 0 until 86_400_000L) return
+        updateHandler.removeCallbacks(scheduledUpdateCheck)
+        if (!manual && sinceLastCheck in 0 until interval) {
+            if (previous.channel == AppUpdateChannel.NIGHTLY) {
+                updateHandler.postDelayed(scheduledUpdateCheck, interval - sinceLastCheck)
+            }
+            return
+        }
         state.value = state.value.copy(appUpdate = previous.copy(status = AppUpdateStatus.CHECKING))
         lifecycleScope.launch {
             val fetched = try {
@@ -253,6 +267,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             } ?: AppUpdate(previous.channel, AppUpdateStatus.UNAVAILABLE)
             saved.apply()
             state.value = state.value.copy(appUpdate = result)
+            if (previous.channel == AppUpdateChannel.NIGHTLY) checkAppUpdate()
         }
     }
 

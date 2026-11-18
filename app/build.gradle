@@ -6,6 +6,10 @@ plugins {
 
 def refreshHours = providers.gradleProperty('fm1RefreshHours').getOrElse('8')
 def debugRefreshHours = providers.gradleProperty('fm1DebugRefreshHours').getOrElse('1')
+def debugAppUpdateMinutes = providers.gradleProperty('fm1DebugAppUpdateMinutes').getOrElse('15')
+if (!debugAppUpdateMinutes.isInteger() || debugAppUpdateMinutes.toInteger() < 1) {
+    throw new GradleException('fm1DebugAppUpdateMinutes must be a positive whole number of minutes')
+}
 [refreshHours, debugRefreshHours].each {
     if (!(it ==~ /[0-9]+/) || it.toInteger() < 1 || it.toInteger() > 168)
         throw new GradleException('Refresh intervals must be whole hours between 1 and 168')
@@ -42,6 +46,7 @@ android {
     useLibrary "android.test.base"
     defaultConfig {
         buildConfigField 'int', 'DEFAULT_SOURCE_REFRESH_HOURS', refreshHours
+        buildConfigField 'int', 'APP_UPDATE_INTERVAL_MINUTES', '1440'
         applicationId 'pl.ekim.fm1_flasher'
         minSdk 34
         targetSdk 36
@@ -76,6 +81,7 @@ android {
     buildTypes {
         debug {
             buildConfigField 'int', 'DEFAULT_SOURCE_REFRESH_HOURS', debugRefreshHours
+            buildConfigField 'int', 'APP_UPDATE_INTERVAL_MINUTES', debugAppUpdateMinutes.toInteger().toString()
             buildConfigField 'String', 'UPDATE_CHANNEL', '"nightly"'
         }
         release {
