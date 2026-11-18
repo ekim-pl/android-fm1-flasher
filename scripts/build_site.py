@@ -201,9 +201,9 @@ def write_page(language, page, output):
 
     if page == 'index.html':
         intro, separator, rest = body.partition('<h2')
-        body = (f'<section class="home-hero"><div>{intro}</div>'
+        body = (f'<section class="home-hero">{intro}</section>'
                 f'<img class="home-cover" src="{relative("assets/readme-cover.png", output)}" '
-                f'alt="" width="1536" height="1024"></section>{separator}{rest}')
+                f'alt="" width="1536" height="1024">{separator}{rest}')
     html = f'''<!doctype html>
 <html lang="{ui['html']}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">

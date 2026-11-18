@@ -5,6 +5,10 @@ FM-1 Flasher **0.10.1** 包含本地固件库、来源颜色、全屏设置和�
 
 [当前指南](documentation.md) · [关于应用](../../about/README.zh-Hans.md) · [版本历史](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
+## 开始使用
+
+[安装与日常使用](documentation.md#getting-started)
+
 ## 设备 · 固件库 · 任务
 
 - **设备：**逐台读取乐器，命名并分别指定已下载固件。
@@ -27,7 +31,6 @@ FM-1 Flasher **0.10.1** 包含本地固件库、来源颜色、全屏设置和�
 
 ## 文档
 
-- [安装与日常使用](documentation.md#getting-started)
 - [集线器上的多台乐器](documentation.md#multiple-fm1-devices-on-a-hub)
 - [构建与测试](documentation.md#building-and-testing)
 - [架构与平台边界](../../MIGRATION.md)

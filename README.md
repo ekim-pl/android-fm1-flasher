@@ -1,6 +1,6 @@
 # FM-1 Flasher
 
-![FM-1 Flasher — Your FM-1 setup. More possibilities.](https://raw.githubusercontent.com/ekim-pl/android-fm1-flasher/main/assets/readme-cover.png)
+![FM-1 Flasher for M-VAVE FM-1](assets/github-social-preview.png)
 
 [![Get it on F-Droid](https://img.shields.io/badge/Get%20it%20on-F--Droid-1976D2?style=for-the-badge&logo=fdroid&logoColor=white)](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/)
 ![Google Play — coming soon](https://img.shields.io/badge/Google%20Play-Coming%20soon-777777?style=for-the-badge&logo=googleplay&logoColor=cccccc)

@@ -5,6 +5,10 @@ FM-1 Flasher **0.10.1** obejmuje lokalną bibliotekę firmware, kolory źródeł
 
 [Aktualna instrukcja](documentation.md) · [O aplikacji](../../about/README.pl.md) · [Historia wydań](https://github.com/ekim-pl/android-fm1-flasher/releases)
 
+## Pierwsze kroki
+
+[Instalacja i codzienne użycie](documentation.md#getting-started)
+
 ## Urządzenia · Biblioteka · Zadania
 
 - **Urządzenia:** odczytaj każdy instrument, nadaj mu nazwę i przypisz własną pobraną paczkę.
@@ -27,7 +31,6 @@ Aby dołączyć do Awesome FM-1, utwórz fork repozytorium, dodaj krótkie zgło
 
 ## Dokumentacja
 
-- [Instalacja i codzienne użycie](documentation.md#getting-started)
 - [Wiele instrumentów przez hub](documentation.md#multiple-fm1-devices-on-a-hub)
 - [Budowanie i testy](documentation.md#building-and-testing)
 - [Architektura i granice platform](../../MIGRATION.md)
