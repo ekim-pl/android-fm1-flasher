@@ -17,7 +17,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 
 @Composable internal fun AboutScreen(
-    document: String, appName: String, version: String, platformLimits: String?,
+    document: String, title: String, build: AppBuildInfo?, language: String, platformLimits: String?,
     privacyTitle: String, privacySummary: String, privacyAction: String,
     onPrivacy: () -> Unit, open: (String) -> Unit,
 ) {
@@ -30,9 +30,16 @@ import androidx.compose.ui.unit.dp
             item {
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                     Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Text(appName, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.semantics { heading() })
-                        Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.surface.copy(alpha = .7f)) {
-                            Text(version, Modifier.padding(horizontal = 12.dp, vertical = 6.dp), style = MaterialTheme.typography.labelLarge)
+                        Text(title, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.semantics { heading() })
+                        if (build != null) {
+                            Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.surface.copy(alpha = .7f)) {
+                                Text(resolveCoreText(msg("about_version", build.version), language),
+                                    Modifier.padding(horizontal = 12.dp, vertical = 6.dp), style = MaterialTheme.typography.labelLarge)
+                            }
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(resolveCoreText(msg("about_build_kind", msg("about_build_${build.kind}")), language))
+                                build.date?.let { Text(resolveCoreText(msg("about_build_date", it), language)) }
+                            }
                         }
                         MarkdownText(sections.first().substringAfter('\n').trim(), open)
                         if (platformLimits != null) Text(platformLimits, style = MaterialTheme.typography.bodySmall)

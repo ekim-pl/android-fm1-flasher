@@ -51,6 +51,7 @@ class DeviceToolsUiTest : InstrumentationTestCase() {
         }
         try {
             instrumentation.runOnMainSync { activity.setContent { FlasherApp(backend) } }
+            locate("Devices")
             locate("Modes and flash chip")
             locate("Read and back up ROM flash")
             assertEquals(AppActionKind.TOOLS_READ, actions.last().kind)

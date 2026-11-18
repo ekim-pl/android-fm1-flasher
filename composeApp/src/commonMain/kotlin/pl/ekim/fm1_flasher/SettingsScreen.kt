@@ -92,7 +92,7 @@ import androidx.compose.ui.unit.dp
         SettingsCard(t("settings_app")) {
             if (state.fleetAvailable) OutlinedButton({ navigate(LibraryTab.ABOUT) }, Modifier.fillMaxWidth()) { Text(t("tab_about")) }
             OutlinedButton(privacy, Modifier.fillMaxWidth()) { Text(t("privacy_title")) }
-            Text(t("about_version", state.appVersion ?: "0.10.0"), style = MaterialTheme.typography.bodySmall)
+            state.appBuild?.let { Text(t("about_version", it.version), style = MaterialTheme.typography.bodySmall) }
             state.appUpdate?.let { update ->
                 Text(t(update.channel.labelKey), style = MaterialTheme.typography.bodySmall)
                 if (state.offline) Text(t("app_update_offline"), style = MaterialTheme.typography.bodySmall)

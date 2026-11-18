@@ -260,6 +260,13 @@
     <string name="no_downloaded_firmware">没有已下载的固件</string>
     <string name="reconnect_automatic">已自动重新连接唯一的 USB 设备：%1$s</string>
     <string name="tab_about">关于</string>
+    <string name="about_build_kind">构建类型：%1$s</string>
+    <string name="about_build_date">构建日期（UTC）：%1$s</string>
+    <string name="about_build_debug">调试版</string>
+    <string name="about_build_nightly">每日构建</string>
+    <string name="about_build_release">发行版</string>
+    <string name="about_build_fdroid">F-Droid</string>
+    <string name="about_build_play">Google Play</string>
     <string name="about_version">版本 %1$s</string>
     <string name="about_document_unavailable">此文档可在项目代码仓库中查看，未随应用附带。</string>
     <string name="about_document">about/app.zh-Hans.md</string>

@@ -1,3 +1,6 @@
+import java.time.LocalDate
+import java.time.ZoneOffset
+
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
@@ -32,6 +35,11 @@ if (analyticsEnabled) {
 def uploadKeystore = System.getenv('ANDROID_KEYSTORE_FILE')
 def debugKeystore = System.getenv('ANDROID_DEBUG_KEYSTORE_FILE')
 def fdroidUpdates = providers.gradleProperty('fm1FdroidUpdates').getOrElse('false').toBoolean()
+def googlePlayBuild = providers.gradleProperty('fm1GooglePlayBuild').getOrElse('false').toBoolean()
+if (fdroidUpdates && googlePlayBuild) {
+    throw new GradleException('Select either the F-Droid or the Google Play distribution')
+}
+def buildDate = LocalDate.now(ZoneOffset.UTC).toString()
 def nightlyCode = providers.gradleProperty('fm1NightlyCode').orNull?.toInteger()
 if (nightlyCode != null && !(nightlyCode in 1000001..2100000000)) {
     throw new GradleException('Nightly versionCode must be between 1000001 and 2100000000')
@@ -47,6 +55,7 @@ android {
     defaultConfig {
         buildConfigField 'int', 'DEFAULT_SOURCE_REFRESH_HOURS', refreshHours
         buildConfigField 'int', 'APP_UPDATE_INTERVAL_MINUTES', '1440'
+        buildConfigField 'String', 'APP_BUILD_DATE', '"' + buildDate + '"'
         applicationId 'pl.ekim.fm1_flasher'
         minSdk 34
         targetSdk 36
@@ -83,9 +92,11 @@ android {
             buildConfigField 'int', 'DEFAULT_SOURCE_REFRESH_HOURS', debugRefreshHours
             buildConfigField 'int', 'APP_UPDATE_INTERVAL_MINUTES', debugAppUpdateMinutes.toInteger().toString()
             buildConfigField 'String', 'UPDATE_CHANNEL', '"nightly"'
+            buildConfigField 'String', 'APP_BUILD_KIND', nightlyCode == null ? '"debug"' : '"nightly"'
         }
         release {
             buildConfigField 'String', 'UPDATE_CHANNEL', fdroidUpdates ? '"fdroid"' : '""'
+            buildConfigField 'String', 'APP_BUILD_KIND', '"' + (fdroidUpdates ? 'fdroid' : googlePlayBuild ? 'play' : 'release') + '"'
             if (uploadKeystore) {
                 signingConfig signingConfigs.release
             }

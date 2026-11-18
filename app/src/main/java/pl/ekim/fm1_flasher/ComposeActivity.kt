@@ -152,7 +152,8 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             else appRelease?.view(channel, installedPackage.longVersionCode, installedSigners) ?: AppUpdate(channel)
         }
         state.value = state.value.copy(initialized = true, language = resources.configuration.locales[0].language.let { if (it in listOf("pl", "zh")) it else "en" },
-            appVersion = installedPackage.versionName, appUpdate = appUpdate,
+            appBuild = AppBuildInfo(installedPackage.versionName ?: BuildConfig.VERSION_NAME, BuildConfig.APP_BUILD_KIND, BuildConfig.APP_BUILD_DATE),
+            appUpdate = appUpdate,
             appearance = prefs.getString("appearance", "SYSTEM") ?: "SYSTEM", browse = BrowseFilters(
                 prefs.getString("query", "").orEmpty(), runCatching { FirmwareCategory.valueOf(prefs.getString("category", "ALL")!!) }.getOrDefault(FirmwareCategory.ALL),
                 runCatching { FirmwareSort.valueOf(prefs.getString("sort", "NAME")!!) }.getOrDefault(FirmwareSort.NAME), prefs.all["downloaded"].toString().toBoolean(), prefs.all["favorites"].toString().toBoolean(), prefs.getString("source", null)?.takeIf { it.isNotBlank() }))

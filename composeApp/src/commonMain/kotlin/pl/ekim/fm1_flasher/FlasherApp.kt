@@ -31,7 +31,6 @@ fun FlasherApp(backend: AppBackend) {
     fun text(key: String, vararg arguments: Any) = resolveCoreText(msg(key, *arguments), language)
     fun send(kind: AppActionKind, id: String = "", value: String = "") = backend.perform(AppAction(kind, id, value))
     var tabName by rememberSaveable { mutableStateOf(LibraryTab.CATALOG.name) }
-    var workspaceInitialized by rememberSaveable { mutableStateOf(false) }
     val midiTools = tabName == MIDI_TOOLS_ROUTE
     val tab = if (midiTools) LibraryTab.DEVICES else runCatching { LibraryTab.valueOf(tabName) }.getOrDefault(LibraryTab.CATALOG)
     var settings by rememberSaveable { mutableStateOf(false) }
@@ -79,10 +78,7 @@ fun FlasherApp(backend: AppBackend) {
     LaunchedEffect(filters) { backend.saveBrowse(filters) }
     LaunchedEffect(state.experimental) { if (!state.experimental && tab == LibraryTab.LOGGER) tabName = LibraryTab.CATALOG.name }
     val dark = state.appearance == "DARK" || (state.appearance == "SYSTEM" && isSystemInDarkTheme())
-    LaunchedEffect(state.fleetAvailable) {
-        if (state.fleetAvailable && !workspaceInitialized) { tabName = LibraryTab.DEVICES.name; workspaceInitialized = true }
-    }
-    val tabs = if (state.fleetAvailable) listOf(LibraryTab.DEVICES, LibraryTab.CATALOG, LibraryTab.TASKS)
+    val tabs = if (state.fleetAvailable) listOf(LibraryTab.CATALOG, LibraryTab.DEVICES, LibraryTab.TASKS)
         else LibraryTab.entries.filter { it !in listOf(LibraryTab.DEVICES, LibraryTab.TASKS) && (it != LibraryTab.LOGGER || state.experimental) }
     MaterialTheme(colorScheme = if (dark) darkColorScheme(primary = Color(0xFF64D8CB), secondary = Color(0xFFA3CCC3), secondaryContainer = Color(0xFF284E48), onSecondaryContainer = Color(0xFFC5EDE4), background = Color(0xFF10161D), surface = Color(0xFF151D26), surfaceContainer = Color(0xFF202B36)) else lightColorScheme(primary = Color(0xFF006B61), secondary = Color(0xFF3F665D), secondaryContainer = Color(0xFFD0E8E1), onSecondaryContainer = Color(0xFF12372F), background = Color(0xFFF3F6F8), surface = Color(0xFFFAFCFE), surfaceContainer = Color(0xFFE8EFF2))) {
         Surface(Modifier.fillMaxSize()) {
@@ -101,8 +97,10 @@ fun FlasherApp(backend: AppBackend) {
                         { action, message -> confirmation = action to message },
                         { destination -> settings = false; tabName = destination.name })
                     else -> Column {
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(text("app_name"), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.End) {
+                        if (tab == LibraryTab.CATALOG) {
+                            Text(text("app_name"), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                        }
                         TextButton(onClick = { settings = true }) { Text(text("settings")) }
                     }
                     state.appUpdate?.takeIf {
@@ -237,7 +235,7 @@ fun FlasherApp(backend: AppBackend) {
                                     { tabName = MIDI_TOOLS_ROUTE })
                                 LibraryTab.LOGGER -> LoggerScreen(state, language, backend)
                                 LibraryTab.ABOUT -> AboutScreen(
-                                    backend.document(text("about_document")), text("app_name"), text("about_version", state.appVersion ?: "0.10.1"),
+                                    backend.document(text("about_document")), text("tab_about"), state.appBuild, language,
                                     if (!state.usbRecovery) text("ios_platform_limits") else null,
                                     text("privacy_title"), text("about_privacy_summary"), text("about_privacy_action"),
                                     { dialog = text("privacy_title") to msg("privacy_body") }, ::openDocumentOrLink)

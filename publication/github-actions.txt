@@ -8,6 +8,11 @@ select main as the workflow branch and enter the existing stable tag separately.
 Tag creation alone does not trigger a release. No workflow in this workflow set
 publishes the application to Google Play production automatically.
 
+About shows the version from the installed package, the distribution or build
+type and the build date in UTC. Gradle sets the metadata for local and CI
+builds. F-Droid uses -Pfm1FdroidUpdates=true and Play uses
+-Pfm1GooglePlayBuild=true. Nightly builds are identified by -Pfm1NightlyCode.
+
 WORKFLOWS
 android-debug.yml — Developer debug APK (test Firebase)
   Optional stable/preview tag matching versionName; empty uses the selected workflow

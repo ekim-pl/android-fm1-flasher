@@ -22,6 +22,7 @@ data class AppUpdate(
     val status: AppUpdateStatus? = null,
     val version: String? = null,
 )
+data class AppBuildInfo(val version: String, val kind: String, val date: String?)
 data class AppSnapshot(
     val defaultSourceRefreshHours: Int = 8,
     val sourceColors: Map<String, SourceColor> = emptyMap(), val sourceManagementAvailable: Boolean = true,
@@ -49,7 +50,7 @@ data class AppSnapshot(
     val backups: List<BackupRow> = emptyList(), val recovery: RecoveryView? = null,
     val usbRecovery: Boolean = false,
     val language: String = "en", val appearance: String = "SYSTEM", val browse: BrowseFilters = BrowseFilters(),
-    val appVersion: String? = null, val appUpdate: AppUpdate? = null,
+    val appBuild: AppBuildInfo? = null, val appUpdate: AppUpdate? = null,
 )
 enum class AppActionKind {
     HISTORY_RETENTION, HISTORY_CLEAR, ANALYTICS_PREFERENCE, LOG_EXPORT, LOG_CLEAR, LOG_RETENTION, CLEAR_DOWNLOADS,

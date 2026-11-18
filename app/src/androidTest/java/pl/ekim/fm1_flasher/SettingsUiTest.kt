@@ -24,6 +24,7 @@ class SettingsUiTest : InstrumentationTestCase() {
         val actions = mutableListOf<AppAction>()
         val backend = object : AppBackend {
             override val state = MutableStateFlow(AppSnapshot(initialized = true, busy = false, fleetAvailable = true,
+                appBuild = AppBuildInfo("0.99.0-nightly.9", "nightly", "2026-11-18"),
                 catalog = Catalog(emptyList(), "", 0, false, sources = listOf(CatalogSource.hub))))
             override fun perform(action: AppAction) { actions += action }
             override fun saveBrowse(filters: BrowseFilters) = Unit
@@ -55,6 +56,15 @@ class SettingsUiTest : InstrumentationTestCase() {
         fun back() { onMain { activity.onBackPressedDispatcher.onBackPressed() }; instrumentation.waitForIdleSync(); Thread.sleep(100) }
         try {
             onMain { activity.setContent { FlasherApp(backend) } }
+            assertPage()
+            onMain {
+                val tabs = nodes().filter { it.config.contains(SemanticsProperties.Selected) }
+                val first = tabs.first { it.config.getOrNull(SemanticsProperties.Text)?.any { text ->
+                    text.text in setOf("Library", "Devices", "Tasks")
+                } == true }
+                assertEquals(true, first.config.getOrNull(SemanticsProperties.Selected))
+                assertTrue(first.config[SemanticsProperties.Text].any { it.text == "Library" })
+            }
             for (language in listOf("en", "pl", "zh")) {
                 onMain { backend.state.value = backend.state.value.copy(language = language) }
                 val config = android.content.res.Configuration(instrumentation.targetContext.resources.configuration).apply { setLocale(java.util.Locale.forLanguageTag(if (language == "zh") "zh-Hans" else language)) }
@@ -98,6 +108,14 @@ class SettingsUiTest : InstrumentationTestCase() {
                 back()
                 onMain { assertTrue(nodes().any { it.config.getOrNull(SemanticsProperties.Text)?.any { text -> text.text == t("fleet_devices") } == true }) }
                 click(t("settings")); click(t("tab_about"))
+                assertPage()
+                onMain {
+                    val visibleText = nodes().flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty() }.map { it.text }
+                    assertTrue(context.getString(R.string.about_version, "0.99.0-nightly.9") in visibleText)
+                    assertTrue(context.getString(R.string.about_build_kind, t("about_build_nightly")) in visibleText)
+                    assertTrue(context.getString(R.string.about_build_date, "2026-11-18") in visibleText)
+                    assertFalse(t("app_name") in visibleText)
+                }
                 var openedLicense = false
                 for (attempt in 0 until 50) {
                     instrumentation.waitForIdleSync(); Thread.sleep(60)

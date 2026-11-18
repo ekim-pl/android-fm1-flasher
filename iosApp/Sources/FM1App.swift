@@ -18,6 +18,16 @@ struct FM1App: App {
 }
 private struct ComposeScreen: UIViewControllerRepresentable {
     let backend: PortableAppBackend
-    func makeUIViewController(context: Context) -> UIViewController { MainViewControllerKt.MainViewController(backend: backend) }
+    func makeUIViewController(context: Context) -> UIViewController {
+        let bundle = Bundle.main
+        let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+        let configuration = bundle.object(forInfoDictionaryKey: "FM1BuildConfiguration") as? String
+        let date = bundle.url(forResource: "FM1BuildDate", withExtension: "txt").flatMap { url in
+            (try? String(contentsOf: url, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return MainViewControllerKt.MainViewController(
+            backend: backend, version: version, configuration: configuration, buildDate: date
+        )
+    }
     func updateUIViewController(_ controller: UIViewController, context: Context) {}
 }
