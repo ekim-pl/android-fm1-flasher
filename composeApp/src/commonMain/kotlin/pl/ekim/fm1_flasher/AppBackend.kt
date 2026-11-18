@@ -9,6 +9,19 @@ data class ToolsView(val backupId: String, val hash: String, val info: DeviceDia
     val operation: FlashOperation? = null, val changed: List<Int> = emptyList(), val target: FlashLayout.Analysis? = null,
     val token: String? = null, val exported: Boolean = false, val layoutChanges: Boolean = false)
 data class RecoveryView(val token: String, val confirmation: AppText)
+enum class AppUpdateChannel(val labelKey: String, val openKey: String) {
+    FDROID("app_update_fdroid", "app_update_open_fdroid"),
+    NIGHTLY("app_update_nightly", "app_update_open_nightly"),
+}
+enum class AppUpdateStatus(val labelKey: String) {
+    CHECKING("app_update_checking"), CURRENT("app_update_current"), AVAILABLE("app_update_available"),
+    UNAVAILABLE("app_update_unavailable"), INCOMPATIBLE("app_update_incompatible"),
+}
+data class AppUpdate(
+    val channel: AppUpdateChannel,
+    val status: AppUpdateStatus? = null,
+    val version: String? = null,
+)
 data class AppSnapshot(
     val defaultSourceRefreshHours: Int = 8,
     val sourceColors: Map<String, SourceColor> = emptyMap(), val sourceManagementAvailable: Boolean = true,
@@ -36,6 +49,7 @@ data class AppSnapshot(
     val backups: List<BackupRow> = emptyList(), val recovery: RecoveryView? = null,
     val usbRecovery: Boolean = false,
     val language: String = "en", val appearance: String = "SYSTEM", val browse: BrowseFilters = BrowseFilters(),
+    val appVersion: String? = null, val appUpdate: AppUpdate? = null,
 )
 enum class AppActionKind {
     HISTORY_RETENTION, HISTORY_CLEAR, ANALYTICS_PREFERENCE, LOG_EXPORT, LOG_CLEAR, LOG_RETENTION, CLEAR_DOWNLOADS,
@@ -45,7 +59,7 @@ enum class AppActionKind {
     EXPERIMENTAL, LOGGER_PORT, LOGGER_TOGGLE, LOGGER_CLEAR, LOGGER_EXPORT, LOGGER_REFRESH,
     TOOLS_INSPECT, TOOLS_IMPORT, TOOLS_READ, TOOLS_MIDI_INFO, TOOLS_MIDI_BACKUP, TOOLS_PREPARE, TOOLS_WRITE,
     DETECT, RECOVERY_ENTER, RECOVERY_BACKUP, RECOVERY_PREPARE, RECOVERY_WRITE, RECOVERY_EXPORT,
-    LANGUAGE, APPEARANCE, OPEN_LINK,
+    LANGUAGE, APPEARANCE, OPEN_LINK, APP_UPDATE_CHECK, APP_UPDATE_OPEN, APP_UPDATE_ADD_REPO,
 }
 data class SourceConfiguration(val name: String, val url: String, val hours: Int, val packages: Set<String>, val artwork: Set<String>,
     val provider: CatalogProviderType? = null, val authentication: HttpCredentials? = null, val packageChips: Map<String, String> = emptyMap())

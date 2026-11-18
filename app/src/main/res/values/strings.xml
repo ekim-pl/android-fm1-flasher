@@ -362,4 +362,16 @@
     <string name="device_color_pink">Pink</string>
     <string name="device_color_green">Green</string>
     <string name="device_color_sky">Sky blue</string>
+    <string name="app_update_fdroid">Update source: F-Droid</string>
+    <string name="app_update_nightly">Update source: GitHub nightly</string>
+    <string name="app_update_check">Check for updates</string>
+    <string name="app_update_checking">Checking for app updates…</string>
+    <string name="app_update_current">The app is up to date.</string>
+    <string name="app_update_available">App update available: %1$s</string>
+    <string name="app_update_unavailable">Could not check for app updates.</string>
+    <string name="app_update_incompatible">This build has a different signature from the available update.</string>
+    <string name="app_update_offline">Update checks are paused in offline mode.</string>
+    <string name="app_update_open_fdroid">Open in F-Droid</string>
+    <string name="app_update_open_nightly">Open GitHub nightly</string>
+    <string name="app_update_add_repo">Add F-Droid repository</string>
 </resources>

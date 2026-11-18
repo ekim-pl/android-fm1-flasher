@@ -14,6 +14,11 @@ The app requires no account and contains no advertising. The F-Droid distributio
 
 When online, the app checks enabled catalog sources and may fetch their permitted preview images. The Firmware Hub is enabled by default; awesome-fm1 on raw.githubusercontent.com and custom sources require opt-in. Disabled sources make no automatic requests; Check now is an explicit one-time request even for a disabled source. Enabled source checks contact GitHub or approved publishers. Repository/package-URL checks may fetch firmware headers or complete FWSC bytes to identify and hash packages, including optional background checks when enabled. Choosing Download explicitly stores a verified offline library copy. Regular checks follow the configured per-source schedule (1–168 hours), including failed attempts. In experimental mode, manual checks can bypass the interval except for The Firmware Hub, which remains limited to once per 24 hours. Server retry delays are respected. Explicit credential replacement or successful OAuth authorization permits a new check. Optional background catalog checks use WorkManager and are off by default; offline mode pauses them. All requests use HTTPS. No firmware is installed automatically.
 
+F-Droid and Android debug builds also check for app updates using public metadata
+on GitHub Pages or GitHub Releases, respectively. Automatic checks start when
+the app is open, at most once per 24 hours, and offline mode pauses them. The
+app compares version and signing information locally.
+
 ## Information visible to external services
 
 Operators of those servers receive the requested URL, the connection IP address and standard HTTPS connection metadata. The app sends a generic technical User-Agent that does not identify an individual user or device. Apart from authentication explicitly configured for a source, the app does not attach favorites, settings, instrument memory contents, MIDI identity or an account identifier to these requests. Server operators handle technical logs under their own privacy policies; the app publisher does not control their retention or processing.

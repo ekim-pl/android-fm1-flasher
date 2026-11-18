@@ -92,7 +92,29 @@ import androidx.compose.ui.unit.dp
         SettingsCard(t("settings_app")) {
             if (state.fleetAvailable) OutlinedButton({ navigate(LibraryTab.ABOUT) }, Modifier.fillMaxWidth()) { Text(t("tab_about")) }
             OutlinedButton(privacy, Modifier.fillMaxWidth()) { Text(t("privacy_title")) }
-            Text(t("about_version", "0.10.0"), style = MaterialTheme.typography.bodySmall)
+            Text(t("about_version", state.appVersion ?: "0.10.0"), style = MaterialTheme.typography.bodySmall)
+            state.appUpdate?.let { update ->
+                Text(t(update.channel.labelKey), style = MaterialTheme.typography.bodySmall)
+                if (state.offline) Text(t("app_update_offline"), style = MaterialTheme.typography.bodySmall)
+                else update.status?.let { status ->
+                    Text(t(status.labelKey, update.version.orEmpty()), style = MaterialTheme.typography.bodySmall)
+                }
+                val canCheck = !state.offline && !state.busy && !state.queueRunning && !state.flashing
+                OutlinedButton({ send(AppAction(AppActionKind.APP_UPDATE_CHECK)) },
+                    Modifier.fillMaxWidth(), enabled = canCheck && update.status != AppUpdateStatus.CHECKING) {
+                    Text(t("app_update_check"))
+                }
+                if (update.status == AppUpdateStatus.AVAILABLE) {
+                    FilledTonalButton({ send(AppAction(AppActionKind.APP_UPDATE_OPEN)) }, Modifier.fillMaxWidth(), enabled = canCheck) {
+                        Text(t(update.channel.openKey))
+                    }
+                }
+                if (update.channel == AppUpdateChannel.FDROID) {
+                    TextButton({ send(AppAction(AppActionKind.APP_UPDATE_ADD_REPO)) }, enabled = canCheck) {
+                        Text(t("app_update_add_repo"))
+                    }
+                }
+            }
         }
     }
 }

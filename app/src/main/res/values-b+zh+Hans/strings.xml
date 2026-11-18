@@ -362,4 +362,16 @@
     <string name="device_color_pink">粉色</string>
     <string name="device_color_green">绿色</string>
     <string name="device_color_sky">天蓝色</string>
+    <string name="app_update_fdroid">更新来源：F-Droid</string>
+    <string name="app_update_nightly">更新来源：GitHub 每日构建</string>
+    <string name="app_update_check">检查更新</string>
+    <string name="app_update_checking">正在检查应用更新…</string>
+    <string name="app_update_current">应用已是最新版本。</string>
+    <string name="app_update_available">应用有可用更新：%1$s</string>
+    <string name="app_update_unavailable">无法检查应用更新。</string>
+    <string name="app_update_incompatible">可用更新的签名与已安装的应用不同。</string>
+    <string name="app_update_offline">离线模式下已暂停检查更新。</string>
+    <string name="app_update_open_fdroid">在 F-Droid 中打开</string>
+    <string name="app_update_open_nightly">打开 GitHub 每日构建</string>
+    <string name="app_update_add_repo">添加 F-Droid 软件源</string>
 </resources>

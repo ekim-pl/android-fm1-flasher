@@ -16,6 +16,10 @@ on:
         description: Commit resolved once by the release workflow
         type: string
         default: ''
+      nightly_run_number:
+        description: Run number from the nightly publishing workflow
+        type: number
+        default: 0
 
 permissions:
   contents: read
@@ -33,11 +37,16 @@ jobs:
     environment: android-debug
     env:
       FM1_RELEASE_TAG: ${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name || '') }}
+      FM1_NIGHTLY_RUN_NUMBER: ${{ inputs.nightly_run_number || 0 }}
     steps:
       - name: Validate requested source
         env:
           SOURCE_COMMIT: ${{ inputs.commit }}
         run: |
+          if [[ "$FM1_NIGHTLY_RUN_NUMBER" != 0 ]]; then
+            [[ "$FM1_NIGHTLY_RUN_NUMBER" =~ ^[1-9][0-9]*$ ]]
+            [[ -z "$FM1_RELEASE_TAG" ]]
+          fi
           if [[ -n "$FM1_RELEASE_TAG" ]]; then
             [[ "$FM1_RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
           fi
@@ -96,7 +105,12 @@ jobs:
           : "${EXPECTED_CERT_SHA256:?Missing pinned certificate fingerprint}"
           umask 077
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_DEBUG_KEYSTORE_FILE"
-          ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+          nightly_args=()
+          if [[ "$FM1_NIGHTLY_RUN_NUMBER" != 0 ]]; then
+            export FM1_NIGHTLY_CODE=$((1000000 + FM1_NIGHTLY_RUN_NUMBER))
+            nightly_args+=("-Pfm1NightlyCode=$FM1_NIGHTLY_CODE")
+          fi
+          ./gradlew --no-daemon -Pfm1Analytics=true -Pfm1AnalyticsEnvironment=test "${nightly_args[@]}" :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
           python3 .release-tools/scripts/release_fixtures.py verify
           python3 .release-tools/scripts/release_artifact.py create debug app/build/outputs/apk/debug/app-debug.apk dist
       - name: Save validated artifact

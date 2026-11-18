@@ -32,7 +32,7 @@ jobs:
       - name: Check, test and build without Firebase
         run: |
           python3 tools/sync-resources.py --check
-          ./gradlew --no-daemon -Pfm1Analytics=false :shared:jvmTest :app:testDebugUnitTest :app:lintRelease :app:assembleRelease
+          ./gradlew --no-daemon -Pfm1Analytics=false -Pfm1FdroidUpdates=true :shared:jvmTest :app:testDebugUnitTest :app:lintRelease :app:assembleRelease
       - name: Require synthetic tests
         run: python3 scripts/release_fixtures.py verify
       - name: Verify no Firebase or Google Play services dependencies

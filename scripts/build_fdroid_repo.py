@@ -67,6 +67,10 @@ def main():
         certs = re.findall(r'Signer #\d+ certificate SHA-256 digest: ([0-9a-fA-F:]+)', signer)
         if len(certs) != 1 or certs[0].replace(':', '').lower() != expected_cert:
             raise ValueError('APK signer does not match the configured certificate')
+        if (manifest.get('certificate_sha256', '').lower() != expected_cert or
+                type(manifest.get('version_code')) is not int or manifest['version_code'] <= 0 or
+                manifest.get('version_name') != tag[1:]):
+            raise ValueError('Invalid F-Droid update metadata')
         apk.rename(repo / filename)
         key = root / 'index.p12'
         key.write_bytes(base64.b64decode(os.environ['FDROID_INDEX_KEYSTORE_BASE64'], validate=True))
@@ -90,6 +94,23 @@ def main():
         metadata.mkdir()
         shutil.copyfile('publication/fdroid/repo-metadata.yml', metadata / 'pl.ekim.fm1_flasher.yml')
         subprocess.run(['fdroid', 'update', '--create-metadata'], cwd=root, check=True)
+        index = json.loads((repo / 'index-v2.json').read_text())
+        versions = index['packages'][manifest['package']]['versions'].values()
+        if not (repo / 'entry.jar').is_file() or not any(
+                version['file']['name'] == f'/{filename}' and
+                version['manifest']['versionCode'] == manifest['version_code'] and
+                version['manifest']['versionName'] == manifest['version_name']
+                for version in versions):
+            raise ValueError('F-Droid index does not contain the selected APK version')
+        index_certificate = subprocess.check_output([
+            'keytool', '-exportcert', '-storetype', 'PKCS12', '-keystore', str(key),
+            '-alias', os.environ['FDROID_INDEX_KEY_ALIAS'], '-storepass:env',
+            'FDROID_INDEX_KEYSTORE_PASSWORD',
+        ])
+        update = {field: manifest[field] for field in (
+            'schema', 'variant', 'package', 'version_name', 'version_code', 'certificate_sha256')}
+        update['repo_fingerprint'] = hashlib.sha256(index_certificate).hexdigest()
+        (repo / 'update.json').write_text(json.dumps(update) + '\n')
         shutil.rmtree(repo / 'status', ignore_errors=True)
         destination = Path('build/site/fdroid/repo')
         destination.parent.mkdir(parents=True, exist_ok=True)

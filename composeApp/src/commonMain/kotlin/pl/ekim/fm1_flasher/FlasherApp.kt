@@ -105,6 +105,20 @@ fun FlasherApp(backend: AppBackend) {
                         Text(text("app_name"), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                         TextButton(onClick = { settings = true }) { Text(text("settings")) }
                     }
+                    state.appUpdate?.takeIf {
+                        it.status == AppUpdateStatus.AVAILABLE && !state.busy && !state.queueRunning && !state.flashing && !state.offline
+                    }?.let { update ->
+                        Surface(color = MaterialTheme.colorScheme.secondaryContainer) {
+                            Row(
+                                Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(text("app_update_available", update.version.orEmpty()), Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodySmall)
+                                TextButton({ send(AppActionKind.APP_UPDATE_OPEN) }) { Text(text(update.channel.openKey)) }
+                            }
+                        }
+                    }
                     Row(Modifier.weight(1f)) {
                         if (wide) NavigationRail {
                             tabs.forEach { item -> NavigationRailItem(selected = tab == item, onClick = { focus.clearFocus(); tabName = item.name },
@@ -223,7 +237,7 @@ fun FlasherApp(backend: AppBackend) {
                                     { tabName = MIDI_TOOLS_ROUTE })
                                 LibraryTab.LOGGER -> LoggerScreen(state, language, backend)
                                 LibraryTab.ABOUT -> AboutScreen(
-                                    backend.document(text("about_document")), text("app_name"), text("about_version", "0.10.1"),
+                                    backend.document(text("about_document")), text("app_name"), text("about_version", state.appVersion ?: "0.10.1"),
                                     if (!state.usbRecovery) text("ios_platform_limits") else null,
                                     text("privacy_title"), text("about_privacy_summary"), text("about_privacy_action"),
                                     { dialog = text("privacy_title") to msg("privacy_body") }, ::openDocumentOrLink)

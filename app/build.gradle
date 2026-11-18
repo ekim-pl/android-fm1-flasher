@@ -27,6 +27,11 @@ if (analyticsEnabled) {
 
 def uploadKeystore = System.getenv('ANDROID_KEYSTORE_FILE')
 def debugKeystore = System.getenv('ANDROID_DEBUG_KEYSTORE_FILE')
+def fdroidUpdates = providers.gradleProperty('fm1FdroidUpdates').getOrElse('false').toBoolean()
+def nightlyCode = providers.gradleProperty('fm1NightlyCode').orNull?.toInteger()
+if (nightlyCode != null && !(nightlyCode in 1000001..2100000000)) {
+    throw new GradleException('Nightly versionCode must be between 1000001 and 2100000000')
+}
 def projectDocsAssets = layout.buildDirectory.dir('generated/projectDocsAssets')
 
 android {
@@ -69,8 +74,12 @@ android {
         }
     }
     buildTypes {
-        debug { buildConfigField 'int', 'DEFAULT_SOURCE_REFRESH_HOURS', debugRefreshHours }
+        debug {
+            buildConfigField 'int', 'DEFAULT_SOURCE_REFRESH_HOURS', debugRefreshHours
+            buildConfigField 'String', 'UPDATE_CHANNEL', '"nightly"'
+        }
         release {
+            buildConfigField 'String', 'UPDATE_CHANNEL', fdroidUpdates ? '"fdroid"' : '""'
             if (uploadKeystore) {
                 signingConfig signingConfigs.release
             }
@@ -106,6 +115,14 @@ if (releaseTag && releaseTag != "v${android.defaultConfig.versionName}") {
 androidComponents {
     beforeVariants(selector().withBuildType('debug')) { variant ->
         if (analyticsEnabled && analyticsEnvironment == 'production') variant.enable = false
+    }
+    if (nightlyCode != null) {
+        onVariants(selector().withBuildType('debug')) { variant ->
+            variant.outputs.each { output ->
+                output.versionCode.set(nightlyCode)
+                output.versionName.set("${android.defaultConfig.versionName}-nightly.${nightlyCode - 1000000}".toString())
+            }
+        }
     }
 }
 

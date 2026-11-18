@@ -620,5 +620,17 @@ internal val androidResourceKeys = mapOf(
     R.string.device_color_pink to "device_color_pink",
     R.string.device_color_green to "device_color_green",
     R.string.device_color_sky to "device_color_sky",
+    R.string.app_update_fdroid to "app_update_fdroid",
+    R.string.app_update_nightly to "app_update_nightly",
+    R.string.app_update_check to "app_update_check",
+    R.string.app_update_checking to "app_update_checking",
+    R.string.app_update_current to "app_update_current",
+    R.string.app_update_available to "app_update_available",
+    R.string.app_update_unavailable to "app_update_unavailable",
+    R.string.app_update_incompatible to "app_update_incompatible",
+    R.string.app_update_offline to "app_update_offline",
+    R.string.app_update_open_fdroid to "app_update_open_fdroid",
+    R.string.app_update_open_nightly to "app_update_open_nightly",
+    R.string.app_update_add_repo to "app_update_add_repo",
 )
 internal val androidResourceIds = androidResourceKeys.entries.associate { it.value to it.key }
