@@ -14,7 +14,7 @@
     <string name="tools_valid">kontrole poprawne</string>
     <string name="tools_unknown_bad">nieznane lub niepoprawne</string>
     <string name="tools_layout_unknown">Nie można zaufać układowi. Rozpoznano tylko stałe obszary chronione; nieznany obszar nie oznacza wolnego miejsca.</string>
-    <string name="tools_map_help">256 sektorów × 4 KiB. Dotknij sektora, aby poznać adres. Pomarańczowoczerwone sektory uległyby zmianie; poniżej lista wszystkich obszarów.</string>
+    <string name="tools_map_help">256 sektorów × 4 KiB. Dotknij sektora, aby sprawdzić jego adres i obszar.</string>
     <string name="tools_changed">uległby zmianie</string>
     <string name="tools_current_layout">Obecny układ</string>
     <string name="tools_preview">Podgląd: %1$s · zmienione sektory: %2$d</string>
@@ -55,4 +55,23 @@
     <string name="tools_op_restore">Przywróć kopię; zachowaj bootloader</string>
     <string name="tools_op_restore_boot">Przywróć kopię wraz z bootloaderem</string>
     <string name="tools_write">Zapisz sprawdzony plan</string>
+    <string name="device_midi_tools">MIDI i kopie zapasowe</string>
+    <string name="tools_midi_heading">Diagnostyka i kopie przez MIDI</string>
+    <string name="mode_no_ports">Podłącz FM-1 w trybie USB MIDI, a następnie odśwież listę portów.</string>
+    <string name="mode_enter_requirement">Odczytaj instrument w karcie MIDI i kopie zapasowe, aby móc przełączyć tryb.</string>
+    <string name="tools_backup_data">Utwórz kopię banków i danych użytkownika</string>
+    <string name="tools_user_data">Kopia danych użytkownika</string>
+    <string name="tools_op_restore_data">Przywróć banki i dane użytkownika</string>
+    <string name="tools_restore_data_help">Kopia obejmuje dostępne ustawienia, brzmienia, sekwencje i presety. Przywracanie wymaga tego samego FM-1 i zgodnego firmware.</string>
+    <string name="tools_confirm_data">Przywrócić banki i dane użytkownika w tym instrumencie? Nie odłączaj zasilania ani USB.</string>
+    <string name="tools_rom_help">Aby wykonać kopię lub odzyskać dane przez USB, podłącz jeden FM-1 w trybie download.</string>
+    <string name="tools_saved_backups">Zapisane kopie</string>
+    <string name="tools_full_backup">Pełna kopia pamięci</string>
+    <string name="tools_hide_details">Ukryj szczegóły</string>
+    <string name="tools_show_map">Pokaż mapę pamięci i szczegóły</string>
+    <string name="tools_write_options">Opcje zapisu</string>
+    <string name="tools_show_midi">Pokaż narzędzia MIDI i diagnostykę</string>
+    <string name="tools_hide_midi">Ukryj narzędzia MIDI i diagnostykę</string>
+    <string name="tools_midi_help">Operacje MIDI wymagają wybranego FM-1 z obsługą m-bootloadera.</string>
+    <string name="tools_changed_legend">Czerwone sektory ulegną zmianie</string>
 </resources>

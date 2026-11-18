@@ -60,10 +60,10 @@
     <string name="fleet_serial_changed">Numer seryjny powracającego urządzenia jest sprzeczny z wybranym instrumentem. Operację zatrzymano.</string>
     <string name="fleet_ports_ambiguous">To urządzenie USB udostępnia wiele par portów MIDI. Zapis jest zablokowany do czasu rozpoznania właściwej pary.</string>
     <string name="device_tools">Tryby i kość pamięci</string>
-    <string name="device_tools_help">Wybierz i odczytaj instrument MIDI, następnie przełącz go w tryb download lub wykryj kość pamięci.</string>
-    <string name="mode_midi">1 · Połączenie MIDI</string>
-    <string name="mode_download">2 · Tryb download i kość pamięci</string>
-    <string name="mode_download_help">Tryb download rozłącza MIDI. Po wykryciu kości wyłącz i włącz instrument, aby wrócić do trybu MIDI.</string>
+    <string name="device_tools_help">Odczytaj FM-1 przez MIDI lub wykryj kość pamięci w trybie USB download.</string>
+    <string name="mode_midi">Połączenie MIDI</string>
+    <string name="mode_download">Tryb USB download</string>
+    <string name="mode_download_help">Przełącz podłączony FM-1 z MIDI w tryb USB download. Spowoduje to rozłączenie MIDI.</string>
     <string name="chip_result_title">Wykryto kość pamięci</string>
     <string name="tools_open">Tryby / kość</string>
     <string name="mode_current">Bieżące urządzenie MIDI: %1$s</string>

@@ -60,10 +60,10 @@
     <string name="fleet_serial_changed">The returning USB serial contradicts the selected instrument. Operation stopped.</string>
     <string name="fleet_ports_ambiguous">This USB device exposes multiple MIDI port pairs. Writing is blocked until the correct pair can be identified.</string>
     <string name="device_tools">Modes and flash chip</string>
-    <string name="device_tools_help">Select and read the MIDI instrument, then switch to download mode or detect its flash chip.</string>
-    <string name="mode_midi">1 · MIDI connection</string>
-    <string name="mode_download">2 · Download mode and chip</string>
-    <string name="mode_download_help">Download mode disconnects MIDI. After detection, power the instrument off and on to return to MIDI mode.</string>
+    <string name="device_tools_help">Read your FM-1 over MIDI or use USB download mode to detect its flash chip.</string>
+    <string name="mode_midi">MIDI connection</string>
+    <string name="mode_download">USB download mode</string>
+    <string name="mode_download_help">Switch a connected FM-1 from MIDI to USB download mode. This disconnects MIDI.</string>
     <string name="chip_result_title">Flash chip detected</string>
     <string name="tools_open">Modes / chip</string>
     <string name="mode_current">Current MIDI device: %1$s</string>

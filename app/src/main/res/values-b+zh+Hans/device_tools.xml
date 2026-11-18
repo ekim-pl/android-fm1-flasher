@@ -14,7 +14,7 @@
     <string name="tools_valid">检查通过</string>
     <string name="tools_unknown_bad">未知或无效</string>
     <string name="tools_layout_unknown">布局不可靠。仅标识固定保护区域；未知空间不代表可用空间。</string>
-    <string name="tools_map_help">256 个扇区，每个 4 KiB。点按扇区查看地址。橙红色扇区将发生变化；下方列出所有区域。</string>
+    <string name="tools_map_help">256 个扇区，每个 4 KiB。点按扇区查看地址和区域。</string>
     <string name="tools_changed">将发生变化</string>
     <string name="tools_current_layout">当前布局</string>
     <string name="tools_preview">预览：%1$s · %2$d 个扇区变化</string>
@@ -55,4 +55,23 @@
     <string name="tools_op_restore">恢复备份；保留引导程序</string>
     <string name="tools_op_restore_boot">恢复备份及引导程序</string>
     <string name="tools_write">写入已审阅计划</string>
+    <string name="device_midi_tools">MIDI 与备份</string>
+    <string name="tools_midi_heading">MIDI 诊断与备份</string>
+    <string name="mode_no_ports">请以 USB MIDI 模式连接 FM-1，然后刷新端口列表。</string>
+    <string name="mode_enter_requirement">请先在 MIDI 与备份中读取乐器信息，以启用模式切换。</string>
+    <string name="tools_backup_data">备份音色库和用户数据</string>
+    <string name="tools_user_data">用户数据备份</string>
+    <string name="tools_op_restore_data">恢复音色库和用户数据</string>
+    <string name="tools_restore_data_help">备份包含可用的设置、音色、序列和预设。恢复需要同一台 FM-1 和匹配的固件。</string>
+    <string name="tools_confirm_data">要恢复此设备上的音色库和用户数据吗？请保持电源和 USB 连接。</string>
+    <string name="tools_rom_help">通过 USB 备份或恢复时，请连接一台处于下载模式的 FM-1。</string>
+    <string name="tools_saved_backups">已保存的备份</string>
+    <string name="tools_full_backup">完整闪存备份</string>
+    <string name="tools_hide_details">隐藏详情</string>
+    <string name="tools_show_map">显示闪存图和详情</string>
+    <string name="tools_write_options">写入选项</string>
+    <string name="tools_show_midi">显示 MIDI 工具和诊断</string>
+    <string name="tools_hide_midi">隐藏 MIDI 工具和诊断</string>
+    <string name="tools_midi_help">MIDI 操作需要选择支持 m-bootloader 的 FM-1。</string>
+    <string name="tools_changed_legend">红色扇区将发生变化</string>
 </resources>

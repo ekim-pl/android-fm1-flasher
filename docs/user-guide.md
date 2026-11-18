@@ -2,7 +2,7 @@
 
 Detailed instructions for the Android application: local firmware, offline use, firmware sources, sequential updates and experimental tools. Commands in this guide run from the repository root.
 
-FM-1 Flasher **0.10.1** includes a local firmware library, source colors, full-screen settings and sequential installation tasks. MIDI and backups provides diagnostics and backup management. Experimental tools add bootloader management, ROM firmware installation and same-device backup restoration.
+FM-1 Flasher **0.10.2** includes a local firmware library, source colors, full-screen settings and sequential installation tasks. MIDI and backups provides diagnostics and backup management. Experimental tools add bootloader management, ROM firmware installation and same-device backup restoration.
 
 [Project README](../README.md) · [Polski](../website/pl/documentation.md) · [简体中文](../website/zh-CN/documentation.md) · [Privacy](../PRIVACY_POLICY.md)
 
@@ -20,7 +20,7 @@ The Android application ID is `pl.ekim.fm1_flasher`. English, Polish and Simplif
 
 Add the [project repository](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/) to an F-Droid client to install and update the app, or download an APK from [GitHub releases](https://github.com/ekim-pl/android-fm1-flasher/releases). The project repository is separate from the official F-Droid catalog. Switching distributions requires compatible signing certificates.
 
-1. Install the 0.10.1 APK on Android 14 or newer. Updating requires the same signing certificate; a Google Play build may use a different certificate from local test builds.
+1. Install the 0.10.2 APK on Android 14 or newer. Updating requires the same signing certificate; a Google Play build may use a different certificate from local test builds.
 2. Open **Library**, find firmware and download it from its detail screen. Downloading verifies the package; it does not start an installation.
 3. Connect instruments with data-capable cables and an OTG hub. A separately powered hub is recommended. The app cannot measure or certify hub power quality.
 4. In **Devices**, use **Read instrument** on each card and grant Android USB access when requested. Only a recognized FM-1 can be added to the plan.

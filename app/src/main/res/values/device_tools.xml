@@ -14,7 +14,7 @@
     <string name="tools_valid">checks passed</string>
     <string name="tools_unknown_bad">unknown or invalid</string>
     <string name="tools_layout_unknown">Layout cannot be trusted. Only fixed protected regions are identified; unknown space is not free space.</string>
-    <string name="tools_map_help">256 sectors × 4 KiB. Tap a sector for its address. Orange-red sectors would change; the text below lists every region.</string>
+    <string name="tools_map_help">256 sectors × 4 KiB. Tap a sector to see its address and region.</string>
     <string name="tools_changed">would change</string>
     <string name="tools_current_layout">Current layout</string>
     <string name="tools_preview">Preview: %1$s · %2$d changed sectors</string>
@@ -55,4 +55,23 @@
     <string name="tools_op_restore">Restore backup; keep bootloader</string>
     <string name="tools_op_restore_boot">Restore backup including bootloader</string>
     <string name="tools_write">Write reviewed plan</string>
+    <string name="device_midi_tools">MIDI and backups</string>
+    <string name="tools_midi_heading">MIDI diagnostics and backup</string>
+    <string name="mode_no_ports">Connect your FM-1 in USB MIDI mode, then refresh the port list.</string>
+    <string name="mode_enter_requirement">Read your instrument under MIDI and backups to enable switching.</string>
+    <string name="tools_backup_data">Back up banks and user data</string>
+    <string name="tools_user_data">User data backup</string>
+    <string name="tools_op_restore_data">Restore banks and user data</string>
+    <string name="tools_restore_data_help">Includes settings, sounds, sequences and presets where present. Restore on the same FM-1 with matching firmware.</string>
+    <string name="tools_confirm_data">Restore banks and user data on this instrument? Keep power and USB connected.</string>
+    <string name="tools_rom_help">For USB backups and recovery, connect one FM-1 in download mode.</string>
+    <string name="tools_saved_backups">Saved backups</string>
+    <string name="tools_full_backup">Full flash backup</string>
+    <string name="tools_hide_details">Hide details</string>
+    <string name="tools_show_map">Show flash map and details</string>
+    <string name="tools_write_options">Write options</string>
+    <string name="tools_show_midi">Show MIDI tools and diagnostics</string>
+    <string name="tools_hide_midi">Hide MIDI tools and diagnostics</string>
+    <string name="tools_midi_help">MIDI actions require a selected FM-1 with m-bootloader support.</string>
+    <string name="tools_changed_legend">Red sectors will change</string>
 </resources>
