@@ -13,16 +13,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  version:
     if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    outputs:
+      number: ${{ steps.version.outputs.number }}
+    steps:
+      - id: version
+        # Reserve build numbers 1 and 2 for the initial preview builds.
+        run: echo "number=$((GITHUB_RUN_NUMBER + 2))" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: version
     uses: ./.github/workflows/android-debug.yml
     with:
       tag: ''
-      nightly_run_number: ${{ fromJSON(github.run_number) }}
+      nightly_run_number: ${{ fromJSON(needs.version.outputs.number) }}
     secrets: inherit
 
   publish-nightly:
-    needs: build
+    needs: [version, build]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -33,9 +43,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          NIGHTLY_NUMBER: ${{ needs.version.outputs.number }}
         run: |
           gh run download "$GITHUB_RUN_ID" --name android-debug-dev --dir dist
-          code=$((1000000 + GITHUB_RUN_NUMBER))
+          code=$((1000000 + NIGHTLY_NUMBER))
           tag="nightly-$code"
           jq -e --arg commit "$GITHUB_SHA" --argjson code "$code" '
             .variant == "debug" and .version_code == $code and .commit == $commit
@@ -52,7 +63,7 @@ jobs:
             fi
           else
             gh release create "$tag" --target "$GITHUB_SHA" --draft --prerelease --latest=false \
-              --title "FM-1 Flasher nightly $GITHUB_RUN_NUMBER" --notes "Developer APK from $GITHUB_SHA."
+              --title "FM-1 Flasher nightly $NIGHTLY_NUMBER" --notes "Developer APK from $GITHUB_SHA."
           fi
           gh release upload "$tag" "${assets[@]}" --clobber
           gh release edit "$tag" --draft=false --latest=false

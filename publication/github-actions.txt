@@ -25,8 +25,9 @@ android-nightly.yml — Public GitHub nightly prerelease
   Runs nightly or by manual dispatch on the default branch. Reuses android-debug
   and its signing environment. Publishes the verified APK, debug-manifest.json
   and SHA256SUMS under a separate nightly-<versionCode> tag for each release.
-  versionCode is 1000000 plus the nightly workflow run number. Only nightlies
-  use this range. Debug builds offer the update when the signing key matches.
+  versionCode is 1000000 plus the nightly build number. The scheduled workflow
+  starts at build number 3, after the initial previews. Only nightlies use
+  this range. Debug builds offer the update when the signing key matches.
   Debug builds check every 15 minutes while open by default. Override at build
   time, for example with -Pfm1DebugAppUpdateMinutes=30 on :app:assembleDebug.
 

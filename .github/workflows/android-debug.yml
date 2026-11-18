@@ -7,6 +7,10 @@ on:
         description: Optional stable or preview tag matching versionName; empty builds the selected branch
         required: false
         type: string
+      nightly_run_number:
+        description: Optional build number for a manually published nightly
+        type: number
+        default: 0
   workflow_call:
     inputs:
       tag:
