@@ -1,6 +1,6 @@
 # Wiele FM-1. Jeden plan instalacji.
 
-FM-1 Flasher **0.10.1** obejmuje lokalną bibliotekę firmware, kolory źródeł, pełnoekranowe ustawienia i sekwencyjną kolejkę instalacji. Narzędzia eksperymentalne dodają diagnostykę pamięci, import kopii, zarządzanie bootloaderem, instalację firmware przez ROM i przywracanie kopii tego samego urządzenia.
+FM-1 Flasher **0.10.2** oferuje lokalną bibliotekę firmware i sekwencyjną kolejkę instalacji. W sekcji **Urządzenia → MIDI i kopie zapasowe** możesz zapisywać i przywracać banki, ustawienia, sekwencje i presety. Narzędzia eksperymentalne umożliwiają zarządzanie bootloaderem, instalację firmware przez ROM i przywracanie pamięci tego samego urządzenia.
 
 
 [Aktualna instrukcja](documentation.md) · [O aplikacji](../../about/README.pl.md) · [Historia wydań](https://github.com/ekim-pl/android-fm1-flasher/releases)
@@ -14,6 +14,8 @@ FM-1 Flasher **0.10.1** obejmuje lokalną bibliotekę firmware, kolory źródeł
 - **Urządzenia:** odczytaj każdy instrument, nadaj mu nazwę i przypisz własną pobraną paczkę.
 - **Biblioteka:** przeszukuj wiele źródeł, zachowuj ulubione i używaj zweryfikowanych paczek offline.
 - **Zadania:** zatwierdź jeden plan, instaluj kolejno i zachowaj osobne wyniki. Zatrzymaj kolejkę po bieżącym instrumencie bez przerywania jego zapisu.
+
+<!-- end-quick-start -->
 
 ## Powrót po restarcie
 
@@ -34,7 +36,7 @@ Aby dołączyć do Awesome FM-1, utwórz fork repozytorium, dodaj krótkie zgło
 - [Wiele instrumentów przez hub](documentation.md#multiple-fm1-devices-on-a-hub)
 - [Budowanie i testy](documentation.md#building-and-testing)
 - [Architektura i granice platform](../../MIGRATION.md)
-- [Raport wydania](../../publication/qa/0.10.1.txt)
+- [Informacje o wydaniu 0.10.2 i pliki APK](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.10.2)
 - [Stan publikacji i ograniczenia workflow](publication.txt)
 - [Budowanie witryny](pages.md)
 

@@ -1,6 +1,6 @@
-# Implementation and verification — 0.10.1 / 41
+# Implementation and verification — 0.10.2 / 42
 
-Current architecture of the Android 0.10.1 source tree. Apple sources are development groundwork, not a released application. For operation instructions see the [user guide](docs/user-guide.md). Build results describe a particular commit/artifact, not every later change with the same version number: see the [publication audit](docs/reviews/2026-11-16-publication-audit.txt) and [repair plan](docs/reviews/2026-11-16-publication-repair-plan.txt). Historical reports under `publication/qa` remain unchanged.
+Current architecture of the Android 0.10.2 source tree. Apple sources are development groundwork, not a released application. For operation instructions see the [user guide](docs/user-guide.md). Build results describe a particular commit/artifact, not every later change with the same version number: see the [publication audit](docs/reviews/2026-11-16-publication-audit.txt) and [repair plan](docs/reviews/2026-11-16-publication-repair-plan.txt). Historical reports under `publication/qa` remain unchanged.
 
 ## Modules and entry points
 

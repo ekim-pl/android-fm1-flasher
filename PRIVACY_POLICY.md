@@ -1,6 +1,6 @@
 # Privacy Policy — FM‑1 Flasher
 
-FM-1 Flasher 0.10.1: source colors and interface preferences are stored only on this device. The Google Play distribution includes Google Analytics for Firebase; usage statistics are enabled by default and can be disabled in Settings. The F-Droid distribution contains no Firebase or analytics SDK.
+FM-1 Flasher 0.10.2: source colors and interface preferences are stored only on this device. The Google Play distribution includes Google Analytics for Firebase; usage statistics are enabled by default and can be disabled in Settings. The F-Droid distribution contains no Firebase or analytics SDK.
 
 ## Publisher and contact
 

@@ -1,4 +1,4 @@
-# FM-1 Flasher 0.10.1
+# FM-1 Flasher 0.10.2
 
 An independent firmware manager for **M-VAVE FM-1**. Android organizes several instruments connected through an OTG hub into **Devices · Library · Tasks**, with one firmware write at a time.
 

@@ -1,6 +1,6 @@
-GitHub Actions — 0.10.1 / 41
+GitHub Actions — 0.10.2 / 42
 
-android-release.yml: tag v0.10.1, uruchomienie z main. Buduje równolegle debug,
+android-release.yml: tag v0.10.2, uruchomienie z main. Buduje równolegle debug,
 F-Droid i Google Play; publikuje APK dopiero po sukcesie wszystkich trzech.
 android-debug.yml: podpisany APK deweloperski z testowym Firebase.
 fdroid-release.yml: podpisany APK bez Firebase i Google Play Services.

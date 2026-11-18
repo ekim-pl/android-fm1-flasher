@@ -1,6 +1,6 @@
-GitHub Actions — 0.10.1 / 41
+GitHub Actions — 0.10.2 / 42
 
-android-release.yml：从 main 为 v0.10.1 标签并行构建 debug、F-Droid 和 Google Play，
+android-release.yml：从 main 为 v0.10.2 标签并行构建 debug、F-Droid 和 Google Play，
 全部成功后发布 APK。
 android-debug.yml：使用测试 Firebase 的已签名开发者 APK。
 fdroid-release.yml：不含 Firebase 或 Google Play Services 的已签名 APK。

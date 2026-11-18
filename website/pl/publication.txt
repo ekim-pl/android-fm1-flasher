@@ -1,4 +1,8 @@
-FM-1 Flasher 0.10.1 / 41 — materiały wydania
+FM-1 Flasher 0.10.2 / 42 — materiały wydania
+
+Wersja 0.10.2 zapisuje banki, ustawienia, sekwencje i presety w kopii danych
+użytkownika. Kopię można przywrócić na tym samym instrumencie z tym samym firmware.
+https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.10.2
 
 Diagnostyka i mapa pamięci, pełne kopie i import, m-bootloader 2.4, przywracanie
 fabrycznego bootloadera V15, instalacja firmware przez ROM oraz kopie tego samego
@@ -10,7 +14,7 @@ oraz AAB Google Play z produkcyjnym Firebase. APK F-Droid na GitHub nie oznacza
 przyjęcia do oficjalnego katalogu F-Droid. Wysyłka AAB i promocja do produkcji są
 osobnymi operacjami. Nie ma wydania iOS. Statystyki można wyłączyć w Ustawieniach.
 
-Weryfikacja źródła: ../../publication/qa/0.10.1.txt. Manifesty i SHA256SUMS określają
+Weryfikacja wydania 0.10.1: ../../publication/qa/0.10.1.txt. Manifesty i SHA256SUMS określają
 faktycznie zbudowane pliki. Nowo włączone zapisy nadal wymagają prób sprzętowych;
 weryfikacja pamięci nie potwierdza startu instrumentu. Zrzuty ekranu pochodzą z 0.10.0.
 Szczegóły: ../../publication/README.txt i ../../publication/github-actions.txt.

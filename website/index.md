@@ -1,6 +1,6 @@
 # Several FM-1 instruments. One installation plan.
 
-FM-1 Flasher **0.10.1** includes a local firmware library, source colors, full-screen settings and sequential installation tasks. Experimental tools add flash diagnostics, backup import, bootloader management, ROM firmware installation and same-device backup restoration.
+FM-1 Flasher **0.10.2** includes a local firmware library and sequential installation tasks. Back up and restore banks, settings, sequences and presets under **Devices → MIDI and backups**. Experimental tools support bootloader management, ROM firmware installation and same-device flash restoration.
 
 
 [Read the current guide](../docs/user-guide.md) · [About](../about/README.md) · [Release history](https://github.com/ekim-pl/android-fm1-flasher/releases)
@@ -14,6 +14,8 @@ FM-1 Flasher **0.10.1** includes a local firmware library, source colors, full-s
 - **Devices:** read each instrument, name it and assign its own downloaded firmware.
 - **Library:** search multiple sources, keep favorites and use verified local packages offline.
 - **Tasks:** review one plan, install sequentially and keep individual results. Stop after the current instrument without interrupting its write.
+
+<!-- end-quick-start -->
 
 ## Returning after a restart
 
@@ -34,7 +36,7 @@ To join Awesome FM-1, fork the repository, add a short project proposal and open
 - [Several instruments through a hub](../docs/user-guide.md#multiple-fm1-devices-on-a-hub)
 - [Build and tests](../docs/user-guide.md#building-and-testing)
 - [Architecture and platform boundaries](../MIGRATION.md)
-- [Release verification](../publication/qa/0.10.1.txt)
+- [0.10.2 release notes and APKs](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.10.2)
 - [Publication status and workflow limitations](../publication/README.txt)
 - [Building this website](pages.md)
 

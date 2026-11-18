@@ -1,4 +1,4 @@
-FM-1 Flasher 0.10.1 — versionCode 41
+FM-1 Flasher 0.10.2 — versionCode 42
 Application ID: pl.ekim.fm1_flasher. Android 14+; target/compile SDK 36.
 Languages: English, Polish, Simplified Chinese. Publisher: Ekim (ekim-pl).
 
@@ -7,7 +7,10 @@ Flash diagnostics and maps, full-flash backup/import, m-bootloader 2.4 installat
 stock V15 boot restoration, compatible ROM firmware installation and same-device
 backup restoration. Experimental tools remain opt-in. Writes require a validated
 plan, exported pre-write backup and confirmation; factory key/MAC are protected.
-Notes: github-release-0.10.1.txt. Local validation: qa/0.10.1.txt.
+0.10.2 adds user-data backups for banks, settings, sequences and presets,
+and restores them to the same instrument with matching firmware.
+Release notes, APKs, manifests and checksums: https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.10.2
+Previous release validation: qa/0.10.1.txt.
 Historical reports describe only the artifacts and checks recorded at their time.
 
 DISTRIBUTIONS
@@ -27,8 +30,8 @@ Use JDK 17, Android SDK 36, Build Tools 35.0.0 and the checked-in Gradle wrapper
   ./gradlew :shared:jvmTest :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
 Production builds also run the pinned V15/V16 integration tests. See MIGRATION.md.
 Merge the reviewed source, wait for trusted API34/36 CI, and create immutable tag
-v0.10.1 on that commit. Then dispatch from main:
-  gh workflow run android-release.yml --ref main -f tag=v0.10.1
+v0.10.2 on that commit. Then dispatch from main:
+  gh workflow run android-release.yml --ref main -f tag=v0.10.2
 The combined workflow builds all three variants and publishes the debug/F-Droid
 APKs with manifests and SHA256SUMS. The Play AAB remains in the Actions artifact.
 Upload/promote that same verified AAB with google-play-upload.yml and
@@ -36,10 +39,10 @@ promote-production.yml. Detailed inputs/recovery: github-actions.txt.
 Publication status is established by GitHub/Play results, not by this source file.
 
 DOCUMENTATION AND STORE MATERIALS
-README.md, docs/user-guide.md and the translated website guides describe 0.10.1.
+README.md, docs/user-guide.md and the translated website guides describe 0.10.2.
 about/app*.md are bundled offline About documents; about/README*.md serve the website.
 Privacy text is synchronized across Markdown, Android resources and static HTML.
-fastlane/metadata/android/{en-US,pl-PL,zh-CN}/ contains listings and changelog 41.
+fastlane/metadata/android/{en-US,pl-PL,zh-CN}/ contains store listings and historical changelogs.
 Existing screenshots show 0.10.0; they are historical illustrations, not new captures.
 Build and check the website with scripts/build_site.py and scripts/check_site.py
 using website/requirements.txt. Deployment occurs from main.

@@ -1,4 +1,7 @@
-FM-1 Flasher 0.10.1 / 41 — 发布材料
+FM-1 Flasher 0.10.2 / 42 — 发布材料
+
+0.10.2 支持备份音色组、设置、序列和预设，并在固件匹配的同一台乐器上恢复。
+https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.10.2
 
 新增闪存诊断与映射、完整备份和导入、m-bootloader 2.4 安装、原厂 V15 引导程序
 恢复、ROM 固件安装及保留或同时恢复引导程序的同设备备份恢复。写入要求准备计划、
@@ -9,6 +12,6 @@ FM-1 Flasher 0.10.1 / 41 — 发布材料
 F-Droid 目录收录。AAB 上传与生产提升是独立操作。目前没有 iOS 发布版本。
 使用统计可在设置中关闭。
 
-源代码验证：../../publication/qa/0.10.1.txt。实际构建文件由清单及 SHA256SUMS 标识。
+0.10.1 版本验证：../../publication/qa/0.10.1.txt。实际构建文件由清单及 SHA256SUMS 标识。
 新启用的写入仍需实机验收；闪存验证不代表设备启动成功。现有截图来自 0.10.0。
 详情：../../publication/README.txt 与 ../../publication/github-actions.txt。

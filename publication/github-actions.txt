@@ -1,4 +1,4 @@
-GitHub Actions — 0.10.1 / versionCode 41
+GitHub Actions — 0.10.2 / versionCode 42
 
 OPERATION
 Workflows support manual dispatch. Build and publication workflows also support
@@ -11,7 +11,7 @@ publishes the application to Google Play production automatically.
 WORKFLOWS
 android-debug.yml — Developer debug APK (test Firebase)
   Optional stable/preview tag matching versionName; empty uses the selected workflow
-  commit. Environment android-debug. Preview tags may use v0.10.1-preview.1.
+  commit. Environment android-debug. Preview tags may use v0.10.2-preview.1.
   Runs synthetic tests/lint without downloading firmware, builds with test Firebase
   and a persistent developer signing key.
   Artifact android-debug-<tag>, or android-debug-dev. No publication.
@@ -67,19 +67,19 @@ android-release.yml — Android release (debug, F-Droid, Google Play)
 
 EXAMPLES
 Complete release:
-  gh workflow run android-release.yml --ref main -f tag=v0.10.1
+  gh workflow run android-release.yml --ref main -f tag=v0.10.2
 Standalone builds:
-  gh workflow run android-debug.yml --ref main -f tag=v0.10.1
-  gh workflow run fdroid-release.yml --ref main -f tag=v0.10.1
-  gh workflow run google-play.yml --ref main -f tag=v0.10.1
+  gh workflow run android-debug.yml --ref main -f tag=v0.10.2
+  gh workflow run fdroid-release.yml --ref main -f tag=v0.10.2
+  gh workflow run google-play.yml --ref main -f tag=v0.10.2
 Independent F-Droid hotfix (use its actual build run ID):
-  gh workflow run android-publish.yml --ref main -f tag=v0.10.1 -f fdroid_run_id=456
+  gh workflow run android-publish.yml --ref main -f tag=v0.10.2 -f fdroid_run_id=456
 Experimental debug from a development branch (no public release):
   gh workflow run android-debug.yml --ref preview-branch
 Publish standalone or recover failed publication (use actual run IDs):
-  gh workflow run android-publish.yml --ref main -f tag=v0.10.1 -f debug_run_id=123 -f fdroid_run_id=456
+  gh workflow run android-publish.yml --ref main -f tag=v0.10.2 -f debug_run_id=123 -f fdroid_run_id=456
 Upload existing AAB (use actual run ID):
-  gh workflow run google-play-upload.yml --ref main -f tag=v0.10.1 -f run_id=789
+  gh workflow run google-play-upload.yml --ref main -f tag=v0.10.2 -f run_id=789
 Find run IDs via Actions or gh run list. Individual reusable jobs inside a combined
 release share the parent's run ID. Re-run failed jobs can preserve successful
 builds; a fresh invocation of the orchestrator rebuilds all variants.

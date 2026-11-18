@@ -1,6 +1,6 @@
 # 多台 FM-1，一个安装计划。
 
-FM-1 Flasher **0.10.1** 包含本地固件库、来源颜色、全屏设置和顺序安装任务。实验性工具新增闪存诊断、备份导入、引导程序管理、ROM 固件安装及同设备备份恢复。
+FM-1 Flasher **0.10.2** 提供本地固件库和顺序安装任务。通过 **设备 → MIDI 与备份** 可备份和恢复音色组、设置、序列及预设。实验性工具支持引导程序管理、ROM 固件安装及同设备闪存恢复。
 
 
 [当前指南](documentation.md) · [关于应用](../../about/README.zh-Hans.md) · [版本历史](https://github.com/ekim-pl/android-fm1-flasher/releases)
@@ -14,6 +14,8 @@ FM-1 Flasher **0.10.1** 包含本地固件库、来源颜色、全屏设置和�
 - **设备：**逐台读取乐器，命名并分别指定已下载固件。
 - **固件库：**搜索多个来源，保存收藏，离线使用已验证的本地包。
 - **任务：**批准一个计划，顺序安装并保留独立结果。在当前乐器完成后停止，不中断其写入。
+
+<!-- end-quick-start -->
 
 ## 重启后的返回
 
@@ -34,7 +36,7 @@ FM-1 Flasher **0.10.1** 包含本地固件库、来源颜色、全屏设置和�
 - [集线器上的多台乐器](documentation.md#multiple-fm1-devices-on-a-hub)
 - [构建与测试](documentation.md#building-and-testing)
 - [架构与平台边界](../../MIGRATION.md)
-- [版本验证报告](../../publication/qa/0.10.1.txt)
+- [0.10.2 发布说明及 APK](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.10.2)
 - [发布状态与工作流限制](publication.txt)
 - [构建网站](pages.md)
 

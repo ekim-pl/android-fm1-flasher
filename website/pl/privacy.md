@@ -1,6 +1,6 @@
 # Polityka prywatności — FM-1 Flasher
 
-FM-1 Flasher 0.10.1: kolory źródeł i ustawienia interfejsu pozostają na tym urządzeniu. Wersja Google Play zawiera Google Analytics for Firebase; statystyki są domyślnie włączone i można je wyłączyć w Ustawieniach. Wersja F-Droid nie zawiera Firebase ani SDK analityki.
+FM-1 Flasher 0.10.2: kolory źródeł i ustawienia interfejsu pozostają na tym urządzeniu. Wersja Google Play zawiera Google Analytics for Firebase; statystyki są domyślnie włączone i można je wyłączyć w Ustawieniach. Wersja F-Droid nie zawiera Firebase ani SDK analityki.
 
 ## Wydawca i kontakt
 

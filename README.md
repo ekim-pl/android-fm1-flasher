@@ -11,9 +11,9 @@
 
 Browse, save and install firmware for your **M-VAVE FM-1** from an Android phone. Keep a local firmware library and update one instrument or several in sequence over USB OTG.
 
-**Version 0.10.1** — experimental flash inspection, bootloader management and backup restoration. [Available APKs](https://github.com/ekim-pl/android-fm1-flasher/releases) · [Build and verification](publication/qa/0.10.1.txt).
+**Version 0.10.2** adds user-data backups and restores for banks, settings, sequences and presets. Restore a user-data archive to the same FM-1 with matching firmware. [Release notes and APKs](https://github.com/ekim-pl/android-fm1-flasher/releases/tag/v0.10.2).
 
-Version 0.10.1 enables experimental bootloader installation, ROM firmware installation and same-device backup restoration, with a reviewed plan and exported backup required before writing.
+Version 0.10.1 introduced experimental bootloader installation, ROM firmware installation and same-device backup restoration, with a reviewed plan and exported backup required before writing.
 
 ## Project manifesto
 

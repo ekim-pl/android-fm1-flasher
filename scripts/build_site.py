@@ -103,6 +103,7 @@ ASSETS = {
        for path in sorted((ROOT / 'fastlane/metadata/android').glob('*/images/phoneScreenshots/*.png'))},
     'assets/icon.svg': 'assets/icon.svg',
     'assets/readme-cover.png': 'assets/readme-cover.png',
+    'assets/github-social-preview.png': 'assets/github-social-preview.png',
     'website/style.css': 'assets/style.css',
     **{f'website/icons/{name}': f'assets/icons/{name}' for name in ('ekim.webp', 'awesome-fm1.svg', 'github.svg', 'youtube.svg', 'instagram.svg', 'discord.svg')},
     'third_party/commonmark-LICENSE.txt': 'licenses/commonmark.txt',
@@ -201,9 +202,15 @@ def write_page(language, page, output):
 
     if page == 'index.html':
         intro, separator, rest = body.partition('<h2')
-        body = (f'<section class="home-hero">{intro}</section>'
+        quick_start, marker, remaining = rest.partition('<!-- end-quick-start -->')
+        assert marker, f'Missing end of quick start in {source}'
+        body = (f'<section class="home-row home-hero"><div>{intro}</div>'
+                f'<img class="home-cover" src="{relative("assets/github-social-preview.png", output)}" '
+                f'alt="" width="1280" height="640"></section>'
+                f'<section class="home-row home-quick-start">'
                 f'<img class="home-cover" src="{relative("assets/readme-cover.png", output)}" '
-                f'alt="" width="1536" height="1024">{separator}{rest}')
+                f'alt="" width="1536" height="1024" loading="lazy">'
+                f'<div>{separator}{quick_start}</div></section>{remaining}')
     html = f'''<!doctype html>
 <html lang="{ui['html']}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">

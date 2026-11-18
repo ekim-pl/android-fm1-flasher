@@ -1,4 +1,4 @@
-# FM-1 Flasher 0.10.1
+# FM-1 Flasher 0.10.2
 
 Niezależny menedżer oprogramowania sprzętowego dla **M-VAVE FM-1**. Wymaga Androida 14 lub nowszego, USB Host/OTG, MIDI, kabla do transmisji danych i stabilnego zasilania. Zalecany jest zasilany hub.
 

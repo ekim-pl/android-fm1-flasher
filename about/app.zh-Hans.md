@@ -1,4 +1,4 @@
-# FM-1 Flasher 0.10.1
+# FM-1 Flasher 0.10.2
 
 独立的 **M-VAVE FM-1** 固件管理器。需要 Android 14 或更高版本、USB Host/OTG、MIDI、数据线和稳定电源。建议使用独立供电的集线器。
 

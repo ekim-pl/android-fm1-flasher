@@ -1,4 +1,4 @@
-# FM-1 Flasher 0.10.1
+# FM-1 Flasher 0.10.2
 
 An independent firmware manager for **M-VAVE FM-1**. Requires Android 14 or newer, USB Host/OTG, MIDI, a data cable and stable power. A powered hub is recommended.
 

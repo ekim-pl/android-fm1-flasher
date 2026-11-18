@@ -1,6 +1,6 @@
 # FM-1 Flasher — instrukcja
 
-FM-1 Flasher **0.10.1** obejmuje lokalną bibliotekę firmware, kolory źródeł, pełnoekranowe ustawienia i sekwencyjną kolejkę instalacji. Narzędzia eksperymentalne dodają diagnostykę pamięci, import kopii, zarządzanie bootloaderem, instalację firmware przez ROM i przywracanie kopii tego samego urządzenia.
+FM-1 Flasher **0.10.2** oferuje lokalną bibliotekę firmware i sekwencyjną kolejkę instalacji. W sekcji **Urządzenia → MIDI i kopie zapasowe** możesz zapisywać i przywracać banki, ustawienia, sekwencje i presety. Narzędzia eksperymentalne umożliwiają zarządzanie bootloaderem, instalację firmware przez ROM i przywracanie pamięci tego samego urządzenia.
 
 Niezależny menedżer firmware dla **M-VAVE FM-1** na Androida. Android obsługuje wiele instrumentów przez hub OTG, zapisując firmware **kolejno, na jednym instrumencie naraz**.
 
@@ -28,7 +28,7 @@ Build debug zawiera osobną ikonę **FM1 Color Demo**. W szczegółach urządzen
 
 ## Pierwsza instalacja i plan aktualizacji
 
-1. Zainstaluj APK 0.10.1 na Androidzie 14 lub nowszym. Aktualizacja wymaga tego samego certyfikatu podpisu; wersja Google Play może używać innego certyfikatu niż lokalny build testowy.
+1. Zainstaluj APK 0.10.2 na Androidzie 14 lub nowszym. Aktualizacja wymaga tego samego certyfikatu podpisu; wersja Google Play może używać innego certyfikatu niż lokalny build testowy.
 2. W **Bibliotece** znajdź firmware i pobierz paczkę z jej szczegółów. Pobranie sprawdza integralność, ale nie rozpoczyna instalacji.
 3. Podłącz instrumenty przewodami do transmisji danych przez hub OTG. Zalecany jest hub z osobnym zasilaniem. Aplikacja nie mierzy jakości zasilania.
 4. W **Urządzeniach** wybierz **Odczytaj instrument** na każdej karcie. Udziel systemowej zgody USB, gdy będzie potrzebna. Do planu można dodać rozpoznany FM-1.
@@ -116,7 +116,7 @@ Port na iOS jest planowany w przyszłości. Nie ma jeszcze wydania na iOS ani og
 
 W buildzie 23 zaliczono **191 testów jednostkowych (62 shared + 129 Android JVM)**; cztery testy zewnętrznych fixture’ów pominięto. Zaliczone są **44 testy instrumentacyjne Androida**, w tym eksport/czyszczenie logu, czyszczenie biblioteki i potwierdzenia w trzech językach. Przeszły debug, lint i kompilacja metadanych iOS. Właściciel potwierdził działanie buildu 20 na fizycznych FM-1; nowych funkcji i wszystkich kombinacji sprzętu nie zweryfikowano fizycznie.
 
-Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu](../../publication/qa/0.10.1.txt) zawiera identyfikację pliku i zakres prób.
+Nie sprawdzono fizycznego FM-1/huba ani aplikacji iOS. Zasilanie, rzeczywiste przejścia trybów/deskryptorów, unikalność seriali i pełny zapis sprzętu pozostają warunkami odbioru. [Raport buildu 0.10.1](../../publication/qa/0.10.1.txt) zawiera identyfikację pliku i zakres prób.
 
 ## Prywatność i autorstwo
 

@@ -1,6 +1,6 @@
 # 隐私政策 — FM-1 Flasher
 
-FM-1 Flasher 0.10.1：来源颜色和界面偏好仅保存在本设备。Google Play 版本包含 Google Analytics for Firebase；使用统计默认开启，可在设置中关闭。F-Droid 版本不包含 Firebase 或分析 SDK。
+FM-1 Flasher 0.10.2：来源颜色和界面偏好仅保存在本设备。Google Play 版本包含 Google Analytics for Firebase；使用统计默认开启，可在设置中关闭。F-Droid 版本不包含 Firebase 或分析 SDK。
 
 ## 发布者与联系方式
 
