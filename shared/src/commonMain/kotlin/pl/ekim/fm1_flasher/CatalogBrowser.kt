@@ -18,6 +18,13 @@ data class BrowseFilters(val query: String = "", val category: FirmwareCategory 
     val sourceId: String? = null)
 
 object CatalogBrowser {
+    private val whitespace = Regex("\\s+")
+
+    private fun String.searchText() = lowercase().map { char ->
+        val index = "ąćęłńóśźż".indexOf(char)
+        if (index >= 0) "acelnoszz"[index] else char
+    }.joinToString("")
+
     fun entries(catalog: Catalog?, local: List<LocalPackage>, favorites: Set<String>, filters: BrowseFilters,
         tab: LibraryTab): List<CatalogEntry> {
         val saved = local.associateBy { it.entry.key }
@@ -28,10 +35,13 @@ object CatalogBrowser {
             if ((visibleSource || tab == LibraryTab.DOWNLOADS || tab == LibraryTab.FAVORITES) &&
                 (saved.entry.key !in combined || tab == LibraryTab.DOWNLOADS)) combined[saved.entry.key] = saved.entry
         }
-        val query = filters.query.trim()
+        val terms = filters.query.trim().searchText().split(whitespace).filter(String::isNotEmpty)
+        val sourceNames = catalog?.sources.orEmpty().associate { it.id to it.name }
         val visible = combined.values.filter { entry ->
             (filters.sourceId == null || filters.sourceId == entry.sourceId) &&
-            (query.isBlank() || "${entry.name} ${entry.author} ${entry.description}".contains(query, true)) &&
+            (terms.isEmpty() || listOf(entry.name, entry.author, entry.description, entry.version, entry.repo,
+                entry.kinds.joinToString(" "), sourceNames[entry.sourceId].orEmpty()).joinToString(" ").searchText()
+                .let { searchable -> terms.all { it in searchable } }) &&
                 (filters.category.key == null || filters.category.key in entry.kinds) &&
                 (!(filters.downloadedOnly || tab == LibraryTab.DOWNLOADS) || entry.key in saved) &&
                 (!(filters.favoritesOnly || tab == LibraryTab.FAVORITES) || entry.key in favorites)

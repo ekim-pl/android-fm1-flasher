@@ -8,7 +8,6 @@
     <string name="fleet_devices">设备</string>
     <string name="fleet_tasks">任务</string>
     <string name="fleet_library">固件库</string>
-    <string name="fleet_workspace">FM-1 工作室</string>
     <string name="fleet_connected_count">已连接 %1$d 台 · 共享固件库</string>
     <string name="fleet_plan_count">计划 · %1$d</string>
     <string name="fleet_connect_title">集中管理您的乐器</string>

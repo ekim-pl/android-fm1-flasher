@@ -3,23 +3,32 @@ package pl.ekim.fm1_flasher
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.vector.PathParser
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.*
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 private const val MIDI_TOOLS_ROUTE = "MIDI_TOOLS"
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun FlasherApp(backend: AppBackend) {
     val state by backend.state.collectAsState()
@@ -147,27 +156,48 @@ fun FlasherApp(backend: AppBackend) {
                                     PullToRefreshBox(isRefreshing = state.busy && !state.flashing, onRefresh = { if (!state.busy) send(AppActionKind.REFRESH) }, modifier = Modifier.weight(1f)) {
                                         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                             item {
-                                                Text(text(when(tab) { LibraryTab.FAVORITES -> "favorites_title"; LibraryTab.DOWNLOADS -> "downloads_title"; else -> "discover_title" }), style = MaterialTheme.typography.headlineLarge)
-                                                Text(text("results_count", entries.size), style = MaterialTheme.typography.bodySmall)
-                                                OutlinedTextField(query, { query = it }, label = { Text(text("search_hint")) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                                                if (filtersExpanded) {
-                                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                    Choice(text("filter_category"), text(filters.category.labelKey), FirmwareCategory.entries.map { it.name to text(it.labelKey) }, { categoryName = it }, Modifier.weight(1f))
-                                                    Choice(text("filter_sort"), text(filters.sort.labelKey), FirmwareSort.entries.map { it.name to text(it.labelKey) }, { sortName = it }, Modifier.weight(1f))
+                                                val clearSearchLabel = text("clear_search")
+                                                ElevatedCard(Modifier.fillMaxWidth()) {
+                                                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                        Text(text(when(tab) { LibraryTab.FAVORITES -> "favorites_title"; LibraryTab.DOWNLOADS -> "downloads_title"; else -> "discover_title" }), style = MaterialTheme.typography.titleLarge)
+                                                        Text(text("results_count", entries.size), style = MaterialTheme.typography.bodySmall,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                        OutlinedTextField(
+                                                            value = query,
+                                                            onValueChange = { query = it },
+                                                            label = { Text(text("search_hint")) },
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            singleLine = true,
+                                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                            keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
+                                                            trailingIcon = if (query.isNotEmpty()) {
+                                                                {
+                                                                    IconButton(
+                                                                        onClick = { query = "" },
+                                                                        modifier = Modifier.semantics { contentDescription = clearSearchLabel },
+                                                                    ) { Text("×", style = MaterialTheme.typography.titleLarge) }
+                                                                }
+                                                            } else null,
+                                                        )
+                                                        if (filtersExpanded) {
+                                                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                                Choice(text("filter_category"), text(filters.category.labelKey), FirmwareCategory.entries.map { it.name to text(it.labelKey) }, { categoryName = it }, Modifier.weight(1f))
+                                                                Choice(text("filter_sort"), text(filters.sort.labelKey), FirmwareSort.entries.map { it.name to text(it.labelKey) }, { sortName = it }, Modifier.weight(1f))
+                                                            }
+                                                            if (state.catalog?.sources?.isNotEmpty() == true) Choice(text("source_filter"), state.catalog?.sources?.firstOrNull { it.id == sourceFilter }?.name ?: text("source_all"), listOf("" to text("source_all")) + state.catalog!!.sources.filter { !it.deleted }.map { it.id to it.name }, { sourceFilter = it })
+                                                        }
+                                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                            FilterChip(downloadedOnly, { downloadedOnly = !downloadedOnly }, label = { Text(text("downloaded_only")) })
+                                                            FilterChip(favoritesOnly, { favoritesOnly = !favoritesOnly }, label = { Text(text("favorites_only")) })
+                                                        }
+                                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                            TextButton({ filtersExpanded = !filtersExpanded }) { Text(text("fleet_filters", (if (categoryName != "ALL") 1 else 0) + (if (sourceFilter.isNotEmpty()) 1 else 0))) }
+                                                            TextButton({ send(AppActionKind.REFRESH) }, enabled = !state.busy && !state.offline) { Text(text("refresh_button")) }
+                                                            if (tab == LibraryTab.DOWNLOADS || downloadedOnly) TextButton({ send(AppActionKind.UPDATE_ALL) }, enabled = !state.busy && !state.offline) { Text(text("updates_count", CatalogBrowser.updates(state.catalog, state.downloads).size)) }
+                                                        }
+                                                        Text(state.catalog?.let { (if (state.offline) text("catalog_offline_prefix") else if (!it.fresh) text("catalog_cached_prefix") else text("catalog_prefix")) + it.updated } ?: text("catalog_offline"), style = MaterialTheme.typography.bodySmall)
+                                                    }
                                                 }
-                                                if (state.catalog?.sources?.isNotEmpty() == true) Choice(text("source_filter"), state.catalog?.sources?.firstOrNull { it.id == sourceFilter }?.name ?: text("source_all"), listOf("" to text("source_all")) + state.catalog!!.sources.filter { !it.deleted }.map { it.id to it.name }, { sourceFilter = it })
-                                                }
-                                                Row(Modifier.horizontalScroll(rememberScrollState())) {
-                                                    FilterChip(downloadedOnly, { downloadedOnly = !downloadedOnly }, label = { Text(text("downloaded_only")) })
-                                                    Spacer(Modifier.width(8.dp))
-                                                    FilterChip(favoritesOnly, { favoritesOnly = !favoritesOnly }, label = { Text(text("favorites_only")) })
-                                                }
-                                                Row(Modifier.horizontalScroll(rememberScrollState())) {
-                                                    TextButton({ filtersExpanded = !filtersExpanded }) { Text(text("fleet_filters", (if (categoryName != "ALL") 1 else 0) + (if (sourceFilter.isNotEmpty()) 1 else 0))) }
-                                                    TextButton({ send(AppActionKind.REFRESH) }, enabled = !state.busy && !state.offline) { Text(text("refresh_button")) }
-                                                    if (tab == LibraryTab.DOWNLOADS || downloadedOnly) TextButton({ send(AppActionKind.UPDATE_ALL) }, enabled = !state.busy && !state.offline) { Text(text("updates_count", CatalogBrowser.updates(state.catalog, state.downloads).size)) }
-                                                }
-                                                Text(state.catalog?.let { (if (state.offline) text("catalog_offline_prefix") else if (!it.fresh) text("catalog_cached_prefix") else text("catalog_prefix")) + it.updated } ?: text("catalog_offline"), style = MaterialTheme.typography.bodySmall)
                                             }
                                             if (entries.isEmpty()) item { Text(text("empty_title")); Text(text(when(tab) { LibraryTab.DOWNLOADS -> "empty_downloads"; LibraryTab.FAVORITES -> "empty_favorites"; else -> "empty_filter" })) }
                                             items(entries, key = { it.key }) { entry ->
@@ -179,40 +209,42 @@ fun FlasherApp(backend: AppBackend) {
                                                 ) {
                                                     Box(Modifier.fillMaxWidth().height(4.dp).background(Color(
                                                         (state.sourceColors[entry.sourceId] ?: SourceColor.defaultFor(entry.sourceId)).argb)))
-                                                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                                        SourceBadge(entry, state)
-                                                        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                                                Text(title(entry, language), style = MaterialTheme.typography.titleLarge)
-                                                                if (entry.author.isNotBlank()) Text(entry.author,
-                                                                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                            }
+                                                    Column(Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp)) {
+                                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                                            Text(title(entry, language), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
                                                             val favorite = entry.key in state.favorites
                                                             // Do not observe the whole app state from semantics on recyclable nodes.
                                                             val favoriteDescription = text(if (favorite) "remove_favorite_accessibility" else "add_favorite_accessibility", title(entry, language))
                                                             IconToggleButton(checked = favorite, onCheckedChange = { send(AppActionKind.FAVORITE, entry.key) },
                                                                 enabled = !state.busy, modifier = Modifier.semantics { contentDescription = favoriteDescription }) {
-                                                                Text(if (favorite) "★" else "☆", fontSize = 28.sp)
+                                                                Text(if (favorite) "★" else "☆", fontSize = 22.sp)
                                                             }
                                                         }
-                                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                                            (listOf(entry.version).filter { it.isNotBlank() } + entry.kinds.map { kind ->
-                                                                text(FirmwareCategory.entries.firstOrNull { it.key == kind }?.labelKey ?: "category_other")
-                                                            }).forEach { label ->
-                                                                Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainer) {
-                                                                    Text(label, Modifier.padding(horizontal = 10.dp, vertical = 5.dp), style = MaterialTheme.typography.labelMedium)
+                                                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                                            Cover(entry, state.offline, backend, state.catalog?.source(entry), compact = true)
+                                                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                                SourceBadge(entry, state)
+                                                                if (entry.author.isNotBlank()) Text(entry.author,
+                                                                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                                    (listOf(entry.version).filter { it.isNotBlank() } + entry.kinds.map { kind ->
+                                                                        text(FirmwareCategory.entries.firstOrNull { it.key == kind }?.labelKey ?: "category_other")
+                                                                    }).forEach { label ->
+                                                                        Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainer) {
+                                                                            Text(label, Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = MaterialTheme.typography.labelMedium)
+                                                                        }
+                                                                    }
+                                                                }
+                                                                val description = if (entry.stock) text("stock_description") else entry.shortDescription
+                                                                if (description.isNotBlank()) Text(description, style = MaterialTheme.typography.bodySmall,
+                                                                    maxLines = 2, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                                val saved = state.downloads.singleOrNull { it.entry.key == entry.key }
+                                                                if (saved != null) {
+                                                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                                                    Text(text("saved_version", saved.entry.version) + if (state.catalog?.entries?.any { it.key == entry.key && it.sha256 != saved.entry.sha256 } == true) text("update_badge") else "",
+                                                                        style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                                                                 }
                                                             }
-                                                        }
-                                                        Cover(entry, state.offline, backend, state.catalog?.source(entry), compact = true)
-                                                        val description = if (entry.stock) text("stock_description") else entry.shortDescription
-                                                        if (description.isNotBlank()) Text(description, style = MaterialTheme.typography.bodyMedium,
-                                                            maxLines = 3, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                        val saved = state.downloads.singleOrNull { it.entry.key == entry.key }
-                                                        if (saved != null) {
-                                                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                                            Text(text("saved_version", saved.entry.version) + if (state.catalog?.entries?.any { it.key == entry.key && it.sha256 != saved.entry.sha256 } == true) text("update_badge") else "",
-                                                                style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                                                         }
                                                     }
                                                 }
@@ -387,8 +419,33 @@ private fun title(entry: CatalogEntry, language: String) = if (entry.stock) reso
         try { value = backend.artwork(entry) } catch (cancelled: CancellationException) { throw cancelled } catch (_: Exception) { value = null }
     }
     val bitmap = image
-    if (bitmap != null) Image(bitmap, entry.name, modifier = Modifier.fillMaxWidth().height(if (compact) 112.dp else 160.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-    else if (!compact) Surface(Modifier.fillMaxWidth().height(100.dp), color = MaterialTheme.colorScheme.secondaryContainer) {
+    if (bitmap != null) Image(
+        bitmap, entry.name,
+        modifier = if (compact) Modifier.size(68.dp).clip(MaterialTheme.shapes.small) else Modifier.fillMaxWidth().height(160.dp),
+        contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+    )
+    else if (compact) AwesomeFm1Thumbnail()
+    else Surface(Modifier.fillMaxWidth().height(100.dp), color = MaterialTheme.colorScheme.secondaryContainer) {
         Column(Modifier.padding(16.dp)) { Text("FM‑1", style = MaterialTheme.typography.headlineMedium); Text(entry.name, style = MaterialTheme.typography.labelLarge) }
+    }
+}
+
+// Path data from website/icons/awesome-fm1.svg.
+private val awesomeFm1Mark by lazy {
+    PathParser().parsePathString("M66.1 105 101 24h54l34.9 81h-39.6L128 54l-22.3 51zM39.8 166h39.2l-17 39H23zM177 166h39.2l16.8 39h-39z").toPath()
+}
+private val awesomeFm1Wave by lazy {
+    PathParser().parsePathString("M16 140h43v-22h27v22h27v-22h27v22h27v-22h27v22h46").toPath()
+}
+
+@Composable private fun AwesomeFm1Thumbnail() {
+    Surface(Modifier.size(68.dp), shape = MaterialTheme.shapes.small, color = Color(0xFF202B36)) {
+        Canvas(Modifier.fillMaxSize().padding(8.dp)) {
+            scale(size.width / 256f, pivot = Offset.Zero) {
+                val lime = Color(0xFFD1FF32)
+                drawPath(awesomeFm1Mark, lime)
+                drawPath(awesomeFm1Wave, lime, style = Stroke(width = 10f, join = StrokeJoin.Round))
+            }
+        }
     }
 }

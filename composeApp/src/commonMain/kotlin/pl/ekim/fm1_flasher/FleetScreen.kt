@@ -34,17 +34,22 @@ import androidx.compose.ui.semantics.semantics
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable internal fun FleetScreen(state: AppSnapshot, language: String, send: (AppAction) -> Unit, library: () -> Unit, tasks: () -> Unit, tools: () -> Unit, midiTools: () -> Unit) {
     fun t(key: String, vararg args: Any) = resolveCoreText(msg(key, *args), language)
     val online = state.fleet.filter { it.endpoint != null }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Text(t("fleet_workspace"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            Text(t("fleet_devices"), style = MaterialTheme.typography.headlineLarge)
-            Text(t("fleet_connected_count", online.size), style = MaterialTheme.typography.bodyMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton({ send(AppAction(AppActionKind.PORTS_REFRESH)) }, enabled = !state.busy) { Text(t("refresh_ports")) }
-                TextButton(tasks) { Text(t("fleet_plan_count", state.jobs.count { it.outcome == JobOutcome.QUEUED })) }
+            ElevatedCard(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(t("fleet_devices"), style = MaterialTheme.typography.titleLarge)
+                    Text(t("fleet_connected_count", online.size), style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilledTonalButton({ send(AppAction(AppActionKind.PORTS_REFRESH)) }, enabled = !state.busy) { Text(t("refresh_ports")) }
+                        TextButton(tasks) { Text(t("fleet_plan_count", state.jobs.count { it.outcome == JobOutcome.QUEUED })) }
+                    }
+                }
             }
         }
         if (state.usbRecovery) item {
@@ -138,7 +143,6 @@ import androidx.compose.ui.semantics.semantics
     val ready = queued.isNotEmpty() && queued.all { job -> FleetPolicy.ready(job, state.fleet.singleOrNull { it.id == job.deviceId }) && state.downloads.any { it.entry.key == job.packageKey && it.entry.sha256 == job.hash } }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
-            Text(t("fleet_workspace"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Text(t("fleet_tasks"), style = MaterialTheme.typography.headlineLarge)
             Text(t("fleet_sequential"))
         }

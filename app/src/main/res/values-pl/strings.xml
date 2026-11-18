@@ -42,6 +42,7 @@
     <string name="metric_downloaded">NA TELEFONIE</string>
     <string name="metric_favorites">ULUBIONE</string>
     <string name="search_hint">Szukaj firmware lub autora…</string>
+    <string name="clear_search">Wyczyść wyszukiwanie</string>
     <string name="search_accessibility">Szukaj w katalogu firmware</string>
     <string name="filter_category">Kategoria</string>
     <string name="filter_sort">Sortowanie</string>

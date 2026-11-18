@@ -21,10 +21,6 @@ Akcent pojawia się przy nazwie urządzenia na listach, w kolejce i historii ora
 
 Ręczny wybór koloru zapamiętuje wpis także z domyślną nazwą. Kolor przetrwa restart aplikacji i ręczne przypisanie powracającego FM1. Nie identyfikuje sprzętu i nie włącza automatycznego parowania. Zadanie zachowuje kolor z chwili dodania do kolejki; późniejsza zmiana nie przemalowuje historii.
 
-### Sprawdzenie bez sprzętu
-
-Build debug zawiera osobną ikonę **FM1 Color Demo**. W szczegółach urządzenia zmienisz kolor. **Jasny / ciemny** przełącza motyw, a **Pokaż / wyczyść zadania** tworzy lub usuwa przykładowe stany, w tym stały postęp 47%. Wyczyść zadania przed kolejną zmianą kolorów. Kolory demo przetrwają restart w osobnych preferencjach. Demo nie łączy się z USB, nie zmienia właściwej floty i nie trafia do wariantu release.
-
 
 ## Pierwsza instalacja i plan aktualizacji
 

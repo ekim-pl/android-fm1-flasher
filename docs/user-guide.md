@@ -106,10 +106,6 @@ The accent appears beside the instrument name in connected/saved device lists, q
 
 Choosing a color remembers the device even if its name is still the default. It survives app restarts and explicit pairing with the returning instrument. Colors are visual labels, not hardware identities; they do not enable automatic matching. Each task keeps the color from when it was queued, so changing a device later does not recolor its history.
 
-### Try colors without hardware
-
-Debug builds include a separate **FM1 Color Demo** launcher icon. Open device Details to select colors; **Jasny / ciemny** switches the theme, and **Pokaż / wyczyść zadania** shows or clears sample tasks, including fixed 47% progress. Clear sample tasks before editing colors again. Demo colors survive a restart in separate local preferences. The demo never connects to USB or changes the real fleet; it is absent from release builds.
-
 ## Tasks, stopping and failures
 
 Jobs freeze the target record/attachment, expected identity, memory selection, package key and hash. All plan packages are checked before the first write; each job is checked again before its transfer. Changing the UI's selected package cannot redirect an active job.

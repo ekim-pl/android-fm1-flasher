@@ -8,7 +8,6 @@
     <string name="fleet_devices">Devices</string>
     <string name="fleet_tasks">Tasks</string>
     <string name="fleet_library">Library</string>
-    <string name="fleet_workspace">FM-1 STUDIO</string>
     <string name="fleet_connected_count">%1$d connected · one shared library</string>
     <string name="fleet_plan_count">Plan · %1$d</string>
     <string name="fleet_connect_title">Your instruments, together</string>

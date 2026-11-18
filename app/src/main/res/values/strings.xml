@@ -42,6 +42,7 @@
     <string name="metric_downloaded">ON DEVICE</string>
     <string name="metric_favorites">FAVORITES</string>
     <string name="search_hint">Search firmware or author…</string>
+    <string name="clear_search">Clear search</string>
     <string name="search_accessibility">Search the firmware catalog</string>
     <string name="filter_category">Category</string>
     <string name="filter_sort">Sort by</string>

@@ -42,6 +42,7 @@
     <string name="metric_downloaded">本机保存</string>
     <string name="metric_favorites">已收藏</string>
     <string name="search_hint">搜索固件或作者…</string>
+    <string name="clear_search">清除搜索</string>
     <string name="search_accessibility">搜索固件目录</string>
     <string name="filter_category">类别</string>
     <string name="filter_sort">排序</string>
