@@ -21,6 +21,20 @@ android-debug.yml — Developer debug APK (test Firebase)
   and a persistent developer signing key.
   Artifact android-debug-<tag>, or android-debug-dev. No publication.
 
+android-pr-debug.yml — Debug APK for each pull request revision
+  Builds the exact PR head on open, push, and reopen. Both the APK and its
+  installed version use <latest-stable-version>-req-<PR number>.<first 12 commit
+  characters>. To enable downloads, set the Actions variable
+  PR_DEBUG_AGE_RECIPIENTS to one developer's public age recipient per line.
+  The workflow uploads only the encrypted .apk.age file. Download it from the
+  run's Artifacts section and decrypt locally with
+    age --decrypt -i developer.agekey -o preview.apk <downloaded-file.apk.age>
+  Keep the private age identities with the developers. Without a configured
+  recipient the workflow validates the build and skips the upload.
+  The preview APK uses standard CI debug signing and a separate application ID
+  (pl.ekim.fm1_flasher.preview). It installs beside releases and nightlies.
+  A later CI run may use a different debug key and require reinstalling the preview.
+
 android-nightly.yml — Public GitHub nightly prerelease
   Runs nightly or by manual dispatch on the default branch. Reuses android-debug
   and its signing environment. Publishes the verified APK, debug-manifest.json

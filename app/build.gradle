@@ -40,7 +40,12 @@ if (fdroidUpdates && googlePlayBuild) {
     throw new GradleException('Select either the F-Droid or the Google Play distribution')
 }
 def buildDate = LocalDate.now(ZoneOffset.UTC).toString()
+def prVersionName = providers.gradleProperty('fm1PrVersionName').orNull
 def nightlyCode = providers.gradleProperty('fm1NightlyCode').orNull?.toInteger()
+if (prVersionName != null && (!(prVersionName ==~ /[0-9]+\.[0-9]+\.[0-9]+-req-[1-9][0-9]*\.[0-9a-f]{12}/) ||
+        nightlyCode != null || analyticsEnabled)) {
+    throw new GradleException('Use <stable-version>-req-<number>.<12-character-commit> for a preview without nightly or analytics settings')
+}
 if (nightlyCode != null && !(nightlyCode in 1000001..2100000000)) {
     throw new GradleException('Nightly versionCode must be between 1000001 and 2100000000')
 }
@@ -91,7 +96,8 @@ android {
         debug {
             buildConfigField 'int', 'DEFAULT_SOURCE_REFRESH_HOURS', debugRefreshHours
             buildConfigField 'int', 'APP_UPDATE_INTERVAL_MINUTES', debugAppUpdateMinutes.toInteger().toString()
-            buildConfigField 'String', 'UPDATE_CHANNEL', '"nightly"'
+            if (prVersionName != null) applicationIdSuffix '.preview'
+            buildConfigField 'String', 'UPDATE_CHANNEL', prVersionName == null ? '"nightly"' : '""'
             buildConfigField 'String', 'APP_BUILD_KIND', nightlyCode == null ? '"debug"' : '"nightly"'
         }
         release {
@@ -133,11 +139,15 @@ androidComponents {
     beforeVariants(selector().withBuildType('debug')) { variant ->
         if (analyticsEnabled && analyticsEnvironment == 'production') variant.enable = false
     }
-    if (nightlyCode != null) {
+    if (prVersionName != null || nightlyCode != null) {
         onVariants(selector().withBuildType('debug')) { variant ->
             variant.outputs.each { output ->
-                output.versionCode.set(nightlyCode)
-                output.versionName.set("${android.defaultConfig.versionName}-nightly.${nightlyCode - 1000000}".toString())
+                if (prVersionName != null) {
+                    output.versionName.set(prVersionName)
+                } else {
+                    output.versionCode.set(nightlyCode)
+                    output.versionName.set("${android.defaultConfig.versionName}-nightly.${nightlyCode - 1000000}".toString())
+                }
             }
         }
     }

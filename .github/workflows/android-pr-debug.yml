@@ -1,0 +1,78 @@
+name: Android PR debug APK
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  debug:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Resolve preview version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          tag=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name')
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::The latest stable release must have a vMAJOR.MINOR.PATCH tag."
+            exit 1
+          fi
+          [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ && "$PR_HEAD" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$(git rev-parse HEAD)" == "$PR_HEAD" ]]
+          echo "name=${tag#v}-req-$PR_NUMBER.${PR_HEAD:0:12}" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          packages: 'platforms;android-36 build-tools;35.0.0'
+          log-accepted-android-sdk-licenses: false
+      - name: Build named debug APK
+        env:
+          PREVIEW_VERSION: ${{ steps.version.outputs.name }}
+        run: |
+          ./gradlew --no-daemon -Pfm1PrVersionName="$PREVIEW_VERSION" :app:assembleDebug
+          apk=app/build/outputs/apk/debug/app-debug.apk
+          package=$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$apk")
+          [[ "$package" == *"name='pl.ekim.fm1_flasher.preview'"* ]]
+          [[ "$package" == *"versionName='$PREVIEW_VERSION'"* ]]
+          mkdir -p pr-dist
+          cp "$apk" "pr-dist/fm1-flasher-$PREVIEW_VERSION.apk"
+      - name: Encrypt APK for project developers
+        id: encryption
+        env:
+          AGE_RECIPIENTS: ${{ vars.PR_DEBUG_AGE_RECIPIENTS }}
+          PREVIEW_VERSION: ${{ steps.version.outputs.name }}
+        run: |
+          if [[ -z "$AGE_RECIPIENTS" ]]; then
+            echo "::notice::Set PR_DEBUG_AGE_RECIPIENTS to enable developer downloads."
+            exit 0
+          fi
+          sudo apt-get update
+          sudo apt-get install -y age
+          printf '%s\n' "$AGE_RECIPIENTS" > "$RUNNER_TEMP/age-recipients"
+          apk="pr-dist/fm1-flasher-$PREVIEW_VERSION.apk"
+          age --recipients-file "$RUNNER_TEMP/age-recipients" --output "$apk.age" "$apk"
+          rm "$apk"
+          echo "encrypted=true" >> "$GITHUB_OUTPUT"
+      - name: Upload encrypted PR debug APK
+        if: steps.encryption.outputs.encrypted == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: fm1-flasher-${{ steps.version.outputs.name }}-encrypted
+          path: pr-dist/*.apk.age
+          if-no-files-found: error
+          retention-days: 14
