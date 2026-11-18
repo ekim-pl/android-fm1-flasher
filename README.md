@@ -69,6 +69,7 @@ Questions, feedback or beta testing: [ekim.pl@gmail.com](mailto:ekim.pl@gmail.co
 
 - **Developer/debug:** `android-debug.yml` builds a signed APK with test Firebase and the persistent developer key.
 - **F-Droid:** Add the [project repository](https://ekim-pl.github.io/android-fm1-flasher/fdroid/repo/) to an F-Droid client for releases. `fdroid-release.yml` builds the signed APK without Firebase or Google Play services; `fdroid.yml` separately validates an unsigned APK. Providing the signed APK does not mean inclusion in the official F-Droid catalog.
+- **F-Droid Nightly:** The [nightly repository](https://ekim-pl.github.io/android-fm1-flasher/fdroid-nightly/repo/) distributes the latest signed developer APK with test Firebase once the channel is enabled. It shares the stable app's application ID. [Nightly setup and switching channels](publication/fdroid/repository.md#nightly-channel).
 - **Google Play:** `google-play.yml` builds a signed AAB with production Firebase. `google-play-upload.yml` uploads the verified bundle to internal testing; `promote-production.yml` promotes that same version.
 
 `android-release.yml` builds all three distributions from one immutable stable tag and publishes the debug/F-Droid APKs, manifests and checksums on GitHub. The Play bundle is retained as an Actions artifact; upload and promotion remain separate steps. All distributions use the same application ID, so switching requires compatible signing certificates. [Build and publication instructions](publication/github-actions.txt).

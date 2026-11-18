@@ -53,3 +53,35 @@ or disabling `FDROID_REPO_ENABLED` causes the next deployment to omit the repo.
 The workflow stores the index signing key in GitHub Actions secrets and uses it
 on the runner. Anyone able to modify trusted default-branch workflow code can
 potentially access repository secrets.
+
+## Nightly channel
+
+The nightly repository is published at
+https://ekim-pl.github.io/android-fm1-flasher/fdroid-nightly/repo/.
+It serves the highest version code from a published `nightly-<versionCode>`
+GitHub prerelease whose tag is reachable from the default branch. It uses the
+same signed debug APK with test Firebase as GitHub Nightly. The APK checksum,
+signing certificate, tag commit and version are checked before indexing.
+The nightly channel has its own index signing key and contains one APK at a time.
+
+1. Generate a separate PKCS12 index signing key using the stable setup command
+   with `fm1-nightly-index.p12` and alias `fm1-nightly-index`.
+2. Add Actions secrets `FDROID_NIGHTLY_INDEX_KEYSTORE_BASE64`,
+   `FDROID_NIGHTLY_INDEX_KEYSTORE_PASSWORD`, `FDROID_NIGHTLY_INDEX_KEY_ALIAS`
+   and `FDROID_NIGHTLY_INDEX_KEY_PASSWORD`.
+3. Add Actions variables `FDROID_NIGHTLY_REPO_URL` (the URL above) and
+   `FDROID_NIGHTLY_APP_CERT_SHA256` (the trusted developer APK fingerprint
+   from the `android-debug` environment's `DEBUG_APP_CERT_SHA256`).
+   Set `FDROID_NIGHTLY_REPO_ENABLED` to `true` to enable publishing.
+4. **Android nightly** checks the default branch daily at 02:29 UTC and builds
+   only if its current commit has no published nightly. A successful new
+   publication starts **GitHub Pages**, which deploys the site and both
+   enabled repositories together. The nightly repository page includes a QR
+   code with its index signing fingerprint for adding it to an F-Droid client.
+   To expose an existing nightly when first enabling the channel, run
+   **GitHub Pages** manually from the default branch.
+
+Enable the nightly repository only on devices intended to receive developer
+builds. Nightly uses the same application ID and a higher version code than
+stable. Switching requires compatible APK signatures. Returning to stable can
+require uninstalling nightly, which removes app data.

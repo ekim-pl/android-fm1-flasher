@@ -20,11 +20,25 @@ jobs:
       number: ${{ steps.version.outputs.number }}
     steps:
       - id: version
-        # Reserve build numbers 1 and 2 for the initial preview builds.
-        run: echo "number=$((GITHUB_RUN_NUMBER + 2))" >> "$GITHUB_OUTPUT"
+        name: Check for an unpublished commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          published=$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" --jq '
+            .[] | select(.prerelease and (.draft | not) and (.tag_name | test("^nightly-[0-9]+$")))
+            | .target_commitish
+          ')
+          if grep -Fxq "$GITHUB_SHA" <<< "$published"; then
+            echo "Nightly is already published for $GITHUB_SHA"
+          else
+            # Reserve build numbers 1 and 2 for the initial preview builds.
+            echo "number=$((GITHUB_RUN_NUMBER + 2))" >> "$GITHUB_OUTPUT"
+          fi
 
   build:
     needs: version
+    if: needs.version.outputs.number != ''
     uses: ./.github/workflows/android-debug.yml
     with:
       tag: ''
@@ -36,7 +50,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
-      actions: read
+      actions: write
       contents: write
     steps:
       - name: Publish the verified nightly APK
@@ -58,12 +72,19 @@ jobs:
           assets=("dist/$apk" dist/debug-manifest.json dist/SHA256SUMS)
           if existing=$(gh release view "$tag" --json isDraft,isPrerelease,targetCommitish); then
             jq -e --arg commit "$GITHUB_SHA" '.isPrerelease and .targetCommitish == $commit' <<< "$existing" > /dev/null
-            if [[ "$(jq -r .isDraft <<< "$existing")" == false ]]; then
-              exit 0
-            fi
+            draft=$(jq -r .isDraft <<< "$existing")
           else
             gh release create "$tag" --target "$GITHUB_SHA" --draft --prerelease --latest=false \
               --title "FM-1 Flasher nightly $NIGHTLY_NUMBER" --notes "Developer APK from $GITHUB_SHA."
+            draft=true
           fi
-          gh release upload "$tag" "${assets[@]}" --clobber
-          gh release edit "$tag" --draft=false --latest=false
+          if [[ "$draft" == true ]]; then
+            gh release upload "$tag" "${assets[@]}" --clobber
+            gh release edit "$tag" --draft=false --latest=false
+          fi
+      - name: Publish the F-Droid nightly channel on Pages
+        if: vars.FDROID_NIGHTLY_REPO_ENABLED == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run pages.yml --ref "$GITHUB_REF_NAME"
