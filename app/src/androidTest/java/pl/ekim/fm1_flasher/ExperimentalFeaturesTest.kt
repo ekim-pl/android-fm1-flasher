@@ -35,7 +35,7 @@ class ExperimentalFeaturesTest : InstrumentationTestCase() {
                 active.toggleMonitor()
                 active.enterDownloadMode()
                 active.onStartCommand(Intent().setAction("RECOVERY_WRITE"), 0, 1)
-                for (action in listOf("TOOLS_READ", "TOOLS_PREPARE", "TOOLS_WRITE", "TOOLS_MIDI_INFO", "TOOLS_MIDI_BACKUP")) {
+                for (action in listOf("TOOLS_READ", "TOOLS_PREPARE", "TOOLS_WRITE")) {
                     active.onStartCommand(Intent().setAction(action), 0, 1)
                     assertNull(active.state.tools)
                     assertNull(active.state.diagnostics)

@@ -47,7 +47,7 @@ Treat every source and firmware package as **untrusted third-party content**, in
 
 ## Backups and experimental tools
 
-Extra tools are **hidden by default**. Enable **Settings → Experimental features** to access full-flash backup/export, flash-chip detection, MIDI logging, operation-log export and limited ROM recovery.
+On Android, open **Devices → MIDI and backups** for m-bootloader MIDI diagnostics and backup, or to import, inspect and export saved backups. Enable **Settings → Experimental features** to access USB download-mode tools under **Modes and flash chip**, as well as MIDI logging and operation-log export.
 
 The experimental backup tool reads the **entire 1 MiB flash memory** of supported chips in USB ROM/download mode, compares two complete reads and stores the copy locally. You can export it as a ZIP archive. This is separate from downloading a firmware package.
 

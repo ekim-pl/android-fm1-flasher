@@ -18,7 +18,9 @@ interface RecoveryFlash {
 
 data class RecoveryBackup(val id: String, val sha256: String, val flashId: Long, val chipKey: Int, val bootHash: String,
     val diagnostics: DeviceDiagnostics = DeviceDiagnostics(flashId, chipKey, Recovery.FLASH_SIZE),
-    val verified: Boolean = true)
+    val verified: Boolean = true, val dataOnly: Boolean = false) {
+    val imageName get() = if (dataOnly) "user-data.bin" else "full-flash-before.bin"
+}
 data class RecoveryPlan(
     val token: String, val backup: RecoveryBackup, val deviceName: String, val deviceId: Int,
     val packageId: String, val packageHash: String, val changedSectors: Int,
@@ -60,12 +62,15 @@ object Recovery {
         }
         return bytes
     }
-    fun backup(flash: RecoveryFlash, store: RecoveryStore, report: (AppText, Int) -> Unit): RecoveryBackup {
+    fun backup(flash: RecoveryFlash, store: RecoveryStore, report: (AppText, Int) -> Unit): RecoveryBackup =
+        store.save(readVerified(flash, report), flash.flashId, flash.chipKey, (flash as? UsbBootConnection)?.diagnostics)
+
+    internal fun readVerified(flash: RecoveryFlash, report: (AppText, Int) -> Unit): ByteArray {
         checkDevice(flash)
         val first = readAll(flash) { report(msg(R.string.recovery_read_first), it) }
         val second = readAll(flash) { report(msg(R.string.recovery_read_second), it) }
         check(first.contentEquals(second)) { failed(msg(R.string.recovery_reads_differ)) }
-        return store.save(first, flash.flashId, flash.chipKey, (flash as? UsbBootConnection)?.diagnostics)
+        return first
     }
     internal fun changedSectors(before: ByteArray, region: ByteArray): List<Int> {
         require(before.size == FLASH_SIZE && region.size == END - START)
@@ -152,16 +157,18 @@ class RecoveryStore(private val root: File) {
     private fun durable(file: File, bytes: ByteArray) {
         FileOutputStream(file).use { it.write(bytes); it.fd.sync() }
     }
-    fun save(bytes: ByteArray, flashId: Long, chipKey: Int, diagnostics: DeviceDiagnostics? = null, verified: Boolean = true): RecoveryBackup {
-        require(bytes.size == Recovery.FLASH_SIZE)
+    fun save(bytes: ByteArray, flashId: Long, chipKey: Int, diagnostics: DeviceDiagnostics? = null, verified: Boolean = true, dataOnly: Boolean = false): RecoveryBackup {
+        require(if (dataOnly) bytes.size in UserDataBackup.MIN_SIZE..UserDataBackup.MAX_SIZE &&
+            diagnostics?.uid != null && verified else bytes.size == Recovery.FLASH_SIZE)
         val backup = RecoveryBackup(UUID.randomUUID().toString(), FirmwarePackage.sha256(bytes), flashId, chipKey,
-            FirmwarePackage.sha256(bytes.copyOfRange(0, Recovery.START)), diagnostics ?: DeviceDiagnostics(flashId, chipKey, Recovery.FLASH_SIZE), verified)
+            if (dataOnly) "" else FirmwarePackage.sha256(bytes.copyOfRange(0, Recovery.START)),
+            diagnostics ?: DeviceDiagnostics(flashId, chipKey, Recovery.FLASH_SIZE), verified, dataOnly)
         val dir = directory(backup.id)
         check(dir.mkdirs())
-        durable(File(dir, "full-flash-before.bin"), bytes)
+        durable(File(dir, backup.imageName), bytes)
         val metadata = JSONObject().put("id", backup.id).put("sha256", backup.sha256)
             .put("flashId", flashId).put("chipKey", chipKey).put("bootHash", backup.bootHash)
-            .put("createdAt", System.currentTimeMillis()).put("size", bytes.size).put("schema", 2)
+            .put("createdAt", System.currentTimeMillis()).put("size", bytes.size).put("schema", if (dataOnly) 3 else 2)
             .put("uid", backup.diagnostics.uid).put("loader", backup.diagnostics.loader)
             .put("transport", backup.diagnostics.transport).put("verified", verified)
         durable(File(dir, "backup.json.pending"), metadata.toString(2).toByteArray())
@@ -179,19 +186,25 @@ class RecoveryStore(private val root: File) {
             val file = File(dir, "backup.json")
             require(file.length() in 1..16384)
             val meta = JSONObject(file.readText())
-            require(meta.optInt("schema", 1) in 1..2)
-            require(meta.optInt("size", Recovery.FLASH_SIZE) == Recovery.FLASH_SIZE)
+            val schema = meta.optInt("schema", 1)
+            require(schema in 1..3)
+            val size = meta.optInt("size", Recovery.FLASH_SIZE)
+            require(if (schema == 3) size in UserDataBackup.MIN_SIZE..UserDataBackup.MAX_SIZE else size == Recovery.FLASH_SIZE)
             RecoveryBackup(dir.name, meta.getString("sha256"), meta.getLong("flashId"), meta.getInt("chipKey"), meta.getString("bootHash"),
                 DeviceDiagnostics(meta.getLong("flashId"), meta.getInt("chipKey"), Recovery.FLASH_SIZE,
                     meta.optString("uid").takeIf { it.matches(Regex("[0-9a-f]{16}")) && it != "0000000000000000" && it != "ffffffffffffffff" },
-                    meta.optString("loader").takeIf { it.isNotBlank() }, meta.optString("transport", "ROM")), meta.optBoolean("verified", true)).also { require(File(dir, "full-flash-before.bin").length() == Recovery.FLASH_SIZE.toLong()) }
+                    meta.optString("loader").takeIf { it.isNotBlank() }, meta.optString("transport", "ROM")), meta.optBoolean("verified", true), schema == 3).also {
+                require(File(dir, it.imageName).length() == size.toLong())
+            }
         }.getOrNull() }.orEmpty()
     fun load(backup: RecoveryBackup): ByteArray {
-        val file = File(directory(backup.id), "full-flash-before.bin")
-        check(file.length() == Recovery.FLASH_SIZE.toLong()) { failed(msg(R.string.recovery_backup_corrupt)) }
+        val file = File(directory(backup.id), backup.imageName)
+        val length = file.length()
+        check(if (backup.dataOnly) length in UserDataBackup.MIN_SIZE.toLong()..UserDataBackup.MAX_SIZE.toLong()
+            else length == Recovery.FLASH_SIZE.toLong()) { failed(msg(R.string.recovery_backup_corrupt)) }
         val bytes = file.readBytes()
         check(FirmwarePackage.sha256(bytes) == backup.sha256 &&
-            FirmwarePackage.sha256(bytes.copyOfRange(0, Recovery.START)) == backup.bootHash) { failed(msg(R.string.recovery_backup_corrupt)) }
+            (backup.dataOnly || FirmwarePackage.sha256(bytes.copyOfRange(0, Recovery.START)) == backup.bootHash)) { failed(msg(R.string.recovery_backup_corrupt)) }
         return bytes
     }
     fun result(backup: RecoveryBackup, status: String, packageHash: String) {
@@ -201,7 +214,7 @@ class RecoveryStore(private val root: File) {
     fun export(backup: RecoveryBackup, output: OutputStream) {
         load(backup)
         ZipOutputStream(output).use { zip ->
-            for (name in listOf("full-flash-before.bin", "backup.json", "result.json")) {
+            for (name in listOf(backup.imageName, "backup.json", "result.json")) {
                 val file = File(directory(backup.id), name)
                 if (file.exists()) {
                     zip.putNextEntry(ZipEntry(name)); file.inputStream().use { it.copyTo(zip) }; zip.closeEntry()

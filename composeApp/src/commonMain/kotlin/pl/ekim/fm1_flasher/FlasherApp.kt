@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+private const val MIDI_TOOLS_ROUTE = "MIDI_TOOLS"
+
 @Composable
 fun FlasherApp(backend: AppBackend) {
     val state by backend.state.collectAsState()
@@ -30,7 +32,8 @@ fun FlasherApp(backend: AppBackend) {
     fun send(kind: AppActionKind, id: String = "", value: String = "") = backend.perform(AppAction(kind, id, value))
     var tabName by rememberSaveable { mutableStateOf(LibraryTab.CATALOG.name) }
     var workspaceInitialized by rememberSaveable { mutableStateOf(false) }
-    val tab = runCatching { LibraryTab.valueOf(tabName) }.getOrDefault(LibraryTab.CATALOG)
+    val midiTools = tabName == MIDI_TOOLS_ROUTE
+    val tab = if (midiTools) LibraryTab.DEVICES else runCatching { LibraryTab.valueOf(tabName) }.getOrDefault(LibraryTab.CATALOG)
     var settings by rememberSaveable { mutableStateOf(false) }
     var detailId by rememberSaveable { mutableStateOf<String?>(null) }
     var dialog by remember { mutableStateOf<Pair<String, AppText>?>(null) }
@@ -117,7 +120,15 @@ fun FlasherApp(backend: AppBackend) {
                                 TextButton({ send(AppActionKind.UNDO_REMOVE) }, enabled = !state.busy) { Text(text("fleet_undo_remove")) }
                             }
                             when (tab) {
-                                LibraryTab.DEVICES -> FleetScreen(state, language, backend::perform, { tabName = LibraryTab.CATALOG.name }, { tabName = LibraryTab.TASKS.name }, { tabName = LibraryTab.FLASHER.name })
+                                LibraryTab.DEVICES -> if (midiTools) {
+                                    MidiDeviceToolsScreen(state, language, backend::perform, { tabName = LibraryTab.DEVICES.name },
+                                        { dialog = text("app_log") to AppText.Joined(state.logs, "\n\n") },
+                                        { tabName = LibraryTab.FLASHER.name })
+                                } else {
+                                    FleetScreen(state, language, backend::perform,
+                                        { tabName = LibraryTab.CATALOG.name }, { tabName = LibraryTab.TASKS.name },
+                                        { tabName = LibraryTab.FLASHER.name }, { tabName = MIDI_TOOLS_ROUTE })
+                                }
                                 LibraryTab.TASKS -> TaskScreen(state, language, backend::perform, { tabName = LibraryTab.DEVICES.name })
                                 LibraryTab.CATALOG, LibraryTab.FAVORITES, LibraryTab.DOWNLOADS -> {
                                     val entries = remember(state.catalog, state.downloads, state.favorites, filters, tab) { CatalogBrowser.entries(state.catalog, state.downloads, state.favorites, filters, tab) }
@@ -207,7 +218,9 @@ fun FlasherApp(backend: AppBackend) {
                                         }
                                     }
                                 }
-                                LibraryTab.FLASHER -> FlasherScreen(state, language, { send(it.kind, it.id, it.value) }, { action, message -> confirmation = action to message }, { recovery = true }, { dialog = text("app_log") to AppText.Joined(state.logs, "\n\n") })
+                                LibraryTab.FLASHER -> FlasherScreen(state, language, backend::perform, { action, message -> confirmation = action to message },
+                                    { recovery = true }, { dialog = text("app_log") to AppText.Joined(state.logs, "\n\n") },
+                                    { tabName = MIDI_TOOLS_ROUTE })
                                 LibraryTab.LOGGER -> LoggerScreen(state, language, backend)
                                 LibraryTab.ABOUT -> AboutScreen(
                                     backend.document(text("about_document")), text("app_name"), text("about_version", "0.10.1"),
@@ -254,7 +267,6 @@ fun FlasherApp(backend: AppBackend) {
                 Button({ send(AppActionKind.RECOVERY_BACKUP) }, enabled = !state.busy) { Text(text("recovery_backup")) }
                 Button({ send(AppActionKind.RECOVERY_PREPARE) }, enabled = !state.busy) { Text(text("recovery_prepare")) }
                 state.recovery?.let { plan -> Button({ confirmation = AppAction(AppActionKind.RECOVERY_WRITE, plan.token) to plan.confirmation }, enabled = !state.busy) { Text(text("recovery_write_plan")) } }
-                state.backups.forEach { backup -> TextButton({ send(AppActionKind.RECOVERY_EXPORT, backup.id) }, enabled = !state.busy) { Text("${text("logger_export")} · ${backup.label}") } }
             }
         }
         dialog?.let { (heading, message) -> AppDialog(heading, { dialog = null }, text("close")) { Text(resolveCoreText(message, language)) } }
@@ -280,10 +292,10 @@ private fun title(entry: CatalogEntry, language: String) = if (entry.stock) reso
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp), content = content)
     }, confirmButton = { TextButton(dismiss) { Text(close) } })
 }
-@Composable private fun FlasherScreen(state: AppSnapshot, language: String, send: (AppAction) -> Unit, confirm: (AppAction, AppText) -> Unit, recovery: () -> Unit, logs: () -> Unit) {
+@Composable private fun FlasherScreen(state: AppSnapshot, language: String, send: (AppAction) -> Unit, confirm: (AppAction, AppText) -> Unit, recovery: () -> Unit, logs: () -> Unit, midiTools: () -> Unit) {
     fun text(key: String, vararg args: Any) = resolveCoreText(msg(key, *args), language)
     if (state.fleetAvailable) {
-        DeviceToolsScreen(state, language, send, confirm, recovery, logs)
+        DeviceToolsScreen(state, language, send, confirm, recovery, midiTools)
         return
     }
     var forceDialog by remember(state.ready, state.target, state.chip, state.identity) { mutableStateOf(false) }

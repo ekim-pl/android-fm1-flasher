@@ -4,8 +4,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 data class AppPort(val id: String, val label: String)
 data class LogRow(val id: Long, val source: String, val channel: Int?, val type: String, val text: String)
-data class BackupRow(val id: String, val label: String)
-data class ToolsView(val backupId: String, val hash: String, val info: DeviceDiagnostics, val analysis: FlashLayout.Analysis,
+data class BackupRow(val id: String, val label: String, val dataOnly: Boolean = false)
+data class ToolsView(val backupId: String, val hash: String, val info: DeviceDiagnostics, val analysis: FlashLayout.Analysis?,
     val operation: FlashOperation? = null, val changed: List<Int> = emptyList(), val target: FlashLayout.Analysis? = null,
     val token: String? = null, val exported: Boolean = false, val layoutChanges: Boolean = false)
 data class RecoveryView(val token: String, val confirmation: AppText)

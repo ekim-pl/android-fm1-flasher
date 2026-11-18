@@ -2,7 +2,7 @@
 
 Detailed instructions for the Android application: local firmware, offline use, firmware sources, sequential updates and experimental tools. Commands in this guide run from the repository root.
 
-FM-1 Flasher **0.10.1** includes a local firmware library, source colors, full-screen settings and sequential installation tasks. Experimental tools add flash diagnostics, backup import, bootloader management, ROM firmware installation and same-device backup restoration.
+FM-1 Flasher **0.10.1** includes a local firmware library, source colors, full-screen settings and sequential installation tasks. MIDI and backups provides diagnostics and backup management. Experimental tools add bootloader management, ROM firmware installation and same-device backup restoration.
 
 [Project README](../README.md) · [Polski](../website/pl/documentation.md) · [简体中文](../website/zh-CN/documentation.md) · [Privacy](../PRIVACY_POLICY.md)
 
@@ -126,9 +126,9 @@ The Android foreground service and time-limited wake lock support an active tran
 
 A downloaded firmware package is an installation file. A recovery backup is a copy read from the instrument's flash memory. Normal MIDI firmware installation does not automatically create this backup.
 
-To access the backup tools, enable **Settings → Experimental features**, open the device tools and connect a supported instrument in **USB ROM/download mode**. This is separate from the normal MIDI update workflow. The backup operation accepts only recognized flash chips and the supported device key.
+For a USB ROM backup, enable **Settings → Experimental features**, open **Devices → Modes and flash chip** and connect a supported instrument in **USB ROM/download mode**. This is separate from the normal MIDI update workflow. The backup operation accepts only recognized flash chips and the supported device key.
 
-The tool reads the entire **1 MiB flash memory twice** and saves a backup only if both reads match. It stores the image (`full-flash-before.bin`), a checksum and device metadata locally. Use the backup export action to save a ZIP archive through Android's file picker; the archive includes the full image, metadata and any recorded recovery result.
+The tool reads the entire **1 MiB flash memory twice** and saves a backup only if both reads match. It stores the image (`full-flash-before.bin`), a checksum and device metadata locally. Use **Devices → MIDI and backups** to export a ZIP archive through Android's file picker; the archive includes the full image, metadata and any recorded recovery result.
 
 **Import backup** accepts app ZIP exports or a 1 MiB BIN with its JSON sidecar. A verified backup can be restored to the same device when UID, chip identity and factory data match. Missing identity or integrity metadata permits inspection only. See [experimental flash writing](#experimental-flash-inspection-and-writing) for the preparation, export and confirmation steps. The separate stock V15 recovery action retains its limited application-only range.
 
@@ -203,11 +203,11 @@ Completed task history is kept for 30 days by default; Settings lets you change 
 
 ## Experimental flash inspection and writing
 
-Open **Devices → Experimental tools → Flash inspection and recovery**.
+Open **Devices → Modes and flash chip → Flash inspection and recovery**.
 Enable Experimental features in Settings first. Connect exactly one FM-1 in ROM
 download mode for ROM tools. **Read and back up ROM flash** reads the entire
 1 MiB twice, saves a verified backup, and displays the actual flash layout.
-Existing saved backups can be inspected without a connected instrument.
+Use **Devices → MIDI and backups** to import, inspect or export backups without a connected instrument. Select a backup there before opening the ROM tools to restore it.
 
 The diagnostics show the measured flash ID, chip key, capacity and loader version,
 and a flash UID when supported. The chip key is not a serial number. Live values

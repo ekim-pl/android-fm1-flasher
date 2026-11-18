@@ -73,7 +73,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             ports = next.devices.map(::port), target = next.target?.let(::port), identity = next.identity, chip = next.chip, chipDetection = next.chipDetection, diagnostics = next.diagnostics, tools = next.tools,
             ready = next.ready, awaitingPort = next.awaitingPort, candidates = next.reconnectCandidates.map(::port),
             progress = next.progress, status = next.status, logs = next.logs, usbRecovery = true,
-            backups = next.recoveryBackups.map { BackupRow(it.id, "${it.id} · ${getString(ChipDetector.classify(it.flashId).label)}") },
+            backups = next.recoveryBackups.map { BackupRow(it.id, "${it.id} · ${getString(ChipDetector.classify(it.flashId).label)}", it.dataOnly) },
             recovery = next.recoveryPlan?.let { RecoveryView(it.token, msg(R.string.recovery_confirmation, it.deviceName,
                 msg(ChipDetector.classify(it.backup.flashId).labelKey), it.changedSectors, it.backup.id, it.backup.sha256)) })
         refreshLogger()
@@ -270,7 +270,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             }
             AppActionKind.LOGGER_EXPORT -> if (next.experimental) startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/plain").putExtra(Intent.EXTRA_TITLE, "midi-log-${System.currentTimeMillis()}.txt"), 41)
             AppActionKind.TOOLS_INSPECT -> active.inspectTools(action.id)
-            AppActionKind.TOOLS_IMPORT -> if (next.experimental && !next.busy) startActivityForResult(
+            AppActionKind.TOOLS_IMPORT -> if (!next.busy) startActivityForResult(
                 Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*").putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true), 63)
             AppActionKind.TOOLS_READ, AppActionKind.TOOLS_PREPARE, AppActionKind.TOOLS_WRITE,
             AppActionKind.TOOLS_MIDI_INFO, AppActionKind.TOOLS_MIDI_BACKUP -> startTools(action)
@@ -280,9 +280,9 @@ class ComposeActivity : ComponentActivity(), AppBackend {
             }
             AppActionKind.RECOVERY_ENTER -> next.target?.takeIf { port(it).id == action.id && !next.busy && next.experimental }?.let { target -> withPermission(target.usb) { if (active.state.target?.endpoint == target.endpoint) active.enterDownloadMode() } }
             AppActionKind.RECOVERY_BACKUP, AppActionKind.RECOVERY_PREPARE, AppActionKind.RECOVERY_WRITE -> startRecovery(action)
-            AppActionKind.RECOVERY_EXPORT -> if (next.experimental && !next.busy && next.recoveryBackups.any { it.id == action.id }) {
+            AppActionKind.RECOVERY_EXPORT -> if (!next.busy && next.recoveryBackups.any { it.id == action.id }) {
                 exportBackupId = action.id
-                startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/zip").putExtra(Intent.EXTRA_TITLE, "fm1-backup-${action.id}.zip"), 61)
+                startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/zip").putExtra(Intent.EXTRA_TITLE, "fm1-${if (next.recoveryBackups.any { it.id == action.id && it.dataOnly }) "user-data" else "backup"}-${action.id}.zip"), 61)
             }
             AppActionKind.LANGUAGE -> {
                 require(action.id in listOf("en", "pl", "zh")); state.value = state.value.copy(language = action.id)
@@ -343,14 +343,15 @@ class ComposeActivity : ComponentActivity(), AppBackend {
     }
     private fun startTools(action: AppAction) {
         val active = service ?: return
-        if (active.state.busy || !active.state.experimental) return
         val midiMode = action.kind in listOf(AppActionKind.TOOLS_MIDI_INFO, AppActionKind.TOOLS_MIDI_BACKUP)
+        if (active.state.busy || (!midiMode && !active.state.experimental)) return
         val device = if (midiMode) active.state.target?.usb else
             getSystemService(UsbManager::class.java).deviceList.values.filter(ChipDetector::supports).singleOrNull()
         if (device == null) { showFailure(msg("tools_connect")); return }
-        val sourceBackup = active.state.tools?.backupId
+        val sourceBackup = action.id.takeIf { action.kind == AppActionKind.TOOLS_PREPARE && it.isNotEmpty() }
+            ?: active.state.tools?.backupId
         withPermission(device) {
-            if (!active.state.busy && active.state.experimental) foreground(Intent(this, FlasherService::class.java).setAction(action.kind.name)
+            if (!active.state.busy && (midiMode || active.state.experimental)) foreground(Intent(this, FlasherService::class.java).setAction(action.kind.name)
                 .putExtra("deviceName", device.deviceName).putExtra("deviceId", device.deviceId)
                 .putExtra("operation", action.value).putExtra("token", action.id).putExtra("sourceBackup", sourceBackup))
         }
@@ -359,7 +360,7 @@ class ComposeActivity : ComponentActivity(), AppBackend {
         val active = service ?: return
         if (active.state.busy || importBackupUris.isEmpty()) return
         val uris = importBackupUris; importBackupUris = emptyList()
-        if (active.state.experimental) active.importTools(uris)
+        active.importTools(uris)
     }
     private fun startRecovery(action: AppAction) {
         val active = service ?: return

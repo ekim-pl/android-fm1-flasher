@@ -34,7 +34,7 @@ import androidx.compose.ui.semantics.semantics
     }
 }
 
-@Composable internal fun FleetScreen(state: AppSnapshot, language: String, send: (AppAction) -> Unit, library: () -> Unit, tasks: () -> Unit, tools: () -> Unit) {
+@Composable internal fun FleetScreen(state: AppSnapshot, language: String, send: (AppAction) -> Unit, library: () -> Unit, tasks: () -> Unit, tools: () -> Unit, midiTools: () -> Unit) {
     fun t(key: String, vararg args: Any) = resolveCoreText(msg(key, *args), language)
     val online = state.fleet.filter { it.endpoint != null }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -46,6 +46,9 @@ import androidx.compose.ui.semantics.semantics
                 TextButton({ send(AppAction(AppActionKind.PORTS_REFRESH)) }, enabled = !state.busy) { Text(t("refresh_ports")) }
                 TextButton(tasks) { Text(t("fleet_plan_count", state.jobs.count { it.outcome == JobOutcome.QUEUED })) }
             }
+        }
+        if (state.usbRecovery) item {
+            FilledTonalButton(midiTools, modifier = Modifier.fillMaxWidth()) { Text(t("device_midi_tools")) }
         }
         if (state.usbRecovery && state.experimental) item {
             FilledTonalButton(tools, modifier = Modifier.fillMaxWidth()) { Text(t("device_tools")) }

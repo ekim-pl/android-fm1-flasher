@@ -88,7 +88,7 @@ class FlasherService : Service() {
     private lateinit var credentials: SourceCredentialStore
     private lateinit var oauth: OAuthManager
     private data class ToolPlan(val token: String, val backup: RecoveryBackup, val plan: FlashWritePlan,
-        val deviceName: String, val deviceId: Int, val epoch: Long)
+        val deviceName: String, val deviceId: Int, val epoch: Long, val before: ByteArray? = null)
     @Volatile private var toolPlan: ToolPlan? = null
     private val exportedBackups = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     private lateinit var recoveryStore: RecoveryStore
@@ -271,7 +271,7 @@ class FlasherService : Service() {
         getSharedPreferences("features", MODE_PRIVATE).edit().putBoolean("experimental", enabled).apply()
         if (!enabled) monitor.stop()
         toolPlan = null
-        update { it.copy(experimental = enabled, recoveryPlan = null, tools = null, diagnostics = null) }
+        update { it.copy(experimental = enabled, recoveryPlan = null, tools = it.tools?.copy(token = null)) }
     }
 
     fun toggleMonitor() {
@@ -751,28 +751,26 @@ class FlasherService : Service() {
     }
 
     fun exportRecovery(id: String, uri: android.net.Uri) = libraryTask {
-        check(state.experimental) { failed(msg(R.string.experimental_disabled)) }
         val backup = recoveryStore.list().single { it.id == id }
         val output = checkNotNull(contentResolver.openOutputStream(uri, "wt"))
         output.use { recoveryStore.export(backup, it) }
-        exportedBackups.add(backup.sha256)
-        update { it.copy(tools = it.tools?.let { view -> if (view.hash == backup.sha256) view.copy(exported = true) else view }) }
+        exportedBackups.add(backup.id)
+        update { it.copy(tools = it.tools?.let { view -> if (view.backupId == backup.id) view.copy(exported = true) else view }) }
         status(msg(R.string.recovery_exported))
     }
 
     fun inspectTools(id: String) = libraryTask {
-        check(state.experimental)
         val backup = recoveryStore.list().single { it.id == id }
         showTools(backup)
     }
     private fun showTools(backup: RecoveryBackup) {
         val view = ToolsView(backup.id, backup.sha256, backup.diagnostics,
-            FlashLayout.analyze(recoveryStore.load(backup), backup.chipKey), exported = backup.sha256 in exportedBackups)
+            recoveryStore.load(backup).let { if (backup.dataOnly) null else FlashLayout.analyze(it, backup.chipKey) }, exported = backup.id in exportedBackups)
         toolPlan = null
         update { it.copy(tools = view, recoveryBackups = recoveryStore.list()) }
     }
     fun importTools(uris: List<android.net.Uri>) = libraryTask {
-        check(state.experimental && uris.size in 1..2)
+        check(uris.size in 1..2)
         val values = uris.map { uri -> checkNotNull(contentResolver.openInputStream(uri)).use { BackupImport.bounded(it, Recovery.FLASH_SIZE + 65536) } }
         val image = values.single { it.size >= Recovery.FLASH_SIZE || it.take(2) == listOf(0x50.toByte(), 0x4B.toByte()) }
         val sidecar = values.singleOrNull { it !== image }
@@ -780,20 +778,20 @@ class FlasherService : Service() {
         status(msg("tools_imported"))
     }
     private fun startTools(intent: Intent): Int {
-        if (state.busy || !state.experimental || !libraryReady) return START_NOT_STICKY
         val action = intent.action
+        val midiMode = action in listOf("TOOLS_MIDI_INFO", "TOOLS_MIDI_BACKUP")
+        if (state.busy || (!midiMode && !state.experimental) || !libraryReady) return START_NOT_STICKY
         if (action !in listOf("TOOLS_READ", "TOOLS_PREPARE", "TOOLS_WRITE", "TOOLS_MIDI_INFO", "TOOLS_MIDI_BACKUP")) return START_NOT_STICKY
         val snapshot = state
         val pending = toolPlan
         val usb = getSystemService(UsbManager::class.java)
-        val midiMode = action in listOf("TOOLS_MIDI_INFO", "TOOLS_MIDI_BACKUP")
         val device = if (midiMode) snapshot.target?.usb else usb.deviceList.values.filter(ChipDetector::supports).singleOrNull()
         if (device == null || device.deviceName != intent.getStringExtra("deviceName") || device.deviceId != intent.getIntExtra("deviceId", -1) || !usb.hasPermission(device)) {
             status(msg("recovery_changed")); return START_NOT_STICKY
         }
         if (action == "TOOLS_WRITE" && (pending == null || pending.token != intent.getStringExtra("token") ||
                 pending.deviceName != device.deviceName || pending.deviceId != device.deviceId || pending.epoch != usbEpoch(device.deviceName) ||
-                pending.backup.sha256 !in exportedBackups)) {
+                pending.backup.id !in exportedBackups)) {
             status(msg("tools_write_unavailable")); return START_NOT_STICKY
         }
         try { monitor.stop(); startForeground(1, notification(msg("tools_reading"))) }
@@ -839,7 +837,8 @@ class FlasherService : Service() {
                             check(usbEpoch(device.deviceName) == epoch)
                             recoveryStore.result(job.backup, "writing", job.plan.inputHash)
                             try {
-                                DeviceToolsWriter.apply(flash, info, recoveryStore.load(job.backup), job.plan,
+                                val saved = recoveryStore.load(job.backup)
+                                DeviceToolsWriter.apply(flash, info, job.before ?: saved, job.plan,
                                     report = { status(msg("tools_writing"), it) }, validate = {
                                         check(usbEpoch(device.deviceName) == epoch && usb.hasPermission(device)) { "Device changed" }
                                     })
@@ -848,11 +847,17 @@ class FlasherService : Service() {
                                 runCatching { recoveryStore.result(job.backup, "failed; write may be incomplete", job.plan.inputHash) }; throw failure
                             }
                         } else {
-                            val backup = Recovery.backup(flash, recoveryStore, ::status)
+                            val operation = if (action == "TOOLS_PREPARE")
+                                FlashOperation.valueOf(checkNotNull(intent.getStringExtra("operation"))) else null
+                            val dataOnly = operation == FlashOperation.RESTORE_DATA ||
+                                (action == "TOOLS_READ" && intent.getStringExtra("operation") == "USER_DATA")
+                            if (dataOnly) check(info.uid != null) { "Device UID is required" }
+                            val before = Recovery.readVerified(flash, ::status)
+                            val payload = if (dataOnly) UserDataBackup.capture(before, info.chipKey) else before
+                            val backup = recoveryStore.save(payload, flash.flashId, flash.chipKey, info, dataOnly = dataOnly)
                             check(usbEpoch(device.deviceName) == epoch)
                             showTools(backup)
-                            if (action == "TOOLS_PREPARE") {
-                                val operation = FlashOperation.valueOf(checkNotNull(intent.getStringExtra("operation")))
+                            if (operation != null) {
                                 var savedInfo: DeviceDiagnostics? = null
                                 val input = when (operation) {
                                     FlashOperation.MBOOT -> assets.open("fm1-uboot-2.4.boot").use { it.readBytes() }.also {
@@ -864,20 +869,21 @@ class FlasherService : Service() {
                                         check(ChipDetector.classify(info.flashId).allows(loaded.first.entry)) { "Package compatibility is unconfirmed" }
                                         library.removalBackup(selected.key).second.also { check(FirmwarePackage.sha256(it) == loaded.second.sha256) }
                                     }
-                                    FlashOperation.RESTORE, FlashOperation.RESTORE_BOOT -> {
+                                    FlashOperation.RESTORE, FlashOperation.RESTORE_BOOT, FlashOperation.RESTORE_DATA -> {
                                         val saved = recoveryStore.list().single { it.id == intent.getStringExtra("sourceBackup") }
                                         check(saved.verified) { "Backup integrity metadata required" }
+                                        check(saved.dataOnly == (operation == FlashOperation.RESTORE_DATA)) { "Wrong backup type" }
                                         savedInfo = saved.diagnostics; recoveryStore.load(saved)
                                     }
                                 }
-                                val plan = FlashWritePlan.create(operation, recoveryStore.load(backup), info, input, FirmwarePackage.sha256(input), savedInfo)
+                                val plan = FlashWritePlan.create(operation, before, info, input, FirmwarePackage.sha256(input), savedInfo)
                                 val token = java.util.UUID.randomUUID().toString()
                                 synchronized(this@FlasherService) {
-                                check(usbEpoch(device.deviceName) == epoch)
-                                toolPlan = ToolPlan(token, backup, plan, device.deviceName, device.deviceId, epoch)
-                                update { it.copy(tools = checkNotNull(it.tools).copy(operation = operation, changed = plan.changedSectors,
-                                    target = FlashLayout.analyze(plan.targetImage(), info.chipKey), token = token,
-                                    layoutChanges = plan.layoutChanges)) }
+                                    check(usbEpoch(device.deviceName) == epoch)
+                                    toolPlan = ToolPlan(token, backup, plan, device.deviceName, device.deviceId, epoch, before.takeIf { dataOnly })
+                                    update { it.copy(tools = checkNotNull(it.tools).copy(operation = operation, changed = plan.changedSectors,
+                                        target = if (dataOnly) null else FlashLayout.analyze(plan.targetImage(), info.chipKey), token = token,
+                                        layoutChanges = plan.layoutChanges)) }
                                 }
                             }
                         }

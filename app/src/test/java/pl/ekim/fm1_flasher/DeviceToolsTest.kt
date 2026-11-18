@@ -6,6 +6,7 @@ import java.io.File
 import java.io.ByteArrayOutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import java.util.zip.ZipInputStream
 
 internal class DeviceToolsTest {
     private val info = DeviceDiagnostics(0x856014, 0x980F, FlashLayout.SIZE, "0102030405060708", "2.3")
@@ -112,6 +113,48 @@ internal class DeviceToolsTest {
         saved[0xFF000] = 9
         assertThrows(IllegalArgumentException::class.java) { restore(info) }
     }
+    @Test fun userDataArchiveRestoresOnlyUserPartitions() {
+        val before = image()
+        FlashLayout.cipher(record("SEQ64", 0xFC000, 0x1000, 0x12), info.chipKey xor 40).copyInto(before, 0x40A0)
+        FlashLayout.cipher(record("USRFLASH", 0xFD000, 0x1000, 0x92), info.chipKey xor 48).copyInto(before, 0x40C0)
+        val saved = before.copyOf().also {
+            it[0x95000] = 3 // VM
+            it[0xEA000] = 4 // USR
+            it[0xE9000] = 5 // BTIF
+            it[0xFC000] = 6 // SEQ64
+            it[0xFD000] = 7 // USRFLASH
+            it[0xFE000] = 8 // unclassified
+        }
+        val payload = UserDataBackup.capture(saved, info.chipKey)
+        assertEquals(0x6A000 + UserDataBackup.HASH_SIZE, payload.size)
+        val root = java.nio.file.Files.createTempDirectory("user-data-backup").toFile()
+        try {
+            val store = RecoveryStore(root)
+            val backup = store.save(payload, info.flashId, info.chipKey, info, dataOnly = true)
+            val archive = ByteArrayOutputStream().also { store.export(backup, it) }.toByteArray()
+            ZipInputStream(archive.inputStream()).use { zip ->
+                assertEquals(listOf("user-data.bin", "backup.json"), generateSequence { zip.nextEntry?.name }.toList())
+            }
+            val imported = BackupImport.read(archive, null, store)
+            assertTrue(imported.dataOnly)
+            assertEquals(imported, store.list().single { it.id == imported.id })
+            assertArrayEquals(payload, store.load(imported))
+
+            fun restore(current: ByteArray = before, identity: DeviceDiagnostics = imported.diagnostics,
+                        input: ByteArray = store.load(imported)) =
+                FlashWritePlan.create(FlashOperation.RESTORE_DATA, current, info, input, FirmwarePackage.sha256(input), identity)
+            val plan = restore()
+            assertEquals(listOf(0x95000, 0xEA000, 0xFC000, 0xFD000), plan.changedSectors)
+            val flash = Flash(before.copyOf())
+            DeviceToolsWriter.apply(flash, info, before, plan)
+            assertArrayEquals(saved.copyOf().also { it[0xE9000] = before[0xE9000]; it[0xFE000] = before[0xFE000] }, flash.bytes)
+            assertThrows(IllegalArgumentException::class.java) { restore(identity = info.copy(uid = "1111111111111111")) }
+            assertThrows(IllegalArgumentException::class.java) { restore(input = payload.copyOf(payload.size - 1)) }
+            assertThrows(IllegalArgumentException::class.java) { restore(current = before.copyOf().also { it[0x4F00] = 0 }) }
+            assertThrows(IllegalArgumentException::class.java) { restore(current = before.copyOf().also { it[0xFF000] = 0 }) }
+        } finally { root.deleteRecursively() }
+    }
+
     @Test fun unsupportedHardwareAndChangedInputCannotPrepareWrites() {
         val before = image(); val input = boot(true)
         for (device in listOf(info.copy(flashId = 0x123456), info.copy(chipKey = 0), info.copy(capacity = FlashLayout.SIZE * 2))) {

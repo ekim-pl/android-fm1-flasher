@@ -75,6 +75,9 @@ class DeviceToolsUiTest : InstrumentationTestCase() {
             instrumentation.waitForIdleSync(); Thread.sleep(100)
             instrumentation.runOnMainSync { assertNull(find("Prepare write plan")) }
             assertEquals(1, actions.count { it.kind == AppActionKind.TOOLS_WRITE })
+            locate("MIDI and backups")
+            locate("Import backup")
+            assertEquals(AppAction(AppActionKind.TOOLS_IMPORT), actions.last())
         } finally {
             instrumentation.runOnMainSync { activity.finish(); ViewRootForTest.onViewCreatedCallback = previous }
         }

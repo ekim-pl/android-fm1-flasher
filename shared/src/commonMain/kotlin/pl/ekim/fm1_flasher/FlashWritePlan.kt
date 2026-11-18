@@ -1,11 +1,11 @@
 package pl.ekim.fm1_flasher
 
-enum class FlashOperation { MBOOT, STOCK_BOOT, FIRMWARE, RESTORE, RESTORE_BOOT }
+enum class FlashOperation { MBOOT, STOCK_BOOT, FIRMWARE, RESTORE, RESTORE_BOOT, RESTORE_DATA }
 
 /** Owns its bytes: a preview cannot be changed after validation. */
 class FlashWritePlan private constructor(
     val operation: FlashOperation, before: ByteArray, target: ByteArray, val diagnostics: DeviceDiagnostics,
-    val inputHash: String, val layoutChanges: Boolean,
+    val inputHash: String, val layoutChanges: Boolean, private val dataRanges: List<IntRange>,
 ) {
     private val bytes = target.copyOf()
     val beforeHash = FirmwarePackage.sha256(before)
@@ -20,6 +20,7 @@ class FlashWritePlan private constructor(
             FlashOperation.MBOOT, FlashOperation.STOCK_BOOT -> address in 0 until FlashLayout.BOOT_END
             FlashOperation.FIRMWARE, FlashOperation.RESTORE -> address in FlashLayout.BOOT_END until FlashLayout.FACTORY
             FlashOperation.RESTORE_BOOT -> address in 0 until FlashLayout.FACTORY
+            FlashOperation.RESTORE_DATA -> dataRanges.any { address in it }
         }) { "Protected flash sector" }
     }
     companion object {
@@ -31,6 +32,7 @@ class FlashWritePlan private constructor(
             val analysis = FlashLayout.analyze(before, info.chipKey)
             require(analysis.fm1Evidence && analysis.layoutValid) { "Insufficient FM-1 evidence" }
             val target = before.copyOf()
+            var dataRanges = emptyList<IntRange>()
             when (operation) {
                 FlashOperation.MBOOT -> FlashLayout.installBoot(before, input).copyInto(target)
                 FlashOperation.STOCK_BOOT, FlashOperation.FIRMWARE -> {
@@ -47,6 +49,12 @@ class FlashWritePlan private constructor(
                         pkg.flashImage.copyInto(target, FlashLayout.BOOT_END, FlashLayout.BOOT_END)
                     }
                 }
+                FlashOperation.RESTORE_DATA -> {
+                    require(info.uid != null && backupInfo?.uid == info.uid &&
+                        backupInfo.flashId == info.flashId && backupInfo.chipKey == info.chipKey &&
+                        backupInfo.capacity == info.capacity) { "Backup device identity is missing or different" }
+                    dataRanges = UserDataBackup.restore(before, info.chipKey, input, target)
+                }
                 FlashOperation.RESTORE, FlashOperation.RESTORE_BOOT -> {
                     require(input.size == FlashLayout.SIZE && info.uid != null && backupInfo?.uid == info.uid &&
                         backupInfo.flashId == info.flashId && backupInfo.chipKey == info.chipKey && backupInfo.capacity == info.capacity) { "Backup device identity is missing or different" }
@@ -60,7 +68,7 @@ class FlashWritePlan private constructor(
                 }
             }
             val next = FlashLayout.analyze(target, info.chipKey)
-            val result = FlashWritePlan(operation, before, target, info, inputHash, analysis.regions != next.regions)
+            val result = FlashWritePlan(operation, before, target, info, inputHash, analysis.regions != next.regions, dataRanges)
             result.changedSectors.forEach(result::checkSector)
             require(before.copyOfRange(FlashLayout.FACTORY, FlashLayout.SIZE).contentEquals(target.copyOfRange(FlashLayout.FACTORY, FlashLayout.SIZE)))
             return result
